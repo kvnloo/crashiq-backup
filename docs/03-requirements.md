@@ -166,7 +166,14 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
 - **Product priority (user, 2026-10-16):** CrashIQ is the *first deployable product*, ahead of DemandIQ, because the data
   is public and already sitting there (CCRS); the value is all in the analysis. Implication: Stage 7 (ship) is NOT
   deferred; v1 scope stays lean (profile/TIS mode) so it ships fast. Audience for the deployed version: to confirm.
-- Open: R2.5 intersection-only mode · runtime agent.
+- **R2.5 DECIDED:** v1 = corridor with study limits (start/end); every intersection along it is included (auto-detected,
+  user edits the list). Intersection-only mode (no corridor) is NOT in v1; it comes with v2 ISOAP/SPICE.
+- **Deployment DECIDED:** same path as DemandIQ: build and run locally, push to hosting when done. It will be a **paid
+  product**. v1 local can keep the single `APP_PASSWORD`; before charging money it needs real user accounts, payments,
+  per-user usage limits on Claude/Jev spend, and terms of use. Data licence checked: CCRS on data.ca.gov is
+  "Other (Public Domain)" (CHP), so commercial use is allowed. To confirm before launch: no other licence issues
+  (OSM data is ODbL: attribution required).
+- Open: runtime agent.
 
 ## Pipeline status
 `[new-tool] Stage 2: resumed 2026-10-16 in Hermes (grill-me). Requirements not locked yet.`
