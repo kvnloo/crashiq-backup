@@ -173,6 +173,14 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   per-user usage limits on Claude/Jev spend, and terms of use. Data licence checked: CCRS on data.ca.gov is
   "Other (Public Domain)" (CHP), so commercial use is allowed. To confirm before launch: no other licence issues
   (OSM data is ODbL: attribution required).
+- **Runtime agent (proposed, awaiting "ok"):** Claude API tool-use loop (DemandIQ pattern) behind the swappable agent contract.
+  Token plan, from ai-agent-validation #2 (model routing) and #9 (cost & latency); full check in Stage 3:
+  (1) Claude never sees raw crash rows, only the computed summary tables + cross-tabs that flag something;
+  (2) Jev does the high-volume cheap steps (J1 geocoding; J3 screening locations against the pattern library, so Claude
+  writes up only the matches); (3) a small model or Jev routes simple follow-up questions straight to query tools;
+  Sonnet only writes the findings; (4) prompt caching on the fixed parts (pattern library, instructions, examples);
+  (5) hard spend cap per study, enforced in code; (6) tokens + $ logged per study. Target to verify in build:
+  < $1 of AI per study (estimate ~$0.20–0.50 for Sonnet; measure, don't trust the estimate).
 - Open: runtime agent.
 
 ## Pipeline status
