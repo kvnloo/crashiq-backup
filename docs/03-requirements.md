@@ -156,7 +156,14 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   If it fails, levers in order: (1) improve the code side: alias table, candidate list, name cleaning (biggest, cheapest);
   (2) give Jev better state (nearby streets, distance/direction, city); (3) try Claude on the leftovers instead;
   (4) no AI: code matches + review queue. The tool still works without Jev; it's an optional booster.
-- Open: Q10 review queue size · Q11 Jev access · R2.5 · runtime agent.
+- **Q9c DECIDED (by Hermes, user deferred: "pull, match, map back is fine"):** coverage is *reported*, not a pass/fail gate.
+  The hidden-GPS test prints accuracy + coverage per tier; the dashboard shows placed/review/unmatched counts.
+- **Q10 DECIDED (default, user didn't object):** review queue grouped by street pair (one decision places all its crashes),
+  top guesses shown on the map, "can't place" option, fixes saved only with approval, report flags a data limitation
+  if >10% of the study's crashes stay unplaced.
+- **Q11 RESOLVED by inspection:** Jev access exists: `TYPESAFE_API_KEY` in `~/.typesafe/credentials`; client shim at
+  `~/z0intelligence/shims/jevkit` (noul / choice / score; several questions per call; ~$0.042 per M input tokens).
+- Open: R2.5 intersection-only mode · runtime agent.
 
 ## Pipeline status
 `[new-tool] Stage 2: resumed 2026-10-16 in Hermes (grill-me). Requirements not locked yet.`
