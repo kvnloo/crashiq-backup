@@ -1,0 +1,461 @@
+<meta charset=utf-8><style>body{font-family:-apple-system,sans-serif;max-width:900px;margin:40px auto;line-height:1.5;padding:0 16px}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 8px}</style><h1>Industry Crash Analysis Exposes CrashIQ's Missing Layers</h1>
+<p>CrashIQ's v1 plan (pull CHP CCRS crashes for a drawn corridor, place crashes that lack coordinates, build a deterministic profile with cross-tabs, have an AI analyst write cited findings) does a solid job of the first step of standard practice: describing crash history. It leaves out the layers that engineers, reviewers and grant programs expect next. Federal practice under HSM Part B ranks sites by <strong>Empirical Bayes (EB) expected crashes</strong> rather than raw counts or rates, because raw numbers are distorted by regression to the mean. Federal regulation requires <strong>both systemic and spot</strong> safety programs. California's own funding rules differ from federal practice in ways the plan does not yet reflect. Local HSIP uses observed crashes (not EB), a closed list of <strong>86 Caltrans countermeasures with fixed CRFs</strong> (not CMF Clearinghouse values), 250-ft influence areas, five severity tables, and a mandatory <strong>collision diagram and collision list</strong>. The kickoff document explicitly defers that diagram. The research frontier (TRB ACS20, NCHRP Report 1152) is moving toward surrogate measures, connected-vehicle hard-braking data and LLM tooling, and pairs that work with a strong demand for human review and agreement with experts. CrashIQ's plan already reflects that caution. The commercial market has statewide HSM platforms costing hundreds of thousands of dollars a year, free TIMS, and a new AI-native competitor, <strong>Citian CRASH, already deployed by SCAG</strong> across Southern California. None of these products found generates California study-ready outputs such as HSIP Analyzer inputs, ISOAP Stage 1 safety packages or ATP crash narratives. That is CrashIQ's opening. Taking it means pulling collision diagrams into v1, replacing generic over-representation tests with the HSM's beta-binomial method, building a California-specific HSIP engine separate from the generic CMF engine, adding EB and systemic/HIN capability in v2, and resolving the "CrashIQ" name conflict before charging money.</p>
+<h2>Federal practice ranks sites by expected, not observed, crashes</h2>
+<p>The HSM organizes safety management as a six-step cycle in Part B: network screening, diagnosis, countermeasure selection, economic appraisal, project prioritization and effectiveness evaluation (<a href="https://www.highwaysafetymanual.org/Pages/hsm_parts.aspx">AASHTO HSM</a>). The key methodological point for a crash tool is that AASHTO deliberately moved screening <strong>away from crash rates</strong>. In AASHTO's words, rate analysis "assumes there is a linear relationship between traffic volume and the frequency of crashes," while expected-frequency methods "account for regression to the mean" and give "a more stable list of locations" (<a href="https://www.highwaysafetymanual.org/Pages/hsm_parts.aspx">AASHTO HSM</a>). FHWA's network screening guide calls three methods "advanced," meaning more reliable than traditional ones: EB-adjusted expected frequency, EB-adjusted excess expected frequency, and the probability that a specific crash type exceeds a threshold proportion. It recommends running more than one measure (<a href="https://highways.dot.gov/safety/data-analysis-tools/systemic/screening-your-network-improve-roadway-safety-performance">FHWA screening guide</a>). Peer-reviewed comparisons agree that "the most reliable methods are based on empirical Bayes" (<a href="https://pubmed.ncbi.nlm.nih.gov/32036107">AA&amp;P via PubMed</a>).</p>
+<p>The HSM measures therefore sort into three rigor tiers, which is a useful yardstick for any product:</p>
+<table>
+<thead>
+<tr>
+<th>Tier</th>
+<th>Measures</th>
+<th>Data needed</th>
+<th>Weakness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1 – Observed</td>
+<td>Crash frequency, crash rate, critical rate, EPDO, relative severity index</td>
+<td>Crashes (plus AADT for rates)</td>
+<td>Biased by regression to the mean; rates assume linearity</td>
+</tr>
+<tr>
+<td>2 – SPF, no EB</td>
+<td>Excess predicted frequency, LOSS</td>
+<td>Crashes, AADT, SPF</td>
+<td>Ignores the site's own history</td>
+</tr>
+<tr>
+<td>3 – Best practice</td>
+<td>EB expected, EB excess expected, EPDO with EB</td>
+<td>Crashes, AADT, inventory, calibrated SPF</td>
+<td>Needs volumes and SPFs</td>
+</tr>
+<tr>
+<td>Volume-free alternative</td>
+<td>Probability of specific crash type exceeding threshold proportion; excess proportion</td>
+<td>Crash type and location only</td>
+<td>Ignores volume; can flag sites that have few non-target crashes</td>
+</tr>
+</tbody>
+</table>
+<p>The threshold-proportion test is the one HSM method that needs no volumes and is "not affected by regression-to-the-mean bias" (<a href="https://highways.dot.gov/safety/data-analysis-tools/systemic/screening-your-network-improve-roadway-safety-performance">FHWA screening guide</a>). That matters directly to CrashIQ v1, which has no AADT unless the user types it in.</p>
+<p><strong>Prediction</strong> lives in HSM Part C. A base-condition safety performance function (SPF), a function of AADT, length or entering volumes, is adjusted for site conditions and calibrated locally. The result is then combined with the site's observed crashes through EB weighting (<a href="https://www.highwaysafetymanual.org/Pages/hsm_parts.aspx">AASHTO HSM</a>). EB, which dates to Hauer et al. (2002), remains "the workhorse of highway safety analysis" (<a href="https://arxiv.org/abs/2605.27889">arXiv 2605.27889</a>). The second edition (HSM2) is imminent but <strong>not confirmed published as of October 2026</strong>. FHWA said publication was "likely… in 2026," a TRB webinar in March 2026 still said "anticipated in 2026," and AASHTO's catalog still lists only HSM1 with its 2014 supplement (<a href="https://highways.dot.gov/media/110891">FHWA IHSDM plans</a>; <a href="https://webinar.mytrb.org/Webinars/Details/1905">TRB Webinar 1905</a>; <a href="https://downloads.transportation.org/publications/catalogs/aashto_designsafety_catalog.pdf">AASHTO catalog</a>).</p>
+<p>HSM2 changes the target for any predictive tool. It adds new total, KABC and KAB SPFs, pedestrian and bicycle SPFs, directional freeway models, new intersection types and roundabouts, an areawide (macro) chapter, and a <strong>systemic approach chapter</strong> that covers "allocating funds between systemic and crash-based projects." It also switches to the term "adjustment factors" inside Part C, keeping "CMF" for Part D and Clearinghouse values (<a href="https://www.highwaysafetymanual.org/Documents/AASHTO_HSM2_Update_webinar_20240618_Combined.pdf">AASHTO HSM2 webinar</a>). FHWA expects agencies to need transition time to calibrate the new models (<a href="https://highways.dot.gov/media/110891">FHWA IHSDM plans</a>). Caltrans is among roughly 25 states sponsoring the $1.57M HSM2 implementation pooled fund (<a href="https://rip.trb.org/View/2169804">TRB RIP 2169804</a>).</p>
+<p>The regulation sets a minimum that a pure hot-spot tool cannot meet. 23 CFR 924.9 requires states to develop "a comprehensive program of <strong>systemic and spot</strong> safety improvement projects." It also requires prioritization by fatal and serious-injury reduction potential and cost-effectiveness, and roadway data meeting the MIRE Fundamental Data Elements (<a href="https://www.ecfr.gov/current/title-23/section-924.9">eCFR 23 CFR 924.9</a>). The systemic approach finds locations by <strong>risk factors associated with severe crash types</strong>, not by crash counts. FHWA says this is the right method where sites "may not have enough crash history to reveal crash patterns" (<a href="https://highways.dot.gov/safety/local-rural/improving-safety-rural-local-and-tribal-roads-safety-toolkit/step-4-diagnose">FHWA Step 4 Diagnose</a>). FHWA's 2024 Systemic Safety User Guide replaced the 2013 SSPST (<a href="https://highways.dot.gov/safety/data-analysis-tools/systemic/systemic-safety-user-guide">FHWA</a>).</p>
+<p>On the software side, IHSDM development is discontinued; its 2021 release is final (<a href="https://highways.dot.gov/media/110891">FHWA IHSDM plans</a>). <strong>AASHTOWare Safety (powered by Numetric)</strong> is now the de facto benchmark for HSM-compliant screening. It offers segment and sliding-window screening with "Historical, Predictive, and Expected performance measures," custom SPFs, collision diagrams and Part C alternatives analysis (<a href="https://aashtoware.org/products/safety/aashtoware-safety-segment">AASHTOWare Segment</a>; <a href="https://aashtoware.org/products/safety/safety-alternative-design">Alternative Design</a>).</p>
+<p>Federal policy messaging also shifted in 2025–2026. FHWA withdrew its Safe System HSIP rulemaking in May 2025 (<a href="https://www.federalregister.gov/documents/2025/05/30/2025-09726/highway-safety-improvement-program-withdrawal">Federal Register</a>). In July 2026 it removed five items from the Proven Safety Countermeasures web list: road diets, bike lanes, appropriate speed limits, speed safety cameras and variable speed limits (<a href="https://www.npr.org/2026/07/16/nx-s1-5893672/dot-bike-lanes-speed-cameras-safety-measures">NPR</a>). A revised National Roadway Safety Strategy in August 2026 then dropped "Safer Speeds" (<a href="https://enotrans.org/article/trump-administration-safety-approach-varies-widely-from-past-strategies">Eno Center</a>). The technical base (HSM, CMF Clearinghouse, 23 CFR 924) did not change; the Clearinghouse was last updated September 25, 2026 (<a href="https://cmfclearinghouse.fhwa.dot.gov/">CMF Clearinghouse</a>). A pattern library tied to the current FHWA PSC web list would therefore be tied to the least stable source in the field.</p>
+<h2>California rewards observed crashes, fixed CRFs and complete paperwork</h2>
+<p>California's local practice deliberately departs from HSM best practice, and CrashIQ's California modes have to follow California's rules rather than the HSM's. Caltrans "has avoided using methodology requiring agencies to mathematically adjust their crash data (e.g., Empirical Bayes) and instead has opted to use 3 to 5 years of 'observed crashes' in estimating 'expected crashes.'" The reason given is that "the lack of reliable statewide traffic volumes for all roadway types precludes Caltrans from using the crash rate methodology" in HSIP ranking (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf">LRSM v1.7</a>). The LRSM's analysis core is <strong>crash frequency and crash rate</strong>, using the FHWA formulas (crashes per 100 million VMT for segments, per million entering vehicles for intersections). It recommends "at least 5 years of network-wide crash data," plus pattern review by type, severity, mode, pavement, time of day and control (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf">LRSM v1.7</a>). LRSM <strong>Version 1.8 (May 11, 2026)</strong> now governs Cycle 13 and supersedes v1.7 figures (<a href="https://dot.ca.gov/programs/local-assistance/fed-and-state-programs/highway-safety-improvement-program/apply-now">Cycle 13 call page</a>; <a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/cycle13-webinar-qa-20260721.pdf">Cycle 13 Q&amp;A</a>).</p>
+<p><strong>HSIP Cycle 13 is a fully deterministic benefit-cost exercise</strong>, which is exactly what CrashIQ's code-computes-every-number architecture is built to do. Applicants choose from <strong>86 countermeasures with fixed CRFs</strong>: 22 signalized-intersection, 25 non-signalized and 39 roadway. Each CRF is scoped to one crash subset: All (63), Ped &amp; Bike (18), Night (3), Emergency Vehicle (1) or Animal (1) (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/cycle13-webinar-slides-20260721.pdf">Cycle 13 slides</a>). CRFs stack multiplicatively, with each later CRF applied to the crashes remaining after the earlier ones. Annual benefit sums CRF × crashes × crash cost by severity, divided by the number of data years, and the BCR is life benefit divided by project cost. Crash costs in 2026 dollars put KA (fatal plus serious injury, combined since Cycle 7 to dampen randomness) at <strong>$2.379M at signalized intersections, $3.784M at non-signalized intersections and $3.276M on roadways</strong>, against $213k for B, $121k for C and $20k for PDO (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/hsipanalyzermanual2026bcrfinalapp.pdf">HSIP Analyzer Manual 2026</a>).</p>
+<p>The input rules are just as specific. The crash period must be <strong>3–5 years</strong>, optionally split to skip the <strong>2020–2022 COVID years</strong> (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/cycle13-webinar-qa-20260721.pdf">Cycle 13 Q&amp;A</a>). Each crash counts once at its most severe outcome, and sub-dataset counts cannot exceed the All dataset. Influence areas are fixed: all crashes <strong>within 250 ft</strong> of a new signal; for other intersection work, crashes within 250 ft in the affected directions, but only to mid-block when the next intersection is <strong>closer than 500 ft</strong>; and the improvement limits for longitudinal treatments. Extensions need written justification, and crashes not reported by law enforcement are excluded (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/hsipanalyzermanual2026bcrfinalapp.pdf">HSIP Analyzer Manual 2026</a>). Applications must attach a <strong>collision diagram</strong> and a matching <strong>collision list</strong> with excluded crashes crossed out, because reviewers look for "a pattern of collisions… susceptible to being reduced by the countermeasure" (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/applicationinstructions2026.pdf">Cycle 13 Application Instructions</a>).</p>
+<p>The minimum BCR to apply is <strong>5.0</strong>, but recent funding cutoffs were much higher:</p>
+<table>
+<thead>
+<tr>
+<th>Cycle</th>
+<th>Applications</th>
+<th>Selected</th>
+<th>$M</th>
+<th>BCR cutoff</th>
+<th>Avg BCR selected</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>9 (2018)</td>
+<td>351</td>
+<td>220</td>
+<td>180.8</td>
+<td>7.5</td>
+<td>17.7</td>
+</tr>
+<tr>
+<td>10 (2021)</td>
+<td>429</td>
+<td>268</td>
+<td>238.3</td>
+<td>12.0</td>
+<td>24.0</td>
+</tr>
+<tr>
+<td>11 (2023)</td>
+<td>434</td>
+<td>286</td>
+<td>231.6</td>
+<td>18.0</td>
+<td>35.5</td>
+</tr>
+<tr>
+<td>12 (2025)</td>
+<td>330</td>
+<td>288</td>
+<td>299.6</td>
+<td>7.0</td>
+<td>28.3</td>
+</tr>
+</tbody>
+</table>
+<p>Source: <a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/cycle13-webinar-slides-20260721.pdf">Cycle 13 slides</a>. Cycle 13 offers $370M and closes <strong>November 2, 2026</strong>. Caltrans keeps bike lanes and road diets on its list even though USDOT removed them from its PSC list; its guidance is "go with the appendix" (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/cycle13-webinar-qa-20260721.pdf">Cycle 13 Q&amp;A</a>). This is concrete evidence that California and federal countermeasure lists have diverged.</p>
+<p>On the State Highway System, <strong>ISOAP (September 2024) replaced the 2013 ICE policy</strong> with a two-stage, Safe-System-based process. Stage 1's initial safety assessment allows "the SPICE tool, Caltrans [TASAS] rate groups, crash modification factors, or other methods," alongside FHWA's Safe System for Intersections (SSI) score covering conflict points, kinetic energy and movement complexity, so <strong>SPICE is permitted, not mandated</strong>. Stage 2 predicts crash frequency and severity per strategy, using the HSM where applicable, and converts the result to a BCR with Caltrans crash costs. ISOAP applies to new intersections or major modifications on the SHS, including new connections or driveways with ADT of 1,000 or more and encroachment-permit projects, which makes it a real trigger for development studies (<a href="https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/isoap/20240910-isoap-process-info-guide--a11y.pdf">ISOAP Guide</a>).</p>
+<p>SPICE itself is an FHWA Excel macro whose calibration factors default to 1.0 (<a href="https://cmfclearinghouse.fhwa.dot.gov/collateral/FHWA-SA-18-026%20SPICE%20Tool%20User%20Guide%20(Final).pdf">SPICE User Manual</a>). For SHS facilities, Caltrans publishes average base crash rates and crash costs for <strong>31 intersection rate groups</strong>, plus highway and ramp tables, on data.ca.gov (last updated August 2026) (<a href="https://lab.data.ca.gov/dataset/2024-crash-data-on-state-highway-system/07f78e23-2381-4e59-a0e7-92f0c64022fe">CA Open Data</a>). Caltrans warns that only these base rates are refined enough for comparison (<a href="https://dot.ca.gov/-/media/dot-media/programs/research-innovation-system-information/documents/annual-collision-data/2021crashdataoncshwybook1a11y.pdf">Caltrans 2021 crash data book</a>). <strong>No equivalent statewide average exists for local roads.</strong></p>
+<p>The data layer changed in 2025. CHP shut off public iSWITRS on January 8, 2025, and CCRS on data.ca.gov became the raw source: per-year Crashes, Parties and InjuredWitnessPassengers files for 2016–2026, updated daily, public domain (<a href="https://chp.ca.gov/iswtrs">CHP</a>; <a href="https://data.ca.gov/dataset/ccrs">data.ca.gov CCRS</a>). TIMS remains the practitioner default. It geocodes about <strong>97%</strong> of SWITRS crashes using an Esri locator plus officer offset, with TSN postmile referencing on state highways (<a href="https://tims.berkeley.edu/help/crashdata/switrs-geocoding.php">TIMS geocoding</a>). The LRSM notes that TIMS excludes property-damage-only crashes (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf">LRSM v1.7</a>). CrashIQ's own spike found that only <strong>78% of 2024 CCRS crashes carry coordinates</strong>, falling to <strong>33–57% in Sacramento, San Francisco, San Diego and LA City</strong>, the urban corridors where most studies happen (<a href="file:///Users/Ak47/Desktop/Crash/docs/02-spike-ccrs.md">CrashIQ CCRS spike</a>). Police data also undercount severe injuries. San Francisco's hospital-linked records show police KSI is a lower bound (<a href="https://www.sfcta.org/sites/default/files/2022-11/SFCTA_Board_SFDPHHighInjuryNetwork_2022-11-15.pdf">SFCTA 2022 HIN</a>).</p>
+<p>Planning-level work in California increasingly means <strong>high-injury networks (HINs) under LRSP and SS4A</strong>. Local HSIP eligibility requires an LRSP or equivalent (SSAR, Vision Zero plan or SS4A Action Plan) updated within five years. Caltrans no longer funds LRSPs (<a href="https://dot.ca.gov/programs/local-assistance/fed-and-state-programs/highway-safety-improvement-program/local-roadway-safety-plans">Caltrans LRSP page</a>). SS4A requires a safety analysis covering "all roadways within the jurisdiction, without regard for ownership," including systemic analysis and "a high-injury network or equivalent" (<a href="https://www.transportation.gov/grants/ss4a/comprehensive-safety-action-plans">USDOT SS4A</a>). There is no single California HIN method:</p>
+<table>
+<thead>
+<tr>
+<th>City</th>
+<th>HIN method</th>
+<th>Result</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>San Francisco</td>
+<td>Linked police, hospital and death records; overlapping quarter-mile sections; 10 KSI per mile threshold</td>
+<td>13.3% of street miles, 74% of KSI</td>
+<td><a href="https://media.api.sf.gov/documents/2024_Vision_Zero_Network_Update_Methodology_For_Steering_Review_20260804_V.4_ca_for_HC.pdf">SF 2024 HIN</a></td>
+</tr>
+<tr>
+<td>Los Angeles</td>
+<td>Mode-weighted KSI with equity tracts and 16 systemic risk factors</td>
+<td>549 miles (7.5% of streets), 61.8% of KSI</td>
+<td><a href="https://ladot.lacity.gov/sites/default/files/documents/la-vision-zero-safety-study-2024.pdf">LADOT 2024</a></td>
+</tr>
+<tr>
+<td>San Diego</td>
+<td>Annual high-crash lists, rate ≥ mean + 1 SD, only intersections with ≥5 crashes, equity labels</td>
+<td>—</td>
+<td><a href="https://www.sandiego.gov/sites/default/files/2025-03/2024-high-crash-locations.pdf">San Diego 2024 memo</a></td>
+</tr>
+</tbody>
+</table>
+<p>For traffic studies, SB 743 made VMT the CEQA metric from July 2020. Caltrans promised a "simplified safety analysis approach" focused on multimodal conflicts and access management (<a href="https://dot.ca.gov/-/media/dot-media/programs/transportation-planning/documents/sb-743/2020-05-20-approved-vmt-focused-tisg-a11y.pdf">Caltrans TISG 2020</a>). A TIS safety section is therefore a review item, not a CEQA significance test. ATP Cycle 8 scores safety on "the history of pedestrian and bicycle collisions and the selected countermeasures" (<a href="https://catc.ca.gov/-/media/ctc-media/documents/programs/atp/cycle8/2027-atp-guidelines-a11y.pdf">CTC 2027 ATP Guidelines</a>).</p>
+<h2>Diagnosis remains a checklist that engineers must verify</h2>
+<p>HSM Chapter 5 defines diagnosis in three steps: a safety data review, a review of supporting documentation, and a field assessment. Its descriptive-statistics fields (date, day and time; crash type; KABCO severity; direction of travel; parties involved; road surface, lighting, weather and impairment) are effectively a specification for CrashIQ's cross-tab dimensions. The HSM suggests <strong>3 to 5 years</strong> of data "to improve the reliability of the diagnosis" (<a href="https://ftp.granit.unh.edu/submissions/NHDOTOUT/craig/HSM/Chapter%205_Diagnosis.pdf">HSM Ch. 5 draft</a>). Collision diagrams are central. They are a plan view of crash type and direction, which the HSM says is more efficiently produced "with software" for multiple sites, and are paired with a field-drawn condition diagram. The HSM flags a location-coding pitfall: crashes coded to the intersection centerline "may misrepresent actual crash locations" (<a href="https://ftp.granit.unh.edu/submissions/NHDOTOUT/craig/HSM/Chapter%205_Diagnosis.pdf">HSM Ch. 5 draft</a>).</p>
+<p>Chapter 6 maps crash patterns to "possible contributing factors" by facility type. The draft exhibits cover segments, signalized and unsignalized intersections, rail crossings, pedestrians and bicyclists. Their stated purpose is to "minimize the probability that a major contributing factor will be overlooked." The HSM insists that linking factors to countermeasures "requires engineering judgment and local knowledge" (<a href="https://ftp.granit.unh.edu/submissions/NHDOTOUT/craig/HSM/Chapter%206_SelectingCountermeasures.pdf">HSM Ch. 6 draft</a>). FHWA reinforces this: "most crashes cannot be related to a singular causal event" (<a href="https://highways.dot.gov/safety/local-rural/improving-safety-rural-local-and-tribal-roads-safety-toolkit/step-4-diagnose">FHWA Step 4</a>). CrashIQ's pattern library therefore has to output <em>candidates for field verification</em>, not diagnosed causes.</p>
+<p><strong>The only HSM-sanctioned over-representation test is a beta-binomial method</strong>: the "Probability of Specific Crash Types Exceeding Threshold Proportion," with its extension "Excess Proportion." Sites are grouped into reference populations of similar sites (for example signalized versus two-way stop-controlled). The site proportion is computed only where the site has <strong>two or more target crashes</strong>, and the threshold is the pooled proportion across the reference population. Beta parameters come from the sample variance, sites are ranked by P(p_i &gt; p*), and excess proportion is reported above a limiting probability such as 90% (<a href="https://ftp.granit.unh.edu/submissions/NHDOTOUT/craig/HSM/Chapter%204_NetworkScreening.pdf">HSM Ch. 4 draft</a>). The HSM allows the test for "collision type or crash severity," so the same calculation works for night, wet, ped/bike or KA shares. Its known weaknesses are that it ignores volume and can flag a site simply because it has few non-target crashes. Oregon DOT therefore pairs it with critical crash rate (<a href="https://www.oregon.gov/odot/Planning/Documents/APMv2_App4A.pdf">ODOT APM App. 4A</a>). A Utah-related FHWA report notes that proportion tests cannot detect elevated severity within a crash type (<a href="https://rosap.ntl.bts.gov/view/dot/88627/dot_88627_DS1.pdf">ROSAP 88627</a>). No HSM, FHWA or Caltrans source prescribes chi-square or z-tests, or multiple-comparison corrections across cross-tab cells. A tool that uses them is going beyond standard practice and must say so.</p>
+<p>Several machine-readable countermeasure sources exist. <strong>LRSM v1.8 Appendix B</strong> gives each countermeasure "where to use" text that works as a symptom trigger; intersection lighting, for example, is indicated where there is "a disproportionate number of night-time crashes" (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/hsipanalyzermanual2026bcrfinalapp.pdf">HSIP Analyzer Manual 2026</a>). <strong>FHWA's FCFT guide</strong> maps focus crash types to contributing factors and then to countermeasures, while warning that a predictive approach "is more reliable than an approach based only on cross-tabulations" (<a href="https://www.govinfo.gov/content/pkg/GOVPUB-TD2-PURL-gpo154695/pdf/GOVPUB-TD2-PURL-gpo154695.pdf">FHWA-HRT-20-053</a>). <strong>PEDSAFE</strong> maps 12 PBCAT crash-type groups to causes and countermeasures (<a href="https://pedbikesafe.org/PEDSAFE/guide_analysis_CrashTypeAnalysis.cfm">PEDSAFE</a>), and <strong>STEP</strong> keys pedestrian-crossing treatments to lanes, speed and AADT (<a href="https://rosap.ntl.bts.gov/view/dot/43674/dot_43674_DS1.pdf">FHWA STEP</a>). The <strong>CMF Clearinghouse</strong> rates CMFs from 1 to 5 stars on a 150-point scale, where 3 stars needs at least 75 points (<a href="https://cmfclearinghouse.fhwa.dot.gov/sqr.php">CMF Clearinghouse SQR</a>).</p>
+<p>On combining CMFs, FHWA research found that multiplication "overestimates the actual reduction in a majority of instances" and recommended "that no more than two CMFs be combined" (<a href="https://cmfclearinghouse.fhwa.dot.gov/collateral/Combining_Multiple_CMFs_Final.pdf">FHWA Combining CMFs</a>). Caltrans HSIP takes a different line. It multiplies sequentially and allows up to three countermeasures per category (SI, NS, R), so up to nine per project (<a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/cycle13-webinar-qa-20260721.pdf">Cycle 13 Q&amp;A, Q29</a>). A countermeasure engine therefore needs separate California and generic rule sets.</p>
+<p>Pulled together, these sources define what a <strong>defensible finding</strong> should carry: the data period, the crash-location assignment rule, the reference population and threshold, the test statistic and limiting probability, the guideline row used for each contributing factor, the CMF ID and star rating, and explicit items requiring field verification (<a href="https://ftp.granit.unh.edu/submissions/NHDOTOUT/craig/HSM/Chapter%205_Diagnosis.pdf">HSM Ch. 5</a>; <a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf">LRSM</a>; <a href="https://cmfclearinghouse.fhwa.dot.gov/sqr.php">CMF Clearinghouse</a>). No single published reviewer checklist exists. This list is compiled from method guidance.</p>
+<h2>Research is shifting to leading indicators and audited AI</h2>
+<p>The January conference in Washington is the TRB Annual Meeting (105th, January 11–15, 2026) (<a href="https://www.nationalacademies.org/events/886">National Academies</a>). The crash-analytics committees are <strong>ACS20 Safety Performance and Analysis</strong> (SPFs, EB, screening, CMFs, surrogates, crash data), <strong>ACS10 Transportation Safety Management Systems</strong> (programs and policy, with a Caltrans member) and <strong>AED60 Statistical and Econometric Methods</strong>. ACS20's free annual synthesis is the best map of the field (<a href="https://trbacs20.org/wp-content/uploads/2025/01/104th-TRBAM-Synthesis-Report-on-Safety-Related-Papers.pdf">104th Synthesis</a>). In 2025, papers clustered in crash data and analysis (176), severity prediction (93), connected and automated vehicle effects (77) and surrogate measures (62). Only 18 were on network screening and 15 on SPFs (<a href="https://trbacs20.org/wp-content/uploads/2025/01/104th-TRBAM-Synthesis-Report-on-Safety-Related-Papers.pdf">104th Synthesis</a>). SPF/EB practice is mature. The new work is in leading indicators and machine learning.</p>
+<p>Five research fronts matter for CrashIQ. The first is <strong>surrogate safety measures and connected-vehicle hard braking</strong>. Google Research linked Android Auto hard-braking events to police-reported crashes in <strong>California (from CCRS)</strong> and Virginia using negative binomial regression. Hard-braking events appeared on 18× more segments than reported crashes did, and the hard-braking rate was significantly associated with crash rate (<a href="https://arxiv.org/abs/2601.06327">arXiv 2601.06327</a>, preprint; <a href="https://research.google/blog/hard-braking-events-as-indicators-of-road-segment-crash-risk">Google blog</a>). The field has not yet accepted this for agency decisions. NCHRP 17-149, on whether hard braking is reliable as a surrogate, is still an unawarded FY2027 project (<a href="http://apps.trb.org/cmsfeed/TRBNetProjectDisplay.asp?ProjectID=6054">TRB</a>). The second is <strong>LLMs on crash narratives</strong>: a fine-tuned RoBERTa model reached F1 0.90 on secondary-crash identification, against 0.86 for zero-shot LLaMA3-70B (<a href="https://arxiv.org/abs/2508.04399">arXiv 2508.04399</a>, preprint). An IEEE ITSC 2025 paper found that higher-accuracy models often agreed <em>less</em> with experts, and argued for Cohen's kappa and expert-agreement metrics (<a href="https://arxiv.org/abs/2504.13068">arXiv 2504.13068</a>). The remaining three are <strong>Safe System kinetic-energy metrics</strong> such as the Kinetic Velocity Index for FSI probability, which builds on FHWA's SSI (<a href="https://trid.trb.org/View/2652210">TRID 2652210</a>); <strong>equity disparity analysis</strong> (<a href="https://highways.dot.gov/sites/fhwa.dot.gov/files/FHWA-HRT-25-035.pdf">FHWA-HRT-25-035</a>); and <strong>ML frequency and severity models paired with SHAP</strong> for interpretability (<a href="https://sciencedirect.com/science/article/pii/S0001457522000537">AA&amp;P 2022</a>).</p>
+<p>The authoritative AI benchmark is <strong>NCHRP Research Report 1152 (2025)</strong>, <em>Leveraging AI and Big Data to Enhance Safety Analysis</em>. It sets out a requirements-first, seven-step ML design process. It warns that decision trees are unstable and SVM/KNN models opaque, and that neural networks transfer poorly between sites. Its example workflow has an engineer double-checking ML output (<a href="https://nap.nationalacademies.org/resource/29098/9780309599603_508.pdf">NCHRP 1152</a>).</p>
+<p>The foundational warning still applies: prediction accuracy and causal validity trade off in safety models (<a href="https://sciencedirect.com/science/article/pii/S2213665720300038">Mannering et al. 2020</a>). ML can serve as a secondary flag. SPF/EB stays authoritative, and an AI write-up must never present an association as a CMF. CrashIQ's design (code computes every number, findings cite tables, the user approves) already matches NCHRP 1152's posture. What it lacks is an expert-agreement metric in its evaluation.</p>
+<h2>Competitors own dashboards and maps, not California study outputs</h2>
+<p>The market falls into four groups. <strong>Statewide HSM platforms</strong> are led by AASHTOWare Safety/Numetric, which Arizona DOT says 16 states use (<a href="https://aset.az.gov/sites/default/files/2025-08/DT25009%20PIJ%20FINAL%20082025.pdf">AZ PIJ</a>). <strong>Local crash-records and collision-diagram tools</strong> include Crash Magic, Crossroads and TIMS; Crash Magic's maker also sells Road Position Magic, a paid service that geocodes crashes by walking them from the nearest intersection by distance and direction (<a href="https://pdmagic.com/gis/rpm">pdmagic RPM</a>), which is the commercial analogue of CrashIQ's J1 placement step. <strong>Big-data platforms</strong> added LLM agents in 2026: INRIX Compass in March and the Replica + Arity Safety Hub in June (<a href="https://inrix.com/press-releases/inrix-launches-compass-ai-platform-to-help-cities-reduce-systemic-roadway-safety-risk/">INRIX</a>; <a href="https://replicahq.com/safety-hub">Replica</a>). <strong>Video and lidar near-miss analytics</strong> come from Miovision, Derq and TrafxSAFE (<a href="https://miovision.com/safety-studies/">Miovision</a>; <a href="https://en.derq.com/press-coverage/derq-advances-traffic-safety-intelligence-with-next-generation-of-insight">Derq</a>). Kittelson's crashKIT runs HSM screening measures without GIS skills (<a href="https://crashkit.kittelsonsoftware.com/">crashKIT</a>).</p>
+<p>Prices span a wide range. AASHTOWare Safety in California's pricing tier (Group 3) lists at <strong>$385k per year per module</strong> for Segment and Intersection, plus $25k implementation units (<a href="https://www.aashtoware.org/wp-content/uploads/2026/06/FY-2027-AASHTOWare_Catalog_web.pdf">AASHTOWare FY2027 Catalog</a>). Urban SDK's municipal contracts run about <strong>$8.5k–$35k per year</strong> (<a href="https://motioncount.com/items/imperialCA_e5e356ac_2575">Imperial, CA</a>; <a href="https://cleveland.com/community/2026/03/olmsted-falls-considering-modern-police-department-gps-speeding-software-service.html">Olmsted Falls</a>). TIMS, the HSIP Analyzer and SPICE are free. No seat-priced, consultant-targeted California crash product was found. CrashIQ's real competitor is "free TIMS + Excel + staff hours."</p>
+<p><strong>Citian CRASH is the direct threat.</strong> It advertises AI and NLP data cleanup, collision diagrams, an HSM-tied countermeasure engine ranked by B/C, HSIP screening dashboards and "grant-ready outputs" (<a href="https://www.citian.co/crash">Citian</a>). SCAG is rolling it out to "SCAG and partner agencies, including cities, counties, and consultants working on their behalf" (<a href="https://scag.ca.gov/sites/default/files/2025-02/tt_jan2025_part1_combined.pdf">SCAG Toolbox Tuesday</a>). That may make it free to CrashIQ's natural Southern California buyers. Its public pages do not claim to produce Caltrans HSIP Analyzer inputs, ISOAP packages or ATP formats.</p>
+<p>AASHTOWare sells services to "automate reports that currently require consultative engagements" (<a href="https://www.aashtoware.org/wp-content/uploads/2026/06/FY-2027-AASHTOWare_Catalog_web.pdf">AASHTOWare catalog</a>). That confirms agencies pay for recurring report writing. None of the products found writes evidence-cited narrative findings from crash records in a study-report format.</p>
+<p><strong>The name "CrashIQ" is already in use</strong> by an open-source MCP project (US accident-severity ML) and a Blink-built AI accident-documentation app (<a href="https://lobehub.com/mcp/sandeeppudi-crashiq-road-accident-severity-intelligence-platform">LobeHub</a>; <a href="https://blink.new/p/crashiq-ai-platform-qxnij27p">Blink</a>). Neither is a traffic engineering product, but both are a trademark and search issue for a paid launch.</p>
+<h2>CrashIQ's plan covers the profile but misses five standard layers</h2>
+<p>Set against the industry, the plan's real strengths are <strong>fresher data</strong> (direct CCRS, including the partial current year, which TIMS publishes later) and <strong>placement of crashes that lack coordinates</strong>. That is a problem Pd' sells as a separate service, and the spike shows it hits urban CCRS hardest. Its third strength is the <strong>auditable AI analyst</strong>, which no competitor offers in study format. The gaps are concentrated in what happens after the profile.</p>
+<table>
+<thead>
+<tr>
+<th>Industry expectation</th>
+<th>Source</th>
+<th>CrashIQ plan today</th>
+<th>Gap</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Collision diagram + matching collision list</td>
+<td>HSM Ch. 5; mandatory for Caltrans HSIP; offered by TIMS, Numetric, Citian, Crash Magic</td>
+<td>Kickoff: "Not building… collision-diagram drawing (later)"</td>
+<td><strong>Critical.</strong> HSIP attachment; core diagnosis output</td>
+</tr>
+<tr>
+<td>HSIP B/C using LRSM v1.8 86 countermeasures, fixed CRFs, costs, influence areas, subset tables</td>
+<td>HSIP Analyzer Manual 2026</td>
+<td>v3 = "CMF Clearinghouse countermeasures + B/C"</td>
+<td><strong>Critical mismatch.</strong> Clearinghouse CMFs are not what Caltrans scores</td>
+</tr>
+<tr>
+<td>Over-representation against a reference population of similar sites (beta-binomial, ≥2 target crashes)</td>
+<td>HSM Ch. 4/5</td>
+<td>"Over-representation tests vs a baseline (corridor/city/county)", method unspecified</td>
+<td><strong>Major.</strong> Method and baseline undefined; multiple-comparison risk</td>
+</tr>
+<tr>
+<td>Regression-to-the-mean-aware ranking (EB expected/excess) for prediction and corridor ranking</td>
+<td>HSM Part B/C; FHWA</td>
+<td>Counts and crashes/mi/yr; rates only with manual AADT; no SPFs except SPICE in v2</td>
+<td><strong>Major</strong> for "predict future crashes"; not needed for HSIP</td>
+</tr>
+<tr>
+<td>"Rates vs statewide averages"</td>
+<td>R1 TIS mode</td>
+<td>Planned without a defined source</td>
+<td><strong>Major.</strong> Exists only for SHS (31 intersection rate groups); none for local roads</td>
+</tr>
+<tr>
+<td>Systemic analysis and HIN</td>
+<td>23 CFR 924.9; SS4A; HSM2 Ch. 12; LRSM</td>
+<td>LRSP listed as a mode, but corridor-only scope, no HIN or risk factors</td>
+<td><strong>Major</strong> for LRSP/SS4A</td>
+</tr>
+<tr>
+<td>ISOAP Stage 1 safety assessment</td>
+<td>ISOAP Guide 2024</td>
+<td>v2 SPICE only</td>
+<td><strong>Moderate.</strong> Missing SSI score and TASAS rate-group comparison</td>
+</tr>
+<tr>
+<td>CCRS → KABCO → HSIP five-severity mapping; per-crash counting; PDO inclusion</td>
+<td>HSIP Analyzer; TIMS lacks PDO</td>
+<td>KSI from InjuredWitnessPassengers</td>
+<td><strong>Moderate.</strong> PDO and severity codes unverified</td>
+</tr>
+<tr>
+<td>Data-quality caveats: provisional years, COVID 2020–2022, police under-reporting, location tiers</td>
+<td>Cycle 13 Q&A; SF HIN</td>
+<td>Preliminary flag, COVID note, location tiers</td>
+<td><strong>Minor.</strong> Add under-reporting and small-sample/RTM language</td>
+</tr>
+<tr>
+<td>Field-verification flags and condition-diagram prompts</td>
+<td>HSM Step 3; HSM Ch. 6</td>
+<td>Not explicit</td>
+<td><strong>Moderate.</strong> Findings risk reading as causes</td>
+</tr>
+<tr>
+<td>SPF calibration and HSM2 readiness</td>
+<td>FHWA; HSM2</td>
+<td>"Not building our own SPF calibration"</td>
+<td><strong>Moderate.</strong> Needs at least user-entered calibration factors</td>
+</tr>
+<tr>
+<td>Equity overlay</td>
+<td>DP-36; LA; San Diego</td>
+<td>None</td>
+<td><strong>Minor</strong></td>
+</tr>
+<tr>
+<td>Surrogates and connected-vehicle hard braking</td>
+<td>TRB frontier</td>
+<td>None</td>
+<td><strong>Future.</strong> Experimental only</td>
+</tr>
+</tbody>
+</table>
+<p>The single biggest contradiction is between the kickoff's deferral of collision diagrams and the Caltrans application rule that requires them. The second is v3's reliance on the CMF Clearinghouse for HSIP B/C, when California scores HSIP only with its own CRF table.</p>
+<h2>Prioritized recommendations by release</h2>
+<p>The ordering follows two principles. First, fix whatever would make a v1 deliverable unacceptable to a California reviewer. Second, bring forward the deterministic California outputs that no competitor automates, because those are the reasons to buy.</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Release</th>
+<th>Recommendation</th>
+<th>Why (evidence)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>v1</strong></td>
+<td>Generate a <strong>collision list and a schematic collision diagram</strong> per intersection and segment. Bucket crashes by manner of collision, vehicle 1/2 direction and movement, and first harmful event. Allow manual corrections and expose the source record for QA. A drawn diagram can be simple; the list must match it and support "crossed-out" exclusions.</td>
+<td>Required HSIP attachment; HSM diagnosis core; TIMS offers it free (<a href="https://tims.berkeley.edu/help/tools/analysis/crash-diagram.php">TIMS Crash Diagram</a>)</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>v1</strong></td>
+<td>Replace the generic "over-representation vs baseline" with the <strong>HSM threshold-proportion (beta-binomial) test</strong> against a reference population of similar locations (same control and facility type). Enforce ≥2 target crashes and a user-set limiting probability (default 0.90). Report p_i, p<em>, P(p_i&gt;p</em>) and excess proportion. Always pair it with a frequency or rate measure. Label any chi-square/z test as beyond standard practice and apply a multiple-comparison control.</td>
+<td><a href="https://ftp.granit.unh.edu/submissions/NHDOTOUT/craig/HSM/Chapter%204_NetworkScreening.pdf">HSM Ch. 4</a>; <a href="https://www.oregon.gov/odot/Planning/Documents/APMv2_App4A.pdf">ODOT pairing</a></td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>v1</strong></td>
+<td>Define the <strong>rate comparison honestly</strong>. Use the LRSM rate formulas. For SHS corridors, load the Caltrans <strong>31 intersection rate groups</strong> and highway/ramp base rates from data.ca.gov. For local roads, offer only peer-group or jurisdiction-internal benchmarks (e.g., San Diego's mean + 1 SD with a minimum crash count) and label them as such. Drop the wording "statewide average" for local streets.</td>
+<td><a href="https://lab.data.ca.gov/dataset/2024-crash-data-on-state-highway-system/07f78e23-2381-4e59-a0e7-92f0c64022fe">Caltrans SHS data</a>; <a href="https://www.sandiego.gov/sites/default/files/2025-03/2024-high-crash-locations.pdf">San Diego</a></td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>v1</strong></td>
+<td>Build a <strong>severity and counting layer</strong>: CCRS → KABCO → the HSIP Analyzer's five severities, one count per crash at its most severe outcome, KA combined. Verify PDO presence in CCRS early. If PDO is present, it is a differentiator over TIMS.</td>
+<td><a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/hsipanalyzermanual2026bcrfinalapp.pdf">HSIP Analyzer Manual</a>; <a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2024/lrsm2024-v2.pdf">LRSM on TIMS PDO</a></td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>v1</strong></td>
+<td>Seed the <strong>pattern library</strong> from HSM Ch. 6 contributing-factor tables, LRSM v1.8 Appendix B "where to use" triggers, FCFT, PEDSAFE and STEP, rather than from the FHWA PSC web list (keep PSC only as a tag). Every finding should say "possible contributing factors — verify in field" and list field-only checks (sight distance, signal visibility, pavement).</td>
+<td><a href="https://ftp.granit.unh.edu/submissions/NHDOTOUT/craig/HSM/Chapter%206_SelectingCountermeasures.pdf">HSM Ch. 6</a>; <a href="https://www.npr.org/2026/07/16/nx-s1-5893672/dot-bike-lanes-speed-cameras-safety-measures">PSC removals</a>; <a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/cycle13-webinar-qa-20260721.pdf">Caltrans "go with the appendix"</a></td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>v1</strong></td>
+<td>Attach a <strong>standard audit block</strong> to every finding: data period and provisional years, assignment rule (250 ft plus the 500 ft mid-block rule), reference population, test statistic, library row ID, location-provenance mix, and caveats on regression to the mean, small numbers and police under-reporting ("KSI is a lower bound").</td>
+<td>HSM/LRSM defensibility elements; <a href="https://www.sfcta.org/sites/default/files/2022-11/SFCTA_Board_SFDPHHighInjuryNetwork_2022-11-15.pdf">SF HIN</a></td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>v1</strong></td>
+<td>Add <strong>expert-agreement scoring (Cohen's kappa)</strong> to the model bake-off alongside findings-correct and citation-pass rates. Benchmark crash placement against the TIMS geocode as a second reference, in addition to the hidden-GPS test.</td>
+<td><a href="https://arxiv.org/abs/2504.13068">arXiv 2504.13068</a>; <a href="https://nap.nationalacademies.org/resource/29098/9780309599603_508.pdf">NCHRP 1152</a>; <a href="https://tims.berkeley.edu/help/crashdata/switrs.php">TIMS 97%</a></td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Pre-launch</strong></td>
+<td>Run a trademark search and pick a new name if needed. Find out whether SCAG's Citian CRASH access covers consultants and what it exports before setting prices. Position against "TIMS + Excel + hours," not against AASHTOWare.</td>
+<td><a href="https://lobehub.com/mcp/sandeeppudi-crashiq-road-accident-severity-intelligence-platform">Name conflicts</a>; <a href="https://scag.ca.gov/sites/default/files/2025-02/tt_jan2025_part1_combined.pdf">SCAG</a></td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>v2 (pull forward)</strong></td>
+<td>Split v3 into two engines and ship the <strong>California HSIP engine first</strong>. It needs: the LRSM v1.8 86-countermeasure table with CRF, life and crash-subset scope; Caltrans 2026 crash costs; influence-area clipping; All/Night/P&amp;B/EV/Animal tables; a 3–5 year window with a COVID toggle; ≤3 countermeasures per category; special rules (roundabout alone, R15–R18 incremental, NS03 warrant sheet, SI02+SI07 exclusion); an Analyzer-ready input sheet; and a <strong>shadow BCR compared with recent cutoffs (7.0–18.0)</strong>. This is the most deterministic and least contested output and has no automated competitor.</td>
+<td><a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/hsipanalyzermanual2026bcrfinalapp.pdf">HSIP Analyzer Manual</a>; <a href="https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/cycle13-webinar-slides-20260721.pdf">Cycle 13 slides</a></td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>v2</strong></td>
+<td>Frame ISOAP mode as an <strong>ISOAP Stage 1 package</strong>: observed CCRS history by type and severity; SPICE-equivalent predicted crashes per control alternative (golden-tested, calibration factor input, default 1.0 flagged); <strong>SSI conflict-point and kinetic-energy scoring</strong>; and an optional TASAS rate-group comparison. Add intersection-only mode.</td>
+<td><a href="https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/isoap/20240910-isoap-process-info-guide--a11y.pdf">ISOAP Guide</a>; <a href="https://cmfclearinghouse.fhwa.dot.gov/collateral/FHWA-SA-18-026%20SPICE%20Tool%20User%20Guide%20(Final).pdf">SPICE manual</a></td>
+</tr>
+<tr>
+<td>11</td>
+<td><strong>v2</strong></td>
+<td>Reuse the SPICE SPF machinery to add <strong>EB expected and excess-expected crashes</strong> for corridor intersections and urban-arterial segments, with sliding-window segment screening. Store SPFs in a <strong>versioned, configurable library</strong> ready for HSM2 KABC/KAB and ped/bike models and AF terminology. Keep HSIP mode on observed crashes.</td>
+<td><a href="https://highways.dot.gov/safety/data-analysis-tools/systemic/screening-your-network-improve-roadway-safety-performance">FHWA screening guide</a>; <a href="https://www.highwaysafetymanual.org/Documents/AASHTO_HSM2_Update_webinar_20240618_Combined.pdf">HSM2 webinar</a></td>
+</tr>
+<tr>
+<td>12</td>
+<td><strong>v2</strong></td>
+<td>Add a <strong>jurisdiction-boundary mode for LRSP/SS4A</strong>: a KSI baseline and trends by mode, crash type and PCF; HIN presets (SF-style quarter-mile sliding KSI/mile, LA-style mode-weighted, San Diego mean + 1 SD), with the chosen method stated in the report; and an optional equity overlay.</td>
+<td><a href="https://www.transportation.gov/grants/ss4a/comprehensive-safety-action-plans">SS4A</a>; <a href="https://media.api.sf.gov/documents/2024_Vision_Zero_Network_Update_Methodology_For_Steering_Review_20260804_V.4_ca_for_HC.pdf">SF</a>; <a href="https://ladot.lacity.gov/sites/default/files/documents/la-vision-zero-safety-study-2024.pdf">LA</a></td>
+</tr>
+<tr>
+<td>13</td>
+<td><strong>v3</strong></td>
+<td>Build a <strong>generic CMF engine</strong> for non-HSIP studies, using Clearinghouse CMFs with star rating, applicability ranges and crash-type scope. Warn when more than two CMFs are combined and show FHWA's conservative alternative alongside the multiplicative result. Add an <strong>ATP mode</strong> with ped/bike-only history and a hazard → countermeasure narrative.</td>
+<td><a href="https://cmfclearinghouse.fhwa.dot.gov/collateral/Combining_Multiple_CMFs_Final.pdf">Combining CMFs</a>; <a href="https://catc.ca.gov/-/media/ctc-media/documents/programs/atp/cycle8/2027-atp-guidelines-a11y.pdf">ATP Guidelines</a></td>
+</tr>
+<tr>
+<td>14</td>
+<td><strong>v3</strong></td>
+<td>Add a <strong>systemic risk-factor layer</strong>: compare attributes of severe focus-crash sites with all sites (curves, lanes, speed, control, from OSM/user inventory) and score sites that have no crash history.</td>
+<td><a href="https://highways.dot.gov/safety/data-analysis-tools/systemic/systemic-safety-project-selection-tool/element-1-systemic">FHWA Systemic Element 1</a></td>
+</tr>
+<tr>
+<td>15</td>
+<td><strong>Later / experimental</strong></td>
+<td>Add connected-vehicle hard braking and video conflicts as clearly labeled <strong>experimental leading indicators</strong>, never as screening results. Use ML only as secondary flags with SHAP explanations. Consider LLM narrative QC only if CCRS exposes narratives (unverified).</td>
+<td><a href="https://arxiv.org/abs/2601.06327">arXiv 2601.06327</a>; <a href="http://apps.trb.org/cmsfeed/TRBNetProjectDisplay.asp?ProjectID=6054">NCHRP 17-149</a></td>
+</tr>
+</tbody>
+</table>
+<p>Two items in the current plan should stay as they are. The <strong>5-year default window</strong> is right, but the tool should warn when a study uses fewer than 3 years or falls outside HSIP's 3–5 years. The <strong>250 ft default influence radius</strong> is right because it matches Caltrans HSIP; the 500 ft mid-block rule should be added.</p>
+<h2>Confirmed facts versus items still unverified</h2>
+<p>Everything cited above was confirmed from a primary or named source in the research notes. The items below were flagged as unverified or conflicting, and none should appear in product text until checked.</p>
+<table>
+<thead>
+<tr>
+<th>Item</th>
+<th>Status</th>
+<th>Action before relying on it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>HSM2 publication</td>
+<td>Not confirmed published as of Oct 2026; all sources say "anticipated 2026"</td>
+<td>Watch the AASHTO store; design SPF library for both editions</td>
+</tr>
+<tr>
+<td>Full list of 13 HSM1 screening measures; Part C formula N_pred = N_spf × ΣCMF × C; EB weight w = 1/(1+k·ΣN_pred)</td>
+<td>From researcher's HSM knowledge, not re-verified online</td>
+<td>Verify against licensed HSM before documenting</td>
+</tr>
+<tr>
+<td>HSM exhibit numbers (6-3 to 6-8) and beta-binomial worked example</td>
+<td>From 2009 pre-publication draft; the draft's α/β example is internally inconsistent</td>
+<td>Golden-test the implementation against the published HSM sample problem</td>
+</tr>
+<tr>
+<td>Critical-rate formula and its status in HSM2</td>
+<td>Unsourced</td>
+<td>Source from a state DOT manual before implementing</td>
+</tr>
+<tr>
+<td>CCRS data dictionary, severity codes, <strong>PDO inclusion</strong></td>
+<td>Not retrieved</td>
+<td>Inspect CCRS before building the severity layer</td>
+</tr>
+<tr>
+<td>CCRS "Created Sept 30, 2026" republication; LA City 2024 count looks low (flag F2)</td>
+<td>Unexplained</td>
+<td>Resolve resource IDs at runtime; check one corridor against TIMS</td>
+</tr>
+<tr>
+<td>Full LRSM v1.8 tables (all 86 CRFs), v1.8 change log, roundabout CRF procedure, Analyzer discounting</td>
+<td>Partially extracted</td>
+<td>Extract programmatically from <code>lrsm2026final.pdf</code></td>
+</tr>
+<tr>
+<td>Countermeasure cap</td>
+<td>LRSM v1.7: 3 per site; Cycle 13 Q&amp;A: 3 per category (9 per project)</td>
+<td>Follow Cycle 13 Application Instructions</td>
+</tr>
+<tr>
+<td>HSIP delivery-ineligibility rule</td>
+<td>Sources conflict ("one" vs "two or more")</td>
+<td>Application Instructions govern</td>
+</tr>
+<tr>
+<td>ISOAP Stage 2 crash costs; TOPD 13-02 rescission; SPICE version after 2018</td>
+<td>Not located</td>
+<td>Contact District ISOAP coordinator</td>
+</tr>
+<tr>
+<td>Caltrans "simplified safety analysis" guidance promised in 2020 TISG</td>
+<td>Not confirmed published</td>
+<td>Check Caltrans LD-IGR guidance</td>
+</tr>
+<tr>
+<td>ATP Cycle 8 safety point weights; ~$619M fund estimate</td>
+<td>Not extracted / secondary source only</td>
+<td>Read CTC rubric PDFs</td>
+</tr>
+<tr>
+<td>SS4A deadline May 26, 2027 and post-2026 funding</td>
+<td>Probably a later NOFO; depends on reauthorization</td>
+<td>Verify on USDOT before marketing SS4A mode</td>
+</tr>
+<tr>
+<td>FHWA PSC removals</td>
+<td>Confirmed by NPR and NACTO, not by an FHWA notice; some FHWA pages still say "28 PSCs"</td>
+<td>Treat PSC as a tag, not a source of truth</td>
+</tr>
+<tr>
+<td>Citian CRASH export formats, SCAG access terms for consultants, contract value</td>
+<td>Unknown</td>
+<td>Ask SCAG or request a demo before pricing</td>
+</tr>
+<tr>
+<td>Caltrans licensing of AASHTOWare Safety; NH $810k Numetric contract</td>
+<td>No record found; NH figure from a third-party mirror</td>
+<td>Do not cite in sales material</td>
+</tr>
+<tr>
+<td>Systemic Safety User Guide 2024 step count</td>
+<td>Five vs six steps depending on source</td>
+<td>Read the PDF directly</td>
+</tr>
+<tr>
+<td>HSM recommended crash-years for screening; calibration sample sizes</td>
+<td>Diagnosis 3–5 yrs (draft) confirmed; screening and calibration figures not verified</td>
+<td>Source before quoting</td>
+</tr>
+<tr>
+<td>Hard braking as a validated surrogate</td>
+<td>Preprint evidence only; NCHRP 17-149 unawarded</td>
+<td>Keep experimental</td>
+</tr>
+</tbody>
+</table>
+<h2>Conclusion</h2>
+<p>The research changes what CrashIQ's main bet should be. The plan assumes the value lies in the AI analyst that writes findings. In California, the parts a buyer most clearly pays for are deterministic and rule-bound: an HSIP crash table that the Analyzer will accept, a collision diagram that reviewers require, an ISOAP Stage 1 package for a driveway permit, and a HIN that satisfies SS4A. Those outputs are exactly where incumbents are weakest. AASHTOWare is priced for states, TIMS stops at maps and diagrams, and Citian targets regional dashboards. The AI analyst becomes credible only on top of HSM-correct statistics (a reference-population proportion test, regression-to-the-mean caveats and, eventually, EB). Without them, a fluent narrative over raw cross-tabs is the "outdated crash rate analysis" HSM2's authors are trying to retire.</p>
+<p>There is also a strategic tension to manage. California's HSIP rewards observed crashes and fixed CRFs, while federal best practice and HSM2 reward expected crashes and calibrated SPFs. A product that keeps those two modes explicitly separate will look unusually rigorous to reviewers. It would show an observed-crash HSIP BCR next to an EB-based "is this site actually high-risk?" view, and say which is which. A product that blends them will be wrong for both. The fastest route to a defensible paid launch is to ship v1 with diagrams and the HSM proportion test, bring the California HSIP engine forward ahead of SPICE, and rename the product before the first invoice.</p>
