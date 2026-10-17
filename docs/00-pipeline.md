@@ -17,3 +17,6 @@ Conductor: `new-tool` (yours). Each stage has a lead skill plus helpers. A stage
 Overlaps, pick one: grill-me (yours) = grill-me (O); tdd (yours) ≈ test-driven-development (B); code-review (yours)
 ≈ requesting-code-review (B). Use yours as lead (they encode your conventions), built-ins as extra checks.
 Cross-cutting: github after every step, refresh if a session drifts, model bake-off (proposed new skill).
+
+**From Stage 4 on, work runs through GitHub:** Hermes turns the design into issues → Claude Code builds one issue per
+branch and opens a PR → Hermes reviews → the user merges. Ownership and rules: `CLAUDE.md`.
