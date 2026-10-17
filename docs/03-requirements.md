@@ -147,9 +147,15 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
 - **Jev DECIDED in principle:** J1 (crashes with no coordinates) is Jev's primary job. J2–J6 stay proposed.
 - **Layout DECIDED:** reuse the DemandIQ frontend shell (TopBar, Sidebar, MapView, themes, step flow); swap in the CrashIQ screens.
 - **Q9 DECIDED:** auto-place bar = **98% real accuracy** (user: "1000 crashes, 980 accurate"). Measured on the hidden-GPS
-  test, ≥1,000 same-city crashes; correct = same study location / within 250 ft of true GPS. The Jev cut-off τ is set
+  test, 1,000 same-city crashes (user confirmed 1,000, not 100,000); correct = same study location / within 250 ft of true GPS. The Jev cut-off τ is set
   where crashes above it are ≥98% right; below → review queue. Note: at n=1,000 a measured 98.0% has ~±0.9% noise,
   so pick τ where the measured value is clearly above 98% (lower confidence bound), or test on more crashes.
+- **Q9b — what if it doesn't pass (user asked):** Jev isn't trained by us; it's a fixed model. The 98% bar is enforced by
+  the cut-off, so accuracy always holds; what a weak matcher costs is *coverage* (more crashes sent to review).
+  Pass/fail therefore needs two numbers: accuracy ≥98% AND coverage ≥ X% (coverage target: Q9c, pending).
+  If it fails, levers in order: (1) improve the code side: alias table, candidate list, name cleaning (biggest, cheapest);
+  (2) give Jev better state (nearby streets, distance/direction, city); (3) try Claude on the leftovers instead;
+  (4) no AI: code matches + review queue. The tool still works without Jev; it's an optional booster.
 - Open: Q10 review queue size · Q11 Jev access · R2.5 · runtime agent.
 
 ## Pipeline status
