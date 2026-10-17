@@ -1,17 +1,19 @@
 # CrashIQ — pipeline and skills per stage
 
-Conductor: `new-tool`. Each stage has one lead skill plus helpers. A stage ends when its gate artifact exists.
+Conductor: `new-tool` (yours). Each stage has a lead skill plus helpers. A stage ends when its gate artifact exists.
+**Yours** = ~/.claude/skills (Hermes reads them too). **Hermes built-in** = bundled (B) or optional, installed on demand (O).
 
-| Stage | Lead skill | Helpers | Gate | Status |
+| Stage | Yours: lead + helpers | Hermes built-in that adds something | Gate | Status |
 |---|---|---|---|---|
-| 1 Kickoff | product-kickoff | spike | docs/01-kickoff.md | done |
-| 2 Requirements | grill-me | brainstorming, prompt-me | docs/03-requirements.md (locked) | done |
-| 3 Design | ai-agent-validation, oracle-spine | caltrans-traffic-expert (mode formats), architecture-design, ux-design | docs/04-design.md | done (F1 open) |
-| 4 Build | fastapi-react-builder | backend-build, frontend-build, web-design (DemandIQ look), viz-design (dashboard charts), tdd, karpathy-guidelines | contract (schemas) + happy-path run end to end | next |
-| 5 Test | tool-testing | testing-strategy, code-review, requesting-code-review (security scan) | six-condition testing gate | — |
+| 1 Kickoff | product-kickoff | spike (B) | docs/01-kickoff.md | done |
+| 2 Requirements | grill-me, brainstorming, prompt-me | decision-questionnaire (O) | docs/03-requirements.md (locked) | done |
+| 3 Design | ai-agent-validation, oracle-spine, caltrans-traffic-expert, architecture-design, ux-design | architecture-diagram (B): picture of the system | docs/04-design.md | done (F1 open) |
+| 4 Build | fastapi-react-builder, backend-build, frontend-build, web-design, viz-design, tdd, karpathy-guidelines | claude-code (B): hand big coding jobs to Claude Code · test-driven-development (B) · xlsx + pdf (B): the exports · subagent-driven-development (O) | schemas + happy-path run end to end | next |
+| 5 Test | tool-testing, testing-strategy, code-review | dogfood (B): click through the app and find bugs · requesting-code-review (B): security scan · systematic-debugging (B) · adversarial-ux-test (O) · evaluation (O): model bake-off scoring | six-condition testing gate | — |
 | 6 Oracle onboard | oracle-spine | — | context object round-trip with provenance | — |
-| 7 Ship | ship-it | deploy-checklist, github | pre-ship checklist passes | — |
-| Paid launch (after 7) | ship-it | system-design (accounts, payments, limits) | accounts + billing + spend caps + terms | — |
+| 7 Ship | ship-it, deploy-checklist | github (B) · docker-management (O) | pre-ship checklist passes | — |
+| Paid launch | system-design, ship-it | stripe-projects / stripe-link-cli (O): payments · web-pentest (O): security test before charging money | accounts + billing + spend caps + terms | — |
 
-Cross-cutting: `github` (push after every step), `systematic-debugging` when something breaks,
-`refresh` if a session drifts, model bake-off (proposed new skill) before picking the Claude tier.
+Overlaps, pick one: grill-me (yours) = grill-me (O); tdd (yours) ≈ test-driven-development (B); code-review (yours)
+≈ requesting-code-review (B). Use yours as lead (they encode your conventions), built-ins as extra checks.
+Cross-cutting: github after every step, refresh if a session drifts, model bake-off (proposed new skill).
