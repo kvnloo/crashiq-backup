@@ -163,6 +163,9 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   if >10% of the study's crashes stay unplaced.
 - **Q11 RESOLVED by inspection:** Jev access exists: `TYPESAFE_API_KEY` in `~/.typesafe/credentials`; client shim at
   `~/z0intelligence/shims/jevkit` (noul / choice / score; several questions per call; ~$0.042 per M input tokens).
+- **Product priority (user, 2026-10-16):** CrashIQ is the *first deployable product*, ahead of DemandIQ, because the data
+  is public and already sitting there (CCRS); the value is all in the analysis. Implication: Stage 7 (ship) is NOT
+  deferred; v1 scope stays lean (profile/TIS mode) so it ships fast. Audience for the deployed version: to confirm.
 - Open: R2.5 intersection-only mode · runtime agent.
 
 ## Pipeline status
