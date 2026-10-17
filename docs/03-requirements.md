@@ -92,7 +92,7 @@ run and what the export contains:
   SQLite locally; persistent disk or Postgres when hosted.
 - Users: the user + a small number of colleagues / demo viewers.
 
-## Status: NOT locked (2026-10-16)
+## Status: LOCKED 2026-10-16 (Hermes session). Earlier "not locked" notes below are history.
 The full picture is agreed in direction. The user is exploring Hermes Agent and "Software Factory" next.
 
 ### OPEN — two agent decisions (kept separate)
@@ -188,8 +188,8 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   citation-validator pass rate, missed patterns, $ and seconds per study → pick the **cheapest tier that passes**, per
   step (routing/chat can be a smaller tier than findings). Re-run when a new model ships. Hosting: plain Anthropic API
   (no Bedrock needed).
-- Open: runtime agent.
+- **Runtime agent DECIDED:** Claude API tool-use loop; model tier chosen by the bake-off. Nothing open.
 
 ## Pipeline status
-`[new-tool] Stage 2: resumed 2026-10-16 in Hermes (grill-me). Requirements not locked yet.`
+`[new-tool] Stage 2 done (LOCKED 2026-10-16) → Stage 3: design check.`
 Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then Stage 3 design check.
