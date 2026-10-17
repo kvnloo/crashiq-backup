@@ -181,6 +181,13 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   Sonnet only writes the findings; (4) prompt caching on the fixed parts (pattern library, instructions, examples);
   (5) hard spend cap per study, enforced in code; (6) tokens + $ logged per study. Target to verify in build:
   < $1 of AI per study (estimate ~$0.20–0.50 for Sonnet; measure, don't trust the estimate).
+- **Model choice → decided by a bake-off, not upfront (user: cheap may be too weak, expensive too costly):** no skill in
+  Hermes or ~/.claude covers model selection (searched). Method (tool-testing + ai-agent-validation #2/#6/#9): build the
+  agent behind the swappable contract → golden set of ~10–20 corridors with the user-approved expected findings (seeded
+  from the user's past analyses) → run Haiku / Sonnet / Opus tiers on the same inputs → score: findings correct vs golden,
+  citation-validator pass rate, missed patterns, $ and seconds per study → pick the **cheapest tier that passes**, per
+  step (routing/chat can be a smaller tier than findings). Re-run when a new model ships. Hosting: plain Anthropic API
+  (no Bedrock needed).
 - Open: runtime agent.
 
 ## Pipeline status
