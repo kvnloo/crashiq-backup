@@ -1,68 +1,38 @@
-"""Hidden-truth geocoding test (issue #1).
+"""Hidden-truth geocoding test (issue #1, PR #16).
 
-Population: SFPD crash reports in CCRS (agency 3801) — the crashes CrashIQ must place without GPS.
-Truth: SFPD's own geocoded location for the same report, from DataSF (CCRS Report Number == case_id_pkey).
-Correct = placed within 250 ft of the truth point.
+Population: one police agency's crash reports in CCRS: the crashes CrashIQ must place without GPS.
+Truth: that agency's own geocoded location for the same report, from the city's open data, linked by report
+number (SF: DataSF case_id; LA: LAPD dr_no). Correct = within 250 ft (76.2 m) of the truth point.
+Rules are tuned on the dev half and reported once on the test half. Lower bounds are Wilson score, 95%.
+
+Years: the most recent complete calendar years with final (non-preliminary) CCRS records and published agency
+truth. Checked 2026-10-18: 2025 has no preliminary SFPD/LAPD rows, so it is included.
+
+    python backend/scripts/validate_geocode.py --city sf --split test --jev
 """
-import argparse, json, math, random, sys
+import argparse, json, math, random, sys, urllib.request
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
-from collections import Counter as _C
-from concurrent.futures import ThreadPoolExecutor
 from crashiq import locate, osm
 from crashiq.jev import JevPicker
-from crashiq.names import similarity, street_key
+from crashiq.names import load_aliases, same_core, similarity, street_key
 from crashiq.sources import ca_ccrs
 
 ROOT = Path(__file__).resolve().parents[2]
 CACHE = ROOT / "data" / "cache"
-SF_WIKIDATA = "Q62"
+TOL_M = 250 * 0.3048
 CITIES = {
-    # name, CCRS agency (NCIC), OSM boundary (Wikidata), years, truth loader key
-    "sf": ("San Francisco", "3801", "Q62", (2023, 2024), "datasf"),
-    "la": ("Los Angeles", "1942", "Q65", (2024,), "lapd"),
+    # name, CCRS agency (NCIC), OSM boundary (Wikidata), years, truth source
+    "sf": ("San Francisco", "3801", "Q62", (2023, 2024, 2025), "datasf"),
+    "la": ("Los Angeles", "1942", "Q65", (2024, 2025), "lapd"),
 }
 # LAPD's open-data points sit at the intersection even when the report gives a distance (2026-10-18: median 6 m
 # from the intersection vs 92 m from the offset point, n=472). There, score the chosen intersection, not the offset.
 SCORE_AT_INTERSECTION = {"la"}
-
-
-def truth_rows(kind, years):
-    """Agency open data -> {report_number: {lat, lon, primary_rd, secondary_rd, distance}}."""
-    import urllib.request
-    cache = CACHE / f"truth_{kind}_{'_'.join(map(str, years))}.json"
-    if cache.exists():
-        return json.loads(cache.read_text())
-    out = {}
-    if kind == "datasf":
-        for r in json.loads((CACHE / "datasf_2023_2024.json").read_text()):
-            if r.get("tb_latitude"):
-                out[r["case_id_pkey"]] = {"lat": float(r["tb_latitude"]), "lon": float(r["tb_longitude"]),
-                                          "primary_rd": r.get("primary_rd"), "secondary_rd": r.get("secondary_rd"),
-                                          "distance": r.get("distance")}
-    elif kind == "lapd":
-        for y in years:
-            off = 0
-            while True:
-                url = ("https://data.lacity.org/resource/d5tf-ez2w.json?$select=dr_no,location,cross_street,location_1"
-                       f"&$where=date_occ%20between%20%27{y}-01-01T00:00:00%27%20and%20%27{y}-12-31T23:59:59%27"
-                       f"&$limit=50000&$offset={off}")
-                with urllib.request.urlopen(url, timeout=180) as r:
-                    batch = json.load(r)
-                for b in batch:
-                    loc = b.get("location_1") or {}
-                    lat, lon = float(loc.get("latitude") or 0), float(loc.get("longitude") or 0)
-                    if lat and lon:  # LAPD uses 0,0 for unknown
-                        out[b["dr_no"]] = {"lat": lat, "lon": lon, "primary_rd": " ".join((b.get("location") or "").split()),
-                                           "secondary_rd": " ".join((b.get("cross_street") or "").split()), "distance": None}
-                if len(batch) < 50000:
-                    break
-                off += 50000
-    cache.write_text(json.dumps(out))
-    return out
-TOL_M = 250 * 0.3048
+CODE_TIERS = ("address", "exact", "relaxed", "near", "fuzzy")
 
 
 def wilson_low(k, n, z=1.96):
@@ -72,128 +42,207 @@ def wilson_low(k, n, z=1.96):
     return (p + z*z/(2*n) - z*math.sqrt(p*(1-p)/n + z*z/(4*n*n))) / (1 + z*z/n)
 
 
-def score(net, p, c, city):
-    if p.lat is None:
+def _socrata(url):
+    rows, off = [], 0
+    while True:
+        with urllib.request.urlopen(f"{url}&$limit=50000&$offset={off}", timeout=180) as r:
+            batch = json.load(r)
+        rows += batch
+        if len(batch) < 50000:
+            return rows
+        off += 50000
+
+
+def truth_rows(kind, years):
+    """Agency open data -> {report_number: {lat, lon, primary_rd, secondary_rd, distance}}, cached."""
+    cache = CACHE / f"truth_{kind}_{'_'.join(map(str, years))}.json"
+    if cache.exists():
+        return json.loads(cache.read_text())
+    out = {}
+    if kind == "datasf":
+        yrs = ",".join(f"%27{y}%27" for y in years)
+        for r in _socrata("https://data.sf.gov/resource/ubvf-ztfx.json?$select=case_id_pkey,tb_latitude,tb_longitude,"
+                          f"primary_rd,secondary_rd,distance&$where=accident_year%20in({yrs})"):
+            if r.get("tb_latitude") and r.get("tb_longitude"):
+                out[r["case_id_pkey"]] = {"lat": float(r["tb_latitude"]), "lon": float(r["tb_longitude"]),
+                                          "primary_rd": r.get("primary_rd"), "secondary_rd": r.get("secondary_rd"),
+                                          "distance": r.get("distance")}
+    elif kind == "lapd":
+        for y in years:
+            for b in _socrata("https://data.lacity.org/resource/d5tf-ez2w.json?$select=dr_no,location,cross_street,location_1"
+                              f"&$where=date_occ%20between%20%27{y}-01-01T00:00:00%27%20and%20%27{y}-12-31T23:59:59%27"):
+                loc = b.get("location_1") or {}
+                lat, lon = float(loc.get("latitude") or 0), float(loc.get("longitude") or 0)
+                if lat and lon:  # LAPD uses 0,0 for unknown
+                    out[b["dr_no"]] = {"lat": lat, "lon": lon, "primary_rd": " ".join((b.get("location") or "").split()),
+                                       "secondary_rd": " ".join((b.get("cross_street") or "").split()), "distance": None}
+    CACHE.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps(out))
+    return out
+
+
+def load_linked(city, seed):
+    """CCRS crashes linked to truth, with every cleaning and hygiene step counted."""
+    _, ncic, _, years, kind = CITIES[city]
+    where = f"\"NCIC Code\"='{ncic}'"
+    crashes, log = [], Counter()
+    for y in years:
+        crashes += ca_ccrs.fetch(y, where, CACHE)
+        for k, v in ca_ccrs.cleaning_log(y, where, CACHE).items():
+            log[f"ccrs_{k}"] += v
+    for c in crashes:  # LAPD writes 2401-07452 in CCRS and 240107452 in its own data
+        c["report_number"] = c["report_number"].replace("-", "")
+    truth = truth_rows(kind, years)
+    log["truth_records"] = len(truth)
+    n_ccrs = Counter(c["report_number"] for c in crashes)
+
+    # Truth hygiene. NOTE: the "unrelated streets" filter uses truth street names to select the sample. That is
+    # selection, not leakage (truth never reaches the locator), and its count is reported so its effect is visible.
+    def resembles(c, t):
+        a = [street_key(c["primary_road"]), street_key(c["secondary_road"])]
+        b = [street_key(t.get("primary_rd")), street_key(t.get("secondary_rd"))]
+        return any(x and y and similarity(x, y) >= 0.75 for x in a for y in b)
+
+    linked = []
+    for c in crashes:
+        t = truth.get(c["report_number"])
+        if not t:
+            log["no_truth_record"] += 1
+        elif not c["report_number"] or n_ccrs[c["report_number"]] > 1:
+            log["dropped_duplicate_or_blank_report_number"] += 1
+        elif not resembles(c, t):
+            log["dropped_truth_streets_unrelated"] += 1
+        else:
+            dist = str(t.get("distance") or "")
+            linked.append(dict(c, truth=(t["lat"], t["lon"]), truth_streets=(t.get("primary_rd"), t.get("secondary_rd")),
+                               truth_offset=float(dist) if dist.replace(".", "").isdigit() else 0.0))
+    log["linked"] = len(linked)
+    random.Random(seed).shuffle(linked)
+    return linked, dict(log)
+
+
+def score(net, pl, c, city):
+    if pl.lat is None:
         return None
-    if city in SCORE_AT_INTERSECTION and p.node is not None:
-        return osm.metres(net.coord[p.node], c["truth"])
-    return osm.metres((p.lat, p.lon), c["truth"])
+    if city in SCORE_AT_INTERSECTION and pl.node is not None:
+        return osm.metres(net.coord[pl.node], c["truth"])
+    return osm.metres((pl.lat, pl.lon), c["truth"])
 
 
 def int_ok(net, node, c):
-    """Matcher's own job: is the chosen intersection the one SFPD's record names? None if not checkable."""
+    """Matcher's own job: is the chosen intersection the one the agency's record names? None if not checkable."""
     a, b = (street_key(x) for x in c.get("truth_streets", (None, None)))
     if node is None or not a or not b:
         return None
-    from crashiq.names import same_core
     near = [m for m in net.intersections if osm.metres(net.coord[m], net.coord[node]) <= locate.CLUSTER_M]
     keys = {k for m in near for k in net.keys_at[m]}
     return any(same_core(a, k) for k in keys) and any(same_core(b, k) for k in keys)
 
 
-def load_sample(n, seed, city="sf"):
-    _, ncic, _, years, kind = CITIES[city]
-    crashes = []
-    for y in years:
-        crashes += ca_ccrs.fetch(y, f"\"NCIC Code\"='{ncic}'", CACHE)
-    for c in crashes:  # LAPD writes 2401-07452 in CCRS and 240107452 in its own data
-        c["report_number"] = c["report_number"].replace("-", "")
-    truth = truth_rows(kind, years)
-    # Truth hygiene (lessons 2026-10-18): CCRS has blank and duplicate report numbers, and DataSF parks
-    # some records at a default point with unrelated street names. Link only unique ids, and keep a
-    # truth record only if at least one of its streets resembles the CCRS streets (typos still pass).
-    n_ccrs = _C(c["report_number"] for c in crashes)
-    def resembles(c, t):
-        a = [street_key(c["primary_road"]), street_key(c["secondary_road"])]
-        b = [street_key(t.get("primary_rd")), street_key(t.get("secondary_rd"))]
-        return any(x and y and similarity(x, y) >= 0.75 for x in a for y in b)
-    linked, dropped = [], _C()
-    for c in crashes:
-        t = truth.get(c["report_number"])
-        if not t:
-            continue
-        if not c["report_number"] or n_ccrs[c["report_number"]] > 1:
-            dropped["duplicate or blank report number"] += 1
-        elif not resembles(c, t):
-            dropped["truth streets unrelated to CCRS streets"] += 1
-        else:
-            linked.append(dict(c, truth=(t["lat"], t["lon"]),
-                               truth_streets=(t.get("primary_rd"), t.get("secondary_rd")),
-                               truth_offset=float(t["distance"]) if str(t.get("distance") or "").replace(".", "").isdigit() else 0.0))
-    print("truth records dropped:", dict(dropped))
-    random.Random(seed).shuffle(linked)
-    return crashes, linked, linked[:n]
+def arm_line(name, rows, auto):
+    sel = [r for r in rows if auto(r)]
+    k = sum(r["ok"] for r in sel)
+    return (f"{name:44s} {len(sel):6d} {len(sel)/len(rows):8.1%} {k/max(1,len(sel)):9.1%} "
+            f"{wilson_low(k, len(sel)):8.1%}"), {"auto": len(sel), "coverage": len(sel)/len(rows),
+                                                 "accuracy": k/max(1, len(sel)), "wilson_low": wilson_low(k, len(sel))}
 
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--n", type=int, default=1000)
-    ap.add_argument("--seed", type=int, default=20261018)
-    ap.add_argument("--out", default=str(ROOT / "data" / "results"))
     ap.add_argument("--city", choices=list(CITIES), default="sf")
-    ap.add_argument("--no-address", action="store_true", help="skip the OSM address tier")
-    ap.add_argument("--jev", action="store_true", help="send leftovers (review + weak tiers) to Jev")
-    ap.add_argument("--weak", default="near", help="comma list of code tiers that go to Jev instead of auto-placing")
-    ap.add_argument("--split", choices=["dev", "test"], help="half of ALL linked crashes: tune on dev, report on test")
+    ap.add_argument("--split", choices=["dev", "test"], required=True, help="tune on dev, report on test")
+    ap.add_argument("--seed", type=int, default=20261018)
+    ap.add_argument("--jev", action="store_true", help="ask Jev for a suggestion on every non-exact crash")
+    ap.add_argument("--jev-model", default="jev-1.13.0")
+    ap.add_argument("--no-address", action="store_true", help="skip the OSM address tier (large cities)")
     a = ap.parse_args()
-    cname, ncic, wikidata, years, kind = CITIES[a.city]
+
+    cname, ncic, wikidata, years, _ = CITIES[a.city]
     net = osm.Network(osm.fetch(wikidata, CACHE))
     addresses = None if a.no_address else locate.AddressIndex(osm.fetch_addresses(wikidata, CACHE))
-    allc, linked, sample = load_sample(a.n, a.seed, a.city)
-    print(f"{cname} agency {ncic} crashes in CCRS {years}: {len(allc)} · linked to agency truth: {len(linked)} · sample: {len(sample)}")
-    if a.split:
-        half = len(linked) // 2
-        sample = linked[:half] if a.split == "dev" else linked[half:]
-        print(f"split: {a.split} ({len(sample)} crashes)")
+    aliases = load_aliases(ROOT / "data" / "aliases" / f"{a.city}.csv")
+    linked, cleaning = load_linked(a.city, a.seed)
+    half = len(linked) // 2
+    sample = linked[:half] if a.split == "dev" else linked[half:]
+    print(f"{cname} · agency {ncic} · years {years} · {a.split} half: {len(sample)} crashes · aliases: {len(aliases)}")
+    print("cleaning:", json.dumps(cleaning))
+
     rows = []
     for c in sample:
-        p = locate.place(net, c, addresses=addresses)
-        err = score(net, p, c, a.city)
+        pl = locate.place(net, c, addresses=addresses, aliases=aliases)
+        err = score(net, pl, c, a.city)
         rows.append({"report": c["report_number"], "primary": c["primary_road"], "secondary": c["secondary_road"],
-                     "offset_ft": c["offset_ft"], "dir": c["offset_dir"], "tier": p.tier, "note": p.note,
-                     "err_m": err, "ok": err is not None and err <= TOL_M, "node": p.node,
-                     "int_ok": int_ok(net, p.node, c), "offset_lost": bool(c.get("truth_offset")) and not c.get("offset_ft")})
+                     "offset_ft": c["offset_ft"], "dir": c["offset_dir"], "tier": pl.tier, "note": pl.note,
+                     "err_m": err, "ok": err is not None and err <= TOL_M, "node": pl.node,
+                     "int_ok": int_ok(net, pl.node, c),
+                     "offset_lost": bool(c.get("truth_offset")) and not c.get("offset_ft")})
+
+    spend = None
     if a.jev:
-        picker = JevPicker(CACHE / f"jev_choices_{a.city}.json", max_calls=3000)
-        weak = set(a.weak.split(","))
-        idx = [i for i, r in enumerate(rows) if r["tier"] == "review" or r["tier"] in weak]
+        picker = JevPicker(CACHE / f"jev_choices_{a.city}.json", max_calls=3000, model=a.jev_model)
+        idx = [i for i, r in enumerate(rows) if r["tier"] not in ("exact", "address")]
         def run(i):
             c = sample[i]
-            p = locate.place_with_jev(net, c, picker, cname)
-            err = score(net, p, c, a.city)
-            rows[i].update(tier=p.tier, note=p.note, p=p.p, err_m=err, ok=err is not None and err <= TOL_M,
-                           node=p.node, int_ok=int_ok(net, p.node, c))
+            pl = locate.place_with_jev(net, c, picker, cname, aliases=aliases)
+            err = score(net, pl, c, a.city)
+            rows[i]["jev"] = {"tier": pl.tier, "p": pl.p, "p2": pl.p2, "err_m": err,
+                              "ok": err is not None and err <= TOL_M, "int_ok": int_ok(net, pl.node, c)}
         with ThreadPoolExecutor(8) as ex:
             list(ex.map(run, idx))
         picker.save()
-        print(f"Jev: {len(idx)} leftovers · {picker.calls} calls · {picker.input_tokens} in / {picker.output_tokens} out tokens "
-              f"· ~${picker.input_tokens * 0.042 / 1e6:.4f} input cost")
-        js = [r for r in rows if r["tier"] == "jev"]
-        print("Jev accuracy by probability cut-off:")
-        for tau in (0.5, 0.7, 0.8, 0.9, 0.95, 0.99):
-            sel = [r for r in js if (r.get("p") or 0) >= tau]
-            k = sum(r["ok"] for r in sel)
-            if sel:
-                print(f"  p >= {tau:4}: {len(sel):4d} placed · {k/len(sel):6.1%} correct · 95% low {wilson_low(k, len(sel)):6.1%}")
-    tiers = Counter(r["tier"] for r in rows)
-    lost = [r for r in rows if r.get("offset_lost")]
-    print(f"offset in SF's record but missing in CCRS: {len(lost)} of {len(rows)} crashes")
-    print("\nTier        placed   correct   accuracy   95% low   | right intersection (checkable)")
-    for t in ("address", "exact", "relaxed", "near", "fuzzy", "jev"):
+        spend = picker.spend()
+        print("jev spend:", json.dumps(spend))
+
+    print(f"offset in the agency's record but missing in CCRS: {sum(r['offset_lost'] for r in rows)} of {len(rows)}")
+    print("\nBy code tier         placed   accuracy  Wilson 95% low | right intersection")
+    for t in CODE_TIERS:
         rs = [r for r in rows if r["tier"] == t]
-        k = sum(r["ok"] for r in rs)
         if rs:
-            iv = [r for r in rs if r.get("int_ok") is not None]
+            k = sum(r["ok"] for r in rs)
+            iv = [r for r in rs if r["int_ok"] is not None]
             ik = sum(bool(r["int_ok"]) for r in iv)
-            itxt = f"{ik}/{len(iv)} = {ik/len(iv):.1%} (low {wilson_low(ik, len(iv)):.1%})" if iv else "n/a"
-            print(f"{t:10s} {len(rs):7d} {k:9d} {k/len(rs):10.1%} {wilson_low(k, len(rs)):9.1%}   | {itxt}")
-    placed = [r for r in rows if r["tier"] != "review"]
-    k = sum(r["ok"] for r in placed)
-    print(f"{'ALL AUTO':10s} {len(placed):7d} {k:9d} {k/max(1,len(placed)):10.1%} {wilson_low(k, len(placed)):9.1%}")
-    print(f"coverage (auto-placed): {len(placed)/len(rows):.1%} · to review: {tiers['review']}")
-    print("review reasons:", Counter(r["note"] for r in rows if r["tier"] == "review").most_common(5))
-    out = Path(a.out); out.mkdir(parents=True, exist_ok=True)
-    (out / f"geocode_{a.city}_rows{'_' + a.split if a.split else ''}.json").write_text(json.dumps(rows, indent=0))
+            print(f"  {t:16s} {len(rs):7d} {k/len(rs):10.1%} {wilson_low(k, len(rs)):10.1%}   | "
+                  + (f"{ik/len(iv):.1%} (low {wilson_low(ik, len(iv)):.1%}, n={len(iv)})" if iv else "n/a"))
+    print(f"  {'review':16s} {sum(r['tier'] == 'review' for r in rows):7d}")
+
+    # Arms: what auto-places in each pipeline. Address-tier crashes are excluded from every arm (user decision).
+    J = lambda r: "jev" in r and r["jev"]["tier"] == "jev"
+    jr = lambda r: dict(r, ok=r["jev"]["ok"]) if J(r) else r
+    arms = {
+        "A  exact only (default gate)": (rows, lambda r: r["tier"] == "exact"),
+        "B  exact + relaxed + near + fuzzy": (rows, lambda r: r["tier"] in ("exact", "relaxed", "near", "fuzzy")),
+    }
+    if a.jev:
+        arms["C  exact + Jev on all leftovers"] = ([jr(r) for r in rows], lambda r: r["tier"] == "exact" or J(r))
+        cp = [r if r["tier"] in ("exact", "fuzzy") else jr(r) for r in rows]
+        arms["C' exact + fuzzy + Jev on the rest"] = (cp, lambda r: r["tier"] in ("exact", "fuzzy") or (J(r) and r["tier"] != "fuzzy"))
+    print(f"\n{'Arm (auto-placed)':44s} {'auto':>6s} {'coverage':>8s} {'accuracy':>9s} {'W95 low':>8s}")
+    arm_stats = {}
+    for name, (rs, f) in arms.items():
+        line, arm_stats[name] = arm_line(name, rs, f)
+        print(line)
+
+    head2head = None
+    if a.jev:  # docs/03 J1 ship rule: Jev vs fuzzy at the same review rate, on the same leftover set
+        L = [r for r in rows if r["tier"] not in ("exact", "address")]
+        code = [r for r in L if r["tier"] in ("relaxed", "near", "fuzzy")]
+        jev = sorted([r for r in L if J(r)], key=lambda r: -(r["jev"]["p"] or 0))[:len(code)]
+        kc, kj = sum(r["ok"] for r in code), sum(r["jev"]["ok"] for r in jev)
+        head2head = {"leftovers": len(L), "placed_each": len(code),
+                     "code_fuzzy_family": {"accuracy": kc/max(1, len(code)), "wilson_low": wilson_low(kc, len(code))},
+                     "jev_top_by_p": {"placed": len(jev), "accuracy": kj/max(1, len(jev)), "wilson_low": wilson_low(kj, len(jev))}}
+        print(f"\nJev vs fuzzy at equal review rate, on {len(L)} leftovers: fuzzy-family {len(code)} placed, "
+              f"{head2head['code_fuzzy_family']['accuracy']:.1%} · Jev top-{len(jev)} by p, {head2head['jev_top_by_p']['accuracy']:.1%}")
+
+    out = ROOT / "data" / "results"
+    out.mkdir(parents=True, exist_ok=True)
+    stem = f"geocode_{a.city}_{a.split}"
+    (out / f"{stem}_rows.json").write_text(json.dumps(rows))
+    (out / f"{stem}_summary.json").write_text(json.dumps(
+        {"city": cname, "agency": ncic, "years": years, "split": a.split, "n": len(rows), "cleaning": cleaning,
+         "arms": arm_stats, "jev_vs_fuzzy": head2head, "jev_spend": spend,
+         "scored_at": "intersection" if a.city in SCORE_AT_INTERSECTION else "offset point"}, indent=1))
+    print(f"\nwrote {out / (stem + '_summary.json')}")
 
 
 if __name__ == "__main__":

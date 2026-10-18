@@ -6,7 +6,7 @@ from crashiq.sources import ca_ccrs
 from crashiq import osm
 
 CACHE = Path(__file__).resolve().parents[2] / "data" / "cache"
-SF_WIKIDATA = "Q62"
+SF_WIKIDATA = "Q62"  # San Francisco
 
 def datasf(years):
     out = CACHE / f"datasf_{'_'.join(map(str, years))}.json"

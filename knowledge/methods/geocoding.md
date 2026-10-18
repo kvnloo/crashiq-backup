@@ -15,15 +15,23 @@ Code: `backend/crashiq/{names,osm,locate,jev}.py` · test: `backend/scripts/vali
 5. **Gate per tier:** a tier may auto-place only if it proves ≥98% (95% lower bound) on held-out data.
    Everything else goes to review, with the best suggestion pre-filled.
 
-## Results, held-out test half (2,655 SFPD crashes, truth = DataSF by report number)
-| Tier | Share | Within 250 ft | 95% low | Right intersection |
-|---|---|---|---|---|
-| exact (auto) | 91.0% | 98.7% | **98.1% ✓** | 99.4% |
-| jev (suggestion only) | 5.0% | 94.0% | 88.7% | 80.5% |
-| address (user decision) | 1.7% | 77.3%* | — | — |
-| review, no suggestion | 2.3% | — | — | — |
-*vs. DataSF's own approximation of the address, so understated.
-Dev half: exact 99.0% (low 98.5%). Jev cost all night: < $0.01.
+## Results, held-out test half — FINAL (run 2026-10-18, `data/results/geocode_sf_test_summary.json`)
+SFPD crashes 2023–2025, truth = DataSF by report number, 4,028 test crashes (8,056 linked). Wilson 95% lower bounds.
+Cleaning: 12,305 CCRS rows read · 0 CHP-deleted · 5 feet-typed-as-miles fixed · 25 duplicate/blank report numbers
+dropped · 18 truth records with unrelated streets dropped.
+
+| Arm (what auto-places) | Coverage | Accuracy (≤250 ft) | Wilson 95% low |
+|---|---|---|---|
+| **A: exact only (default gate)** | **90.2%** | **98.8%** | **98.3% ✓** |
+| B: exact + relaxed + near + fuzzy | 94.1% | 98.5% | 98.1% ✓ (barely; 98.0% on dev) |
+| C: exact + Jev on all leftovers | 95.1% | 98.2% | 97.8% ✗ |
+| C′: exact + fuzzy + Jev on the rest | 95.2% | 98.2% | 97.8% ✗ |
+
+By tier (test): exact 98.8% (right intersection 99.2%), relaxed 99.0% (n=100), near 73.3% (n=30), fuzzy 89.7% (n=29),
+address 81.4% (n=70, vs SF's approximate address truth), review 167.
+**Jev vs fuzzy at equal review rate** (docs/03 J1 ship rule), 326 leftovers: fuzzy family 92.5% vs Jev top-159 by p 88.1%.
+Jev 1.14 (released 2026-10-14): same 88.1%. → Jev does not beat fuzzy; it does not ship as an auto-placer.
+Jev spend: 1.13 run 169 calls, 69,900 input tokens, $0.0029 (5 failed calls); 1.14 run $0.0037. Output tokens are free.
 
 ## What didn't work (keep it)
 - **SF hidden-GPS test on CCRS crashes with GPS:** wrong population (CHP freeway). Replaced by the DataSF join.

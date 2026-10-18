@@ -72,20 +72,37 @@ def _normalize(rec: dict) -> dict:
 
 
 def fetch(year: int, where: str, cache_dir: Path, page: int = 5000) -> list[dict]:
-    """All crashes for `year` matching a SQL `where` clause, cached as JSON."""
+    """All crashes for `year` matching a SQL `where` clause, cached as JSON. Cleaning counts: `cleaning_log`."""
+    return _fetch(year, where, cache_dir, page)["rows"]
+
+
+def cleaning_log(year: int, where: str, cache_dir: Path) -> dict:
+    """Counts per cleaning step for a cached pull: rows read, CHP-deleted dropped, feet-typed-as-miles fixed."""
+    return _fetch(year, where, cache_dir)["cleaning"]
+
+
+def _fetch(year: int, where: str, cache_dir: Path, page: int = 5000) -> dict:
     cache = cache_dir / f"ccrs_{year}_{hashlib.sha1(where.encode()).hexdigest()[:10]}.json"
     if cache.exists():
-        return json.loads(cache.read_text())
+        data = json.loads(cache.read_text())
+        if isinstance(data, dict):
+            return data
     rid = crash_resource_ids()[year]
     cols = ", ".join(f'"{v}"' for v in _COLUMNS.values())
-    rows, offset = [], 0
+    raw, offset = [], 0
     while True:
         sql = f'SELECT {cols} FROM "{rid}" WHERE {where} ORDER BY "Collision Id" LIMIT {page} OFFSET {offset}'
         batch = _get("datastore_search_sql", sql=sql)["records"]
-        rows += [_normalize(r) for r in batch if str(r.get("IsDeleted")) != "True"]  # CHP-deleted reports
+        raw += batch
         if len(batch) < page:
             break
         offset += page
+    rows = [_normalize(r) for r in raw if str(r.get("IsDeleted")) != "True"]  # CHP-deleted reports
+    data = {"rows": rows, "cleaning": {
+        "rows_read": len(raw),
+        "deleted_dropped": len(raw) - len(rows),
+        "feet_typed_as_miles_fixed": sum(1 for c in rows if c["offset_fixed"]),
+    }}
     cache_dir.mkdir(parents=True, exist_ok=True)
-    cache.write_text(json.dumps(rows))
-    return rows
+    cache.write_text(json.dumps(data))
+    return data

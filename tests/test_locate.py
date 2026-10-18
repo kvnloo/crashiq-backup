@@ -61,7 +61,7 @@ class FakePicker:
         self.answer = answer
 
     def pick(self, city, primary, secondary, labels):
-        return (labels[0] if self.answer == "first" else self.answer), 0.9
+        return (labels[0] if self.answer == "first" else self.answer), 0.9, 0.05
 
 
 def test_jev_can_only_choose_a_code_generated_candidate():
@@ -79,3 +79,26 @@ def test_short_names_are_not_fuzzy_matched():
         {"type": "way", "id": 1, "nodes": [1, 2], "tags": {"name": "Oak Street"}},
         {"type": "way", "id": 2, "nodes": [3, 1], "tags": {"name": "Main Street"}}]})
     assert locate.place(net, crash("MAIN ST", "OAKK ST")).tier == "review"
+
+
+def test_alias_file_is_applied(tmp_path):
+    from crashiq.names import load_aliases
+    f = tmp_path / "aliases.csv"
+    f.write_text("raw,replacement\nPIONEER BLVD,MAIN ST\n")
+    aliases = load_aliases(f)
+    assert aliases == {"PIONEER BLVD": "MAIN ST"}
+    assert locate.place(NET, crash("PIONEER BLVD", "OAKLAND AV"), aliases=aliases).tier == "exact"
+    assert load_aliases(tmp_path / "missing.csv") == {}
+
+
+def test_gate_defaults_jev_never_auto():
+    g = locate.Gate()
+    assert g.auto(locate.Placement("exact", 1, 1)) and not g.auto(locate.Placement("relaxed", 1, 1))
+    assert not g.auto(locate.Placement("jev", 1, 1, p=0.99, p2=0.0))
+
+
+def test_gate_jev_below_tau_or_margin_goes_to_review():
+    g = locate.Gate(jev_tau=0.9, jev_margin=0.3)
+    assert g.auto(locate.Placement("jev", 1, 1, p=0.95, p2=0.05))
+    assert not g.auto(locate.Placement("jev", 1, 1, p=0.85, p2=0.05))   # below tau
+    assert not g.auto(locate.Placement("jev", 1, 1, p=0.92, p2=0.70))   # below margin

@@ -30,7 +30,8 @@ class Placement:
     lon: float | None = None
     node: int | None = None
     note: str = ""
-    p: float | None = None         # Jev probability when tier == jev
+    p: float | None = None         # Jev probability of its pick when tier == jev
+    p2: float | None = None        # Jev probability of the runner-up (for the margin check)
 
 
 def _keys_matching(net: Network, k: StreetKey) -> list[StreetKey]:
@@ -159,7 +160,7 @@ def _house_address(crash: dict) -> tuple[StreetKey, int] | None:
 
 
 def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: float = 0.05,
-          addresses: AddressIndex | None = None) -> Placement:
+          addresses: AddressIndex | None = None, aliases: dict[str, str] | None = None) -> Placement:
     if addresses is not None:
         addr = _house_address(crash)
         if addr:
@@ -167,7 +168,7 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
             if pt:
                 return Placement("address", pt[0], pt[1], note=f"{addr[1]} {addr[0].core}")
             return Placement("review", note="address not found")
-    kp, ks = street_key(crash.get("primary_road")), street_key(crash.get("secondary_road"))
+    kp, ks = street_key(crash.get("primary_road"), aliases), street_key(crash.get("secondary_road"), aliases)
     if not kp or not ks:
         return Placement("review", note="missing street name")
     relaxed = lambda k: _same_core_keys(net, k)
@@ -190,10 +191,10 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
     return Placement("review", note="no intersection of the two named streets")
 
 
-def candidates(net: Network, crash: dict, k: int = 5) -> list[tuple[int, str, float]]:
+def candidates(net: Network, crash: dict, k: int = 5, aliases: dict[str, str] | None = None) -> list[tuple[int, str, float]]:
     """Top-k intersections by combined name similarity, for a Jev choice. (node, label, score).
     Pairs that share a node, or pass within NEAR_M (ramps, medians, plazas), are both candidates."""
-    kp, ks = street_key(crash.get("primary_road")), street_key(crash.get("secondary_road"))
+    kp, ks = street_key(crash.get("primary_road"), aliases), street_key(crash.get("secondary_road"), aliases)
     if not kp or not ks:
         return []
     def best_streets(key):
@@ -215,19 +216,37 @@ def candidates(net: Network, crash: dict, k: int = 5) -> list[tuple[int, str, fl
     return sorted(out, key=lambda t: -t[2])[:k]
 
 
-def place_with_jev(net: Network, crash: dict, picker, city: str, k: int = 5) -> Placement:
-    """Leftovers only: Jev chooses among top-k code-generated candidate intersections, code places the point."""
-    cands = candidates(net, crash, k)
+def place_with_jev(net: Network, crash: dict, picker, city: str, k: int = 5,
+                   aliases: dict[str, str] | None = None) -> Placement:
+    """Leftovers only: Jev chooses among top-k code-generated candidate intersections, code places the point.
+    The result is a *suggestion*; `Gate.auto` decides whether it may auto-place."""
+    cands = candidates(net, crash, k, aliases)
     if not cands:
         return Placement("review", note="no candidates")
     labels = {}
     for node, label, _ in cands:
         labels.setdefault(label, node)   # same label at two nodes: keep the best-scored one
-    choice, p = picker.pick(city, crash.get("primary_road") or "", crash.get("secondary_road") or "", list(labels))
+    choice, p, p2 = picker.pick(city, crash.get("primary_road") or "", crash.get("secondary_road") or "", list(labels))
     if choice is None or choice not in labels:
-        return Placement("review", note="jev: none of these", p=p)
+        return Placement("review", note="jev: none of these", p=p, p2=p2)
     node = labels[choice]
-    kp = street_key(crash.get("primary_road"))
+    kp = street_key(crash.get("primary_road"), aliases)
     prim = [s for s in net.streets if kp and similarity(kp, s) >= 0.6 and node in net.all_nodes_of.get(s, ())]
     lat, lon = offset(net, node, prim, crash.get("offset_ft"), crash.get("offset_dir"))
-    return Placement("jev", lat, lon, node, note=choice, p=p)
+    return Placement("jev", lat, lon, node, note=choice, p=p, p2=p2)
+
+
+@dataclass
+class Gate:
+    """Seam 1 (docs/04 §2): which placements may auto-place. Thresholds are user decisions, kept as config.
+    Default = only tiers proven >=98% (95% Wilson lower bound) on held-out data, and Jev never auto-places."""
+    auto_tiers: frozenset = frozenset({"exact"})
+    jev_tau: float | None = None     # Jev pick probability needed to auto-place; None = never
+    jev_margin: float = 0.0          # and its lead over the runner-up
+
+    def auto(self, pl: Placement) -> bool:
+        if pl.lat is None:
+            return False
+        if pl.tier == "jev":
+            return self.jev_tau is not None and (pl.p or 0) >= self.jev_tau and (pl.p or 0) - (pl.p2 or 0) >= self.jev_margin
+        return pl.tier in self.auto_tiers
