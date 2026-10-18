@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
@@ -36,8 +38,15 @@ _UNIT_FT = {"F": 1.0, "M": 5280.0, "Y": 3.0}  # feet, miles, yards
 
 def _get(action: str, **params) -> dict:
     url = API + action + "?" + urllib.parse.urlencode(params)
-    with urllib.request.urlopen(url, timeout=120) as r:
-        body = json.load(r)
+    for attempt in range(4):  # data.ca.gov returns occasional 502/504 under load
+        try:
+            with urllib.request.urlopen(url, timeout=120) as r:
+                body = json.load(r)
+            break
+        except urllib.error.HTTPError as e:
+            if e.code not in (429, 502, 503, 504) or attempt == 3:
+                raise
+            time.sleep(2 ** attempt * 3)
     if not body.get("success"):
         raise RuntimeError(f"CCRS API error: {body.get('error')}")
     return body["result"]

@@ -103,3 +103,23 @@ disagree. Start weights from the user's judgment, tune them on the hidden-GPS de
 **Not in public data:** narratives and sketches (`SketchDesc` = "See Attachment"). Clients (agencies,
 consultants) hold the full reports, so "upload your reports, we read the narratives too" is a paid-feature idea.
 First puzzle cases: Long Beach Traffic Circle (`E PACIFIC COAST HWY & TRAFFIC CIR`): resolve by each driver's street.
+
+## Clue reliability, measured (Long Beach PD 2023–25, hidden GPS) — `backend/scripts/clue_reliability.py`
+Street names scored on all 12,652 GPS records (raw GPS is wrong ~6–10%, so these are lower bounds); every other
+clue on 9,207 clean-GPS records. Results in `data/results/clue_reliability_lb.json`.
+
+| Clue | Right | n | Log-odds weight |
+|---|---|---|---|
+| Beat (matches the beat of its 15 nearest neighbours) | 95.0% | 9,187 | 2.9 |
+| Cross street (within 250 ft + stated distance) | 89.2% | 11,692 | 2.1 |
+| Primary street (GPS on it, ≤30 m) | 86.8% | 12,096 | 1.9 |
+| Driver direction of travel (along the primary, mid-block) | 83.4% | 1,017 | 1.6 |
+| Direction of the offset (N/S/E/W within 60°) | 74.6% | 484 | 1.1 |
+| Traffic control code vs mapped signal/stop within 40 m | 62.2% | 7,891 | 0.5 (OSM signal gaps count against it) |
+| Distance (within 50% or 15 m of the true distance) | 57.8% | 2,483 | 0.3 |
+| Each driver's street (Parties `StreetOrHighwayName`) | — | 0 | LBPD never fills it (statewide 2024: 75% of drivers) |
+
+The user's order held (names high, distance/direction low), except **beat ranks highest** and driver direction
+higher than expected. Log-odds weights = ln(p / (1 − p)): the naive-Bayes way to add independent clues. Next: score
+candidate locations with these weights and test on the hidden-GPS halves (#17). Parties_2025 is download-only
+(not in the API), so driver clues cover 2023–24.
