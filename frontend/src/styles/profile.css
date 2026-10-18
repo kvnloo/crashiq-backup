@@ -1,0 +1,63 @@
+/* Step 3 Crash profile: severity map (loud) on the left, the numbers on the right. */
+.profile { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(400px, 1fr); height: 100%; }
+.profile .mapcol { position: relative; border-right: 1px solid var(--line); min-height: 320px; }
+.profile .mapcol .ciq-map { position: absolute; inset: 0; }
+.profile .datacol { overflow: auto; padding: 22px 24px 40px; display: grid; gap: 24px; align-content: start; grid-auto-rows: max-content; min-width: 0; }
+.map-legend { left: 16px; bottom: 16px; padding: 10px 12px; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 11px var(--font-mono); color: var(--muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.legend.small { margin-top: 10px; }
+.sect-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; gap: 8px; }
+.src { font-size: 12px; color: var(--muted); cursor: help; user-select: none; }
+.src:hover, .src:focus-visible { color: var(--fg); }
+.sf-kpi__label { display: flex; gap: 6px; align-items: center; }
+
+.bars { display: grid; gap: 8px; }
+.bar { display: grid; grid-template-columns: 140px minmax(0, 1fr) 44px; gap: 10px; align-items: center; font-size: 13px; }
+.bar .lab { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bar .tr { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; display: flex; }
+.bar .tr i { display: block; height: 100%; transform-origin: left; animation: grow .9s cubic-bezier(.2,.8,.2,1) both; }
+.bar .tr i.inj { background: var(--sev-i); }
+.bar .tr i.pdo { background: var(--sev-p); opacity: .7; }
+@keyframes grow { from { transform: scaleX(0); } }
+.bar .v { text-align: right; font-weight: 600; }
+
+.heat { display: grid; grid-template-columns: 34px repeat(24, minmax(0, 1fr)); gap: 2px; font: 10px var(--font-mono); color: var(--muted); }
+.heat .c { aspect-ratio: 1; border-radius: 2px; background: var(--surface-2); }
+.heat .lab { display: flex; align-items: center; }
+.heat .hh { text-align: center; }
+
+.rowlink { all: unset; cursor: pointer; font-weight: 600; }
+.rowlink:hover { text-decoration: underline; }
+.rowlink:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+.segrow .rowlink { font-weight: 400; color: var(--muted); }
+.kind { font-size: 11px; }
+
+.caveats { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.caveats li { font-size: 13px; color: var(--muted); padding-left: 14px; position: relative; }
+.caveats li::before { content: ""; position: absolute; left: 0; top: .55em; width: 6px; height: 6px; border-radius: 50%; background: var(--muted); }
+.caveats li.warn { color: var(--amber); }
+.caveats li.warn::before { background: var(--amber); }
+
+.sources .srcbody { display: grid; gap: 8px; margin-top: 12px; font-size: 13px; }
+.sources ul, .drill .kv { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; }
+.sources li, .drill .kv li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+.sources .lbl { font: 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-top: 6px; }
+.sources .sf-btn { justify-self: start; margin-top: 6px; }
+
+.drill { display: grid; gap: 18px; }
+.drill section { display: grid; gap: 8px; }
+.drill .sf-table { font-size: 12px; }
+.empty { display: grid; gap: 14px; justify-items: start; color: var(--muted); padding-top: 20px; }
+.linkbtn { justify-self: start; background: none; border: 0; padding: 4px 0; color: var(--info); font: 600 13px var(--font-body); cursor: pointer; }
+
+@media (max-width: 920px) {
+  .profile { grid-template-columns: 1fr; height: auto; }
+  .profile .mapcol { height: 50vh; }
+}
+@media (prefers-reduced-motion: reduce) { .bar .tr i { animation: none; } }
+.profile .sf-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+.profile .sf-kpi { padding: 12px 14px; }
+.profile .sf-kpi__value { font-size: 26px; }
+@media (max-width: 1180px) { .profile .sf-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
