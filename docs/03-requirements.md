@@ -190,6 +190,28 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   (no Bedrock needed).
 - **Runtime agent DECIDED:** Claude API tool-use loop; model tier chosen by the bake-off. Nothing open.
 
+## Session 2026-10-18 — research recommendations (issue #3), user answers
+- **D1 YES, mode-driven:** outputs depend on the study mode chosen in Setup. Each mode declares the deliverables its
+  agency requires; e.g. HSIP application mode → collision list + collision diagram per location appear in results
+  and export. Modes that don't require them don't show them.
+- **D2 YES:** HSM beta-binomial over-representation test (threshold proportion; ≥2 target crashes; similar-site
+  reference group). NOTE for later: review whether a better over-representation method exists.
+- **D3 YES:** Caltrans rate-group averages for State Highway System locations only; peer-group comparison elsewhere,
+  labelled as such (never "statewide average" on local streets). Rates computed only where the mode needs them.
+- **D4 YES (very important to user):** HSIP five severity levels; **one count per crash** (not per vehicle/party/victim);
+  verify against CCRS fields (incl. whether PDO crashes are present). Open a **technical-nuances list**
+  (docs/06-nuances.md): every doubt goes there, the user answers from 8 years of crash-analysis experience or we research.
+- **D5 pending:** user asked for a plain explanation of the pattern-library sources (HSM Ch. 6 / LRSM App. B).
+- **D6 pending:** user asked what the audit block is; concern: "we're crunching data from a lot of sources".
+- **D7 pending:** not answered (kappa agreement score in the bake-off).
+- **D8 LATER:** build the base product first; then review competitors (Citian etc.) and add features. Trademark later.
+- **D9 open:** user uses the CMF Clearinghouse for ISOAP and calls it "a whole digging game"; asked how we'd approach it.
+  Proposal to confirm: HSIP mode uses Caltrans' own LRSM countermeasure table (closed list, required by HSIP);
+  Clearinghouse used in ISOAP/general modes as a curated shortlist (star rating, crash types), not a full ingest.
+- **D10 YES:** ISOAP mode as a Stage 1 package (SPICE + conflict-point / Safe System score + observed history).
+- **Phasing DECIDED in principle:** one complete process at a time, not many in parallel. Proposed order (to confirm):
+  P1 core crash profile (foundation) → P2 HSIP application → P3 ISOAP → P4 traffic-study safety section, ATP, LRSP/HIN.
+
 ## Pipeline status
 `[new-tool] Stage 2 done (LOCKED 2026-10-16) → Stage 3: design check.`
 Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then Stage 3 design check.
