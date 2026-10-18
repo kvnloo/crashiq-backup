@@ -203,8 +203,8 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   (docs/06-nuances.md): every doubt goes there, the user answers from 8 years of crash-analysis experience or we research.
 - **D5 YES (2026-10-18):** pattern library seeded from HSM Ch. 6 (pattern → possible factors) and Caltrans LRSM App. B
   (crash type → accepted countermeasures); FHWA PSC only as a tag; every finding says "possible cause, verify in field".
-- **D6 pending:** user likes the traceability but worries it's too much info for the end user. Proposal: collapsed by
-  default (one small "Sources" link per finding); full audit detail in the PDF appendix for reviewers.
+- **D6 YES, collapsed (2026-10-18):** audit block hidden by default: one small "Sources" link per finding; full audit
+  detail in the PDF appendix for reviewers (user: avoid too much info for the end user).
 - **D7 YES (2026-10-18):** bake-off also scores agreement with the user's findings (kappa); internal only.
 - **D8 LATER:** build the base product first; then review competitors (Citian etc.) and add features. Trademark later.
 - **D9 YES (2026-10-18), matching method to confirm:** user uses the CMF Clearinghouse for ISOAP ("a whole digging game").
@@ -216,7 +216,7 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   Proposal to confirm: HSIP mode uses Caltrans' own LRSM countermeasure table (closed list, required by HSIP);
   Clearinghouse used in ISOAP/general modes as a curated shortlist (star rating, crash types), not a full ingest.
 - **D10 YES:** ISOAP mode as a Stage 1 package (SPICE + conflict-point / Safe System score + observed history).
-- **Phasing DECIDED in principle:** one complete process at a time, not many in parallel. Proposed order (to confirm):
+- **Phasing DECIDED (2026-10-18):** one complete process at a time, not many in parallel. Order confirmed:
   P1 core crash profile (foundation) → P2 HSIP application → P3 ISOAP → P4 traffic-study safety section, ATP, LRSP/HIN.
 - **Market DECIDED (2026-10-18):** goal is to grow across US states, one state at a time. **California first** (user is
   there and can reach clients), then the next state. Design implication: everything state-specific sits behind a
