@@ -95,6 +95,24 @@ MIGRATIONS: list[str] = [
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     """,
+    # 6 — #14 AI spend log (one row per Claude/Jev call, refusal or fallback)
+    """
+    CREATE TABLE ai_spend (
+        id                INTEGER PRIMARY KEY AUTOINCREMENT,
+        study_id          TEXT NOT NULL,
+        provider          TEXT NOT NULL,
+        model             TEXT NOT NULL,
+        step              TEXT NOT NULL,
+        input_tokens      INTEGER NOT NULL DEFAULT 0,
+        output_tokens     INTEGER NOT NULL DEFAULT 0,
+        cache_read_tokens INTEGER NOT NULL DEFAULT 0,
+        usd               REAL NOT NULL DEFAULT 0,
+        estimate_usd      REAL NOT NULL DEFAULT 0,
+        outcome           TEXT NOT NULL,
+        created_at        TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX ai_spend_study ON ai_spend (study_id);
+    """,
 ]
 
 
