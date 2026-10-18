@@ -1,0 +1,69 @@
+/* Step 2 Corridor: the map is the loud element; tools and the location panel float beside it, never on it. */
+.corridor { position: absolute; inset: 0; }
+.corridor .mapwrap, .ciq-map { position: absolute; inset: 0; }
+.corridor .toolbar { left: 16px; top: 16px; display: flex; gap: 6px; padding: 6px; align-items: flex-start; }
+.corridor .tool { padding: 10px 12px 9px; border-radius: 6px; border: 1px solid var(--line); background: var(--surface);
+  cursor: pointer; font: 600 13px var(--font-body); color: var(--fg); white-space: nowrap; }
+.corridor .tool:hover { border-color: var(--muted); }
+.corridor .search { position: relative; width: 260px; }
+.corridor .search .input { padding: 9px 12px 8px; font-size: 14px; }
+.corridor .search .hits { position: absolute; top: calc(100% + 6px); left: 0; right: 0; display: grid; gap: 2px; padding: 6px;
+  background: var(--surface); border: 1px solid var(--line); border-radius: 8px; font-size: 13px; }
+.corridor .search .hits button { text-align: left; background: none; border: 0; padding: 7px 8px; border-radius: 5px; cursor: pointer; }
+.corridor .search .hits button:hover { background: var(--surface-2); }
+.corridor .hint { left: 16px; bottom: 22px; max-width: min(520px, calc(100% - 460px)); padding: 10px 14px; font-size: 13px; }
+
+.side { right: 16px; top: 16px; bottom: 16px; width: min(400px, calc(100% - 32px)); display: flex; flex-direction: column; overflow: hidden; }
+.side .hd { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.side .hd .sub { font-size: 12px; margin-top: 6px; }
+.side .bd { padding: 12px 14px; overflow: auto; flex: 1; display: grid; gap: 14px; align-content: start; grid-auto-rows: max-content; }
+.side .ft { padding: 12px 18px; border-top: 1px solid var(--line); }
+.sf-btn.quiet { background: transparent; }
+
+.loclist { display: grid; gap: 1px; }
+.loc { display: grid; grid-template-columns: 26px minmax(0, 1fr) auto; gap: 10px; align-items: start; padding: 7px 6px; border-radius: 6px; }
+.loc:hover, .loc.sel { background: var(--surface-2); }
+.loc.off .n, .loc.off .pin { opacity: .5; }
+.loc .pin { width: 22px; height: 22px; border-radius: 50%; border: 2px solid var(--fg); display: grid; place-items: center;
+  font: 700 10px var(--font-mono); margin-top: 1px; }
+.loc .pin.end { background: var(--go); border-color: var(--go); color: var(--on-go); }
+.loc .body { min-width: 0; display: grid; gap: 4px; }
+.loc .n { all: unset; font-weight: 600; font-size: 14px; cursor: text; overflow-wrap: anywhere; }
+.loc .n:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; border-radius: 3px; }
+.loc .m { display: flex; gap: 6px; flex-wrap: wrap; }
+.loc .rename { padding: 5px 8px; font-size: 14px; }
+.loc .acts { display: flex; gap: 6px; align-items: center; }
+.loc .acts input { accent-color: var(--go); width: 16px; height: 16px; }
+.loc .x { border: 0; background: none; color: var(--muted); font-size: 18px; line-height: 1; cursor: pointer; padding: 0 4px; }
+.loc .x:hover { color: var(--stop); }
+.loc.seg { grid-template-columns: 26px auto minmax(0, 1fr); align-items: center; padding: 0 6px; min-height: 22px;
+  font: 11px var(--font-mono); color: var(--muted); }
+.loc.seg > span:first-child { border-left: 1px dashed var(--line); height: 100%; min-height: 22px; margin-left: 11px; }
+.loc.endrow { align-items: center; font-size: 13px; }
+.tier { font: 600 10px var(--font-mono); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
+.aadts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.aadt { display: grid; gap: 3px; font: 10px var(--font-mono); color: var(--muted); }
+.aadt .input { padding: 5px 8px; font-size: 13px; }
+.loc.seg .aadt { grid-template-columns: auto 100px; align-items: center; gap: 6px; justify-self: end; }
+.linkbtn { justify-self: start; background: none; border: 0; padding: 4px 0; color: var(--info); font: 600 13px var(--font-body); cursor: pointer; }
+.linkbtn[aria-pressed="true"] { color: var(--amber); }
+.opts { display: grid; gap: 14px; margin-top: 12px; }
+.slider { width: 100%; accent-color: var(--go); }
+.check { display: flex; gap: 8px; align-items: center; font-size: 14px; cursor: pointer; }
+.check input { accent-color: var(--go); }
+
+/* Map marks (Leaflet divIcons) */
+.ciq-end span, .ciq-pin span { display: grid; place-items: center; width: 100%; height: 100%; border-radius: 50%;
+  font: 700 11px var(--font-mono); }
+.ciq-end span { background: var(--go); color: var(--on-go); box-shadow: 0 0 0 3px color-mix(in srgb, var(--go) 30%, transparent); cursor: grab; }
+.ciq-pin span { background: var(--surface); color: var(--fg); border: 2px solid var(--fg); }
+.ciq-pin--off span { opacity: .45; }
+.ciq-pin--sel span { background: var(--fg); color: var(--bg); }
+.ciq-vertex { background: var(--go); border-radius: 50%; }
+.leaflet-container.ciq-map { cursor: crosshair; }
+
+@media (max-width: 920px) {
+  .side { top: auto; height: 55%; }
+  .corridor .search { width: 180px; }
+  .corridor .hint { display: none; }
+}

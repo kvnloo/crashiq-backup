@@ -26,6 +26,10 @@ class Settings:
     typesafe_api_key: str | None = field(default_factory=lambda: os.getenv("TYPESAFE_API_KEY") or None, repr=False)
     # Per-study AI spend cap in USD (C15). Default proposed in PR #14, for the user to confirm.
     study_ai_cap_usd: float = field(default_factory=lambda: _float("STUDY_AI_CAP_USD", 1.00))
+    # Offline demo: answer Overpass/CKAN from recorded files in this folder instead of the network.
+    # Never set in production. Used for screenshots in the build sandbox, which can't reach those hosts.
+    fixtures_dir: Path | None = field(default_factory=lambda: Path(os.environ["CRASHIQ_FIXTURES_DIR"])
+                                      if os.getenv("CRASHIQ_FIXTURES_DIR") else None)
     # Frontend build served by the same process in production (single service, DemandIQ pattern).
     dist_dir: Path = field(default_factory=lambda: ROOT / "frontend" / "dist")
 

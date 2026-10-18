@@ -29,7 +29,7 @@ from pydantic import BaseModel, Field
 
 from . import study as study_mod
 from .db import Database
-from .geo import FT_PER_MI, Polyline, angle_diff
+from .geo import FT_PER_MI, Polyline, angle_diff, buffer_ring
 from .names import street_key
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
@@ -267,7 +267,10 @@ def network(db: Database, sid: str) -> dict:
     s = study_mod.require(db, sid)
     net = _load(db, sid)
     base = {"radius_ft": s["radius_ft"], "buffer_ft": s["buffer_ft"]}
-    return {**base, **(net or {"line": None, "intersections": [], "segments": []})}
+    if not net:
+        return {**base, "line": None, "intersections": [], "segments": [], "buffer_ring": None}
+    ring = buffer_ring(Polyline([tuple(p) for p in net["line"]]), s["buffer_ft"])
+    return {**base, **net, "buffer_ring": ring}
 
 
 def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: dict) -> dict:

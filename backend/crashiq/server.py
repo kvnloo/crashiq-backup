@@ -72,6 +72,8 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
                    "jev_configured": bool(settings.typesafe_api_key)},
         }
 
+    if settings.fixtures_dir:
+        _use_fixtures(app, settings.fixtures_dir)
     _mount_routers(api, app)
     app.include_router(api)
 
@@ -90,6 +92,13 @@ def _mount_routers(api: APIRouter, app: FastAPI) -> None:
 
     api.include_router(study.router)
     api.include_router(network.router)
+
+
+def _use_fixtures(app: FastAPI, folder: Path) -> None:
+    """Offline demo mode: every Overpass call returns the recorded Crenshaw response."""
+    overpass = folder / "overpass_crenshaw.json"
+    if overpass.exists():
+        app.state.overpass = lambda url, data, timeout: overpass.read_bytes()
 
 
 def _mount_spa(app: FastAPI, dist: Path, require_auth) -> None:
