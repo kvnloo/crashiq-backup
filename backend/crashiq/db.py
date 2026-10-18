@@ -68,6 +68,15 @@ MIGRATIONS: list[str] = [
         PRIMARY KEY (study_id, segment_id)
     );
     """,
+    # 4 — #9 crash pull cache, one per study (re-pulled when the window or corridor changes)
+    """
+    CREATE TABLE crash_pull (
+        study_id  TEXT PRIMARY KEY REFERENCES study(id) ON DELETE CASCADE,
+        cache_key TEXT,
+        pulled_at TEXT NOT NULL,
+        payload   TEXT NOT NULL
+    );
+    """,
 ]
 
 

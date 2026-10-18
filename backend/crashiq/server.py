@@ -88,17 +88,23 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
 
 def _mount_routers(api: APIRouter, app: FastAPI) -> None:
     """Component routers register here (one line per issue)."""
-    from . import network, study
+    from . import crashes, network, study
 
     api.include_router(study.router)
     api.include_router(network.router)
+    api.include_router(crashes.router)
 
 
 def _use_fixtures(app: FastAPI, folder: Path) -> None:
-    """Offline demo mode: every Overpass call returns the recorded Crenshaw response."""
+    """Offline demo mode: Overpass returns the recorded Crenshaw response; CKAN runs on the fixture datastore."""
     overpass = folder / "overpass_crenshaw.json"
     if overpass.exists():
         app.state.overpass = lambda url, data, timeout: overpass.read_bytes()
+    ckan = folder / "ckan_crenshaw.json"
+    if ckan.exists():
+        from .sources.fake_ckan import FakeCkan
+
+        app.state.ckan = FakeCkan(ckan)
 
 
 def _mount_spa(app: FastAPI, dist: Path, require_auth) -> None:
