@@ -89,7 +89,7 @@ run and what the export contains:
 - LLM: Claude API, current Sonnet for the agent.
 - Crash data: live CCRS pull from data.ca.gov per study, cached per project. Fallback if too slow: per-county snapshot.
 - Persistence (new vs DemandIQ): projects, accepted findings/worked examples, pattern library →
-  SQLite locally; persistent disk or Postgres when hosted.
+  SQLite for v1, locally and when hosted (persistent disk). **PostgreSQL not needed for v1** (user, 2026-10-18).
 - Users: the user + a small number of colleagues / demo viewers.
 
 ## Status: LOCKED 2026-10-16 (Hermes session). Earlier "not locked" notes below are history.
@@ -234,8 +234,16 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   (3) Address tier: keep (best location from whatever the record gives, as the user did by hand).
   (4) Provenance labels `address`, `relaxed`, `near` added (see above).
   (5) City crash maps (DataSF etc.): verification/tallying only, not a placement source.
-  (6) Anthropic API key: user will set one up.
-  (7) LA truth source: open (user answer unclear).
+  (6) Anthropic API key: user will set one up, **deferred to the end** of the build (user, 2026-10-18).
+  (7) LA truth source: **dropped** (user, 2026-10-18). No LA truth test; LA counts are covered by the #18 source check.
+- **Tool and stack decisions (user, 2026-10-18, after #20):**
+  (1) **libpostal dropped.** It would add about $60/month of hosting (4 GB instance, #20) for no gain: in Claude Code's
+  bake-off (commit 1509d39, `knowledge/tools.md`) it was slightly more accurate but placed fewer crashes than our locator.
+  The "libpostal as fallback" idea in that file is dropped with it.
+  (2) **Anthropic API key deferred to the end.** Build and test everything that doesn't need Claude first; the key is set up last.
+  (3) **LA truth question dropped** (geocoding decision 7 above).
+  (4) **PostgreSQL not needed: SQLite for v1** (R8). So the PostGIS TIGER geocoder is out for v1; if TIGER is used, it is loaded
+  into our own locator (#20 Q1 option B).
 - **New requirement (user, 2026-10-18):** before analysis, a **state-level validity check of crash data sources**: best source per
   state and road type (CA: TIMS for city streets, CHP/CCRS for freeways), cross-check where several exist, reach consensus,
   then analyse. Research: issue #18.

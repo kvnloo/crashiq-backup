@@ -1,0 +1,319 @@
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>body{font-family:-apple-system,sans-serif;max-width:900px;margin:40px auto;line-height:1.5;padding:0 16px}table{border-collapse:collapse;display:block;overflow-x:auto}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}</style><h1>In California, CCRS Is the Record Source on Every Road Type; TIMS Wins Only on Placing City-Street Injury Crashes</h1>
+<p>Issue #18 · Hermes · researched 2026-10-18 · status: research only, nothing here is decided</p>
+<p>The user's starting rule was "TIMS for city streets, CHP/CCRS for freeways." The data supports the freeway half outright and the city-street half only for <em>location</em>. <strong>Freeways, state highways outside cities and unincorporated county roads (52% of 2024 crashes) are reported by CHP, and in CCRS every one of those records has GPS</strong> (100.0%, 2024). Nothing beats CCRS there, except that Caltrans's own state-highway counts (TASAS) are 4.5% lower for freeway crashes and 17% lower for fatal freeway crashes, so any comparison against Caltrans average rates has to use Caltrans's counting rules. <strong>City streets (44% of crashes) are where the sources split.</strong> CCRS has all of them, property-damage crashes included (52% of city-street crashes are PDO), but only 53% carry GPS, and LAPD and SFPD records about 1%. TIMS geocodes about 97% of fatal and injury crashes, but it drops every PDO crash and is built from the same CHP records, so it can place crashes better but can't count them better. City open data counts differently again: <strong>LAPD's own dataset has 1.3–1.5 times as many crashes as CCRS in every year 2019–2024</strong>, and it stopped updating in March 2025. San Francisco agrees much better (CCRS has 91–99% of DataSF's injury crashes). Hermes's recommendation: one record set (CCRS) for every road type, our locator plus a TIMS cross-check for city-street placement, and a source check on every study that reports the gap rather than merging sources.</p>
+<p><strong>Method.</strong> Counts are from live queries on 2026-10-18 (script <code>research_notes/ca-sources-2026-10-18/queries.py</code>, output <code>evidence.json</code>): CCRS 2023–2024 grouped by road type, CCRS LAPD and SFPD counts by year 2019–2026, LAPD and DataSF open data by year. Caltrans state-highway totals come from Caltrans's <em>2024 Crash Data on California State Highways</em> (prepared 03/18/2026); FARS figures from the FARS Encyclopedia. TIMS facts come from SafeTREC's help pages and terms; Hermes has no TIMS account, so no TIMS record was downloaded. Earlier measurements (SF join, Long Beach GPS, offsets) are from <code>knowledge/pain-points.md</code> and <code>knowledge/sources/</code> on the PR #16 branch. Road type comes from CCRS fields: <code>IsFreeway</code>, reporting agency (NCIC code starting with 9 = CHP), <code>IsHighwayRelated</code>, <code>City Is Incorporated</code>. "PDO" here means no one killed or injured. Anything not confirmed from a primary source is marked <strong>UNVERIFIED</strong>. Sources with URLs: <code>research_notes/ca-sources-2026-10-18/sources.md</code>.</p>
+<h2>Who reports which road decides how good the data is</h2>
+<p>CCRS 2024 (417,170 crashes after dropping deleted reports), grouped by road type:</p>
+<table>
+<thead>
+<tr>
+<th>Road type (CCRS fields)</th>
+<th>Reported by</th>
+<th>Crashes</th>
+<th>Share</th>
+<th>Has GPS</th>
+<th>PDO</th>
+<th>Fatal crashes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>City streets (local agency, incorporated, not highway)</td>
+<td>City police / sheriff contracts</td>
+<td>185,148</td>
+<td>44.4%</td>
+<td><strong>53.3%</strong></td>
+<td>52.4%</td>
+<td>1,462</td>
+</tr>
+<tr>
+<td>Freeways (<code>IsFreeway</code>)</td>
+<td>CHP</td>
+<td>133,289</td>
+<td>32.0%</td>
+<td><strong>100.0%</strong></td>
+<td>66.3%</td>
+<td>946</td>
+</tr>
+<tr>
+<td>Unincorporated county roads</td>
+<td>CHP</td>
+<td>64,645</td>
+<td>15.5%</td>
+<td>100.0%</td>
+<td>62.7%</td>
+<td>780</td>
+</tr>
+<tr>
+<td>Conventional state highways outside cities</td>
+<td>CHP</td>
+<td>17,135</td>
+<td>4.1%</td>
+<td>100.0%</td>
+<td>56.5%</td>
+<td>364</td>
+</tr>
+<tr>
+<td>State highways inside cities</td>
+<td>City police</td>
+<td>12,893</td>
+<td>3.1%</td>
+<td>54.5%</td>
+<td>48.3%</td>
+<td>182</td>
+</tr>
+<tr>
+<td>Other CHP inside cities</td>
+<td>CHP</td>
+<td>3,985</td>
+<td>1.0%</td>
+<td>100.0%</td>
+<td>75.4%</td>
+<td>21</td>
+</tr>
+</tbody>
+</table>
+<p>2023 shows the same pattern (city streets 44.8% of crashes, 51.3% with GPS; every CHP group ≥99.9%). Two things follow. <strong>The location problem is a city-police problem, not a road problem</strong>: a state highway inside a city has the same 55% GPS as a city street because the city police write the report. And <strong>CCRS's <code>IsFreeway</code> flag is only filled on CHP reports</strong>; local-agency rows have it blank, so "road type" in CCRS has to be derived from agency + highway + incorporated flags, as above.</p>
+<h2>The sources compared</h2>
+<table>
+<thead>
+<tr>
+<th></th>
+<th><strong>CCRS</strong> (CHP, data.ca.gov)</th>
+<th><strong>TIMS</strong> (UC Berkeley SafeTREC)</th>
+<th><strong>Caltrans TASAS / TSN</strong></th>
+<th><strong>City open data</strong> (DataSF, LAPD)</th>
+<th><strong>FARS</strong> (NHTSA)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Records</td>
+<td>Every reported crash, all agencies, 2016–2026</td>
+<td>SWITRS (CHP) records, last 10 final years + provisional</td>
+<td>State-highway crashes only, coded to postmile</td>
+<td>One agency's own reports</td>
+<td>Fatal crashes only</td>
+</tr>
+<tr>
+<td>PDO</td>
+<td><strong>Yes</strong> (59% of all rows, 2024)</td>
+<td><strong>No</strong> ("TIMS excludes property-damage-only crashes")</td>
+<td>Yes</td>
+<td>SF: no (injury only). LA: yes</td>
+<td>No</td>
+</tr>
+<tr>
+<td>Location</td>
+<td>Officer GPS: 100% CHP, 53% city streets, ~1% LAPD/SFPD; street pair + offset on all</td>
+<td>SafeTREC geocode <code>POINT_X/Y</code> on ~97% of F+I crashes (Esri StreetMap Premium intersection locator + offset; TSN postmiles on state highways)</td>
+<td>Postmile (linear referencing)</td>
+<td>SF: SFPD coordinates; LA: hundred-block address, snapped points</td>
+<td>Lat/long</td>
+</tr>
+<tr>
+<td>Freshness</td>
+<td>Daily; current year preliminary</td>
+<td>Quarterly; CHP finalizes 12–18 months late</td>
+<td>Annual book (2024 published 03/2026); data by request</td>
+<td>SF quarterly; <strong>LA frozen since 2025-03-11</strong></td>
+<td>~15-month lag</td>
+</tr>
+<tr>
+<td>Access</td>
+<td>Open API, no login</td>
+<td>Free account, CSV download per query</td>
+<td>Request form, <strong>PDF output only</strong>; CPRA for non-Caltrans work</td>
+<td>Open API</td>
+<td>Open download</td>
+</tr>
+<tr>
+<td>Licence</td>
+<td>Public domain</td>
+<td><strong>No licence grant</strong>: attribution requested, data "AS IS", §409 notice, CPRA litigation limits, Caltrans staff told not to rely on it</td>
+<td>Caltrans records; not a redistributable feed</td>
+<td>DataSF PDDL 1.0; LAPD CC0 1.0</td>
+<td>US government work</td>
+</tr>
+</tbody>
+</table>
+<p>TIMS is not a second source of crashes. It is CHP's records with SafeTREC's geocodes added. SafeTREC also notes that since CHP moved to CCRS (2015), CCRS no longer returns Caltrans highway attributes, so TIMS now checks officer GPS on state highways and falls back to its postmile method when needed.</p>
+<h2>Where two sources cover the same crashes, how well they agree</h2>
+<table>
+<thead>
+<tr>
+<th>Comparison</th>
+<th>Years</th>
+<th>Result</th>
+<th>What explains it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CCRS vs LAPD open data</strong>, City of LA</td>
+<td>2019–2024</td>
+<td>CCRS has <strong>67–77%</strong> of LAPD's count every year (2024: 12,851 vs 16,720; 2023: 10,984 vs 16,461; 2019: 37,708 vs 56,628)</td>
+<td>Consistent gap, so not a reporting lag. Possible causes: LAPD reports that never reach CHP, or LAPD counting incidents CHP doesn't treat as reportable crashes. <strong>UNVERIFIED</strong>; needs a report-number join (LAPD's DR number vs CCRS <code>Report Number</code>)</td>
+</tr>
+<tr>
+<td><strong>LAPD reporting drop</strong>, both sources</td>
+<td>2019→2021</td>
+<td>LAPD open data 56,628 → 18,796 (−67%); CCRS LAPD 37,708 → 13,908 (−63%)</td>
+<td>Both sources drop together, so it's a change in what LAPD reports, not a real safety change. Cause <strong>UNVERIFIED</strong>. Any LA trend or before/after study across 2020–21 is invalid without a warning</td>
+</tr>
+<tr>
+<td><strong>CCRS vs DataSF</strong>, SFPD injury crashes</td>
+<td>2019–2025</td>
+<td>CCRS has <strong>91–99%</strong> of DataSF's injury crashes (2024: 2,893 vs 3,026; 2025: 2,917 vs 2,946)</td>
+<td>Close. Whether DataSF includes non-SFPD reports is UNVERIFIED. Known since 2026-10-18: the two join exactly on report number (5,309 linked crashes 2023–24), and ~10% of SFPD records lose their offset in CCRS</td>
+</tr>
+<tr>
+<td><strong>CCRS vs Caltrans TASAS</strong>, freeways</td>
+<td>2024</td>
+<td>Crashes 133,289 vs 127,545 (<strong>+4.5%</strong>); fatal crashes 946 vs 808 (<strong>+17%</strong>); killed 1,049 vs 882 (+19%)</td>
+<td>Caltrans counts crashes <em>on</em> the highway only: it excludes crashes "associated with" a state highway, suicides and beat-902 incidents. CCRS <code>IsFreeway</code> is the officer's flag</td>
+</tr>
+<tr>
+<td><strong>CCRS vs Caltrans TASAS</strong>, all state highways</td>
+<td>2024</td>
+<td>CCRS highway-related 163,317 vs 153,588 (+6.3%); fatal 1,492 vs 1,337 (+12%)</td>
+<td>Same reasons; CCRS <code>IsHighwayRelated</code> is broader than "on the highway"</td>
+</tr>
+<tr>
+<td><strong>CCRS vs FARS</strong>, statewide deaths</td>
+<td>2023, 2024</td>
+<td>4,271 vs 4,169 (+2.4%, FARS final); 4,059 vs 3,876 (+4.7%, FARS 1st release); fatal crashes 2024: 3,755 vs 3,583 (+4.8%)</td>
+<td>FARS counts deaths within 30 days on public trafficways only. Agreement within 5%</td>
+</tr>
+<tr>
+<td><strong>CCRS vs TIMS</strong>, statewide F+I crashes</td>
+<td>2023</td>
+<td>167,604 vs 163,848 (+2.3%)</td>
+<td><strong>UNVERIFIED</strong>: the TIMS figure is quoted by a third-party page, not read from TIMS. Same records, so they should agree closely</td>
+</tr>
+<tr>
+<td><strong>Officer GPS vs the record's own streets</strong> (Long Beach PD)</td>
+<td>2024</td>
+<td>Only 73% of GPS points sit on the streets the officer wrote</td>
+<td>From pain point #2. GPS is not automatically the best location either</td>
+</tr>
+</tbody>
+</table>
+<h2>What this means per road type</h2>
+<table>
+<thead>
+<tr>
+<th>Road type</th>
+<th>Records from</th>
+<th>Location from</th>
+<th>Cross-check</th>
+<th>Confidence</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Freeways</strong></td>
+<td>CCRS</td>
+<td>CCRS GPS (100%), checked against the record's own route/streets</td>
+<td>Caltrans TASAS for anything compared to Caltrans average rates; FARS for fatal counts</td>
+<td>High. Matches the user's "CCRS for freeways"</td>
+</tr>
+<tr>
+<td><strong>State highways (conventional)</strong></td>
+<td>CCRS</td>
+<td>CHP GPS outside cities; our locator inside cities (city police, 55% GPS)</td>
+<td>Caltrans TASAS (same rate caveat)</td>
+<td>High outside cities, medium inside</td>
+</tr>
+<tr>
+<td><strong>Unincorporated county roads</strong></td>
+<td>CCRS</td>
+<td>CCRS GPS (100%)</td>
+<td>FARS for fatal</td>
+<td>High</td>
+</tr>
+<tr>
+<td><strong>City streets</strong></td>
+<td>CCRS (keeps PDO)</td>
+<td>Our locator (PR #16: 90% auto-placed at 98.8% in SF), validated GPS where present</td>
+<td>TIMS <code>POINT_X/Y</code> on the F+I subset; agency open data for counts (SF good, LA known gap)</td>
+<td>Medium. Placement is solved in SF and being validated per city (#17); counts in LA are under-reported by CCRS</td>
+</tr>
+</tbody>
+</table>
+<p><strong>The user's TIMS-for-city-streets rule, restated with the evidence.</strong> TIMS is the better <em>placed</em> injury dataset on city streets today: ~97% geocoded against CCRS's 53% GPS. But using it as the record set would drop the 52% of city-street crashes that are PDO (pain point #10), and it can't close the LAPD gap because it is built from the same CHP records. It also has no licence grant for a paid product. So TIMS fits as a placement cross-check (does our point agree with SafeTREC's?), not as the source of counts.</p>
+<h2>Proposed consensus rule (for the user to decide)</h2>
+<ol>
+<li><strong>One record set per state.</strong> In CA that is CCRS, all severities. Sources are never added together; a crash counted in two sources would be counted twice.</li>
+<li><strong>Best location per crash, with provenance:</strong> validated officer GPS → our locator (exact / address / relaxed / near) → user. A TIMS point, where the user has a TIMS export, is a check on our point, never a silent replacement.</li>
+<li><strong>A source check on every study, reported in the audit block:</strong> study-area count from CCRS vs the second source for that road type (Caltrans TASAS on state highways, agency open data on city streets, FARS for fatal). If the gap is over a threshold the user sets, the study shows a warning with the known reason.</li>
+<li><strong>Known reporting breaks are warnings, not silent data:</strong> e.g. LAPD 2020–21, current-year preliminary records, LA open data frozen after 2025-03-11.</li>
+<li><strong>Rates against Caltrans averages (D3) use Caltrans's counting rule:</strong> crashes <em>on</em> the state highway only, labelled "approximate to TASAS" until the user can import a Caltrans TSAR export.</li>
+</ol>
+<h2>Licence notes</h2>
+<ul>
+<li><strong>CCRS:</strong> public domain (CHP). Fine for a paid product.</li>
+<li><strong>TIMS:</strong> no licence is granted. The terms ask for an acknowledgment ("Transportation Injury Mapping System (TIMS), Safe Transportation Research and Education Center, University of California, Berkeley"), give the data "AS IS", carry the §409 notice, bar use "in connection with" pending litigation against the State or a local authority, and tell Caltrans staff not to rely on it for engineering decisions. Commercial use isn't mentioned either way. Hermes's reading, not legal advice: <strong>don't redistribute TIMS geocodes inside CrashIQ without written permission from SafeTREC (tims_info@berkeley.edu)</strong>. A user who uploads their own TIMS export for a cross-check is a lower-risk pattern.</li>
+<li><strong>Caltrans TASAS:</strong> PDF output on request, CPRA for non-Caltrans projects. Not a feed CrashIQ can pull.</li>
+<li><strong>DataSF:</strong> ODC PDDL 1.0. <strong>LAPD:</strong> CC0 1.0. <strong>FARS:</strong> US government work. All fine.</li>
+<li>The §407/§409 notice applies to crash data used for HSIP work in every source above (#4 Q4 lawyer review).</li>
+</ul>
+<h2>Pain points to add (rows 15–18)</h2>
+<p><code>knowledge/pain-points.md</code> lives on Claude Code's PR #16 branch, so these rows are listed here and on #18 instead of edited in:</p>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Pain point</th>
+<th>Evidence</th>
+<th>Cost to the client</th>
+<th>How CrashIQ addresses it</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>15</td>
+<td><strong>State and Caltrans counts differ on state highways</strong></td>
+<td>2024 freeways: CCRS 133,289 vs Caltrans 127,545 crashes; fatal 946 vs 808 (+17%)</td>
+<td>Crash rates computed from CCRS but compared to Caltrans averages are inflated; HSIP numbers don't match Caltrans's</td>
+<td>Caltrans counting rule applied before any comparison to Caltrans rates; gap shown</td>
+</tr>
+<tr>
+<td>16</td>
+<td><strong>A city's reporting can collapse, and it looks like a safety gain</strong></td>
+<td>LAPD crashes 56,628 (2019) → 18,796 (2021) in LAPD's own data; same drop in CCRS</td>
+<td>Before/after and trend studies in LA across 2020–21 show a fake 60%+ improvement</td>
+<td>Reporting-break warnings per agency and year</td>
+</tr>
+<tr>
+<td>17</td>
+<td><strong>City open data goes stale without notice</strong></td>
+<td>LAPD collision dataset frozen since 2025-03-11 (new RMS dataset not yet published)</td>
+<td>Studies on "the city's data" miss 1.5+ years</td>
+<td>Source freshness check before every study</td>
+</tr>
+<tr>
+<td>18</td>
+<td><strong>The best-geocoded free source has no PDO and no commercial licence</strong></td>
+<td>TIMS: ~97% geocoded, F+I only, no licence grant</td>
+<td>Agencies use TIMS for maps and miss half their crashes; consultants can't build products on it</td>
+<td>CCRS records with our own placement; TIMS only as a check</td>
+</tr>
+</tbody>
+</table>
+<h2>Questions for the user</h2>
+<p>Reply like <code>1A 2Y 3Y…</code>. Hermes's recommendation is in brackets. Nothing in docs/ or the build has been changed for these.</p>
+<ol>
+<li><strong>City streets:</strong> (A) CCRS records + our locator, TIMS points only as a cross-check; (B) take TIMS points as the placement for F+I crashes when available (needs SafeTREC permission); (C) other. [A]</li>
+<li><strong>Ask SafeTREC in writing</strong> whether TIMS geocodes may be used inside a paid tool? Hermes drafts the email, you send it. [Yes]</li>
+<li><strong>Study-level source-gap warning:</strong> flag when the CCRS count differs from the second source by more than ___%. [10%]</li>
+<li><strong>State-highway rates vs Caltrans averages (D3):</strong> (A) filter CCRS to Caltrans's "on the highway" rule and label it approximate in v1, TSAR import later; (B) require a TSAR export from the user before showing SHS rates. [A]</li>
+<li><strong>LA reporting break:</strong> warn on any LAPD study window that crosses 2020–21? [Yes]</li>
+<li><strong>LAPD gap:</strong> worth a report-number join (LAPD DR number vs CCRS) to find which crashes CCRS is missing? About an hour of Claude Code time. [Yes, after #16 merges]</li>
+<li><strong>FARS fatal check:</strong> compare each study's fatal count with FARS as part of the source check (this is a check, not the v2 map overlay from #4 Q8)? [Yes]</li>
+</ol>
+<h2>Confirmed versus unverified</h2>
+<p><strong>Confirmed 2026-10-18 (live queries or primary documents):</strong> every CCRS count above; LAPD and DataSF counts by year; LAPD dataset frozen (data last updated 2025-03-11) and CC0; DataSF PDDL; TIMS excludes PDO, ~97% geocoded, method, terms text; Caltrans 2024 SHS statewide and freeway counts and its exclusions; Caltrans request form gives PDF only; FARS CA fatalities 2023/2024 and fatal crashes 2024.</p>
+<p><strong>UNVERIFIED:</strong> why CCRS has only 67–77% of LAPD's crashes; why LAPD reporting dropped in 2020–21; whether DataSF includes non-SFPD reports; the TIMS 2023 F+I count (secondary source); TIMS's real geocode accuracy on city streets (no TIMS export tested; SafeTREC publishes a rate, not an accuracy); the join key between TIMS <code>CASE_ID</code> and CCRS <code>Collision Id</code>.</p>
+<h2>Conclusion</h2>
+<p>California doesn't need different sources for different roads. It needs one complete record set and different <em>location</em> handling by road type. CHP-reported roads (freeways, state highways outside cities, county roads) are fully located in CCRS. City streets are the hard part, and TIMS's advantage there is placement, which is the job PR #16 is already doing. The disagreements worth showing clients are the ones CrashIQ can explain: Caltrans's narrower counting on state highways, LAPD's reporting gap and break, and a frozen city dataset. The next state's pack (#19) should carry the same three things: its record source, its location method per road type, and the cross-checks to run.</p>

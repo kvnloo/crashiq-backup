@@ -1,0 +1,365 @@
+{
+ "run": "2026-10-18",
+ "ccrs_by_roadtype": {
+  "2023": {
+   "city street (local agency)": {
+    "n": 183751,
+    "gps": 94311,
+    "pdo": 98007,
+    "fatal": 1566,
+    "killed": 1658
+   },
+   "freeway (CHP)": {
+    "n": 129354,
+    "gps": 129354,
+    "pdo": 85788,
+    "fatal": 1003,
+    "killed": 1118
+   },
+   "unincorporated county road (CHP)": {
+    "n": 62834,
+    "gps": 62834,
+    "pdo": 39558,
+    "fatal": 757,
+    "killed": 821
+   },
+   "conventional state highway (CHP)": {
+    "n": 17573,
+    "gps": 17573,
+    "pdo": 9918,
+    "fatal": 405,
+    "killed": 467
+   },
+   "state highway in city (local PD)": {
+    "n": 12832,
+    "gps": 7269,
+    "pdo": 6260,
+    "fatal": 178,
+    "killed": 193
+   },
+   "other CHP (inside city, not highway)": {
+    "n": 3465,
+    "gps": 3463,
+    "pdo": 2684,
+    "fatal": 14,
+    "killed": 14
+   },
+   "other/unknown (local agency)": {
+    "n": 23,
+    "gps": 13,
+    "pdo": 13,
+    "fatal": 0,
+    "killed": 0
+   },
+   "ALL": {
+    "n": 409832,
+    "gps": 314817,
+    "pdo": 242228,
+    "fatal": 3923,
+    "killed": 4271
+   }
+  },
+  "2024": {
+   "city street (local agency)": {
+    "n": 185148,
+    "gps": 98610,
+    "pdo": 96996,
+    "fatal": 1462,
+    "killed": 1544
+   },
+   "freeway (CHP)": {
+    "n": 133289,
+    "gps": 133288,
+    "pdo": 88353,
+    "fatal": 946,
+    "killed": 1049
+   },
+   "unincorporated county road (CHP)": {
+    "n": 64645,
+    "gps": 64645,
+    "pdo": 40529,
+    "fatal": 780,
+    "killed": 854
+   },
+   "conventional state highway (CHP)": {
+    "n": 17135,
+    "gps": 17135,
+    "pdo": 9682,
+    "fatal": 364,
+    "killed": 402
+   },
+   "state highway in city (local PD)": {
+    "n": 12893,
+    "gps": 7028,
+    "pdo": 6229,
+    "fatal": 182,
+    "killed": 186
+   },
+   "other CHP (inside city, not highway)": {
+    "n": 3985,
+    "gps": 3985,
+    "pdo": 3006,
+    "fatal": 21,
+    "killed": 24
+   },
+   "other/unknown (local agency)": {
+    "n": 75,
+    "gps": 22,
+    "pdo": 42,
+    "fatal": 0,
+    "killed": 0
+   },
+   "ALL": {
+    "n": 417170,
+    "gps": 324713,
+    "pdo": 244837,
+    "fatal": 3755,
+    "killed": 4059
+   }
+  }
+ },
+ "ccrs_agency_years": {
+  "2019": {
+   "1942": {
+    "n": 37708,
+    "pdo": 14238,
+    "gps": 68
+   },
+   "3801": {
+    "n": 4991,
+    "pdo": 1675,
+    "gps": 53
+   }
+  },
+  "2020": {
+   "1942": {
+    "n": 30045,
+    "pdo": 12576,
+    "gps": 59
+   },
+   "3801": {
+    "n": 3569,
+    "pdo": 1321,
+    "gps": 18
+   }
+  },
+  "2021": {
+   "1942": {
+    "n": 13908,
+    "pdo": 6244,
+    "gps": 62
+   },
+   "3801": {
+    "n": 4135,
+    "pdo": 1491,
+    "gps": 24
+   }
+  },
+  "2022": {
+   "1942": {
+    "n": 11724,
+    "pdo": 5596,
+    "gps": 45
+   },
+   "3801": {
+    "n": 3884,
+    "pdo": 1265,
+    "gps": 27
+   }
+  },
+  "2023": {
+   "1942": {
+    "n": 10984,
+    "pdo": 5359,
+    "gps": 105
+   },
+   "3801": {
+    "n": 4081,
+    "pdo": 1386,
+    "gps": 22
+   }
+  },
+  "2024": {
+   "1942": {
+    "n": 12851,
+    "pdo": 6576,
+    "gps": 127
+   },
+   "3801": {
+    "n": 4133,
+    "pdo": 1240,
+    "gps": 54
+   }
+  },
+  "2025": {
+   "1942": {
+    "n": 14326,
+    "pdo": 7171,
+    "gps": 63
+   },
+   "3801": {
+    "n": 4091,
+    "pdo": 1174,
+    "gps": 62
+   }
+  },
+  "2026": {
+   "1942": {
+    "n": 9482,
+    "pdo": 4629,
+    "gps": 20
+   },
+   "3801": {
+    "n": 3039,
+    "pdo": 825,
+    "gps": 82
+   }
+  }
+ },
+ "lapd_open_by_year": {
+  "2010": 45098,
+  "2011": 45280,
+  "2012": 45409,
+  "2013": 45040,
+  "2014": 46957,
+  "2015": 52488,
+  "2016": 56532,
+  "2017": 57727,
+  "2018": 57159,
+  "2019": 56628,
+  "2020": 42385,
+  "2021": 18796,
+  "2022": 16417,
+  "2023": 16461,
+  "2024": 16720,
+  "2025": 2580
+ },
+ "datasf_injury_by_year": {
+  "2016": 3323,
+  "2017": 3427,
+  "2018": 3300,
+  "2019": 3486,
+  "2020": 2454,
+  "2021": 2758,
+  "2022": 2886,
+  "2023": 2923,
+  "2024": 3026,
+  "2025": 2946,
+  "2026": 2150
+ },
+ "cross_agency": [
+  {
+   "year": 2019,
+   "ccrs_lapd": 37708,
+   "lapd_open": 56628,
+   "ratio_la": 0.666,
+   "lapd_gps": 0.0018,
+   "ccrs_sfpd_inj": 3316,
+   "datasf_inj": 3486,
+   "ratio_sf": 0.951,
+   "sfpd_gps": 0.0106,
+   "lapd_pdo": 0.378
+  },
+  {
+   "year": 2020,
+   "ccrs_lapd": 30045,
+   "lapd_open": 42385,
+   "ratio_la": 0.709,
+   "lapd_gps": 0.002,
+   "ccrs_sfpd_inj": 2248,
+   "datasf_inj": 2454,
+   "ratio_sf": 0.916,
+   "sfpd_gps": 0.005,
+   "lapd_pdo": 0.419
+  },
+  {
+   "year": 2021,
+   "ccrs_lapd": 13908,
+   "lapd_open": 18796,
+   "ratio_la": 0.74,
+   "lapd_gps": 0.0045,
+   "ccrs_sfpd_inj": 2644,
+   "datasf_inj": 2758,
+   "ratio_sf": 0.959,
+   "sfpd_gps": 0.0058,
+   "lapd_pdo": 0.449
+  },
+  {
+   "year": 2022,
+   "ccrs_lapd": 11724,
+   "lapd_open": 16417,
+   "ratio_la": 0.714,
+   "lapd_gps": 0.0038,
+   "ccrs_sfpd_inj": 2619,
+   "datasf_inj": 2886,
+   "ratio_sf": 0.907,
+   "sfpd_gps": 0.007,
+   "lapd_pdo": 0.477
+  },
+  {
+   "year": 2023,
+   "ccrs_lapd": 10984,
+   "lapd_open": 16461,
+   "ratio_la": 0.667,
+   "lapd_gps": 0.0096,
+   "ccrs_sfpd_inj": 2695,
+   "datasf_inj": 2923,
+   "ratio_sf": 0.922,
+   "sfpd_gps": 0.0054,
+   "lapd_pdo": 0.488
+  },
+  {
+   "year": 2024,
+   "ccrs_lapd": 12851,
+   "lapd_open": 16720,
+   "ratio_la": 0.769,
+   "lapd_gps": 0.0099,
+   "ccrs_sfpd_inj": 2893,
+   "datasf_inj": 3026,
+   "ratio_sf": 0.956,
+   "sfpd_gps": 0.0131,
+   "lapd_pdo": 0.512
+  },
+  {
+   "year": 2025,
+   "ccrs_lapd": 14326,
+   "lapd_open": 2580,
+   "ratio_la": 5.553,
+   "lapd_gps": 0.0044,
+   "ccrs_sfpd_inj": 2917,
+   "datasf_inj": 2946,
+   "ratio_sf": 0.99,
+   "sfpd_gps": 0.0152,
+   "lapd_pdo": 0.501
+  }
+ ],
+ "caltrans_shs_2024": {
+  "total": 153588,
+  "pdo": 98919,
+  "injury": 53332,
+  "fatal": 1337,
+  "killed": 1467,
+  "fwy_total": 127545,
+  "fwy_pdo": 84870,
+  "fwy_fatal": 808,
+  "fwy_killed": 882,
+  "nonfwy_total": 26043,
+  "nonfwy_fatal": 529,
+  "prepared": "2026-03-18"
+ },
+ "fars_ca": {
+  "2023": {
+   "killed": 4169,
+   "status": "final (FARS Encyclopedia)"
+  },
+  "2024": {
+   "killed": 3876,
+   "fatal_crashes": 3583,
+   "status": "1st release (FARS Encyclopedia)"
+  }
+ },
+ "tims_2023_fi_secondary": {
+  "value": 163848,
+  "source": "GJEL page quoting TIMS snapshot 2026-06-08; NOT verified in TIMS"
+ }
+}
