@@ -130,7 +130,7 @@ street pair means.
 4. Jev Choice, **leftovers only**: top-5 code-generated candidates + "none of these". Jev picks; it never invents a location.
 5. Seam check (code): the pick must be in the list, top probability ≥ τ, and margin over 2nd ≥ m. Otherwise → review queue.
 6. Code: offset SecondaryDistance/Direction along PrimaryRoad → coordinates → normal 250 ft assignment.
-**Provenance on every crash:** `gps` / `exact` / `fuzzy` / `jev(p)` / `user` / `unmatched`. Dashboard shows counts per tier.
+**Provenance on every crash:** `gps` / `address` / `exact` / `relaxed` / `near` / `fuzzy` / `jev(p)` / `user` / `review` / `unmatched` (address/relaxed/near/review added by the user 2026-10-18, PR #16). Dashboard shows counts per tier.
 Every analysis can be re-run excluding `jev` crashes.
 **Cache:** decisions keyed by (city, normalized primary, normalized secondary). One decision covers every crash
 with that string pair, which keeps calls few and results repeatable.
@@ -225,6 +225,20 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   stays state-neutral. Adding a state = adding a pack, not rewriting the app. Cheap to do now; expensive to retrofit.
   User confirmed: build the pack structure, but **only the California pack is active**. Next state likely **Texas**;
   Hermes does the background research for it (data source, severity, HSIP-equivalent formats) when the user says go.
+
+- **Geocoding decisions (user, 2026-10-18, PR #16):**
+  (1) Test design = the original one: hide the record's own GPS and place it from the report (Long Beach run). Other sources
+  (DataSF etc.) are not the test truth; sources disagree. Result so far: Jev loses to code matching (LB clean GPS 92.6% vs 95.2%;
+  SF 88.1% vs 92.5%), so Jev is a review suggestion only, never an auto-placer.
+  (2) Placement gate: decide later. Unplaced crashes go to the review list; why they don't place is backlog #17.
+  (3) Address tier: keep (best location from whatever the record gives, as the user did by hand).
+  (4) Provenance labels `address`, `relaxed`, `near` added (see above).
+  (5) City crash maps (DataSF etc.): verification/tallying only, not a placement source.
+  (6) Anthropic API key: user will set one up.
+  (7) LA truth source: open (user answer unclear).
+- **New requirement (user, 2026-10-18):** before analysis, a **state-level validity check of crash data sources**: best source per
+  state and road type (CA: TIMS for city streets, CHP/CCRS for freeways), cross-check where several exist, reach consensus,
+  then analyse. Research: issue #18.
 
 ## Pipeline status
 `[new-tool] Stage 2 done (LOCKED 2026-10-16) → Stage 3: design check.`
