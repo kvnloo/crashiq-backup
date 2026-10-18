@@ -113,6 +113,14 @@ MIGRATIONS: list[str] = [
     );
     CREATE INDEX ai_spend_study ON ai_spend (study_id);
     """,
+    # 7 — #15 Oracle context object imported from another tile (kept verbatim; CrashIQ writes on export)
+    """
+    CREATE TABLE context_object (
+        study_id   TEXT PRIMARY KEY REFERENCES study(id) ON DELETE CASCADE,
+        body       TEXT NOT NULL,
+        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    """,
 ]
 
 
