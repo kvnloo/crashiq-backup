@@ -21,11 +21,11 @@ Legend: KEEP · CUT · CHANGE · HIDE (behind "More options" / shown only when r
 | ◐ button (right) | Toggles light/dark theme | CUT, pick one theme; or move into an account menu |
 
 **Left rail**
-| Steps 1–6 with subtitles | Navigation + progress | KEEP; drop subtitles once the step titles are clear |
+| Steps 1–6 with subtitles | Navigation + progress | KEEP, but **5 steps** (user, 2026-10-18): Setup · Corridor (draw + review together) · Crash profile · Findings · Export; drop subtitles once the step titles are clear |
 | Footer "Mockup v0.1 · Data: CCRS · Map ©" | Credits | KEEP the data/map credit (required, small); CUT "Mockup v0.1" |
 
 **1 Setup**
-| Animated road / signal hero | Decoration | CUT |
+| Animated road / signal hero | Decoration | ~~CUT~~ **KEEP** (user, 2026-10-18: "I really like the traffic"); headline above it, never on top of it |
 | Study type cards (5; 3 say "Coming v2") | Choose the study mode | CHANGE: one dropdown with only the 2 working modes; no "coming soon" items |
 | Project name | Names the study | KEEP |
 | Year chips (one per year) | Choose crash history window | CHANGE: dropdown "Last 5 complete years (2021–2025) ▾" with a "Custom range" option |

@@ -75,14 +75,14 @@ run and what the export contains:
 - Pull all three CCRS tables: Crashes, Parties (movements, modes, at-fault, age), InjuredWitnessPassengers (KABCO for KSI).
 
 ## R7 — Screen flow (Q7)
-1. Setup (mode, project name, year window)
-2. Study area (draw corridor / pick intersections)
-3. Review locations (intersections, segments, 250 ft + buffer, AADT if rates on; crashes colored by location confidence)
-4. Crash profile dashboard (KPIs, severity map, collision types, PCFs, temporal heatmap, top locations; per-location drill-in)
-   - v2: ISOAP prediction step (SPICE) after 4
-5. Findings (agent diagnoses + evidence + ✓/✗/edit + follow-up chat)
-   - v3: Countermeasures step after 5
-6. Export (Excel + PDF, mode-specific format)
+**5 steps** (user decision 2026-10-18, issues #5/#6/#8; was 6 — Study area and Review locations merged into one Corridor step):
+1. Setup (mode, project name, year window). Keeps the traffic animation, headline above it, never on top of it.
+2. Corridor: draw corridor / pick intersections, then review locations on the same screen (intersections, segments, 250 ft + buffer, AADT if rates on; crashes colored by location confidence)
+3. Crash profile dashboard (KPIs, severity map, collision types, PCFs, temporal heatmap, top locations; per-location drill-in)
+   - v2: ISOAP prediction step (SPICE) after 3
+4. Findings (agent diagnoses + evidence + ✓/✗/edit + follow-up chat)
+   - v3: Countermeasures step after 4
+5. Export (Excel + PDF, mode-specific format)
 
 ## R8 — Deployment & platform (Q8)
 - Same as DemandIQ: local dev first → Render, single Docker service, `APP_PASSWORD` basic auth, `ANTHROPIC_API_KEY`.
