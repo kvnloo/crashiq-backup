@@ -171,13 +171,18 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
     kp, ks = street_key(crash.get("primary_road"), aliases), street_key(crash.get("secondary_road"), aliases)
     if not kp or not ks:
         return Placement("review", note="missing street name")
-    relaxed = lambda k: _same_core_keys(net, k)
+    # Relax one thing at a time (2026-10-18, Atlantic Av & Atlantic Pl in Long Beach): first the leading
+    # directional only, keeping the suffix ("ATLANTIC PL" -> North Atlantic Place); only then any suffix.
+    def relaxed(k):
+        keep_suffix = [s for s in _same_core_keys(net, k) if k.suffix is None or s.suffix is None or s.suffix == k.suffix]
+        return keep_suffix or _same_core_keys(net, k)
     fuzzy = lambda k: _keys_matching(net, k) or relaxed(k) or _fuzzy(net, k, fuzzy_min, fuzzy_margin)
     for tier, find, meet in (("exact", lambda k: _keys_matching(net, k), _shared_nodes),
                              ("relaxed", relaxed, _shared_nodes),
                              ("near", relaxed, _near_nodes),
                              ("fuzzy", fuzzy, _shared_nodes)):
         a, b = find(kp), find(ks)
+        b = [s for s in b if s not in a]   # the two streets of a crash are never the same street
         if not a or not b:
             continue
         nodes = meet(net, a, b)

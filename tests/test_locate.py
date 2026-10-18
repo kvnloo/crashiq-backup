@@ -102,3 +102,16 @@ def test_gate_jev_below_tau_or_margin_goes_to_review():
     assert g.auto(locate.Placement("jev", 1, 1, p=0.95, p2=0.05))
     assert not g.auto(locate.Placement("jev", 1, 1, p=0.85, p2=0.05))   # below tau
     assert not g.auto(locate.Placement("jev", 1, 1, p=0.92, p2=0.70))   # below margin
+
+
+def test_relaxed_keeps_suffix_before_dropping_it():
+    # Long Beach, 2026-10-18: "ATLANTIC AV & ATLANTIC PL"; OSM calls the small street "North Atlantic Place".
+    net = Network({"elements": [
+        {"type": "node", "id": 1, "lat": 33.880, "lon": -118.186}, {"type": "node", "id": 2, "lat": 33.881, "lon": -118.186},
+        {"type": "node", "id": 3, "lat": 33.880, "lon": -118.185}, {"type": "node", "id": 4, "lat": 33.870, "lon": -118.186},
+        {"type": "node", "id": 5, "lat": 33.870, "lon": -118.185},
+        {"type": "way", "id": 1, "nodes": [4, 1, 2], "tags": {"name": "Atlantic Avenue"}},
+        {"type": "way", "id": 2, "nodes": [1, 3], "tags": {"name": "North Atlantic Place"}},
+        {"type": "way", "id": 3, "nodes": [4, 5], "tags": {"name": "45th Street"}}]})
+    p = locate.place(net, crash("ATLANTIC AV", "ATLANTIC PL"))
+    assert p.tier == "relaxed" and p.node == 1
