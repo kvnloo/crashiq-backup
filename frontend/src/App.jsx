@@ -3,17 +3,25 @@ import TopBar from './components/TopBar'
 import Rail from './components/Rail'
 import { STEPS } from './steps'
 import { StudyProvider, useStudy } from './study'
-import Placeholder from './screens/Placeholder'
 import Setup from './screens/Setup'
 import Corridor from './screens/Corridor'
 import Profile from './screens/Profile'
+import Findings from './screens/Findings'
+import Export from './screens/Export'
 
 const SCREENS = {
   setup: Setup,
   corridor: Corridor,
   profile: Profile,
-  findings: () => <Placeholder title="Findings" />,
-  export: () => <Placeholder title="Export" />,
+  findings: Findings,
+  export: Export,
+}
+
+// Furthest step with data: corridor drawn → Corridor; crashes pulled → Profile (Findings is optional).
+function reachedStep(study) {
+  if (study?.progress?.crashes) return 3
+  if (study?.progress?.corridor) return 1
+  return 0
 }
 
 function Frame() {
@@ -25,7 +33,7 @@ function Frame() {
     <>
       <TopBar projectName={study?.name} />
       <div className="app">
-        <Rail studyId={studyId} current={current} />
+        <Rail studyId={studyId} current={current} reached={reachedStep(study)} />
         <main className="stage">
           <Outlet />
         </main>
@@ -35,9 +43,9 @@ function Frame() {
 }
 
 function Shell() {
-  const { studyId } = useParams()
+  const { studyId, step } = useParams()
   return (
-    <StudyProvider studyId={studyId}>
+    <StudyProvider studyId={studyId} refreshKey={step}>
       <Frame />
     </StudyProvider>
   )

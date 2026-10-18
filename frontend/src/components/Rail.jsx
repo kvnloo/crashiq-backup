@@ -1,11 +1,17 @@
+import { useEffect, useRef } from 'react'
 import { NavLink } from 'react-router-dom'
 import { STEPS, stepPath } from '../steps'
 
 // Left rail: the five steps. Steps after Setup open once a study exists (they need its id).
 // `reached` = index of the furthest step the study has data for; earlier steps show a check.
 export default function Rail({ studyId, current, reached = 0 }) {
+  const ref = useRef(null)
+  // On phones the rail is a horizontal strip: keep the current step in view.
+  useEffect(() => {
+    ref.current?.querySelector('.step.on')?.scrollIntoView?.({ block: 'nearest', inline: 'nearest' })
+  }, [current])
   return (
-    <nav className="rail" aria-label="Study steps">
+    <nav className="rail" aria-label="Study steps" ref={ref}>
       <div className="sf-eyebrow">Safety study</div>
       {STEPS.map((s, i) => {
         const done = i < current && i <= reached

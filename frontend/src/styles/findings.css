@@ -1,0 +1,12 @@
+.findings-screen { max-width: 860px; margin: 0 auto; padding: 36px 32px 60px; display: grid; gap: 22px; grid-auto-rows: max-content; }
+.empty-state { display: grid; grid-template-columns: auto 1fr; gap: 16px; align-items: start; padding: 18px;
+  border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+.empty-state p { margin: 6px 0 0; max-width: 60ch; }
+.flist { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.fcard { padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: grid; gap: 10px; }
+.fcard.st-accepted { border-color: color-mix(in srgb, var(--go) 50%, var(--line)); }
+.fcard.st-rejected { opacity: .6; }
+.fcard .claim { margin: 0; font: 600 16px/1.45 var(--font-body); }
+.fcard .meta { font-size: 11px; color: var(--muted); }
+.fcard .row { display: flex; gap: 8px; align-items: center; }
+.fcard .status { font: 11px var(--font-mono); text-transform: uppercase; letter-spacing: .06em; }

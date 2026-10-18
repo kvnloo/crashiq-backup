@@ -4,7 +4,8 @@ import { api } from './lib/api'
 // The open study, shared by the header, rail and every step screen.
 const StudyCtx = createContext({ study: null, setStudy: () => {}, reload: () => {}, error: null })
 
-export function StudyProvider({ studyId, children }) {
+// `refreshKey` (the current step) re-reads the study so the rail's progress stays current.
+export function StudyProvider({ studyId, refreshKey, children }) {
   const [state, setState] = useState({ id: null, study: null, error: null })
 
   const load = useCallback(async (id, isAlive = () => true) => {
@@ -23,7 +24,7 @@ export function StudyProvider({ studyId, children }) {
       .then((s) => { if (alive) setState({ id: studyId, study: s, error: null }) })
       .catch((e) => { if (alive) setState({ id: studyId, study: null, error: e }) })
     return () => { alive = false }
-  }, [studyId])
+  }, [studyId, refreshKey])
 
   const current = state.id === studyId ? state : { study: null, error: null }
   const value = {

@@ -180,7 +180,10 @@ def create_study(body: StudyIn, request: Request) -> dict:
 
 @router.get("/studies/{sid}")
 def get_study(sid: str, request: Request) -> dict:
-    return require(request.app.state.db, sid)
+    db = request.app.state.db
+    s = require(db, sid)
+    has = lambda t: db.one(f"SELECT 1 AS x FROM {t} WHERE study_id = ?", (sid,)) is not None  # noqa: E731
+    return {**s, "progress": {"corridor": has("corridor"), "crashes": has("crash_pull")}}
 
 
 @router.patch("/studies/{sid}")

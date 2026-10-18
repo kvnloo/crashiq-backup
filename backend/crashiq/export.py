@@ -1,0 +1,206 @@
+"""C13 export (v1: crash profile / TIS mode): Excel workbook and PDF built only from the C6 profile response.
+No number is computed here; values are copied from the cited tables (T1…T11) and their cells."""
+
+from __future__ import annotations
+
+import io
+from datetime import datetime, timezone
+
+from fastapi import APIRouter, Request
+from fastapi.responses import Response
+from openpyxl import Workbook
+from openpyxl.styles import Alignment, Font, PatternFill
+from openpyxl.utils import get_column_letter
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
+from reportlab.lib.units import inch
+from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+
+from . import profile as profile_mod
+from .assign import for_study
+
+CREDITS = ("Crash data: CCRS, California Highway Patrol (data.ca.gov, public domain). "
+           "Map data © OpenStreetMap contributors (ODbL).")
+NO_AI = "This profile has no AI narrative yet. Findings will be added once the analyst step is enabled."
+
+
+def gather(db, sid: str) -> dict:
+    study, net, pull, a = for_study(db, sid)
+    return {"study": study, "network": net, "profile": profile_mod.build(study, net, pull, a),
+            "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
+
+
+def _t(p, tid):
+    return next(t for t in p["tables"] if t["id"] == tid)
+
+
+def _fname(study, ext):
+    safe = "".join(ch if ch.isalnum() or ch in "-_" else "_" for ch in study["name"]).strip("_") or "study"
+    return f"CrashIQ_{safe}_{study['from_year']}-{study['to_year']}.{ext}"
+
+
+# -- Excel -----------------------------------------------------------------------------------------------
+def to_xlsx(d: dict) -> bytes:
+    s, net, p = d["study"], d["network"], d["profile"]
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Study"
+    bold = Font(bold=True)
+    rows = [("CrashIQ crash profile", ""), ("Project", s["name"]), ("Study type", s["mode_label"]),
+            ("Crash history", f"{s['from_year']}–{s['to_year']}"), ("Corridor", net.get("corridor_name") or ""),
+            ("Corridor length (mi)", profile_mod.cell(p["tables"], "T1/length_mi/value")),
+            ("Influence radius (ft)", s["radius_ft"]), ("Corridor buffer (ft)", s["buffer_ft"]),
+            ("Generated", d["generated"]), ("Data pulled", p["pulled_at"]), ("", ""), ("Caveats", "")]
+    rows += [("", c["text"]) for c in p["caveats"]] or [("", "None")]
+    rows += [("", ""), ("Note", NO_AI), ("Sources", CREDITS),
+             ("Tables", "Each sheet is one cited table (T1…T11). Cell = sheet / row key / column.")]
+    for r in rows:
+        ws.append(list(r))
+    ws["A1"].font = Font(bold=True, size=14)
+    for row in ws.iter_rows(min_row=2, max_col=1):
+        row[0].font = bold
+    ws.column_dimensions["A"].width = 24
+    ws.column_dimensions["B"].width = 90
+    head = PatternFill("solid", fgColor="22282E")
+    for t in p["tables"]:
+        sh = wb.create_sheet(f"{t['id']} {t['title']}"[:31].replace("/", "-").replace(":", "-"))
+        sh.append([f"{t['id']} · {t['title']}"])
+        sh["A1"].font = Font(bold=True, size=12)
+        sh.append(["Row key", "Label"] + [c["label"] for c in t["columns"]])
+        for cell in sh[2]:
+            cell.font = Font(bold=True, color="FFFFFF")
+            cell.fill = head
+        for r in t["rows"]:
+            sh.append([r["key"], r["label"]] + [r["values"].get(c["key"]) for c in t["columns"]])
+        sh.append([])
+        sh.append(["Location sources"] + [f"{k}: {v}" for k, v in t["provenance"].items()])
+        sh.column_dimensions["A"].width = 22
+        sh.column_dimensions["B"].width = 44
+        for i in range(3, len(t["columns"]) + 3):
+            sh.column_dimensions[get_column_letter(i)].width = 12
+        sh.freeze_panes = "C3"
+        for row in sh.iter_rows(min_row=3):
+            for c in row[2:]:
+                c.alignment = Alignment(horizontal="right")
+    buf = io.BytesIO()
+    wb.save(buf)
+    return buf.getvalue()
+
+
+# -- PDF -------------------------------------------------------------------------------------------------
+def _fmt(v, d=None):
+    if v is None:
+        return "—"
+    if isinstance(v, float) and d is not None:
+        return f"{v:,.{d}f}"
+    return f"{v:,}" if isinstance(v, (int, float)) else str(v)
+
+
+def to_pdf(d: dict) -> bytes:
+    s, net, p = d["study"], d["network"], d["profile"]
+    buf = io.BytesIO()
+    doc = SimpleDocTemplate(buf, pagesize=letter, leftMargin=0.7 * inch, rightMargin=0.7 * inch,
+                            topMargin=0.7 * inch, bottomMargin=0.7 * inch, title=f"{s['name']} crash profile",
+                            author="CrashIQ")
+    ss = getSampleStyleSheet()
+    h1 = ParagraphStyle("h1", parent=ss["Title"], alignment=0, fontSize=20, spaceAfter=4)
+    h2 = ParagraphStyle("h2", parent=ss["Heading2"], fontSize=13, spaceBefore=12, spaceAfter=6)
+    body = ParagraphStyle("b", parent=ss["BodyText"], fontSize=9.5, leading=13)
+    small = ParagraphStyle("s", parent=body, fontSize=8, textColor=colors.HexColor("#57636F"))
+    cellp = ParagraphStyle("c", parent=body, fontSize=8.5, leading=10.5)
+    dark, line = colors.HexColor("#22282E"), colors.HexColor("#D3D8DD")
+    W = letter[0] - 1.4 * inch                      # every table spans the text width
+
+    def cols(first, n):                             # label column + n equal number columns
+        return [first] + [(W - first) / n] * n
+
+    def table(data, widths, num_cols=()):
+        t = Table(data, colWidths=widths, repeatRows=1)
+        st = [("FONT", (0, 0), (-1, 0), "Helvetica-Bold", 8.5), ("FONT", (0, 1), (-1, -1), "Helvetica", 8.5),
+              ("BACKGROUND", (0, 0), (-1, 0), dark), ("TEXTCOLOR", (0, 0), (-1, 0), colors.white),
+              ("LINEBELOW", (0, 1), (-1, -1), 0.4, line), ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+              ("TOPPADDING", (0, 0), (-1, -1), 3), ("BOTTOMPADDING", (0, 0), (-1, -1), 3)]
+        for c in num_cols:
+            st.append(("ALIGN", (c, 0), (c, -1), "RIGHT"))
+        t.setStyle(TableStyle(st))
+        return t
+
+    def src(tid):
+        return Paragraph(f"Source: table {tid}, computed from the CCRS records listed in the appendix workbook.", small)
+
+    v = lambda a: profile_mod.cell(p["tables"], a)
+    story = [Paragraph(f"{s['name']}: crash profile", h1),
+             Paragraph(f"{net.get('corridor_name') or 'Corridor'} · {s['mode_label']} · crash history "
+                       f"{s['from_year']}–{s['to_year']} · generated {d['generated']}", small), Spacer(1, 10)]
+    kpis = [["Crashes", "KSI crashes", "Injury crashes", "Crashes per mile · year"],
+            [_fmt(v(p["kpis"]["crashes"])), _fmt(v(p["kpis"]["ksi_crashes"])), _fmt(v(p["kpis"]["injury_crashes"])),
+             _fmt(v(p["kpis"]["crashes_per_mi_yr"]))]]
+    kt = Table(kpis, colWidths=[W / 4] * 4)
+    kt.setStyle(TableStyle([("FONT", (0, 0), (-1, 0), "Helvetica", 8), ("TEXTCOLOR", (0, 0), (-1, 0), colors.HexColor("#57636F")),
+                            ("FONT", (0, 1), (-1, 1), "Helvetica-Bold", 18), ("BOX", (0, 0), (-1, -1), 0.6, line),
+                            ("INNERGRID", (0, 0), (-1, -1), 0.6, line), ("TOPPADDING", (0, 0), (-1, -1), 6),
+                            ("BOTTOMPADDING", (0, 0), (-1, -1), 6)]))
+    story += [kt, src("T1")]
+
+    t1 = _t(p, "T1")
+    story += [Paragraph("Study summary", h2),
+              table([["Measure", "Value"]] + [[r["label"], _fmt(r["values"]["value"])] for r in t1["rows"]],
+                    cols(W - 1.4 * inch, 1), (1,)), src("T1")]
+    t2 = _t(p, "T2")
+    has_rate = any(r["values"]["rate"] is not None for r in t2["rows"])
+    head = ["Location", "Crashes", "Per yr", "KSI", "Injury", "Dark"] + (["Rate"] if has_rate else [])
+    data = [head] + [[Paragraph(r["label"], cellp), _fmt(r["values"]["crashes"]), _fmt(r["values"]["crashes_per_year"]),
+                      _fmt(r["values"]["ksi_crashes"]), _fmt(r["values"]["injury_crashes"]),
+                      _fmt(r["values"]["dark_crashes"])] + ([_fmt(r["values"]["rate"])] if has_rate else [])
+                     for r in t2["rows"]]
+    w = cols(3.1 * inch, len(head) - 1)
+    story += [Paragraph("Locations (corridor order)", h2), table(data, w, range(1, len(head))), src("T2")]
+    t3 = _t(p, "T3")
+    story += [KeepTogether([Paragraph("Severity (each crash counted once)", h2),
+                            table([["Severity", "Crashes", "Share %"]] + [[r["label"], _fmt(r["values"]["crashes"]),
+                                   _fmt(r["values"]["share_pct"], 1)] for r in t3["rows"]], cols(W - 2.4 * inch, 2), (1, 2)),
+                            src("T3")])]
+    for tid, title, limit, label in (("T4", "Collision type", None, "Type"),
+                                     ("T5", "Primary collision factor (top 10)", 10, "Factor"),
+                                     ("T6", "Lighting", None, "Lighting")):
+        t = _t(p, tid)
+        rows = t["rows"][:limit] if limit else t["rows"]
+        story += [KeepTogether([Paragraph(title, h2), table(
+            [[label, "Crashes", "Injury", "KSI", "Share %"]] + [[Paragraph(r["label"], cellp), _fmt(r["values"]["crashes"]),
+                                                              _fmt(r["values"]["injury_crashes"]), _fmt(r["values"]["ksi_crashes"]),
+                                                              _fmt(r["values"]["share_pct"], 1)] for r in rows],
+            cols(W - 3.6 * inch, 4), (1, 2, 3, 4)), src(tid)])]
+    story += [Paragraph("Caveats", h2)]
+    story += [Paragraph("• " + c["text"], body) for c in p["caveats"]] or [Paragraph("None.", body)]
+    story += [Paragraph("Findings", h2), Paragraph(NO_AI, body), Spacer(1, 14), Paragraph(CREDITS, small)]
+
+    def footer(canvas, _doc):
+        canvas.saveState()
+        canvas.setFont("Helvetica", 7.5)
+        canvas.setFillColor(colors.HexColor("#57636F"))
+        canvas.drawString(0.7 * inch, 0.45 * inch, f"CrashIQ · {s['name']} · {s['from_year']}–{s['to_year']}")
+        canvas.drawRightString(letter[0] - 0.7 * inch, 0.45 * inch, f"Page {canvas.getPageNumber()}")
+        canvas.restoreState()
+
+    doc.build(story, onFirstPage=footer, onLaterPages=footer)
+    return buf.getvalue()
+
+
+router = APIRouter()
+
+
+@router.get("/studies/{sid}/export.xlsx")
+def export_xlsx(sid: str, request: Request):
+    d = gather(request.app.state.db, sid)
+    return Response(to_xlsx(d), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+                    headers={"Content-Disposition": f'attachment; filename="{_fname(d["study"], "xlsx")}"'})
+
+
+@router.get("/studies/{sid}/export.pdf")
+def export_pdf(sid: str, request: Request):
+    d = gather(request.app.state.db, sid)
+    return Response(to_pdf(d), media_type="application/pdf",
+                    headers={"Content-Disposition": f'attachment; filename="{_fname(d["study"], "pdf")}"'})
+
+
