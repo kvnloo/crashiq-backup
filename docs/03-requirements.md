@@ -201,8 +201,10 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
 - **D4 YES (very important to user):** HSIP five severity levels; **one count per crash** (not per vehicle/party/victim);
   verify against CCRS fields (incl. whether PDO crashes are present). Open a **technical-nuances list**
   (docs/06-nuances.md): every doubt goes there, the user answers from 8 years of crash-analysis experience or we research.
-- **D5 pending:** user asked for a plain explanation of the pattern-library sources (HSM Ch. 6 / LRSM App. B).
-- **D6 pending:** user asked what the audit block is; concern: "we're crunching data from a lot of sources".
+- **D5 YES (2026-10-18):** pattern library seeded from HSM Ch. 6 (pattern → possible factors) and Caltrans LRSM App. B
+  (crash type → accepted countermeasures); FHWA PSC only as a tag; every finding says "possible cause, verify in field".
+- **D6 pending:** user likes the traceability but worries it's too much info for the end user. Proposal: collapsed by
+  default (one small "Sources" link per finding); full audit detail in the PDF appendix for reviewers.
 - **D7 pending:** not answered (kappa agreement score in the bake-off).
 - **D8 LATER:** build the base product first; then review competitors (Citian etc.) and add features. Trademark later.
 - **D9 open:** user uses the CMF Clearinghouse for ISOAP and calls it "a whole digging game"; asked how we'd approach it.
