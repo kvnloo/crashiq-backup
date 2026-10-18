@@ -2,22 +2,26 @@ import { BrowserRouter, Navigate, Outlet, Route, Routes, useParams } from 'react
 import TopBar from './components/TopBar'
 import Rail from './components/Rail'
 import { STEPS } from './steps'
+import { StudyProvider, useStudy } from './study'
 import Placeholder from './screens/Placeholder'
+import Setup from './screens/Setup'
 
 const SCREENS = {
-  setup: () => <Placeholder title="Setup" />,
+  setup: Setup,
   corridor: () => <Placeholder title="Corridor" />,
   profile: () => <Placeholder title="Crash profile" />,
   findings: () => <Placeholder title="Findings" />,
   export: () => <Placeholder title="Export" />,
 }
 
-function Shell() {
+function Frame() {
   const { studyId, step = 'setup' } = useParams()
+  const { study, error } = useStudy()
   const current = Math.max(0, STEPS.findIndex((s) => s.key === step))
+  if (studyId && error?.status === 404) return <Navigate to="/" replace />
   return (
     <>
-      <TopBar projectName={null} />
+      <TopBar projectName={study?.name} />
       <div className="app">
         <Rail studyId={studyId} current={current} />
         <main className="stage">
@@ -25,6 +29,15 @@ function Shell() {
         </main>
       </div>
     </>
+  )
+}
+
+function Shell() {
+  const { studyId } = useParams()
+  return (
+    <StudyProvider studyId={studyId}>
+      <Frame />
+    </StudyProvider>
   )
 }
 
@@ -38,7 +51,7 @@ export function AppRoutes() {
   return (
     <Routes>
       <Route element={<Shell />}>
-        <Route index element={SCREENS.setup()} />
+        <Route index element={<Setup />} />
         <Route path="s/:studyId/:step" element={<StepScreen />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />

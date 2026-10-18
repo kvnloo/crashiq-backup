@@ -1,0 +1,11 @@
+.setup { max-width: 1080px; margin: 0 auto; padding: 44px 32px 48px; display: grid; gap: 22px; grid-auto-rows: max-content; }
+.setup .intro p { margin: 12px 0 0; font-size: 17px; max-width: 560px; }
+.setup .sf-road canvas { height: clamp(220px, 30vw, 320px); }
+.startbar { display: grid; grid-template-columns: 280px minmax(0, 1fr) 280px auto; gap: 14px; align-items: end; }
+.startbar .sf-btn { height: 44px; white-space: nowrap; }
+.startbar .custom { grid-column: 3 / 4; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+@media (max-width: 920px) {
+  .setup { padding: 28px 16px; }
+  .startbar { grid-template-columns: 1fr; }
+  .startbar .custom { grid-column: auto; }
+}

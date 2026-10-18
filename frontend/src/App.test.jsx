@@ -1,15 +1,10 @@
-import { render, screen, within } from '@testing-library/react'
-import { MemoryRouter } from 'react-router-dom'
-import { describe, expect, it } from 'vitest'
-import { AppRoutes } from './App'
+import { screen, within } from '@testing-library/react'
+import { beforeEach, describe, expect, it } from 'vitest'
+import { META, mockApi, renderAt } from './test-utils'
 
-function renderAt(path) {
-  return render(
-    <MemoryRouter initialEntries={[path]}>
-      <AppRoutes />
-    </MemoryRouter>,
-  )
-}
+beforeEach(() => {
+  mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': { id: 'abc', name: 'Crenshaw', mode: 'profile', from_year: 2021, to_year: 2025 } })
+})
 
 describe('app shell', () => {
   it('shows the five steps in order, titles only', () => {
@@ -35,10 +30,11 @@ describe('app shell', () => {
     expect(within(rail).getAllByRole('link')).toHaveLength(1) // only Setup
   })
 
-  it('opens every step once a study exists and marks the current one', () => {
+  it('opens every step once a study exists, marks the current one, shows the project name', async () => {
     renderAt('/s/abc/profile')
     const rail = screen.getByRole('navigation', { name: 'Study steps' })
     expect(within(rail).getAllByRole('link')).toHaveLength(5)
     expect(within(rail).getByRole('link', { current: 'step' })).toHaveTextContent('Crash profile')
+    expect(await screen.findByText('Crenshaw')).toBeInTheDocument()
   })
 })

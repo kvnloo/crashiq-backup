@@ -21,6 +21,19 @@ MIGRATIONS: list[str] = [
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     """,
+    # 2 — #6 study: project, mode, crash-history window
+    """
+    CREATE TABLE study (
+        id                    TEXT PRIMARY KEY,
+        name                  TEXT NOT NULL,
+        mode                  TEXT NOT NULL,
+        from_year             INTEGER NOT NULL,
+        to_year               INTEGER NOT NULL,
+        covid_years_in_window INTEGER NOT NULL,
+        created_at            TEXT NOT NULL DEFAULT (datetime('now')),
+        updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    """,
 ]
 
 
