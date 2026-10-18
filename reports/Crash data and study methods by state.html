@@ -1,0 +1,462 @@
+<meta charset=utf-8><style>body{font-family:-apple-system,sans-serif;max-width:900px;margin:40px auto;line-height:1.5;padding:0 16px}table{border-collapse:collapse}td,th{border:1px solid #ccc;padding:4px 8px}</style><h1>Going Nationwide Means One Engine, Many Data Adapters and Per-State Study Rules</h1>
+<p>Issue #4 · Hermes · researched 2026-10-18 · status: research only, nothing here is decided</p>
+<p>CrashIQ can go national. The data and rules it depends on, though, are state-by-state. The federal layers cover every state but cannot drive a corridor study on their own. FARS has coordinates for every fatal crash and no other severities. CRSS is a national sample with no usable locations. HPMS has AADT on federal-aid roads but not on local streets. What does carry over nationally is the method layer: KABCO, the HSM, the CMF Clearinghouse (bulk-downloadable), and the SS4A action-plan requirement. SS4A asks for the same safety analysis and high-injury network in every state, which makes it the most portable study mode CrashIQ could build. Everything a study actually needs beyond that is state-specific: record-level crashes with coordinates, crash costs, countermeasure lists, HSIP scoring and ICE procedures. Access varies widely. <strong>Massachusetts</strong> (open ArcGIS API, KABCO, 93–97% geocoded, AADT on every crash record) and <strong>Pennsylvania</strong> (public downloads for 2006–2025 with decimal lat/long and KABCO) are as open as California's CCRS, or close to it. <strong>Texas</strong> is public but needs registration for bulk files. <strong>New York</strong> outside NYC and <strong>Washington</strong> keep geocoded record-level data behind agency-sponsored logins or emailed requests. <strong>Florida</strong> has good data, and a strong free state tool (Signal Four Analytics) already does much of what CrashIQ would. Almost no state publishes a licence that clearly allows commercial reuse. That, more than the engineering, is what sets the rollout pace.</p>
+<p><strong>Method.</strong> Two research sub-agents covered (A) federal layers, CA, NY, MA and NJ and (B) TX, FL and WA, plus a nine-state screen. They read official pages, PDFs and live APIs on 2026-10-18. Hermes spot-checked the key numbers against live APIs the same night: MassDOT 2026 layer = 95,962 crashes; NYC Open Data max crash date = 2026-06-11; data.ny.gov crash years = 2021–2024; PennDOT 2026 data dictionary reachable; LRSM v1.8 text says "82 countermeasures". Anything not confirmed from a primary source is marked <strong>UNVERIFIED</strong>. Working notes with every source URL: <code>research_notes/state-research-2026-10-18/</code>.</p>
+<h2>Federal layers give a national floor, not a study</h2>
+<table>
+<thead>
+<tr>
+<th>Layer</th>
+<th>What it gives CrashIQ</th>
+<th>What it can't do</th>
+<th>Access</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>NHTSA FARS</strong></td>
+<td>Every fatal crash with LATITUDE/LONGITUD, vehicle and person files; national K-count fallback where a state is gated</td>
+<td>No A/B/C/O, so no KSI and no full profile; corridor fatal counts too sparse to screen on</td>
+<td>FARS Crash API, no login, 2010 onward, XML/CSV/JSON (<a href="https://crashviewer.nhtsa.dot.gov/CrashAPI">API</a>). 2024 file released 04/01/2026, about a 15-month lag (<a href="https://www.nhtsa.gov/file-downloads/download?p=nhtsa%2Fdownloads%2FFARS%2F2024%2FFARS2024%20Release%20Notes.txt">release notes</a>)</td>
+</tr>
+<tr>
+<td><strong>NHTSA CRSS</strong></td>
+<td>National crash-type distributions as a benchmark</td>
+<td>Weighted national sample, no site-level location: unusable for corridors</td>
+<td>Public files (<a href="https://nhtsa.gov/national-center-statistics-and-analysis-ncsa/crash-report-sampling-system-crss">NHTSA</a>)</td>
+</tr>
+<tr>
+<td><strong>FHWA HPMS</strong></td>
+<td>AADT on arterials and collectors, so crash rates work on federal-aid roads</td>
+<td>Local roads and minor-street volumes are mostly missing; plan for user-entered AADT</td>
+<td>2024 spatial file on data.gov, updated Sept 21, 2026 (<a href="http://catalog.data.gov/dataset/hpms-spatial-all-sections-2024">data.gov</a>)</td>
+</tr>
+<tr>
+<td><strong>MIRE FDE (23 CFR 924.11(b))</strong></td>
+<td>States "shall have access to a complete collection of the MIRE fundamental data elements on all public roads by September 30, 2026", including AADT. The deadline passed 18 days ago; no extension found (<a href="https://ecfr.gov/current/title-23/chapter-I/subchapter-J/part-924/section-924.11">eCFR</a>)</td>
+<td>Public release of those inventories varies by state (UNVERIFIED per state)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>MMUCC 6th ed. (2024)</strong></td>
+<td>A national data-element standard for crash records, a natural template for CrashIQ's internal schema</td>
+<td>Voluntary; state adoption level UNVERIFIED, so field codes differ by state (<a href="https://www.nhtsa.gov/traffic-records/model-minimum-uniform-crash-criteria">NHTSA</a>)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>KABCO</strong></td>
+<td>Common severity scale (KSI = K+A)</td>
+<td>Some public state datasets don't use it (NY, Seattle; see below)</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>CMF Clearinghouse</strong></td>
+<td>Whole database downloads as XML/XLSX/CSV, explicitly so tools can ingest it; last updated Nov 10, 2025 (<a href="https://cmfclearinghouse.fhwa.dot.gov/cmf_data.php">FHWA</a>)</td>
+<td>Reuse terms not stated (federal work, UNVERIFIED). States that use their own lists (CA, TX) don't accept it for funding</td>
+<td>Bulk download</td>
+</tr>
+<tr>
+<td><strong>HSM 1st ed. + 2014 supplement</strong></td>
+<td>The national method reference (screening, SPFs, EB)</td>
+<td>AASHTO-copyrighted: CrashIQ can't reproduce SPF tables without a licence. HSM2 is still not confirmed published; FHWA says "likely" in 2026 (<a href="https://rosap.ntl.bts.gov/view/dot/88871">FHWA-HRT-26-015</a>)</td>
+<td>Purchase</td>
+</tr>
+<tr>
+<td><strong>SPICE / IHSDM</strong></td>
+<td>SPICE is the FHWA ICE crash-prediction spreadsheet used by FL and CA (<a href="https://cmfclearinghouse.fhwa.dot.gov/collateral/FHWA-SA-18-026%20SPICE%20Tool%20User%20Guide%20(Final).pdf">user guide</a>)</td>
+<td>FHWA has discontinued IHSDM development (<a href="https://rosap.ntl.bts.gov/view/dot/88871">FHWA</a>)</td>
+<td>Free</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Federal programs every state runs.</strong> HSIP (23 USC 148, 23 CFR 924) with an SHSP. A Vulnerable Road User Safety Assessment: if VRU deaths are ≥15% of the total, ≥15% of HSIP goes to VRU safety (<a href="https://highways.dot.gov/sites/fhwa.dot.gov/files/2024-07/HSIP%20VRU%20Fact%20Sheet_508.pdf">FHWA</a>). FHWA LRSP guidance (<a href="https://highways.dot.gov/safety/proven-safety-countermeasures/local-road-safety-plans">FHWA</a>). And <strong>SS4A action plans</strong>, whose safety-analysis component asks for a baseline of fatal and serious-injury crashes by location, severity, contributing factors and crash type, on "all roadways… without regard for ownership," and "a geospatial identification of higher-risk locations… (a high-injury network or equivalent)" (<a href="https://www.transportation.gov/grants/ss4a/comprehensive-safety-action-plans">USDOT</a>). That is one specification for all 50 states, and it maps directly onto CrashIQ's profile and findings.</p>
+<p><strong>Legal layer, same everywhere.</strong> Data "compiled or collected for the purpose of identifying, evaluating, or planning the safety enhancement of potential accident sites" under §148 can't be used in discovery or as evidence (<a href="https://law.cornell.edu/uscode/text/23/407">23 USC 407</a>). WA, CO, VA and FL all attach this notice to their crash releases (state sections below). DPPA (18 USC 2721) limits use of personal information from DMV records, which matters in NY and VA (<a href="https://www.law.cornell.edu/uscode/text/18/2721">LII</a>). Hermes's reading, not legal advice: CrashIQ exports for HSIP or safety planning should carry a §407 notice, and agency data-use agreements are likely to forbid resale.</p>
+<p><strong>Competitors that span states.</strong> AASHTOWare Safety (Numetric) is licensed by state DOTs at $100k–$350k per module per year. CA, FL, TX and NY are in the top price group (<a href="https://aashtoware.org/products/safety/safety-ordering">AASHTO</a>), and NJ and GA already run their public crash dashboards on it. Citian CRASH is the AI-native competitor (SCAG) (<a href="https://citian.co/crash">Citian</a>). LexisNexis BuyCrash sells individual report PDFs, not analytics (<a href="https://risk.lexisnexis.com/products/lexisnexis-buycrash">LexisNexis</a>).</p>
+<h2>The state × data matrix</h2>
+<p>Difficulty means how hard it is for CrashIQ to support a corridor study in that state: <strong>E</strong>asy, <strong>M</strong>edium, <strong>H</strong>ard. "Licence" means written terms that allow use inside a paid product.</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>Record-level crash source</th>
+<th>Access</th>
+<th>Coordinates</th>
+<th>Years / lag</th>
+<th>Severity</th>
+<th>Licence for commercial use</th>
+<th>AADT</th>
+<th>Diff.</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CA</strong> (baseline)</td>
+<td>CHP CCRS on data.ca.gov: Crashes / Parties / InjuredWitnessPassengers</td>
+<td>Open CKAN API, no login</td>
+<td>78% (2024), as low as 33–35% in some cities (docs/02)</td>
+<td>2016–2026, updated daily</td>
+<td>KABCO (person table)</td>
+<td><strong>Public Domain</strong>, "No restrictions on public use" (<a href="https://data.ca.gov/dataset/ccrs">data.ca.gov</a>)</td>
+<td>SHS only (Traffic Census)</td>
+<td>live</td>
+</tr>
+<tr>
+<td><strong>MA</strong></td>
+<td>MassDOT IMPACT open data</td>
+<td>Open ArcGIS REST API (Crash / Vehicle / Person layers per year) (<a href="https://gis.crashdata.dot.mass.gov/arcgis/rest/services/MassDOT">REST</a>)</td>
+<td>92.8% (2026), 97.3% (2025)</td>
+<td>2002–2026; newest crash 2026-10-17</td>
+<td>KABCO</td>
+<td><strong>None stated</strong> (UNVERIFIED); disclaimer only</td>
+<td><strong>AADT joined to each crash record</strong>; road inventory covers all public roads</td>
+<td><strong>E</strong></td>
+</tr>
+<tr>
+<td><strong>PA</strong></td>
+<td>PennDOT crash downloads + PCIT</td>
+<td>Public download, no login seen (<a href="https://experience.arcgis.com/experience/51809b06e7b140208a4ed6fbad964990">PennDOT</a>)</td>
+<td>DEC_LATITUDE / DEC_LONGITUDE (<a href="https://gis.penndot.pa.gov/gishub/crashZip/Crash_Data_Dictionary_2026.pdf">dictionary</a>); % UNVERIFIED</td>
+<td>2006–2025</td>
+<td>KABCO</td>
+<td>None stated (UNVERIFIED)</td>
+<td>UNVERIFIED</td>
+<td><strong>E</strong></td>
+</tr>
+<tr>
+<td><strong>VA</strong></td>
+<td>VDOT "Crash Data" on data.virginia.gov (DMV TREDS)</td>
+<td>Open CSV / API, about 1.08M rows (<a href="https://data.virginia.gov/dataset/crash-data">portal</a>)</td>
+<td>UNVERIFIED</td>
+<td>UNVERIFIED</td>
+<td>UNVERIFIED</td>
+<td>Not open: §407 + DPPA + DMV terms; no commercial ban stated</td>
+<td>UNVERIFIED</td>
+<td><strong>E–M</strong></td>
+</tr>
+<tr>
+<td><strong>TX</strong></td>
+<td>TxDOT CRIS</td>
+<td>CRIS Query public; bulk CSV "Public extract" after free self-registration, password-protected daily zips (<a href="https://www.txdot.gov/data-maps/crash-reports-records/crash-data-analysis-statistics.html">TxDOT</a>)</td>
+<td>Present (Austin's CRIS-based data has derived lat/long); statewide % UNVERIFIED</td>
+<td>10 years + current; annual figures by June</td>
+<td>KABCO-style numeric codes</td>
+<td>None stated (UNVERIFIED); conclusions must be "your own"</td>
+<td>STARS II (MS2), RHiNo inventory</td>
+<td><strong>M</strong></td>
+</tr>
+<tr>
+<td><strong>NY</strong> (state)</td>
+<td>DMV crash tables on data.ny.gov; geocoded data in NYSDOT CLEAR</td>
+<td>Public tables via Socrata API; <strong>CLEAR needs an agency sponsor per consultant contract</strong> (<a href="https://clear.dot.ny.gov/clear/apps">CLEAR</a>)</td>
+<td><strong>None</strong> in public tables (county / municipality / reference marker only)</td>
+<td>Rolling 4 years (2021–2024), about a 13-month lag</td>
+<td><strong>Not KABCO</strong> (Fatal / Injury / PD; person Severe / Moderate / Minor)</td>
+<td><strong>Yes</strong>, OPEN-NY terms allow private-sector use (<a href="https://data.ny.gov/download/77gx-ii52/application/pdf">terms</a>)</td>
+<td>NYSDOT TDV; local coverage partial</td>
+<td><strong>M–H</strong></td>
+</tr>
+<tr>
+<td><strong>NYC</strong></td>
+<td>NYPD Motor Vehicle Collisions (crashes, persons, vehicles)</td>
+<td>Open Socrata API</td>
+<td>89% (≈10.9% null/0)</td>
+<td>2012-07 to <strong>2026-06-11</strong>; marked "temporarily not updating"</td>
+<td>Injured / killed counts only, no A level</td>
+<td><strong>Yes</strong> (Local Law 11: no usage restrictions)</td>
+<td>City</td>
+<td><strong>E–M</strong></td>
+</tr>
+<tr>
+<td><strong>WA</strong></td>
+<td>WSDOT Crash Data &amp; Reporting Branch</td>
+<td>Public dashboards; record-level by <strong>emailed request</strong> (anyone, about 10 days, Excel/PDF) (<a href="https://wsdot.wa.gov/sites/default/files/2026-04/Crash-Data-FAQ-s.pdf">FAQ</a>)</td>
+<td>Portal maps only records with X/Y; % UNVERIFIED</td>
+<td>15 years + current kept; final each July</td>
+<td>Severity coded; exact KABCO UNVERIFIED (Seattle open data uses 3 / 2b / 2 / 1 / 0)</td>
+<td>None; §407 notice on every release</td>
+<td>State highways only (GeoPortal)</td>
+<td><strong>M–H</strong></td>
+</tr>
+<tr>
+<td><strong>FL</strong></td>
+<td>FLHSMV public download; FDOT Signal Four Analytics (official)</td>
+<td>FLHSMV quarterly zip, public (<a href="https://www.flhsmv.gov/crash-facts/">FLHSMV</a>); S4 login for agencies, consultants via FDOT PM</td>
+<td>Crash lat/long in FLHSMV file; FDOT-verified in S4</td>
+<td>FLHSMV rolling 3 years + current; FDOT GIS layers 2007–2024</td>
+<td>KABCO</td>
+<td>None stated; FDOT §407/409 "used only for the purposes deemed appropriate by FDOT"</td>
+<td>Florida Traffic Online, RCI</td>
+<td><strong>M</strong> (data) / contested market</td>
+</tr>
+<tr>
+<td><strong>NJ</strong></td>
+<td>NJDOT raw tables to 2018; Numetric dashboard 2019+</td>
+<td>2001–2018 bulk TXT; 2019+ bulk download UNVERIFIED; Safety Voyager agency-only</td>
+<td>UNVERIFIED</td>
+<td>2001–2018 bulk</td>
+<td>UNVERIFIED</td>
+<td>UNVERIFIED</td>
+<td>data.nj.gov AADT</td>
+<td><strong>M</strong></td>
+</tr>
+<tr>
+<td><strong>CO</strong></td>
+<td>CDOT statewide crash listings</td>
+<td>Public download (<a href="https://www.codot.gov/safety/traffic-safety/data-analysis/crash-data">CDOT</a>)</td>
+<td>16% missing in DRCOG region (2022); statewide UNVERIFIED</td>
+<td>2007–2026</td>
+<td>UNVERIFIED</td>
+<td>§407-protected</td>
+<td>UNVERIFIED</td>
+<td><strong>E–M</strong></td>
+</tr>
+<tr>
+<td><strong>MI</strong></td>
+<td>UMTRI Michigan Traffic Crash Facts</td>
+<td>Public query tool + map (<a href="https://www.michigantrafficcrashfacts.org/">MTCF</a>); bulk export UNVERIFIED</td>
+<td>Map view</td>
+<td>2004–2025</td>
+<td>UNVERIFIED</td>
+<td>UNVERIFIED</td>
+<td>—</td>
+<td><strong>M</strong></td>
+</tr>
+<tr>
+<td><strong>GA</strong></td>
+<td>GDOT dashboard (Numetric), GEARS (LexisNexis)</td>
+<td>Public 5-year dashboard; custom data by email</td>
+<td>—</td>
+<td>Past 5 years</td>
+<td>—</td>
+<td>UNVERIFIED</td>
+<td>—</td>
+<td><strong>M–H</strong></td>
+</tr>
+<tr>
+<td><strong>OH</strong></td>
+<td>ODOT GCAT</td>
+<td>Login for agencies and pre-qualified consultants; moving to AASHTOWare</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>§409 notice</td>
+<td>—</td>
+<td><strong>H</strong></td>
+</tr>
+<tr>
+<td><strong>NC</strong></td>
+<td>NCDOT TEAAS</td>
+<td>Government and research only</td>
+<td>—</td>
+<td>1990 to Jan 2026</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td><strong>H</strong></td>
+</tr>
+<tr>
+<td><strong>AZ</strong></td>
+<td>ADOT</td>
+<td>Public Record Center request only</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td><strong>H</strong></td>
+</tr>
+<tr>
+<td><strong>IL</strong></td>
+<td>IDOT Safety Portal</td>
+<td>Account vetted by County Engineer, then IDOT approval</td>
+<td>—</td>
+<td>10 years</td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td><strong>H</strong></td>
+</tr>
+</tbody>
+</table>
+<p>Sources for each cell are linked in the state sections below and in the working notes. Reporting thresholds affect PDO counts and so every "share of crashes" comparison: NY and MA require a report above <strong>$1,000</strong> of damage, TX at <strong>$1,000+</strong>, NJ above <strong>$500</strong>, and FL treats over <strong>$500</strong> as reportable (state sections).</p>
+<h2>Study methods differ more than the data does</h2>
+<p>Each state has its own HSIP scoring, countermeasure list, crash costs and intersection-control procedure, and they aren't interchangeable. Getting the method right per state is the product.</p>
+<table>
+<thead>
+<tr>
+<th>State</th>
+<th>HSIP / funding method</th>
+<th>Countermeasure list</th>
+<th>Crash costs</th>
+<th>ICE / intersection control</th>
+<th>Other required formats</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CA</strong></td>
+<td>Observed crashes (3–5 yrs), BCR via <strong>HSIP Analyzer</strong>, min. BCR 5.0; LRSP required to apply (<a href="https://dot.ca.gov/programs/local-assistance/fed-and-state-programs/highway-safety-improvement-program/apply-now">apply-now</a>)</td>
+<td>Caltrans list with one fixed CRF each. <strong>LRSM v1.8 text says 82</strong>; the earlier industry report cited 86 from the Cycle 13 slides (to resolve)</td>
+<td>HSIP Analyzer Manual 2026</td>
+<td><strong>ISOAP</strong> (Sept 2024), SPICE permitted not mandated</td>
+<td>ATP, LRSP, collision diagram + list</td>
+</tr>
+<tr>
+<td><strong>TX</strong></td>
+<td>Centrally run; ranked by <strong>Safety Improvement Index</strong>; 3 years of crashes; 2026 Excel SII calculator (<a href="https://www.txdot.gov/content/dam/docs/division/trf/highway-safety-engineering/hsip-guidance-program.pdf">HSIP 2026</a>)</td>
+<td><strong>Work Codes</strong> with reduction factors (App. B)</td>
+<td>NSC comprehensive, set per call</td>
+<td>Two-stage ICE when a state route / NHS / state-federal funds are involved (TSP Manual Ch. 10)</td>
+<td><strong>TSP Manual §6.1.3.1</strong>: 5 complete years (3 min, 8 for rural/ped-bike/CMV), fixed list of minimum items, rate vs statewide average (<a href="https://www.txdot.gov/manuals/des/tsp/chapter-6-safety-analysis--methodologies--and-tool/6-1-safety-analysis-methods/6-1-3-existing-conditions-analysis/6-1-3-1-historical-crash-data-analysis.html">TxDOT</a>)</td>
+</tr>
+<tr>
+<td><strong>NY</strong></td>
+<td>BCR required but <strong>need not be ≥1.0</strong>; 3% discount; ranked by BCR_FI; EB before-after; PIL lists by PSI / LOSS (<a href="https://www.dot.ny.gov/divisions/operating/osss/highway-repository/RedBook.pdf">Red Book, Apr 2026</a>)</td>
+<td>CLEAR defaults or the <strong>FHWA CMF Clearinghouse</strong></td>
+<td>Red Book Table 3: K $18,186,968; A $991,313; B $309,976; C $194,893; O $18,794</td>
+<td>No "ICE" by name found; HDM §5.9.1 requires a roundabout alternative (<a href="https://dot.ny.gov/divisions/engineering/design/dqab/hdm/hdm-repository/rev50.pdf">HDM rev. 50</a>)</td>
+<td>Yellow Book investigations; NYC Vision Zero priority corridors</td>
+</tr>
+<tr>
+<td><strong>MA</strong></td>
+<td>Cluster is HSIP-eligible if its EPDO is in the <strong>top 5% of the region</strong> (<a href="https://www.mass.gov/info-details/highway-safety-improvement-program">MassDOT</a>)</td>
+<td>MassDOT CMF list (Safety Alternatives Analysis Guide)</td>
+<td>"Average comprehensive crash costs"; values UNVERIFIED</td>
+<td><strong>ICE Procedure</strong> (3/31/2021), 3 stages, also for municipal projects; exempt if minor approaches &lt;1,000 AADT (<a href="https://mass.gov/doc/massdot-ice-procedure-requirements/download">MassDOT</a>)</td>
+<td><strong>Road Safety Audit required</strong> for HSIP applications and 25% design (<a href="https://www.mass.gov/info-details/road-safety-audits">MassDOT</a>); SPF + EB no-build in the Safety Alternatives Analysis</td>
+</tr>
+<tr>
+<td><strong>WA</strong></td>
+<td>30% state / 70% local; local via <strong>City Safety</strong> and <strong>County Safety</strong> programs tied to Target Zero and the agency's LRSP (<a href="https://wsdot.wa.gov/business-wsdot/support-local-programs/funding-programs/highway-safety-improvement-program">WSDOT</a>)</td>
+<td>HSM / CMFs, societal cost</td>
+<td>UNVERIFIED</td>
+<td><strong>Memo 25-02</strong> (7/8/2025): roundabouts preferred on state highways; Simplified and standard ICE; PE-stamped (<a href="https://wsdot.wa.gov/publications/fulltext/ProjectDev/ProjectDeliveryMemos/Memo25-02.pdf">memo</a>)</td>
+<td><strong>LRSP 7-step systemic template</strong> (<a href="https://wsdot.wa.gov/sites/default/files/2023-03/LocalRoadSafetyPlan-Template-Feb2023.pdf">template</a>)</td>
+</tr>
+<tr>
+<td><strong>FL</strong></td>
+<td>FDOT-administered for all public roads; 3–5 years of FDOT location-verified crashes (<a href="https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/safety/11a-safetyengineering/crash-data/florida-hsip-guidelines-manual6f3e1a5a378142ca861609b583b4ecf8.pdf?sfvrsn=51bf5868_0">HSIP Guidelines</a>)</td>
+<td>HSM / CMFs</td>
+<td>FDM Table 122.6.2 (2026)</td>
+<td><strong>FDOT Manual on ICE</strong>: Stage 1 spreadsheet + CAP-X + SPICE, Stage 2 with SSI score</td>
+<td>PD&amp;E Safety Analysis Guidebook: HSM predictive + EB with Florida-calibrated SPFs</td>
+</tr>
+<tr>
+<td><strong>PA / VA / GA</strong></td>
+<td>—</td>
+<td>—</td>
+<td>—</td>
+<td>PennDOT ICE (2018); VDOT VJuST/iCAP (IIM-TOD-397); GDOT ICE Policy</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>What the method table shows.</strong> California is the outlier on method: observed crashes and fixed CRFs. MA, FL, NY and WA all expect HSM-style SPF + Empirical Bayes somewhere in their process. In practice, CrashIQ's planned v2 EB capability is required, not optional, outside California. Texas is the closest to California (observed crashes, its own fixed reduction factors, a calculator-based index) and has the most explicit "minimum items" template of any state reviewed.</p>
+<h2>Recommended rollout order (recommendation only)</h2>
+<p>Ranked on four things: data openness (record-level, coordinates, no login, licence), how much study-mode work is needed, market size, and how much a free state tool already covers.</p>
+<table>
+<thead>
+<tr>
+<th>Wave</th>
+<th>State</th>
+<th>Why</th>
+<th>Main risk</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><strong>CA</strong></td>
+<td>Built now; public-domain data</td>
+<td>Uneven urban coordinates (J1 geocoding)</td>
+</tr>
+<tr>
+<td>1</td>
+<td><strong>MA</strong></td>
+<td>Easiest data in the country: open API, KABCO, AADT on every crash, near-real-time. Explicit formats (RSA, ICE, EPDO top-5%) map onto clear exports</td>
+<td>No written licence. Ask MassDOT first. Small market</td>
+</tr>
+<tr>
+<td>1</td>
+<td><strong>TX</strong></td>
+<td>Very large market; public extract; the TSP §6.1.3.1 minimum-items template and SII/Work Codes are easy to automate deterministically</td>
+<td>Registration and daily-zip ingestion; licence unclear; free CRIS Query covers basic counts</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>PA</strong> <em>(added)</em></td>
+<td>Open downloads for 2006–2025 with lat/long and KABCO, close to CCRS; large market; ICE policy</td>
+<td>Licence unverified</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>VA</strong> <em>(added)</em></td>
+<td>Open portal and API; mature ICE (VJuST/iCAP) suits an ICE export</td>
+<td>DPPA / §407 terms need legal review</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>NY</strong></td>
+<td>NYC open data works natively. The rest of the state needs a "bring your own CLEAR export" importer; public tables have no coordinates and no KABCO</td>
+<td>NYC feed paused since June 2026; CLEAR is per-contract</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>WA</strong></td>
+<td>Best study-model fit after CA (LRSP 7-step, City/County Safety, ICE); Seattle open data</td>
+<td>Statewide records only by emailed request, about 10 days</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>FL</strong> <em>(added)</em></td>
+<td>Big market with good data (FLHSMV public file with lat/long)</td>
+<td>Signal Four Analytics already gives agencies corridor summaries and collision diagrams for free. Target private-sector TIS consultants without S4 access</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>CO</strong> <em>(added)</em>, <strong>NJ</strong></td>
+<td>Public data (CO 2007–2026); NJ local safety program requires HSM + B/C</td>
+<td>Smaller markets; NJ 2019+ bulk access unverified</td>
+</tr>
+<tr>
+<td>parked</td>
+<td>OH, NC, GA, AZ, IL</td>
+<td>Crash data behind logins, vetting or records requests</td>
+<td>Only reachable through a user-supplied export</td>
+</tr>
+</tbody>
+</table>
+<p>Sub-agent B's own ranking of the nine screened states was PA, VA, CO, MI, GA, OH, NC, AZ, IL. Hermes moved FL ahead of CO on market size, and MI stays unranked until its bulk export path is confirmed.</p>
+<h2>What CrashIQ must make state-specific, and what it can share</h2>
+<p><strong>Shared engine (build once):</strong>
+- <strong>Canonical crash schema</strong> modelled on MMUCC: crash / unit / person, KABCO severity, one count per crash at its worst outcome, plus a <code>state</code> and <code>source</code> field on every record and the existing location provenance (<code>gps/exact/fuzzy/jev(p)/user/unmatched</code>).
+- Geocoding pipeline (OSM intersections, name normalizer, candidate list, Jev choice). Alias tables stay per state and city as versioned files.
+- Corridor drawing, crash assignment, profile tables, findings contract and validator, audit block, export framework.
+- Method library: HSM rate formulas, threshold-proportion test, EB (v2), CMF Clearinghouse engine, FHWA pattern library.
+- National overlays: FARS fatal crashes, HPMS AADT where present.
+- <strong>SS4A / HIN action-plan mode.</strong> One federal specification, valid in every state.</p>
+<p><strong>State pack (one per state, versioned data files, nothing hard-coded):</strong>
+- <strong>Data adapter:</strong> how to fetch (live API, bulk file, or user upload), field mapping to the canonical schema, the <strong>severity map</strong> (NY's Fatal/Injury/PD, Seattle's 3/2b/2/1/0 and TX numeric codes don't map one-to-one onto KABCO, so each needs a documented rule), reporting threshold, PDO caveats, location referencing (NY reference markers, TX/FL milepost), coordinate coverage note, legal notices (§407, DPPA, state confidentiality).
+- <strong>Method tables:</strong> crash costs (NY Red Book, CA HSIP Analyzer, FDOT FDM 122.6.2, TxDOT NSC), countermeasure list (CA's CRF list, TX Work Codes, MassDOT CMF list, or the Clearinghouse in NY), default data windows (CA HSIP 3–5 years, TX HSIP 3, TX TSP 5).
+- <strong>Study modes:</strong> CA HSIP / ISOAP / ATP; TX TSP safety section + SII; MA RSA packet + ICE + Safety Alternatives Analysis; WA City Safety + LRSP 7-step + ICE; FL ICE + PD&amp;E. A state's modes ship only when golden-tested against a real study in that state's format.</p>
+<p><strong>Two adapter types.</strong> Open states (CA, MA, PA, VA, NYC, TX after registration) get a live or scheduled pull. Gated states (NY CLEAR, WSDOT requests, FL S4, OH GCAT) get an <strong>import of the user's own export</strong>: the user brings data they are entitled to, and CrashIQ never redistributes it. The same importer also covers licence-unclear states until written terms exist.</p>
+<p><strong>Implication for the build now (no change made).</strong> The drafted C3 issue (#9, <code>ccrs</code>) pulls CCRS directly. Shaping its output as the canonical schema, with <code>state='CA'</code> from day one, is cheap now and expensive to retrofit. This is Q2 below.</p>
+<h2>Questions for the user</h2>
+<p>Reply like <code>1A 2Y 3Y…</code>. Hermes's recommendation is in brackets. Nothing has been changed in docs/03, docs/04 or the build issues.</p>
+<ol>
+<li><strong>Rollout order.</strong> (A) as recommended: MA + TX → PA + VA → NY + WA → FL, CO, NJ; (B) your original order: NY, TX, WA, MA first, then the added states; (C) other. [A]</li>
+<li><strong>State-neutral data model in v1:</strong> canonical MMUCC/KABCO schema + adapter interface now, even though v1 ships CA only? About S–M extra work on C3. [Yes]</li>
+<li><strong>"Bring your own export" importer</strong> for gated states (NY CLEAR, WSDOT, FL S4) as the standard path, with no redistribution of their data? [Yes]</li>
+<li><strong>Licences:</strong> should Hermes draft emails for you to send to MassDOT, TxDOT and PennDOT asking for written confirmation that crash data may be used inside a paid tool? Is a lawyer review of §407 / DPPA in the paid-launch budget? [Yes to drafts; lawyer before charging]</li>
+<li><strong>First non-CA study mode:</strong> SS4A action-plan / HIN mode (same in every state) before porting state HSIP modes? [Yes]</li>
+<li><strong>Target customer outside CA:</strong> private-sector consultants doing TIS/development work, who often lack agency logins, or agencies, who already have free state tools (S4, CLEAR, IMPACT)? [Consultants first]</li>
+<li><strong>EB timing:</strong> MA, FL, NY and WA expect SPF + Empirical Bayes. Does that pull EB (and an HSM licence question) forward from v2 to the first non-CA release? [Yes, tie EB to the first non-CA state]</li>
+<li><strong>FARS fatal overlay</strong> as a national fallback layer (fatal crashes only, labelled as such)? [Later, v2]</li>
+<li><strong>CA countermeasure count:</strong> LRSM v1.8 text says 82 countermeasures; the industry report said 86 from the Cycle 13 slides. OK for Hermes to reconcile against the HSIP Analyzer before decision #3-Q9 is locked? [Yes]</li>
+<li><strong>NY state severity:</strong> the public tables aren't KABCO. Map Killed / Severe / Moderate / Minor onto K/A/B/C with a flagged caveat, or accept NY only through CLEAR exports (KABCO)? [CLEAR exports for KSI work; mapped NYS tables for counts only]</li>
+</ol>
+<h2>Confirmed versus unverified</h2>
+<p><strong>Confirmed tonight against live APIs or primary documents:</strong> CCRS Public Domain licence and daily updates; MassDOT 2026 layer with 95,962 crashes, KABCO and joined AADT; NYC crash feed stops at 2026-06-11; data.ny.gov crash tables cover 2021–2024 with no lat/long; OPEN-NY terms allow private-sector use; MIRE FDE deadline of Sept 30, 2026 in the eCFR; TxDOT TSP §6.1.3.1 and HSIP 2026 SII method; NYSDOT Red Book crash costs; WSDOT request process and Memo 25-02; FDOT ICE manual; PennDOT 2026 crash data dictionary with decimal lat/long; LRSM v1.8 "82 countermeasures" wording.</p>
+<p><strong>UNVERIFIED (check before any build or sales claim):</strong> commercial-reuse terms in <strong>every state except CA and NY</strong>; statewide coordinate shares for TX, WA, PA, VA and CO; VA year range and fields; MI and GA bulk export paths; NJ 2019+ bulk access and KABCO use; WSDOT severity coding and SPF calibration; MassDOT crash-cost values; the national count of state ICE policies; MMUCC adoption by state; HSM2 on sale. Population figures used in sub-agent B's ranking were from memory and are not used in this report.</p>
+<h2>Conclusion</h2>
+<p>CrashIQ's engine can be national, but its value comes from state packs. Each one is a data adapter plus that state's method tables and study formats, golden-tested against a real study. MA and TX can follow CA with the least new method risk, PA and VA are the open-data additions, and NY and WA need the user-export path. The cheapest move that keeps all of this open is a design decision, not code: make the v1 data model state-neutral before C3 is built. The most important open item is licensing, which no amount of engineering removes. Methodology correctness comes before speed: no state should ship until its severity map, crash costs and countermeasure list are written as versioned files and checked against a real study in that state.</p>

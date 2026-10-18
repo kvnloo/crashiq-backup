@@ -20,3 +20,7 @@ Cross-cutting: github after every step, refresh if a session drifts, model bake-
 
 **From Stage 4 on, work runs through GitHub:** Hermes turns the design into issues → Claude Code builds one issue per
 branch and opens a PR → Hermes reviews → the user merges. Ownership and rules: `CLAUDE.md`.
+
+## User direction log
+- **2026-10-18 (user, via Claude Code):** methodology correctness comes first. The mockup layout
+  (`design/mockups/`) is approved in direction and will be refined later.

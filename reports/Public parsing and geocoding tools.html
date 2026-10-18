@@ -1,0 +1,178 @@
+<meta charset=utf-8><style>body{font-family:-apple-system,sans-serif;max-width:900px;margin:40px auto;line-height:1.5;padding:0 16px}table{border-collapse:collapse;display:block;overflow-x:auto}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}</style><h1>Public Tools Can Replace Some Locator Code, but Only TIGER Travels Cleanly to Every State</h1>
+<p>Issue #20 (feeds #18 and #19) · Hermes · researched 2026-10-18 · status: research only, nothing here is decided</p>
+<p>The user asked for proven public tools so agents stop re-inventing address handling. This report covers the non-code side: licence, hosting cost, nationwide fit and upkeep. Claude Code's bake-off on the hidden-GPS tests (Long Beach, SF) answers the accuracy question; until it reports, nothing here says any tool beats our locator. <strong>Licences are not the problem.</strong> Every tool's code is MIT, Apache or GPL, and all of these can run inside a hosted paid product. The data is public domain (Census TIGER) or ODbL (OpenStreetMap: attribution required, no share-alike for individual geocodes). <strong>Cost and fit are the real differences.</strong> usaddress is a few MB of pure Python, handles "street &amp; street" intersections and can be retrained on our own labelled crash strings. libpostal is more accurate on postal addresses (99.45% claimed) but needs a 1.8–2.2 GB model and about 4 GB of RAM, which means an $85/month Render instance instead of $25. <strong>Census TIGER/Line is the only street network built the same way in all 50 states, with no copyright.</strong> California's geocoder layers are 1.22 GB zipped. Nominatim can't search intersections at all, and Pelias needs an Elasticsearch cluster, so neither fits the core job. The nationwide limit comes from the crash data, not the tools: NY, WA, TX and FL often locate crashes by route and milepost or reference marker, which no parser or geocoder here handles.</p>
+<p><strong>Method.</strong> Licences and activity were read from the GitHub API and PyPI on 2026-10-18. Docs, usage policies and pricing come from primary pages, cited inline. TIGER sizes were summed by script from the Census TIGER2026 directory listings (<code class="notranslate">research_notes/tools-2026-10-18/tiger2026_sizes.json</code>). Anything not confirmed from a primary source is marked <strong>UNVERIFIED</strong>. Render prices are list prices on 2026-10-18.</p>
+<h2>The tools, side by side</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>Tool</th>
+<th>What it does for CrashIQ</th>
+<th>Code licence / paid-product OK?</th>
+<th>Data licence</th>
+<th>Hosting on Render</th>
+<th>Last release · activity</th>
+<th>Published accuracy</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>usaddress</strong> (datamade)</td>
+<td>Splits a US address string into labelled parts. Has intersection labels (<code class="notranslate">IntersectionSeparator</code>, <code class="notranslate">SecondStreetName…</code>) (<a href="https://parserator.datamade.us/api-docs/" rel="nofollow">docs</a>), so "CRENSHAW BLVD &amp; 120TH ST" parses as two streets</td>
+<td>MIT · yes, keep the notice</td>
+<td>Model and training data ship in the repo under MIT</td>
+<td>Pure Python + python-crfsuite, a few MB. Fits the existing web service ($7–25/mo tier), <strong>no extra cost</strong></td>
+<td>v0.5.16, 2025-08-07 · 1.6k stars, 176 open issues</td>
+<td>None published. README: "cannot identify address components with perfect accuracy". <strong>Retrainable</strong> on our own labelled strings (parserator)</td>
+</tr>
+<tr>
+<td><strong>usaddress-scourgify</strong> (GreenBuildingRegistry)</td>
+<td>Normalizes a full mailing address to USPS Pub 28 / RESO (suffixes, directionals, ordinals) on top of usaddress</td>
+<td>MIT (GitHub; PyPI metadata blank) · yes</td>
+<td>Same as usaddress</td>
+<td>Pure Python, <strong>no extra cost</strong></td>
+<td>v0.7.1, 2026-08-07 · 246 stars, 3 open issues</td>
+<td>None. Built for building registries: it <strong>raises an error</strong> on anything usaddress tags "Ambiguous" (read from <code class="notranslate">normalize.py</code>), and crash strings are often ambiguous. Best fit: our <code class="notranslate">address</code> tier only</td>
+</tr>
+<tr>
+<td><strong>libpostal</strong> (openvenues) + <code class="notranslate">postal</code> Python binding</td>
+<td>Statistical parser and normalizer for addresses worldwide</td>
+<td>MIT · yes</td>
+<td>Default model trained on OSM (ODbL), OpenAddresses (mostly CC-BY) and GeoPlanet (CC-BY) (<a href="https://github.com/openvenues/libpostal">README</a>). The model files' own licence isn't stated: <strong>UNVERIFIED</strong>. Alternative Senzing model (better US parsing, repo Apache-2.0)</td>
+<td>Model 1.8 GB (Senzing 2.2 GB) on disk. The README's REST server example needs ~4 GB of memory, so a <strong>4 GB instance at $85/mo</strong> instead of the 2 GB at $25/mo: about <strong>+$60/mo</strong>. C build in the Docker image</td>
+<td>Tag v1.1.4, 2025-10-18; last commit 2025-12-06 (Senzing data v1.2.0). GitHub's "latest release" page still shows v1.1 (2018) · 4.9k stars, 299 open issues</td>
+<td><strong>99.45%</strong> correct full parses on held-out data (postal addresses, not crash strings). Retraining means the 100 GB+ public pipeline: not practical for us</td>
+</tr>
+<tr>
+<td><strong>PostGIS TIGER geocoder</strong> (<code class="notranslate">postgis_tiger_geocoder</code>, <code class="notranslate">Geocode_Intersection</code>)</td>
+<td>Takes two street names + state/city/zip and returns candidate points with a rating; fuzzy matching by soundex/levenshtein (<a href="https://postgis.net/docs/manual-3.6/Geocode_Intersection.html" rel="nofollow">docs</a>)</td>
+<td>GPL-2.0 · yes for a hosted service (GPL applies on distribution; it isn't AGPL). An on-premise install for an agency would bring GPL source obligations for PostGIS itself. Hermes's reading, not legal advice</td>
+<td>TIGER: public domain</td>
+<td><strong>Adds PostgreSQL</strong> to a stack that is SQLite today. Render Postgres supports the extension (<a href="https://render.com/docs/postgresql-extensions" rel="nofollow">Render</a>). $19/mo (1 GB RAM) to $55/mo (4 GB) plus $0.30/GB storage. CA's four layers are 1.22 GB zipped; loaded size <strong>not measured</strong> (one 2015 user report put the whole-US database at ~105 GB)</td>
+<td>PostGIS 3.6.4 current; its loader goes up to <strong>TIGER 2025</strong> (<code class="notranslate">tiger_loader_2025.sql</code>). TIGER 2026 is out, so the loader lags a year</td>
+<td>None published. Doc example: 3 s per query on 2010-era hardware</td>
+</tr>
+<tr>
+<td><strong>Census TIGER/Line</strong> (EDGES, FEATNAMES, ADDR, FACES)</td>
+<td>National street centerlines with names, alternate names (route numbers) and address ranges. Usable through PostGIS <strong>or loaded straight into our own locator</strong> in place of / next to OSM</td>
+<td>—</td>
+<td>US Government work, no copyright (17 USC 105); cite the Census Bureau; "TIGER/Line" is a trademark that can't go in a product name; no accuracy warranty (<a href="https://www2.census.gov/geo/pdfs/maps-data/data/tiger/tgrshp2026/TGRSHP2026_TechDoc_Ch1.pdf" rel="nofollow">TechDoc ch.1</a>)</td>
+<td>Files only. Zipped, TIGER 2026, four geocoder layers: <strong>CA 1.22 GB, TX 1.90, PA 0.64, FL 0.63, NY 0.46, WA 0.43, MA 0.19; US 21.8 GB</strong> (measured)</td>
+<td>Annual release (2026 out)</td>
+<td>Census disclaims positional and attribute accuracy</td>
+</tr>
+<tr>
+<td><strong>Census Geocoder API</strong></td>
+<td>Free hosted address → point from MAF/TIGER ranges; single or batch of up to 10,000</td>
+<td>Federal service, free, no key</td>
+<td>Public domain output</td>
+<td>$0 hosting</td>
+<td>Live</td>
+<td>None published. <strong>No intersection mode</strong>: the user guide never mentions intersections (<a href="https://www2.census.gov/geo/pdfs/maps-data/data/Census_Geocoder_User_Guide.pdf" rel="nofollow">guide</a>). Rate limits not published</td>
+</tr>
+<tr>
+<td><strong>Nominatim</strong> (OSM)</td>
+<td>Full geocoder on OSM</td>
+<td>GPL-3.0 · yes for a hosted service</td>
+<td>OSM ODbL: attribution when publicly used; individual results are "insubstantial extracts", so no share-alike unless we build a substantial copy of OSM (<a href="https://osmfoundation.org/wiki/Licence/Community_Guidelines/Geocoding_-_Guideline" rel="nofollow">OSMF guideline</a>)</td>
+<td>Public server: <strong>max 1 request/s, no heavy use</strong> (<a href="https://operations.osmfoundation.org/policies/nominatim/" rel="nofollow">policy</a>), so a product must self-host. Published sizing covers only the full planet (64–128 GB RAM, 1 TB disk); a CA-only import is much smaller but not documented</td>
+<td>v5.3.3, 2026-10-14 · very active</td>
+<td>None. <strong>Can't search intersections</strong>: the request has been open since 2014 (<a href="https://github.com/osm-search/Nominatim/issues/123" data-hovercard-type="issue" data-hovercard-url="/osm-search/Nominatim/issues/123/hovercard">#123</a>)</td>
+</tr>
+<tr>
+<td><strong>Pelias</strong></td>
+<td>Elasticsearch-based geocoder (uses libpostal-style parsing)</td>
+<td>MIT · yes. Elasticsearch's own licence (ELv2/SSPL/AGPL) allows internal use; which versions Pelias supports is UNVERIFIED</td>
+<td>OSM (ODbL), OpenAddresses (mixed per-source licences), Who's On First, Geonames</td>
+<td>8 GB RAM and 50 GB disk for a regional build (<a href="https://github.com/pelias/documentation/blob/master/pelias_from_scratch.md">docs</a>), so $135+/mo plus Elasticsearch upkeep</td>
+<td>api v7.11.0, 2026-09-25 · active</td>
+<td>None. The parser recognizes intersections; an intersection layer is confirmed only on the paid host geocode.earth (North America) (<a href="https://geocode.earth/docs/reference/data_layers/" rel="nofollow">docs</a>), not in the open-source build: <strong>UNVERIFIED</strong></td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p><strong>Already in our stack: OSM through Overpass.</strong> <code class="notranslate">backend/crashiq/osm.py</code> calls the public Overpass server. Its guideline is about 10,000 requests and 1 GB a day (<a href="https://dev.overpass-api.de/overpass-doc/en/preface/commons.html" rel="nofollow">Overpass</a>): fine for development, wrong for a paid product. Production would load Geofabrik extracts instead (California 1.26 GB, US 11.4 GB <code class="notranslate">.osm.pbf</code>, <a href="https://download.geofabrik.de/north-america.html" rel="nofollow">Geofabrik</a>). It must also show "© OpenStreetMap contributors" on maps and exports.</p>
+<h2>Nationwide fit: the tools are national, the crash locations aren't (#4, #18, #19)</h2>
+<p>usaddress, libpostal and TIGER cover every state, DC and Puerto Rico the same way. OSM street naming and completeness vary by region, while TIGER is built by one agency to one schema. What changes by state is <strong>how the crash record says where it happened</strong> (from the #4 matrix):</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>State</th>
+<th>Location in the crash data we can get</th>
+<th>Do these tools help?</th>
+<th>What else is needed</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>CA</strong></td>
+<td>CCRS: primary/cross street + offset; GPS 33–97% by agency</td>
+<td><strong>Yes, this is the main use case</strong> (J1)</td>
+<td>Our locator + agency jurisdiction network (OSM or TIGER)</td>
+</tr>
+<tr>
+<td><strong>MA</strong></td>
+<td>MassDOT portal: 93–97% already geocoded</td>
+<td>Only for the 3–7% left over</td>
+<td>Nothing major</td>
+</tr>
+<tr>
+<td><strong>PA</strong></td>
+<td>Public downloads with decimal lat/long</td>
+<td>Little</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>TX</strong></td>
+<td>CRIS: lat/long present, statewide share UNVERIFIED; street-name fields UNVERIFIED</td>
+<td>Probably for a residue</td>
+<td>Check CRIS location fields once registered</td>
+</tr>
+<tr>
+<td><strong>NY</strong> (state)</td>
+<td>Public tables: county, municipality, <strong>reference marker</strong>, no lat/long. CLEAR exports are geocoded</td>
+<td>Parsers no; TIGER no</td>
+<td>NYSDOT reference-marker inventory, or the user's CLEAR export</td>
+</tr>
+<tr>
+<td><strong>NYC</strong></td>
+<td>Open data with lat/long + on/cross street</td>
+<td>Residue only</td>
+<td>—</td>
+</tr>
+<tr>
+<td><strong>WA</strong></td>
+<td>Emailed extracts; state routes by <strong>milepost</strong>, local street detail UNVERIFIED</td>
+<td>Partly, local streets only</td>
+<td>WSDOT LRS for state routes</td>
+</tr>
+<tr>
+<td><strong>FL</strong></td>
+<td>FLHSMV file with lat/long</td>
+<td>Little</td>
+<td>—</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<p>Route/milepost locations need each state's linear referencing system. The national fallback is FHWA's ARNOLD all-roads network inside HPMS (<a href="https://catalog.data.gov/dataset/hpms-spatial-all-sections-2024" rel="nofollow">data.gov, 2024</a>); whether it carries street names that would help matching is UNVERIFIED. <strong>For the #19 state pack:</strong> "location method" belongs in the pack (street-pair geocoding / milepost conversion / coordinates as given). The parser and street network stay shared.</p>
+<h2>Recommendation (Hermes's view, for the user to decide)</h2>
+<ol>
+<li><strong>Parsing: usaddress first.</strong> It costs nothing to host, it understands intersections, and it can learn CCRS-style strings from our own labels (only with the user's approval, per CLAUDE.md). Take libpostal only if the bake-off shows a clear win over usaddress, because that win would cost about $60/month and a model we can't retrain. Use scourgify only for the house-address tier.</li>
+<li><strong>Street network: plan on TIGER as the nationwide backbone, next to OSM.</strong> It is public domain, carries no attribution or share-alike duty, and is built to one schema in every state. Whether we use it through PostGIS <code class="notranslate">Geocode_Intersection</code> or load the TIGER files into our own locator depends on the bake-off. If PostGIS doesn't clearly win, loading TIGER into our locator keeps the SQLite stack and avoids a Postgres bill.</li>
+<li><strong>Not for the core:</strong> Nominatim (no intersection search), Pelias (cost and upkeep), the public Nominatim server (usage policy). The Census Geocoder API is a free option for the house-address tier only.</li>
+<li><strong>Before any paid launch:</strong> move OSM from public Overpass to Geofabrik extracts, and add OSM attribution to the UI and exports.</li>
+</ol>
+<h2>Questions for the user</h2>
+<p>Reply like <code class="notranslate">1A 2Y 3Y…</code>. Hermes's recommendation is in brackets. Nothing in docs/ or the build has been changed.</p>
+<ol>
+<li><strong>If the bake-off favours PostGIS <code class="notranslate">Geocode_Intersection</code>:</strong> (A) add hosted PostgreSQL/PostGIS (about $19–55/mo plus storage), or (B) load TIGER into our own locator and stay on SQLite, accepting some extra build work? [Decide after the bake-off; lean B unless PostGIS clearly wins]</li>
+<li><strong>libpostal:</strong> worth about +$60/month hosting if it beats usaddress on the hidden-GPS tests? (Y / N / only above a set accuracy gain, which you name) [Only above a gain you set]</li>
+<li><strong>Train usaddress on our own labelled crash strings</strong> (each label set approved by you before it goes in)? [Yes]</li>
+<li><strong>OSM in production:</strong> switch from public Overpass to Geofabrik extracts and show OSM attribution before launch? [Yes]</li>
+<li><strong>GPL components</strong> (PostGIS, Nominatim) are fine for a hosted service. If you might sell on-premise installs to agencies, should a lawyer check that with the §407/DPPA review (#4 Q4)? [Yes, same review]</li>
+<li><strong>TIGER vs OSM as the primary network per state:</strong> pick per state from test results, and record the choice in the state pack (#19)? [Yes]</li>
+</ol>
+<h2>Confirmed versus unverified</h2>
+<p><strong>Confirmed 2026-10-18 from primary sources:</strong> every code licence (GitHub API: libpostal MIT, usaddress MIT, scourgify MIT, PostGIS GPL-2.0, Nominatim GPL-3.0, Pelias MIT; Senzing libpostal-data Apache-2.0); release dates; libpostal model sizes and its 99.45% claim; usaddress intersection labels; scourgify error on ambiguous parses; PostGIS 3.6.4 is current with a TIGER 2025 loader; Render lists <code class="notranslate">postgis_tiger_geocoder</code> and these prices; the TIGER no-copyright and trademark text; TIGER 2026 sizes (script); Census Geocoder 10,000-record batch and no intersection mode; Nominatim's 1 request/s policy and open intersection issue; Overpass limits; Geofabrik sizes; the OSMF geocoding guideline.</p>
+<p><strong>UNVERIFIED:</strong> the licence of libpostal's default model files; libpostal's real RAM use in our app (the 4 GB figure is for a third-party REST server); loaded TIGER database size for CA; a CA-only Nominatim footprint; Pelias's open-source intersection support and Elasticsearch version; TX CRIS location fields; WA local-street location detail; whether ARNOLD has street names.</p>
+<h2>Conclusion</h2>
+<p>Licences don't block any of these tools in a hosted paid product. What separates them is cost, fit to crash strings and the nationwide story. usaddress is the cheap, trainable parser. TIGER is the only street data that is free of obligations and the same in every state. The heavyweight geocoders (Nominatim, Pelias) don't solve the intersection problem CrashIQ actually has. Claude Code's bake-off decides on accuracy; the user decides on the questions above. Outside California, much of the location work in NY, WA and parts of TX/FL is milepost conversion, which belongs in each state pack, not in a parsing library.</p>

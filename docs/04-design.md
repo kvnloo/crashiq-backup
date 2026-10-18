@@ -26,7 +26,8 @@ v2 (SPICE/ISOAP, intersection-only mode) and v3 (CMF countermeasures, B/C) are o
 | C15 | `budget` | code | Per-study $ cap on Claude + Jev, token/$ log per study |
 
 Stack: FastAPI + Vite/React + Leaflet, DemandIQ shell (TopBar, Sidebar, MapView, themes, step flow).
-Storage: SQLite locally (projects, crash cache, geocode decision cache, findings, examples, library).
+Storage: SQLite for v1, locally and hosted (projects, crash cache, geocode decision cache, findings, examples, library).
+No PostgreSQL/PostGIS in v1 (user, 2026-10-18). Address parsing: no libpostal (user, 2026-10-18).
 
 ## 2. AI vs deterministic split
 
@@ -93,6 +94,8 @@ update), OSM/Overpass (ODbL, attribution), Caltrans Traffic Census (later, SHS A
   as private local test fixtures (never in the shipped product or its memory), or rebuild equivalent cases from public
   CCRS data. Needs the user's call.
 - **F2:** LA City 2024 count looked low in the spike. Check against TIMS for one known corridor in Stage 4.
+  #18 (2026-10-18): CCRS has 67–77% of LAPD's own crash count in every year 2019–2024, and LAPD reporting fell ~65%
+  from 2019 to 2021 in both sources (`reports/California crash data sources by road type.md`). Fix is the user's call (#18 Q5–Q6).
 
 ## Gate
 Components, AI/deterministic split, spine fields in/out, data sources: written. → Stage 4 (build), after F1.

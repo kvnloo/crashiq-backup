@@ -1,0 +1,313 @@
+<meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><style>body{font-family:-apple-system,sans-serif;max-width:900px;margin:40px auto;line-height:1.5;padding:0 16px}table{border-collapse:collapse;display:block;overflow-x:auto}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}</style><h1>A State Pack Must Describe Location per Road Type, Not per State: Outline for CA, NY, TX, WA and MA</h1>
+<p>Issue #19 (uses #4, #18, #20) · Hermes · researched 2026-10-18 · status: outline only. Per the user (2026-10-18), only the California pack is active; nothing here asks Claude Code to build another state.</p>
+<p>The state pack keeps everything state-specific out of the core (docs/03, "Market DECIDED"). This outline says what a pack has to contain, filled in for California and the four states the user named. The main finding is that <strong>location method varies inside a state, by road type</strong>, so the pack can't carry one "location method" field. Washington uses three in one dataset: state-route milepost, county-road number plus milepost, and city block plus intersecting street. California uses two: CHP's GPS on freeways and county roads, and street pair plus offset on city streets. New York's public tables have only a reference marker and no coordinates. Texas CRIS has coordinates and street fields, with TxDOT's reference-marker system on state roads (field names UNVERIFIED until a CRIS extract is pulled). Massachusetts is already 93–97% geocoded. Severity mapping, reporting thresholds and legal notices differ the same way. The pack therefore needs one record per <strong>road type</strong>: which source, which location method, which cross-check. That's the shape #18 produced for California.</p>
+<p><strong>Method.</strong> Facts come from the #4 state research (<code>reports/Crash data and study methods by state.md</code> and <code>research_notes/state-research-2026-10-18/</code>), the #20 tools report, the #18 California work (<code>reports/California crash data sources by road type.md</code>), and three checks made 2026-10-18: the WSDOT crash data dictionary, the WSDOT portal's FARS-comparison notes, and the column list of Austin's CRIS-sourced open dataset. Anything not confirmed from a primary source is marked <strong>UNVERIFIED</strong>.</p>
+<h2>What every pack contains</h2>
+<table>
+<thead>
+<tr>
+<th>#</th>
+<th>Section</th>
+<th>What it holds</th>
+<th>Why it can't be shared</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td><strong>Identity</strong></td>
+<td>State, pack version, status (<code>active</code> / <code>outline</code>), golden-test status</td>
+<td>Only a golden-tested pack may run studies</td>
+</tr>
+<tr>
+<td>2</td>
+<td><strong>Sources per road type</strong></td>
+<td>For each road type: record source, location source, cross-check source, access type (<code>live_api</code> / <code>bulk_file</code> / <code>user_export</code>), freshness, licence status</td>
+<td>#18: the right source and check differ by road type</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>Field map</strong></td>
+<td>Source columns → the canonical crash / party / person schema (MMUCC-style, <code>state</code> + <code>source</code> on every row)</td>
+<td>Every state names fields differently</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>Severity map</strong></td>
+<td>Source codes → KABCO, with a documented rule and a caveat flag where it isn't one-to-one</td>
+<td>NY and Seattle don't use KABCO; TX uses numeric codes</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>Location methods per road type</strong></td>
+<td><code>coordinates</code> (validate and keep), <code>street_pair</code> (our locator), <code>route_milepost</code> / <code>reference_marker</code> (the state's linear referencing system), plus which street network (OSM / TIGER per #20)</td>
+<td>WA has three methods in one dataset; NY public data has only reference markers</td>
+</tr>
+<tr>
+<td>6</td>
+<td><strong>Counting rules</strong></td>
+<td>Reporting threshold, PDO caveats, death window (30 days or not), deleted/preliminary records, known reporting breaks per agency/year</td>
+<td>Counts are only comparable under the same rules (#18: CCRS vs Caltrans +4.5%)</td>
+</tr>
+<tr>
+<td>7</td>
+<td><strong>Validity checks</strong></td>
+<td>The cross-checks to run on each study (second source per road type, FARS fatal check), thresholds, known gaps</td>
+<td>#18 consensus rule</td>
+</tr>
+<tr>
+<td>8</td>
+<td><strong>Method tables</strong></td>
+<td>Crash costs, countermeasure/CRF list, average-rate tables, default data windows</td>
+<td>Each state sets its own (#4)</td>
+</tr>
+<tr>
+<td>9</td>
+<td><strong>Study modes</strong></td>
+<td>The state's formats (HSIP, ICE, TIS safety section, LRSP…)</td>
+<td>Each state's formats differ (#4)</td>
+</tr>
+<tr>
+<td>10</td>
+<td><strong>Legal notices</strong></td>
+<td>§407/§409, DPPA, state confidentiality text for exports</td>
+<td>Wording differs by state</td>
+</tr>
+</tbody>
+</table>
+<h2>The five states</h2>
+<h3>California (active)</h3>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sources per road type</td>
+<td><strong>Freeways, conventional highways outside cities, county roads (CHP):</strong> CCRS records + GPS (100%); cross-check Caltrans TASAS (state highways), FARS (fatal). <strong>City streets and state highways inside cities (city police):</strong> CCRS records (with PDO), GPS on ~53%; cross-check agency open data (DataSF good; LAPD gap 23–33%) and TIMS points if the user supplies them. All <code>live_api</code>, public domain</td>
+</tr>
+<tr>
+<td>Field map</td>
+<td>Built in <code>ca_ccrs.py</code> (Crashes); Parties and InjuredWitnessPassengers to add</td>
+</tr>
+<tr>
+<td>Severity map</td>
+<td>CCRS person injury codes → KABCO; open item N3 in docs/06</td>
+</tr>
+<tr>
+<td>Location</td>
+<td><code>coordinates</code> (CHP, validated against the record's own streets) + <code>street_pair</code> (PR #16 locator: exact / address / relaxed / near). <code>IsFreeway</code> is blank on local-agency rows, so road type is derived from agency + highway + incorporated flags</td>
+</tr>
+<tr>
+<td>Counting rules</td>
+<td>Drop <code>IsDeleted</code>; flag <code>Is Preliminary</code>; feet-as-miles fix; non-unique report numbers; LAPD 2020–21 reporting break; Caltrans "on the highway" rule when comparing to Caltrans rates</td>
+</tr>
+<tr>
+<td>Method tables</td>
+<td>HSIP Analyzer crash costs; Caltrans CRF list (82 vs 86 to reconcile, #4 Q9); Caltrans rate-group averages (SHS only, D3)</td>
+</tr>
+<tr>
+<td>Study modes</td>
+<td>Profile/TIS (v1), HSIP, ISOAP, ATP, LRSP</td>
+</tr>
+<tr>
+<td>Legal</td>
+<td>§407/§409 on HSIP outputs; Veh. C. §20014 confidentiality of the underlying reports</td>
+</tr>
+</tbody>
+</table>
+<h3>New York (outline)</h3>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sources per road type</td>
+<td><strong>Statewide public tables</strong> (data.ny.gov, DMV): no coordinates, county / municipality / <code>dot_reference_marker_location</code> only, 4 rolling years, OPEN-NY terms allow private-sector use. <strong>CLEAR</strong> (NYSDOT): geocoded, agency-sponsored login per consultant contract → <code>user_export</code>. <strong>NYC</strong>: open data with lat/long (89%), feed paused since 2026-06-11</td>
+</tr>
+<tr>
+<td>Field map</td>
+<td>Case / Individual / Vehicle tables; CLEAR export layout UNVERIFIED</td>
+</tr>
+<tr>
+<td>Severity map</td>
+<td>Public tables are <strong>not KABCO</strong> (crash: Fatal / Injury / PD; person: Killed / Severe / Moderate / Minor). #4 Q10 recommendation: CLEAR exports for KSI work, mapped public tables for counts only</td>
+</tr>
+<tr>
+<td>Location</td>
+<td><code>reference_marker</code> on state highways (needs NYSDOT's reference-marker inventory); CLEAR's computed location as <code>coordinates</code>; NYC <code>coordinates</code></td>
+</tr>
+<tr>
+<td>Counting rules</td>
+<td>$1,000 reporting threshold; non-reportable police-only crashes appear in CLEAR but not the public tables</td>
+</tr>
+<tr>
+<td>Method tables</td>
+<td>Red Book crash costs (K $18,186,968 … O $18,794); CMF Clearinghouse; BCR need not be ≥1.0</td>
+</tr>
+<tr>
+<td>Study modes</td>
+<td>HSIP (PSI / LOSS / PIL), Yellow Book investigations, NYC Vision Zero priority locations</td>
+</tr>
+<tr>
+<td>Legal</td>
+<td>§407/§409; DPPA on DMV records</td>
+</tr>
+</tbody>
+</table>
+<h3>Texas (outline; named by the user as the likely next state)</h3>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sources per road type</td>
+<td><strong>CRIS</strong> public extract (free registration, password-protected daily zips) for all roads; CRIS Query for quick counts. Licence for redistribution: none stated (UNVERIFIED)</td>
+</tr>
+<tr>
+<td>Field map</td>
+<td>CRIS crash / unit / person extract; field list UNVERIFIED until a registered pull. Austin's CRIS-sourced data shows <code>rpt_block_num</code>, <code>rpt_street_name</code>, <code>onsys_fl</code> (on the state system), <code>latitude</code>/<code>longitude</code>, <code>crash_sev_id</code></td>
+</tr>
+<tr>
+<td>Severity map</td>
+<td>CRIS codes: 4 killed, 1 incapacitating, 2 non-incapacitating, 3 possible, 5 not injured, 0 unknown → K, A, B, C, O, unknown</td>
+</tr>
+<tr>
+<td>Location</td>
+<td><code>coordinates</code> where present (statewide share UNVERIFIED); <code>street_pair</code> / block number off-system; TxDOT reference markers on-system (CRIS field names UNVERIFIED)</td>
+</tr>
+<tr>
+<td>Counting rules</td>
+<td>$1,000 threshold; annual figures final by June</td>
+</tr>
+<tr>
+<td>Method tables</td>
+<td>NSC comprehensive costs set per HSIP call; Work Codes with reduction factors; statewide average rates</td>
+</tr>
+<tr>
+<td>Study modes</td>
+<td>TSP Manual §6.1.3.1 historical crash analysis (5 years, fixed minimum items), HSIP SII calculator, two-stage ICE on state routes</td>
+</tr>
+<tr>
+<td>Legal</td>
+<td>CRIS disclaimer ("conclusions are your own"); §409</td>
+</tr>
+</tbody>
+</table>
+<h3>Washington (outline)</h3>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sources per road type</td>
+<td><strong>WSDOT</strong> record-level extracts by request (public requests via the Public Disclosure Request Center, ~10 days, Excel) → <code>user_export</code>; public portal is summary only. Seattle open data for Seattle streets</td>
+</tr>
+<tr>
+<td>Field map</td>
+<td>WSDOT layout: Collision Report Type (by trafficway jurisdiction), Primary Trafficway, Block Number, Milepost, Ahead/Back indicator, Intersecting Trafficway, County Road number + milepost</td>
+</tr>
+<tr>
+<td>Severity map</td>
+<td>WSDOT coding vs KABCO UNVERIFIED; Seattle uses 3 / 2b / 2 / 1 / 0</td>
+</tr>
+<tr>
+<td>Location</td>
+<td><strong>Three methods by road type:</strong> state routes → <code>route_milepost</code> (WSDOT LRS, with back-mileage equations); county roads → county road number + milepost (county LRS); city streets → <code>street_pair</code> from block number + intersecting trafficway</td>
+</tr>
+<tr>
+<td>Counting rules</td>
+<td>Final each July; <strong>WSDOT keeps deaths beyond 30 days if on the police report, FARS doesn't</strong>, so the FARS check needs a tolerance; 15 years retained</td>
+</tr>
+<tr>
+<td>Method tables</td>
+<td>Societal crash costs (values UNVERIFIED); HSM / CMFs</td>
+</tr>
+<tr>
+<td>Study modes</td>
+<td>LRSP 7-step systemic template, City Safety / County Safety calls, ICE (Memo 25-02, roundabouts preferred on state highways)</td>
+</tr>
+<tr>
+<td>Legal</td>
+<td>§409 notice on every release</td>
+</tr>
+</tbody>
+</table>
+<h3>Massachusetts (outline)</h3>
+<table>
+<thead>
+<tr>
+<th>Section</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Sources per road type</td>
+<td><strong>MassDOT IMPACT</strong> ArcGIS REST (crash / vehicle / person layers per year), all roads, near-real-time → <code>live_api</code>. No licence stated; ask MassDOT first (#4 Q4)</td>
+</tr>
+<tr>
+<td>Field map</td>
+<td>IMPACT fields incl. <code>MAX_INJR_SVRTY_CL</code>, <code>IS_GEOCODED</code>, joined road inventory (AADT, F_CLASS, lanes, speed limit, jurisdiction)</td>
+</tr>
+<tr>
+<td>Severity map</td>
+<td>Already KABCO</td>
+</tr>
+<tr>
+<td>Location</td>
+<td><code>coordinates</code> (92.8% geocoded 2026, 97.3% 2025, uneven by police department); <code>street_pair</code> only for the residue</td>
+</tr>
+<tr>
+<td>Counting rules</td>
+<td>$1,000 threshold; operator-only reports mixed with police reports</td>
+</tr>
+<tr>
+<td>Method tables</td>
+<td>MassDOT CMF list; comprehensive crash costs (values UNVERIFIED); EPDO weights</td>
+</tr>
+<tr>
+<td>Study modes</td>
+<td>HSIP cluster eligibility (top 5% EPDO in region), Road Safety Audit packet, ICE Procedure, Safety Alternatives Analysis (SPF + EB)</td>
+</tr>
+<tr>
+<td>Legal</td>
+<td>MassDOT disclaimer ("not an official record"); §409</td>
+</tr>
+</tbody>
+</table>
+<h2>What this means for the #19 interface (input for Claude Code's proposal)</h2>
+<ol>
+<li><strong>Location method is a list keyed by road type</strong>, not one value per state. The core runs the method named for each crash's road type. <code>route_milepost</code> / <code>reference_marker</code> is a new method type, needed by NY, WA and TX state roads; CA doesn't need it in v1 because CHP's GPS covers its state highways.</li>
+<li><strong>Access type is per source.</strong> <code>user_export</code> is a first-class adapter type (NY CLEAR, WSDOT, possibly TX), not an edge case.</li>
+<li><strong>Counting rules and validity checks are pack data</strong>, so the #18 source check runs the same code in every state with each state's rules and second sources.</li>
+<li><strong>Severity maps carry a caveat flag</strong>, so a non-KABCO state can still produce counts while KSI outputs are blocked or labelled.</li>
+<li>Nothing here changes the v1 build: only the CA pack is active (user, 2026-10-18).</li>
+</ol>
+<h2>Questions for the user</h2>
+<p>Reply like <code>1Y 2Y…</code>. Recommendation in brackets.</p>
+<ol>
+<li><strong>Road type inside the pack:</strong> describe sources, location method and cross-checks per road type (as above), rather than one set per state? [Yes]</li>
+<li><strong>Milepost / reference-marker locating:</strong> keep it out of v1 (CA doesn't need it) and build it with the first state that does (NY, WA or TX)? [Yes]</li>
+<li><strong>Texas groundwork:</strong> when you say go on Texas, should Hermes first register for the CRIS extract (needs your email on the account) to confirm the location fields? [Yes, when you say go]</li>
+</ol>
+<h2>Confirmed versus unverified</h2>
+<p><strong>Confirmed:</strong> WSDOT data dictionary location fields and report types; WSDOT 15-year retention and July finalization; WSDOT's &gt;30-day death rule vs FARS; Austin CRIS-sourced columns; all NY, MA, TX and WA facts carried over from #4 are confirmed there unless marked.</p>
+<p><strong>UNVERIFIED:</strong> CRIS statewide field names and coordinate share; WSDOT severity coding; MassDOT and WSDOT crash-cost values; CLEAR export layout; licence terms in TX, WA and MA.</p>
+<h2>Conclusion</h2>
+<p>A pack is a source table, a location method and a set of counting rules per road type, plus the state's method tables and study formats. California's pack is the template: one record source, two location methods, three cross-checks. The four outlines show the interface has to allow linear-referencing locations and user-supplied exports from the start, even though v1 uses neither.</p>

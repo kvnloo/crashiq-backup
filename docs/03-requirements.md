@@ -89,7 +89,7 @@ run and what the export contains:
 - LLM: Claude API, current Sonnet for the agent.
 - Crash data: live CCRS pull from data.ca.gov per study, cached per project. Fallback if too slow: per-county snapshot.
 - Persistence (new vs DemandIQ): projects, accepted findings/worked examples, pattern library →
-  SQLite locally; persistent disk or Postgres when hosted.
+  SQLite for v1, locally and when hosted (persistent disk). **PostgreSQL not needed for v1** (user, 2026-10-18).
 - Users: the user + a small number of colleagues / demo viewers.
 
 ## Status: LOCKED 2026-10-16 (Hermes session). Earlier "not locked" notes below are history.
@@ -130,7 +130,7 @@ street pair means.
 4. Jev Choice, **leftovers only**: top-5 code-generated candidates + "none of these". Jev picks; it never invents a location.
 5. Seam check (code): the pick must be in the list, top probability ≥ τ, and margin over 2nd ≥ m. Otherwise → review queue.
 6. Code: offset SecondaryDistance/Direction along PrimaryRoad → coordinates → normal 250 ft assignment.
-**Provenance on every crash:** `gps` / `exact` / `fuzzy` / `jev(p)` / `user` / `unmatched`. Dashboard shows counts per tier.
+**Provenance on every crash:** `gps` / `address` / `exact` / `relaxed` / `near` / `fuzzy` / `jev(p)` / `user` / `review` / `unmatched` (address/relaxed/near/review added by the user 2026-10-18, PR #16). Dashboard shows counts per tier.
 Every analysis can be re-run excluding `jev` crashes.
 **Cache:** decisions keyed by (city, normalized primary, normalized secondary). One decision covers every crash
 with that string pair, which keeps calls few and results repeatable.
@@ -201,15 +201,22 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
 - **D4 YES (very important to user):** HSIP five severity levels; **one count per crash** (not per vehicle/party/victim);
   verify against CCRS fields (incl. whether PDO crashes are present). Open a **technical-nuances list**
   (docs/06-nuances.md): every doubt goes there, the user answers from 8 years of crash-analysis experience or we research.
-- **D5 pending:** user asked for a plain explanation of the pattern-library sources (HSM Ch. 6 / LRSM App. B).
-- **D6 pending:** user asked what the audit block is; concern: "we're crunching data from a lot of sources".
-- **D7 pending:** not answered (kappa agreement score in the bake-off).
+- **D5 YES (2026-10-18):** pattern library seeded from HSM Ch. 6 (pattern → possible factors) and Caltrans LRSM App. B
+  (crash type → accepted countermeasures); FHWA PSC only as a tag; every finding says "possible cause, verify in field".
+- **D6 YES, collapsed (2026-10-18):** audit block hidden by default: one small "Sources" link per finding; full audit
+  detail in the PDF appendix for reviewers (user: avoid too much info for the end user).
+- **D7 YES (2026-10-18):** bake-off also scores agreement with the user's findings (kappa); internal only.
 - **D8 LATER:** build the base product first; then review competitors (Citian etc.) and add features. Trademark later.
-- **D9 open:** user uses the CMF Clearinghouse for ISOAP and calls it "a whole digging game"; asked how we'd approach it.
+- **D9 YES (2026-10-18), matching method to confirm:** user uses the CMF Clearinghouse for ISOAP ("a whole digging game").
+  Matching proposal: (1) code knows each location's over-represented crash types (D2), location type and conditions;
+  (2) a curated, versioned countermeasure table, each row tagged with crash types addressed, location type, conditions,
+  CRF/CMF, star rating, source ID (LRSM row or Clearinghouse CMF ID); built once, refreshed periodically, not scraped
+  per study; (3) code filters by tag match, ranks by expected crashes reduced on that location's own target crashes,
+  then star rating; (4) user picks; combination rules enforced (Caltrans max 3; warn when multiplying >2 CMFs).
   Proposal to confirm: HSIP mode uses Caltrans' own LRSM countermeasure table (closed list, required by HSIP);
   Clearinghouse used in ISOAP/general modes as a curated shortlist (star rating, crash types), not a full ingest.
 - **D10 YES:** ISOAP mode as a Stage 1 package (SPICE + conflict-point / Safe System score + observed history).
-- **Phasing DECIDED in principle:** one complete process at a time, not many in parallel. Proposed order (to confirm):
+- **Phasing DECIDED (2026-10-18):** one complete process at a time, not many in parallel. Order confirmed:
   P1 core crash profile (foundation) → P2 HSIP application → P3 ISOAP → P4 traffic-study safety section, ATP, LRSP/HIN.
 - **Market DECIDED (2026-10-18):** goal is to grow across US states, one state at a time. **California first** (user is
   there and can reach clients), then the next state. Design implication: everything state-specific sits behind a
@@ -219,6 +226,32 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   User confirmed: build the pack structure, but **only the California pack is active**. Next state likely **Texas**;
   Hermes does the background research for it (data source, severity, HSIP-equivalent formats) when the user says go.
 
+- **Geocoding decisions (user, 2026-10-18, PR #16):**
+  (1) Test design = the original one: hide the record's own GPS and place it from the report (Long Beach run). Other sources
+  (DataSF etc.) are not the test truth; sources disagree. Result so far: Jev loses to code matching (LB clean GPS 92.6% vs 95.2%;
+  SF 88.1% vs 92.5%), so Jev is a review suggestion only, never an auto-placer.
+  (2) Placement gate: decide later. Unplaced crashes go to the review list; why they don't place is backlog #17.
+  (3) Address tier: keep (best location from whatever the record gives, as the user did by hand).
+  (4) Provenance labels `address`, `relaxed`, `near` added (see above).
+  (5) City crash maps (DataSF etc.): verification/tallying only, not a placement source.
+  (6) Anthropic API key: user will set one up, **deferred to the end** of the build (user, 2026-10-18).
+  (7) LA truth source: **dropped** (user, 2026-10-18). No LA truth test; LA counts are covered by the #18 source check.
+- **Tool and stack decisions (user, 2026-10-18, after #20):**
+  (1) **libpostal dropped.** It would add about $60/month of hosting (4 GB instance, #20) for no gain: in Claude Code's
+  bake-off (commit 1509d39, `knowledge/tools.md`) it was slightly more accurate but placed fewer crashes than our locator.
+  The "libpostal as fallback" idea in that file is dropped with it.
+  (2) **Anthropic API key deferred to the end.** Build and test everything that doesn't need Claude first; the key is set up last.
+  (3) **LA truth question dropped** (geocoding decision 7 above).
+  (4) **PostgreSQL not needed: SQLite for v1** (R8). So the PostGIS TIGER geocoder is out for v1; if TIGER is used, it is loaded
+  into our own locator (#20 Q1 option B).
+- **New requirement (user, 2026-10-18):** before analysis, a **state-level validity check of crash data sources**: best source per
+  state and road type (CA: TIMS for city streets, CHP/CCRS for freeways), cross-check where several exist, reach consensus,
+  then analyse. Research: issue #18.
+
 ## Pipeline status
 `[new-tool] Stage 2 done (LOCKED 2026-10-16) → Stage 3: design check.`
 Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then Stage 3 design check.
+
+- **Two maps DECIDED (user, 2026-10-18):** use both OSM and Census TIGER street networks for crash placement
+  (practice data: +1–2 crashes placed per 100 at about the same accuracy; free). Scheduled as a later task under #17,
+  not part of PR #16.
