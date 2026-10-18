@@ -6,11 +6,12 @@ import { StudyProvider, useStudy } from './study'
 import Placeholder from './screens/Placeholder'
 import Setup from './screens/Setup'
 import Corridor from './screens/Corridor'
+import Profile from './screens/Profile'
 
 const SCREENS = {
   setup: Setup,
   corridor: Corridor,
-  profile: () => <Placeholder title="Crash profile" />,
+  profile: Profile,
   findings: () => <Placeholder title="Findings" />,
   export: () => <Placeholder title="Export" />,
 }
