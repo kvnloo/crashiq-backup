@@ -42,3 +42,19 @@ Dev half: exact 99.0% (low 98.5%). Jev cost all night: < $0.01.
 - Give Jev more state: offset/direction, candidate cross-streets, the other crashes at the same street pair.
 - Second truth source: TIMS (Berkeley) geocodes; needs the user's login and its terms may limit commercial use.
 - Repeat in a second city with a different agency style (LA, San Jose) before trusting the 98% statewide.
+
+## Second city: Los Angeles (LAPD, NCIC 1942), 2026-10-18
+- **Link works:** CCRS writes LAPD report numbers as `2401-07452`; LAPD open data (data.lacity.org `d5tf-ez2w`)
+  uses `240107452`. Strip the dash. 11,265 of 12,851 LAPD 2024 crashes linked (after hygiene).
+- **LAPD truth is snapped to the intersection:** for crashes with a reported offset ≥150 ft, LAPD's point is a
+  median 6 m from the intersection and 92 m from the offset point (n=472). So LA truth can only score *which
+  intersection* we chose, not the offset. Script scores LA at the chosen intersection (`SCORE_AT_INTERSECTION`).
+- **LAPD truth has large geocode errors:** e.g. Canoga Ave & Burbank Blvd: ours at the real intersection
+  (34.1733, -118.5974), LAPD 1.6 km away; Burbank & Fulton 5.9 km away; Devonshire & Petit 8 km away. Same
+  street names on both sides. 205 of 336 exact-tier "misses" name the same intersection as LAPD.
+- **Dev-half numbers (truth-limited):** exact 82.4% within 250 ft of LAPD's point, but the chosen intersection
+  agrees with LAPD's street names 93.3%; relaxed 96.1% by names. **LA cannot certify 98% with LAPD truth.**
+  Need a better LA truth (TIMS geocodes, or hand-checking a random sample) before any LA claim.
+- LA naming differs from SF: more `relaxed` matches (3,027 vs 1,909 exact) because of N/S/E/W halves and
+  missing suffixes. Directional halves (N vs S Figueroa) deserve their own handling and test.
+- Performance: whole-network scans were too slow for LA (8 min); street index by core added (O(1) lookups).

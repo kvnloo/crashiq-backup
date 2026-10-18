@@ -34,11 +34,23 @@ class Placement:
 
 
 def _keys_matching(net: Network, k: StreetKey) -> list[StreetKey]:
-    return [s for s in net.streets if same_street(k, s)]
+    return [s for s in _same_core_keys(net, k) if same_street(k, s)]
+
+
+def _same_core_keys(net: Network, k: StreetKey) -> list[StreetKey]:
+    from .names import drop_directional
+    pool = net.by_core.get(k.core.replace(" ", ""), set()) | net.by_core.get(drop_directional(k).core.replace(" ", ""), set())
+    return [s for s in pool if same_core(k, s)]
+
+
+def _similar_pool(net: Network, k: StreetKey) -> list[StreetKey]:
+    """Streets worth scoring for a typo: similar length (SequenceMatcher can't reach 0.6 otherwise)."""
+    n = len(k.core.replace(" ", ""))
+    return [s for s in net.streets if abs(len(s.core.replace(" ", "")) - n) <= max(3, n // 2)]
 
 
 def _fuzzy(net: Network, k: StreetKey, min_score: float, margin: float) -> list[StreetKey]:
-    scored = sorted(((similarity(k, s), s) for s in net.streets), key=lambda t: -t[0])
+    scored = sorted(((similarity(k, s), s) for s in _similar_pool(net, k)), key=lambda t: -t[0])
     if not scored or scored[0][0] < min_score:
         return []
     best = scored[0][0]
@@ -158,7 +170,7 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
     kp, ks = street_key(crash.get("primary_road")), street_key(crash.get("secondary_road"))
     if not kp or not ks:
         return Placement("review", note="missing street name")
-    relaxed = lambda k: [s for s in net.streets if same_core(k, s)]
+    relaxed = lambda k: _same_core_keys(net, k)
     fuzzy = lambda k: _keys_matching(net, k) or relaxed(k) or _fuzzy(net, k, fuzzy_min, fuzzy_margin)
     for tier, find, meet in (("exact", lambda k: _keys_matching(net, k), _shared_nodes),
                              ("relaxed", relaxed, _shared_nodes),
@@ -185,7 +197,7 @@ def candidates(net: Network, crash: dict, k: int = 5) -> list[tuple[int, str, fl
     if not kp or not ks:
         return []
     def best_streets(key):
-        sc = sorted(((max(similarity(key, s), 0.97 if same_core(key, s) else 0), s) for s in net.streets),
+        sc = sorted(((max(similarity(key, s), 0.97 if same_core(key, s) else 0), s) for s in _similar_pool(net, key)),
                     key=lambda t: -t[0])[:10]
         return [(s, v) for v, s in sc if v >= 0.6]
     pa, pb = best_streets(kp), best_streets(ks)

@@ -1,5 +1,8 @@
 # Lessons (newest first)
 
+- 2026-10-18 · A city's open data is not automatically good truth: LAPD points are snapped to intersections and some are km off (Canoga & Burbank 1.6 km). Check the truth on known intersections before scoring.
+- 2026-10-18 · CCRS has 12,851 LAPD crashes for 2024; LAPD open data has 16,720. CCRS may miss ~23% of LAPD collisions (or LAPD publishes non-reportable ones). Follow up (F2).
+
 - 2026-10-18 · CCRS has an `IsDeleted` flag (found by Hermes): drop those rows in every pull. None among SFPD 2023–24.
 - 2026-10-18 · CCRS includes property-damage-only crashes: 59% of 2024 rows have 0 killed and 0 injured (found by Hermes). TIMS lacks most PDO.
 

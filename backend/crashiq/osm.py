@@ -113,6 +113,12 @@ class Network:
         self.intersections = [n for n, ks in self.keys_at.items()
                               if len({k.core.replace(" ", "") for k in ks}) >= 2 and n in self.coord]
         self.streets: set[StreetKey] = set(self.label)
+        # Index by core (spaces removed, and with any leading directional dropped) for O(1) name lookups.
+        from .names import drop_directional
+        self.by_core: dict[str, set[StreetKey]] = defaultdict(set)
+        for k in self.streets:
+            self.by_core[k.core.replace(" ", "")].add(k)
+            self.by_core[drop_directional(k).core.replace(" ", "")].add(k)
         self.all_nodes_of: dict[StreetKey, set[int]] = defaultdict(set)
         for n, ks in self.keys_at.items():
             if n in self.coord:
