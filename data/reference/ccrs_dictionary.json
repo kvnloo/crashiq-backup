@@ -1,0 +1,1550 @@
+{
+ "source": "CHP CCRS Raw Data Export Layout (rawdata_template.docx, 9/27/2024), data.ca.gov package ccrs",
+ "tables": {
+  "crashes": [
+   {
+    "field": "Collision Id",
+    "type": "Integer",
+    "description": "the unique identifier of the crash report",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Report Number",
+    "type": "Varchar(25)",
+    "description": "The unique identifier of the crash report within one NCIC, but it\u2019s not unique across CA state",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Report Version",
+    "type": "Integer",
+    "description": "Version of the crash submitted",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Is Preliminary",
+    "type": "Bit",
+    "description": "when, due to unusual circumstances, the crash \ninvestigation cannot be submitted to the CHP within 15 working days. The preliminary investigation shall include at a minimum: \n(1) Number and names of involved parties. \n(2) Injuries. \n(3) A scene description. \n(4) A summary of the sequence of events that led to the crash.",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "NCIC Code",
+    "type": "Varchar(4)",
+    "description": "Four numerics assigned by DOJ",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Crash Date Time",
+    "type": "DateTime",
+    "description": "the date when the collision occurred (YYYYMMDD)",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Collision Time",
+    "type": "Varchar(4)",
+    "description": "the time the crash occurred using a 24-hour clock",
+    "values": [
+     "Data may appear with no leading zero(s)."
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Beat",
+    "type": "Varchar(25)",
+    "description": "Assigned patrol area. This number may be one to three digits",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "City Id",
+    "type": "Integer",
+    "description": "The unique identifier of the city",
+    "values": [
+     "For internal storage"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "City Code",
+    "type": "Varchar(10)",
+    "description": "The unique code of city in which the crash occurred.",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "City Name",
+    "type": "Varchar(50)",
+    "description": "Name of the city where the crashed happened",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "County Code",
+    "type": "Integer",
+    "description": "The unique code of the county in which the crash occurred.",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "City Is Active",
+    "type": "Bit",
+    "description": "Defined by CHP whether the city is still valid or not in the database",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "City Is Incorporated",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Collision Type Code",
+    "type": "Char(1)",
+    "description": "Define the type of a crash",
+    "values": [
+     "A B C D E F G H"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Collision Type Description",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "A-HEAD-ON",
+     "B-SIDE SWIPE",
+     "C-REAR END",
+     "D-BROADSIDE",
+     "E-HIT OBJECT",
+     "F-OVERTURNED",
+     "G-VEHICLE/PEDESTRAIN",
+     "H-OTHER"
+    ],
+    "codes": {
+     "A": "HEAD-ON",
+     "B": "SIDE SWIPE",
+     "C": "REAR END",
+     "D": "BROADSIDE",
+     "E": "HIT OBJECT",
+     "F": "OVERTURNED",
+     "G": "VEHICLE/PEDESTRAIN",
+     "H": "OTHER"
+    }
+   },
+   {
+    "field": "Day of Week",
+    "type": "Varchar(12)",
+    "description": "the day of the week when the crash occurred",
+    "values": [
+     "Monday",
+     "Tuesday",
+     "Wednesday",
+     "Thursday",
+     "Friday",
+     "Saturday",
+     "Sunday"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "DispatchNotified",
+    "type": "Small int",
+    "description": "Defined as smallint datatype.",
+    "values": [
+     "0 - No",
+     "1 - Yes",
+     "2 \u2013 NotApplicable"
+    ],
+    "codes": {
+     "0": "No",
+     "1": "Yes",
+     "2": "NotApplicable"
+    }
+   },
+   {
+    "field": "HasPhotographs",
+    "type": "Bit",
+    "description": "Whether the crash report has photographs or not",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "HitRun",
+    "type": "Char(1)",
+    "description": "",
+    "values": [
+     "F \u2013 Felony",
+     "M \u2013 Misdemeanor",
+     "Blank - None"
+    ],
+    "codes": {
+     "F": "Felony",
+     "M": "Misdemeanor"
+    }
+   },
+   {
+    "field": "IsDeleted",
+    "type": "Bit",
+    "description": "Determine if a crash is deleted or not",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsHighwayRelated",
+    "type": "Bit",
+    "description": "Determine if a crash happened on highway or not",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsTowAway",
+    "type": "Bit",
+    "description": "Determine if Vehicles involved in the crash towed away or not",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "JudicialDistrict",
+    "type": "Varchar(100)",
+    "description": "Judicial district where the crash occurred",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "MotorVehicleInvolvedWithCode",
+    "type": "Char(1)",
+    "description": "",
+    "values": [
+     "A - Non-Collision",
+     "B - Pedestrian",
+     "C - Other Motor Vehicle",
+     "D - Motor Vehicle on Other Roadway",
+     "E - Parked Motor Vehicle",
+     "F - Train",
+     "G - Bicycle",
+     "H - Animal",
+     "I - Fixed Object",
+     "J - Other Object",
+     "-  - Not Stated"
+    ],
+    "codes": {
+     "A": "Non-Collision",
+     "B": "Pedestrian",
+     "C": "Other Motor Vehicle",
+     "D": "Motor Vehicle on Other Roadway",
+     "E": "Parked Motor Vehicle",
+     "F": "Train",
+     "G": "Bicycle",
+     "H": "Animal",
+     "I": "Fixed Object",
+     "J": "Other Object"
+    }
+   },
+   {
+    "field": "MotorVehicleInvolvedWithDesc",
+    "type": "Varchar(50)",
+    "description": "Description of the Motor Vehicle Involved With code",
+    "values": [
+     "A - Non-Collision",
+     "B - Pedestrian",
+     "C - Other Motor Vehicle",
+     "D - Motor Vehicle on Other Roadway",
+     "E - Parked Motor Vehicle",
+     "F - Train",
+     "G - Bicycle",
+     "H - Animal",
+     "I - Fixed Object",
+     "J - Other Object",
+     "-  - Not Stated"
+    ],
+    "codes": {
+     "A": "Non-Collision",
+     "B": "Pedestrian",
+     "C": "Other Motor Vehicle",
+     "D": "Motor Vehicle on Other Roadway",
+     "E": "Parked Motor Vehicle",
+     "F": "Train",
+     "G": "Bicycle",
+     "H": "Animal",
+     "I": "Fixed Object",
+     "J": "Other Object"
+    }
+   },
+   {
+    "field": "MotorVehicleInvolvedWithOtherDesc",
+    "type": "Varchar(50)",
+    "description": "Additional description of the Motor Vehicle Involved With code",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "NumberInjured",
+    "type": "Smallint",
+    "description": "Number injured in the crash",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "NumberKilled",
+    "type": "Smallint",
+    "description": "Number killed in the crash",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Weather 1",
+    "type": "Varchar(50)",
+    "description": "Weather condition at the time of the crash",
+    "values": [
+     "A - Clear",
+     "B - Cloudy",
+     "C - Raining",
+     "D - Snowing",
+     "E - Fog",
+     "F - Other",
+     "G - Wind"
+    ],
+    "codes": {
+     "A": "Clear",
+     "B": "Cloudy",
+     "C": "Raining",
+     "D": "Snowing",
+     "E": "Fog",
+     "F": "Other",
+     "G": "Wind"
+    }
+   },
+   {
+    "field": "Weather 2",
+    "type": "Varchar(50)",
+    "description": "Additional weather condition at the time of the crash",
+    "values": [
+     "Same as weather 1 above"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Road Condition 1",
+    "type": "Varchar (50)",
+    "description": "Roadway condition at the time of the crash in the traffic lane(s) involved.",
+    "values": [
+     "A - Holes, Deep Ruts",
+     "B - Loose Material on Roadway",
+     "C - Obstruction on Roadway",
+     "D - Construction or Repair Zone",
+     "E - Reduced Roadway Width",
+     "F - Flooded",
+     "G - Other",
+     "H - No Unusual Condition"
+    ],
+    "codes": {
+     "A": "Holes, Deep Ruts",
+     "B": "Loose Material on Roadway",
+     "C": "Obstruction on Roadway",
+     "D": "Construction or Repair Zone",
+     "E": "Reduced Roadway Width",
+     "F": "Flooded",
+     "G": "Other",
+     "H": "No Unusual Condition"
+    }
+   },
+   {
+    "field": "Road Condition 2",
+    "type": "Varchar (50)",
+    "description": "Second roadway condition at the time of the crash in the traffic lane(s) involved.",
+    "values": [
+     "Same as road condition 1 above"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Special Condition",
+    "type": "Varchar (50)",
+    "description": "Indicate type of crash report\nNote: if the report has more than one special conditions, the values are separated by a slash (/)\n\n550 - Suspected Staged Traffic Collision",
+    "values": [
+     "Counter Report",
+     "Courtesy Report",
+     "Farm Labor Vehicle",
+     "Fatal",
+     "Hazardous Material",
+     "Late-Reported",
+     "On-Duty Emergency Vehicle",
+     "Preliminary",
+     "Private Property",
+     "School Bus Collision",
+     "No Pupils on School Bus",
+     "550",
+     "Tribal Land Reportable",
+     "Tribal Land Non-Reportable",
+     "Autonomous Vehicle",
+     "MAIT (PRIMARY)",
+     "MAIT SUPPLEMENTAL",
+     "Nonreportable or Incident Only"
+    ],
+    "codes": {
+     "On": "Duty Emergency Vehicle"
+    }
+   },
+   {
+    "field": "LightingCode",
+    "type": "Char(1)",
+    "description": "",
+    "values": [
+     "A-DAYLIGHT",
+     "B-DUSK-DAWN",
+     "C-DARK-STREET LIGHTS",
+     "D-DARK-NO STREET LIGHTS",
+     "E-DARK-STREET LIGHTS NOT FUNCTIONING*"
+    ],
+    "codes": {
+     "A": "DAYLIGHT",
+     "B": "DUSK-DAWN",
+     "C": "DARK-STREET LIGHTS",
+     "D": "DARK-NO STREET LIGHTS",
+     "E": "DARK-STREET LIGHTS NOT FUNCTIONING*"
+    }
+   },
+   {
+    "field": "LightingDescription",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "A-DAYLIGHT",
+     "B-DUSK-DAWN",
+     "C-DARK-STREET LIGHTS",
+     "D-DARK-NO STREET LIGHTS",
+     "E-DARK-STREET LIGHTS NOT FUNCTIONING*"
+    ],
+    "codes": {
+     "A": "DAYLIGHT",
+     "B": "DUSK-DAWN",
+     "C": "DARK-STREET LIGHTS",
+     "D": "DARK-NO STREET LIGHTS",
+     "E": "DARK-STREET LIGHTS NOT FUNCTIONING*"
+    }
+   },
+   {
+    "field": "Latitude",
+    "type": "Decimal",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Longitude",
+    "type": "Decimal",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "MilePostDirection",
+    "type": "Varchar(2)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "MilePostDistance",
+    "type": "Numeric",
+    "description": "reflects the distance from either the south or west county line, depending on the general direction of the highway, to that location.",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "MilePostMarker",
+    "type": "Varchar(100)",
+    "description": "Milepost markers indicate the route number, county, and post miles of the location",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "MilePostUnitOfMeasure",
+    "type": "Char(1)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "PedestrianActionCode",
+    "type": "Char(1)",
+    "description": "",
+    "values": [
+     "A - No Pedestrian Involved",
+     "B - Crossing in Crosswalk at Intersection",
+     "C - Crossing in Crosswalk Not at Intersection",
+     "D - Crossing Not in Crosswalk",
+     "E - In Road, Including Shoulder",
+     "F - Not in Road",
+     "G - Approaching/Leaving School Bus"
+    ],
+    "codes": {
+     "A": "No Pedestrian Involved",
+     "B": "Crossing in Crosswalk at Intersection",
+     "C": "Crossing in Crosswalk Not at Intersection",
+     "D": "Crossing Not in Crosswalk",
+     "E": "In Road, Including Shoulder",
+     "F": "Not in Road",
+     "G": "Approaching/Leaving School Bus"
+    }
+   },
+   {
+    "field": "PedestrianActionDesc",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "A - No Pedestrian Involved",
+     "B - Crossing in Crosswalk at Intersection",
+     "C - Crossing in Crosswalk Not at Intersection",
+     "D - Crossing Not in Crosswalk",
+     "E - In Road, Including Shoulder",
+     "F - Not in Road",
+     "G - Approaching/Leaving School Bus"
+    ],
+    "codes": {
+     "A": "No Pedestrian Involved",
+     "B": "Crossing in Crosswalk at Intersection",
+     "C": "Crossing in Crosswalk Not at Intersection",
+     "D": "Crossing Not in Crosswalk",
+     "E": "In Road, Including Shoulder",
+     "F": "Not in Road",
+     "G": "Approaching/Leaving School Bus"
+    }
+   },
+   {
+    "field": "PreparedDate",
+    "type": "DateTime",
+    "description": "Date when the report was first prepared to key in the system",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "PrimaryCollisionFactorCode",
+    "type": "Char(1)",
+    "description": "Primary crash factor",
+    "values": [
+     "A - (Vehicle) Code Violation",
+     "B - Other Improper Driving",
+     "C - Other Than Driver",
+     "D - Unknown",
+     "E - Fell Asleep",
+     "-  - Not Stated"
+    ],
+    "codes": {
+     "A": "(Vehicle) Code Violation",
+     "B": "Other Improper Driving",
+     "C": "Other Than Driver",
+     "D": "Unknown",
+     "E": "Fell Asleep"
+    }
+   },
+   {
+    "field": "PrimaryCollisionFactorDescription",
+    "type": "Varchar(50)",
+    "description": "Primary crash factor description",
+    "values": [
+     "A - (Vehicle) Code Violation",
+     "B - Other Improper Driving",
+     "C - Other Than Driver",
+     "D - Unknown",
+     "E - Fell Asleep",
+     "-  - Not Stated"
+    ],
+    "codes": {
+     "A": "(Vehicle) Code Violation",
+     "B": "Other Improper Driving",
+     "C": "Other Than Driver",
+     "D": "Unknown",
+     "E": "Fell Asleep"
+    }
+   },
+   {
+    "field": "PrimaryCollisionFactorIsCited",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "PrimaryCollisionPartyNumber",
+    "type": "interger",
+    "description": "Identify the party who is the primary crash factor",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Primary Rd",
+    "type": "Varchar(100)",
+    "description": "Road/location where the crash occurred",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "ReportingDistrict",
+    "type": "Varchar(100)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "ReportingDistrictCode",
+    "type": "Varchar(10)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Secondary Rd",
+    "type": "Varchar(100)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "ReviewedDate",
+    "type": "Datetime",
+    "description": "Date the report was reviewed for final approval",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "RoadwaySurfaceCode",
+    "type": "Char(1)",
+    "description": "",
+    "values": [
+     "A-DRY",
+     "B-WET",
+     "C-SNOWY-ICY",
+     "D-SLIPPERY(MUDDY,OILY,ETC)"
+    ],
+    "codes": {
+     "A": "DRY",
+     "B": "WET",
+     "C": "SNOWY-ICY",
+     "D": "SLIPPERY(MUDDY,OILY,ETC)"
+    }
+   },
+   {
+    "field": "SecondaryDirection",
+    "type": "Char(1)",
+    "description": "Direction of the secondary road from the primary road",
+    "values": [
+     "N - North",
+     "E - East",
+     "S - South",
+     "W - West",
+     "- or blank  - Not Stated, in Intersection"
+    ],
+    "codes": {
+     "N": "North",
+     "E": "East",
+     "S": "South",
+     "W": "West"
+    }
+   },
+   {
+    "field": "SecondaryDistance",
+    "type": "Numeric",
+    "description": "Distance from the secondary road to the primary road",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "SecondaryUnitOfMeasure",
+    "type": "Char(1)",
+    "description": "Unit of measure of the distance from the secondary road to the primary road",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "SecondaryRoad",
+    "type": "Varchar(100)",
+    "description": "The nearest crossed road where the crash occurred",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "TrafficControlDeviceCode",
+    "type": "Char(1)",
+    "description": "",
+    "values": [
+     "A-CONTROLS FUNCTIONING",
+     "B-CONTROLS NOT FUNCTIONING*",
+     "C-CONTROLS OBSCURED",
+     "D-NO CONTROLS PRESENT/FACTOR*"
+    ],
+    "codes": {
+     "A": "CONTROLS FUNCTIONING",
+     "B": "CONTROLS NOT FUNCTIONING*",
+     "C": "CONTROLS OBSCURED",
+     "D": "NO CONTROLS PRESENT/FACTOR*"
+    }
+   },
+   {
+    "field": "CreatedDate",
+    "type": "DateTime",
+    "description": "Date and time when the report was created",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "ModifiedDate",
+    "type": "DateTime",
+    "description": "Latest date and time when the report was modified",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "IsCountyRoad",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsFreeWay",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "CHP555Version",
+    "type": "Smallint",
+    "description": "Version of the report identified by CHP",
+    "values": [
+     "1,2,3,4"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsAdditonalObjectStruck",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "NotificationDate",
+    "type": "DateTime",
+    "description": "Date and Time when the crashed was notified",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "NotificationTimeDescription",
+    "type": "Varchar(10)",
+    "description": "the time the crash notified using a 24-hour clock",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "HasDigitalMediaFiles",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "EvidenceNumber",
+    "type": "Varchar(25)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "IsLocationReferToNarrative",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsAOIOneSameAsLocation",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   }
+  ],
+  "parties": [
+   {
+    "field": "CollisionId",
+    "type": "integer",
+    "description": "the unique identifier of the crash involved in the crash",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Party Number",
+    "type": "smallint",
+    "description": "Number identifier of the parties in the crash",
+    "values": [
+     "1 to 999"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Party Type",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "DRIVER",
+     "PEDESTRIAN",
+     "PARKED VEHICLE",
+     "BICYCLIST",
+     "OTHER",
+     "OPERATOR"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsAtFault",
+    "type": "Bit",
+    "description": "indicates whether the party was at fault in the crash",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsOnDutyEmergencyVehicle",
+    "type": "Bit",
+    "description": "Indicates whether the party is an on-duty emergency vehicle or not in the crash",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsHitAndRun",
+    "type": "Bit",
+    "description": "Indicates whether the party is hit and run or not",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "AirbagCode",
+    "type": "Char(1)",
+    "description": "",
+    "values": [
+     "B-UNKNOWN",
+     "L-AIR BAG DEPLOYED",
+     "M-AIR BAG NOT DEPLOYED",
+     "N-OTHER",
+     "P-NOT REQUIRED"
+    ],
+    "codes": {
+     "B": "UNKNOWN",
+     "L": "AIR BAG DEPLOYED",
+     "M": "AIR BAG NOT DEPLOYED",
+     "N": "OTHER",
+     "P": "NOT REQUIRED"
+    }
+   },
+   {
+    "field": "AirBagCodeDescription",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "B-UNKNOWN",
+     "L-AIR BAG DEPLOYED",
+     "M-AIR BAG NOT DEPLOYED",
+     "N-OTHER",
+     "P-NOT REQUIRED"
+    ],
+    "codes": {
+     "B": "UNKNOWN",
+     "L": "AIR BAG DEPLOYED",
+     "M": "AIR BAG NOT DEPLOYED",
+     "N": "OTHER",
+     "P": "NOT REQUIRED"
+    }
+   },
+   {
+    "field": "SafetyEquipmentCode and Description",
+    "type": "Char(1) / Varchar(50)",
+    "description": "",
+    "values": [
+     "A - None in Vehicle",
+     "B - Unknown",
+     "C - Lap Belt Used",
+     "D - Lap Belt Not Used",
+     "E - Shoulder Harness Used",
+     "F - Shoulder Harness Not Used",
+     "G - Lap/Shoulder Harness Used",
+     "H - Lap/Shoulder Harness Not Used",
+     "J - Passive Restraint Used",
+     "K - Passive Restraint Not Used",
+     "L - Air Bag Deployed",
+     "M - Air Bag Not Deployed",
+     "N - Other",
+     "P - Not Required",
+     "Q - Child Restraint in Vehicle Used",
+     "R - Child Restraint in Vehicle Not Used",
+     "S - Child Restraint in Vehicle, Use Unknown",
+     "T - Child Restraint in Vehicle, Improper Use",
+     "U - No Child Restraint in Vehicle",
+     "V - Driver, Motorcycle Helmet Not Used",
+     "W - Driver, Motorcycle Helmet Used",
+     "X - Passenger, Motorcycle Helmet Not Used",
+     "Y - Passenger, Motorcycle Helmet Used",
+     "-  or blank - Not Stated"
+    ],
+    "codes": {
+     "A": "None in Vehicle",
+     "B": "Unknown",
+     "C": "Lap Belt Used",
+     "D": "Lap Belt Not Used",
+     "E": "Shoulder Harness Used",
+     "F": "Shoulder Harness Not Used",
+     "G": "Lap/Shoulder Harness Used",
+     "H": "Lap/Shoulder Harness Not Used",
+     "J": "Passive Restraint Used",
+     "K": "Passive Restraint Not Used",
+     "L": "Air Bag Deployed",
+     "M": "Air Bag Not Deployed",
+     "N": "Other",
+     "P": "Not Required",
+     "Q": "Child Restraint in Vehicle Used",
+     "R": "Child Restraint in Vehicle Not Used",
+     "S": "Child Restraint in Vehicle, Use Unknown",
+     "T": "Child Restraint in Vehicle, Improper Use",
+     "U": "No Child Restraint in Vehicle",
+     "V": "Driver, Motorcycle Helmet Not Used",
+     "W": "Driver, Motorcycle Helmet Used",
+     "X": "Passenger, Motorcycle Helmet Not Used",
+     "Y": "Passenger, Motorcycle Helmet Used"
+    }
+   },
+   {
+    "field": "Special Information",
+    "type": "Varchar(50)",
+    "description": "Value A Indicates that the crash involved a vehicle known to be, or believed to be, transporting a hazardous material. \n\nValue E indicates that the crash involved a motor vehicle in-transport passing a stopped school bus with its red signal lamps in operation, pursuant to CVC Section 22112, or reacting to, pursuant to CVC Section 22454viii.\n\nOther values are related to cell phone in use.",
+    "values": [
+     "A - Hazardous Materials",
+     "B - Cell Phone in Use (4/1/01)",
+     "C - Cell Phone Not in Use (4/1/01)",
+     "D - No Cell Phone/Unknown (4/1/01)",
+     "1 - Cell Phone Handheld in Use",
+     "2 - Cell Phone Handsfree in Use",
+     "3 - Cell Phone Not in Use",
+     "4 - Cell Phone Use Unknown",
+     "E - School Bus Related (1/1/02)"
+    ],
+    "codes": {
+     "A": "Hazardous Materials",
+     "B": "Cell Phone in Use (4/1/01)",
+     "C": "Cell Phone Not in Use (4/1/01)",
+     "D": "No Cell Phone/Unknown (4/1/01)",
+     "1": "Cell Phone Handheld in Use",
+     "2": "Cell Phone Handsfree in Use",
+     "3": "Cell Phone Not in Use",
+     "4": "Cell Phone Use Unknown",
+     "E": "School Bus Related (1/1/02)"
+    }
+   },
+   {
+    "field": "Other Associate Factor",
+    "type": "Varchar(50)",
+    "description": "A factor that contributed to the crash but was not the primary cause of the crash.\nNote: if the report has more than one special conditions, the values are separated by a slash (/)",
+    "values": [
+     "VC SECTION VIOLATED",
+     "VISION OBSCUREMENT",
+     "INATTENTION",
+     "STOP & GO TRAFFIC",
+     "ENTERING OR LEAVING RAMP",
+     "PREVIOUS COLLISION",
+     "UNFAMILIAR WITH ROAD",
+     "DEFECTIVE VEHICLE EQUIPMENT",
+     "UNINVOLVED VEHICLE",
+     "OTHER",
+     "NONE APPARENT",
+     "RUNAWAY VEHICLE"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Inattention",
+    "type": "Varchar(50)",
+    "description": "Type of inattention",
+    "values": [
+     "CELL PHONE HANDHELD",
+     "CELL PHONE HANDSFREE",
+     "ELECTRONIC_EQUIPMENT",
+     "RADIO/CD",
+     "SMOKING",
+     "EATING",
+     "CHILDREN",
+     "ANIMALS",
+     "PERSONAL HYGIENE",
+     "READING",
+     "OTHER"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "DirectionOfTravel",
+    "type": "Char(1)",
+    "description": "",
+    "values": [
+     "N - North",
+     "S - South",
+     "E - East",
+     "W - West",
+     "-   - Not Stated"
+    ],
+    "codes": {
+     "N": "North",
+     "S": "South",
+     "E": "East",
+     "W": "West"
+    }
+   },
+   {
+    "field": "StreetOrHighwayName",
+    "type": "Varchar(75)",
+    "description": "Location where the party involved in the crash",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "SpeedLimit",
+    "type": "Smallint",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "MovementPrecCollCode and Description",
+    "type": "Char(1)/Varchar(50)",
+    "description": "",
+    "values": [
+     "A - Stopped",
+     "B - Proceeding Straight",
+     "C - Ran Off Road",
+     "D - Making Right Turn",
+     "E - Making Left Turn",
+     "F - Making U-Turn",
+     "G - Backing",
+     "H - Slowing/Stopping",
+     "I - Passing Other Vehicle",
+     "J - Changing Lanes",
+     "K - Parking Maneuver",
+     "L - Entering Traffic",
+     "M - Other Unsafe Turning",
+     "N - Crossed Into Opposing Lane",
+     "O - Parked",
+     "P - Merging",
+     "Q - Traveling Wrong Way",
+     "R - Other",
+     "-  - Not Stated"
+    ],
+    "codes": {
+     "A": "Stopped",
+     "B": "Proceeding Straight",
+     "C": "Ran Off Road",
+     "D": "Making Right Turn",
+     "E": "Making Left Turn",
+     "F": "Making U-Turn",
+     "G": "Backing",
+     "H": "Slowing/Stopping",
+     "I": "Passing Other Vehicle",
+     "J": "Changing Lanes",
+     "K": "Parking Maneuver",
+     "L": "Entering Traffic",
+     "M": "Other Unsafe Turning",
+     "N": "Crossed Into Opposing Lane",
+     "O": "Parked",
+     "P": "Merging",
+     "Q": "Traveling Wrong Way",
+     "R": "Other"
+    }
+   },
+   {
+    "field": "SobrietyDrugPhysicalCode and Description",
+    "type": "Char(1)/varchar(50)",
+    "description": "",
+    "values": [
+     "A - Had Not Been Drinking",
+     "B - Had Been Drinking, Under Influence",
+     "C - Had Been Drinking, Not Under Influence",
+     "D - Had Been Drinking, Impairment Unknown",
+     "G - Impairment Unknown",
+     "H - Not Applicable",
+     "-  - Not Stated"
+    ],
+    "codes": {
+     "A": "Had Not Been Drinking",
+     "B": "Had Been Drinking, Under Influence",
+     "C": "Had Been Drinking, Not Under Influence",
+     "D": "Had Been Drinking, Impairment Unknown",
+     "G": "Impairment Unknown",
+     "H": "Not Applicable"
+    }
+   },
+   {
+    "field": "",
+    "type": "",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "GenderCode and Description",
+    "type": "Char(1)/varchar(50)",
+    "description": "the gender of the party",
+    "values": [
+     "F-FEMALE",
+     "M-MALE",
+     "U-UNKNOWN",
+     "X-NON-BINARY"
+    ],
+    "codes": {
+     "F": "FEMALE",
+     "M": "MALE",
+     "U": "UNKNOWN",
+     "X": "NON-BINARY"
+    }
+   },
+   {
+    "field": "StatedAge",
+    "type": "Varchar(10)",
+    "description": "the age of the party at the time of the crash",
+    "values": [
+     "0 to 100+ (0 & blank = Not Stated)"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "DriverLicenseClass",
+    "type": "Varchar(2)",
+    "description": "",
+    "values": [
+     "A",
+     "B",
+     "C",
+     "D",
+     "F",
+     "M",
+     "M1",
+     "M2",
+     "U"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "DriverLicenseStateCode",
+    "type": "Char(2)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "RaceCode and Desc",
+    "type": "Char(1)/varchar(50)",
+    "description": "",
+    "values": [
+     "A - Asian           O - Other",
+     "B - Black           W - White",
+     "H - Hispanic      Blank - Not stated",
+     "Eff."
+    ],
+    "codes": {
+     "A": "Asian           O - Other",
+     "B": "Black           W - White",
+     "H": "Hispanic      Blank - Not stated"
+    }
+   },
+   {
+    "field": "Vehicle1TypeId",
+    "type": "smallint",
+    "description": "Two-digit code for a single vehicle/the towing vehicle of\na combination of vehicles",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle1TypeDesc",
+    "type": "Varchar(50)",
+    "description": "Description of the VehicleType",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle1Year",
+    "type": "Interger",
+    "description": "Year of the vehicle",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle1Make",
+    "type": "Varchar(50)",
+    "description": "Vehicle make",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle1Model",
+    "type": "Varchar(50)",
+    "description": "Vehicle model",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle1Color",
+    "type": "Varchar(50)",
+    "description": "Vehicle color",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "V1IsVehicleTowed",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle2TypeId",
+    "type": "smallint",
+    "description": "Two-digit code for a single vehicle/the towed vehicle of\na combination of vehicles",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle2TypeDesc",
+    "type": "Varchar(50)",
+    "description": "Description of the VehicleType",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle2Year",
+    "type": "Interger",
+    "description": "Year of the vehicle",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle2Make",
+    "type": "Varchar(50)",
+    "description": "Vehicle make",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle2Model",
+    "type": "Varchar(50)",
+    "description": "Vehicle model",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Vehicle2Color",
+    "type": "Varchar(50)",
+    "description": "Vehicle color",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "V2IsVehicleTowed",
+    "type": "Bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Lane",
+    "type": "",
+    "description": "the lane number or other road position\nwhere the vehicle was located prior to the crash or loss of control",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "ThruLane",
+    "type": "",
+    "description": "Through (Thru) lanes are lanes that route traffic straight ahead away from local or exit\nlanes and includes shared through/turn lanes, but excludes turn only lanes; auxiliary\nlanes, such as parking lanes and truck climbing lanes; toll collection lanes; and\nacceleration/deceleration lanes.",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "TotalLane",
+    "type": "",
+    "description": "Total lanes would be all-inclusive",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "IsDREConducted",
+    "type": "bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   }
+  ],
+  "injured_witness_passengers": [
+   {
+    "field": "InjuredWitPassId",
+    "type": "integer",
+    "description": "the unique identifier of injured/witness/passenger in the crash report",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "StatedAge",
+    "type": "Varchar(10)",
+    "description": "the age of the party at the time of the crash",
+    "values": [
+     "0 to 100+ (0 & blank = Not Stated)"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "Gender",
+    "type": "Char(1)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Gender Desc",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "F-FEMALE",
+     "M-MALE",
+     "U-UNKNOWN",
+     "X-NON-BINARY"
+    ],
+    "codes": {
+     "F": "FEMALE",
+     "M": "MALE",
+     "U": "UNKNOWN",
+     "X": "NON-BINARY"
+    }
+   },
+   {
+    "field": "Race",
+    "type": "Char(1)",
+    "description": "",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "Race Desc",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "A-ASIAN",
+     "B-BLACK",
+     "H-HISPANIC",
+     "O-OTHER",
+     "W-WHITE"
+    ],
+    "codes": {
+     "A": "ASIAN",
+     "B": "BLACK",
+     "H": "HISPANIC",
+     "O": "OTHER",
+     "W": "WHITE"
+    }
+   },
+   {
+    "field": "IsWitnessOnly",
+    "type": "bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "IsPassengerOnly",
+    "type": "bit",
+    "description": "",
+    "values": [
+     "True/False"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "ExtentOfInjury",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "FATAL INJURY",
+     "SUSPECTED SERIOUS INJURY",
+     "SUSPECTED MINOR INJURY",
+     "POSSIBLE INJURY"
+    ],
+    "codes": {}
+   },
+   {
+    "field": "InjuredPersonType",
+    "type": "Varchar(50)",
+    "description": "Identify the type of injured person in the crash",
+    "values": [],
+    "codes": {}
+   },
+   {
+    "field": "SeatPosition",
+    "type": "Varchar(50)",
+    "description": "",
+    "values": [
+     "1 - Driver",
+     "2 thru 6 - Passengers",
+     "7 - Station Wagon Rear",
+     "8 - Rear Occupant of Truck or Van",
+     "9 - Position Unknown",
+     "0 - Other Occupants",
+     "A thru Z - Bus Occupants",
+     "-  - Not Stated"
+    ],
+    "codes": {
+     "1": "Driver",
+     "7": "Station Wagon Rear",
+     "8": "Rear Occupant of Truck or Van",
+     "9": "Position Unknown",
+     "0": "Other Occupants"
+    }
+   },
+   {
+    "field": "AirBagCode\nAnd Desc",
+    "type": "Char(1)/Varchar(50)",
+    "description": "",
+    "values": [
+     "B-UNKNOWN",
+     "L-AIR BAG DEPLOYED",
+     "M-AIR BAG NOT DEPLOYED",
+     "N-OTHER",
+     "P-NOT REQUIRED"
+    ],
+    "codes": {
+     "B": "UNKNOWN",
+     "L": "AIR BAG DEPLOYED",
+     "M": "AIR BAG NOT DEPLOYED",
+     "N": "OTHER",
+     "P": "NOT REQUIRED"
+    }
+   },
+   {
+    "field": "SafetyEquipmentCode and Desc",
+    "type": "Char(1)/Varchar(50)",
+    "description": "",
+    "values": [
+     "A - None in Vehicle",
+     "B - Unknown",
+     "C - Lap Belt Used",
+     "D - Lap Belt Not Used",
+     "E - Shoulder Harness Used",
+     "F - Shoulder Harness Not Used",
+     "G - Lap/Shoulder Harness Used",
+     "H - Lap/Shoulder Harness Not Used",
+     "J - Passive Restraint Used",
+     "K - Passive Restraint Not Used",
+     "L - Air Bag Deployed",
+     "M - Air Bag Not Deployed",
+     "N - Other",
+     "P - Not Required",
+     "Q - Child Restraint in Vehicle Used",
+     "R - Child Restraint in Vehicle Not Used",
+     "S - Child Restraint in Vehicle, Use Unknown",
+     "T - Child Restraint in Vehicle, Improper Use",
+     "U - No Child Restraint in Vehicle",
+     "V - Driver, Motorcycle Helmet Not Used",
+     "W - Driver, Motorcycle Helmet Used",
+     "X - Passenger, Motorcycle Helmet Not Used",
+     "Y - Passenger, Motorcycle Helmet Used",
+     "- or blank -  Not Stated"
+    ],
+    "codes": {
+     "A": "None in Vehicle",
+     "B": "Unknown",
+     "C": "Lap Belt Used",
+     "D": "Lap Belt Not Used",
+     "E": "Shoulder Harness Used",
+     "F": "Shoulder Harness Not Used",
+     "G": "Lap/Shoulder Harness Used",
+     "H": "Lap/Shoulder Harness Not Used",
+     "J": "Passive Restraint Used",
+     "K": "Passive Restraint Not Used",
+     "L": "Air Bag Deployed",
+     "M": "Air Bag Not Deployed",
+     "N": "Other",
+     "P": "Not Required",
+     "Q": "Child Restraint in Vehicle Used",
+     "R": "Child Restraint in Vehicle Not Used",
+     "S": "Child Restraint in Vehicle, Use Unknown",
+     "T": "Child Restraint in Vehicle, Improper Use",
+     "U": "No Child Restraint in Vehicle",
+     "V": "Driver, Motorcycle Helmet Not Used",
+     "W": "Driver, Motorcycle Helmet Used",
+     "X": "Passenger, Motorcycle Helmet Not Used",
+     "Y": "Passenger, Motorcycle Helmet Used"
+    }
+   },
+   {
+    "field": "Ejected",
+    "type": "varchar(50)",
+    "description": "",
+    "values": [
+     "0 - Not Ejected",
+     "1 - Fully Ejected",
+     "2 - Partially Ejected",
+     "3 - Unknown",
+     "-  - Not Stated"
+    ],
+    "codes": {
+     "0": "Not Ejected",
+     "1": "Fully Ejected",
+     "2": "Partially Ejected",
+     "3": "Unknown"
+    }
+   }
+  ]
+ }
+}
