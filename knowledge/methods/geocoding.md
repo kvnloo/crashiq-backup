@@ -82,3 +82,24 @@ names, compare. No second source. LBPD 2023–25: 13,181 crashes, 96% with GPS; 
 - **Conclusion across SF and Long Beach: Jev does not beat code matching on this task.** Code is the method; Jev
   stays a review suggestion at most. The 98% bar on the clean subset is not yet met in Long Beach (97.0%):
   remaining misses are mostly 100–250 m, worth investigating (offset handling, GPS taken away from the scene).
+
+## The user's geocoding method: weighted clues (2026-10-18, from the user's hands-on experience)
+When the user geocoded crashes by hand, they used the approach road and the direction of travel, and when clues
+conflicted they **weighted each clue by how hard it is for the officer to get it wrong**: street names (read off
+signs) beat direction and distance (often estimated). Design to build (backlog #17):
+
+| Clue | Source in public CCRS | Weight (start) |
+|---|---|---|
+| Primary / cross street | Crashes: `PrimaryRoad`, `SecondaryRoad` | High |
+| Each driver's street (approach road) | Parties: `StreetOrHighwayName` | High |
+| Beat / reporting district | Crashes: `Beat`, `ReportingDistrict` (LBPD 2024: 99.5% filled) | Medium |
+| Traffic control at the spot | Crashes: `TrafficControlDeviceCode` | Medium–low |
+| Each driver's direction and movement | Parties: `DirectionOfTravel`, `MovementPrecCollDescription` | Low–medium |
+| Distance and direction from cross street | Crashes: `SecondaryDistance`, `SecondaryDirection` | Low |
+| Road character | Parties: `SpeedLimit`, `Lane`, `TotalLanes` | Low |
+
+Score every candidate location; the top one wins only if clearly ahead; otherwise review, showing which clues
+disagree. Start weights from the user's judgment, tune them on the hidden-GPS dev half, report on the test half.
+**Not in public data:** narratives and sketches (`SketchDesc` = "See Attachment"). Clients (agencies,
+consultants) hold the full reports, so "upload your reports, we read the narratives too" is a paid-feature idea.
+First puzzle cases: Long Beach Traffic Circle (`E PACIFIC COAST HWY & TRAFFIC CIR`): resolve by each driver's street.

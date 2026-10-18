@@ -17,6 +17,7 @@ a test or analysis turns up a new discrepancy.
 | 8 | **Unit errors** | "Miles" offsets of 33–233 inside a city (feet typed as miles): 5 in SF, 146 in Long Beach | Crashes placed miles away, or dropped | Automatic fix with a flag on the record | Built |
 | 9 | **Deleted reports still in the data** | CCRS has an `IsDeleted` flag (found by Hermes) | Counting reports CHP has withdrawn | Dropped on every pull, count reported | Built |
 | 10 | **Property-damage crashes missing from common tools** | CCRS: 59% of 2024 rows are PDO; TIMS lacks most PDO | Patterns in non-injury crashes (rear-ends, sideswipes) invisible; EPDO weights incomplete | CCRS pulled directly, PDO included | Built |
+| 12 | **Location clues buried in the parties table and narratives** | CCRS Parties has each driver's street, direction and movement; narratives are only in the PDF reports | Hand geocoders read them one crash at a time | Weighted-clue locator uses every structured clue; report upload reads narratives (planned) | Designed (#17) |
 | 11 | **Each city writes reports differently** | Long Beach drops directionals (`7TH ST` for East/West 7th), so the "relaxed" tier carries 44% of crashes vs ~2% in SF | One-size tools work in one city and fail in the next | Per-city validation before claiming accuracy; per-agency rules where needed | Ongoing (#17) |
 
 ## How to use this with clients
