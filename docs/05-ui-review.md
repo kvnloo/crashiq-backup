@@ -68,5 +68,5 @@ or evidence for a finding.
 
 ## Open
 - **Q-UI1:** top-right branding: what should change (name, logo, colors, or remove the badge/theme button)?
-- **Q-UI2:** final product name (the "CrashIQ" name is already taken by two unrelated apps).
+- **Q-UI2 DECIDED (2026-10-17):** keep "CrashIQ" for now; revisit the name before paid launch (name conflict noted).
 - **Note:** `design/mockups/` is not committed to git yet (it lives only on the Mac).
