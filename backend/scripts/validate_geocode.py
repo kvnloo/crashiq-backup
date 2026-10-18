@@ -36,6 +36,7 @@ CITIES = {
 # LAPD's open-data points sit at the intersection even when the report gives a distance (2026-10-18: median 6 m
 # from the intersection vs 92 m from the offset point, n=472). There, score the chosen intersection, not the offset.
 SCORE_AT_INTERSECTION = {"la"}
+COUNTY_FIPS = {"sf": "06075", "la": "06037", "lb": "06037", "riv": "06065"}  # for the TIGER network option
 CODE_TIERS = ("address", "exact", "relaxed", "near", "fuzzy")
 
 
@@ -166,10 +167,27 @@ def main():
     ap.add_argument("--jev", action="store_true", help="ask Jev for a suggestion on every non-exact crash")
     ap.add_argument("--jev-model", default="jev-1.13.0")
     ap.add_argument("--no-address", action="store_true", help="skip the OSM address tier (large cities)")
+    ap.add_argument("--network", choices=["osm", "tiger"], default="osm", help="street network: OSM or Census TIGER")
+    ap.add_argument("--normalizer", default="ours", help="ours | ours_usps | usaddress | libpostal (bake-off)")
     a = ap.parse_args()
 
     cname, ncic, wikidata, years, _ = CITIES[a.city]
-    net = osm.Network(osm.fetch(wikidata, CACHE))
+    from crashiq import names
+    names.use(a.normalizer)  # before the network is built: OSM names go through the same normalizer
+    osm_net = osm.Network(osm.fetch(wikidata, CACHE))
+    if a.network == "tiger":
+        # Same jurisdiction as the OSM run: keep TIGER segments whose midpoint is within ~150 m of an OSM road node.
+        from crashiq import tiger
+        cell = lambda la, lo: (round(la / 0.0015), round(lo / 0.0015))
+        inside = {cell(*p) for p in osm_net.coord.values()}
+        keep = lambda la, lo: cell(la, lo) in inside
+        fips = COUNTY_FIPS[a.city]
+        net = osm.Network(tiger.elements(CACHE / "tiger" / f"tl_2024_{fips}_edges.zip",
+                                         CACHE / "tiger" / f"tl_2024_{fips}_featnames.zip", keep))
+        print(f"TIGER network: {len(net.streets)} street names, {len(net.intersections)} intersections "
+              f"(OSM: {len(osm_net.streets)}, {len(osm_net.intersections)})")
+    else:
+        net = osm_net
     addresses = None if a.no_address else locate.AddressIndex(osm.fetch_addresses(wikidata, CACHE))
     aliases = load_aliases(ROOT / "data" / "aliases" / f"{a.city}.csv")
     linked, cleaning = load_linked(a.city, a.seed)
@@ -247,10 +265,11 @@ def main():
 
     out = ROOT / "data" / "results"
     out.mkdir(parents=True, exist_ok=True)
-    stem = f"geocode_{a.city}_{a.split}"
+    stem = (f"geocode_{a.city}_{a.split}" + ("" if a.normalizer == "ours" else f"_{a.normalizer}")
+            + ("" if a.network == "osm" else f"_{a.network}"))
     (out / f"{stem}_rows.json").write_text(json.dumps(rows))
     (out / f"{stem}_summary.json").write_text(json.dumps(
-        {"city": cname, "agency": ncic, "years": years, "split": a.split, "n": len(rows), "cleaning": cleaning,
+        {"normalizer": a.normalizer, "network": a.network, "city": cname, "agency": ncic, "years": years, "split": a.split, "n": len(rows), "cleaning": cleaning,
          "arms": arm_stats, "jev_vs_fuzzy": head2head, "jev_spend": spend,
          "scored_at": "intersection" if a.city in SCORE_AT_INTERSECTION else "offset point"}, indent=1))
     print(f"\nwrote {out / (stem + '_summary.json')}")

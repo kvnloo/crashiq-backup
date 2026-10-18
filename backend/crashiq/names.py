@@ -21,7 +21,7 @@ SUFFIX = {
     "DRIVE": "DR", "DR": "DR", "ROAD": "RD", "RD": "RD", "PLACE": "PL", "PL": "PL",
     "COURT": "CT", "CT": "CT", "TERRACE": "TER", "TER": "TER", "TERR": "TER",
     "WAY": "WAY", "WY": "WAY", "LANE": "LN", "LN": "LN", "ALLEY": "ALY", "ALY": "ALY",
-    "HIGHWAY": "HWY", "HWY": "HWY", "PARKWAY": "PKWY", "PKWY": "PKWY",
+    "HIGHWAY": "HWY", "HWY": "HWY", "HY": "HWY", "HIWAY": "HWY", "PARKWAY": "PKWY", "PKWY": "PKWY",
     "CIRCLE": "CIR", "CIR": "CIR", "EXPRESSWAY": "EXPY", "EXPY": "EXPY",
     "PLAZA": "PLZ", "PLZ": "PLZ", "SQUARE": "SQ", "SQ": "SQ", "WALK": "WALK", "TUNNEL": "TUNL",
 }
@@ -49,7 +49,24 @@ def _ordinal(n: int) -> str:
     return f"{n}{tail}"
 
 
+_IMPL = None  # set by use(); None = our own rules
+
+
+def use(name: str) -> None:
+    """Pick the normalizer for the bake-off: ours | ours_usps | usaddress | libpostal (see normalizers.py)."""
+    global _IMPL
+    from .normalizers import IMPLS
+    _IMPL = IMPLS[name]
+
+
 def street_key(raw: str | None, aliases: dict[str, str] | None = None) -> StreetKey | None:
+    if aliases and raw:
+        k = re.sub(r"\s+", " ", re.sub(r"[.,#'\"]", " ", raw.upper())).strip()
+        raw = aliases.get(k, raw)
+    return _IMPL(raw) if _IMPL else _street_key_ours(raw)
+
+
+def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> StreetKey | None:
     if not raw:
         return None
     s = raw.upper()
