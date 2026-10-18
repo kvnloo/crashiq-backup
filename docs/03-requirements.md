@@ -216,6 +216,8 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   **state pack** (crash data source + field mapping, severity mapping, rate tables, countermeasure/CRF list, crash costs,
   study-mode formats such as HSIP/ISOAP). The core (map, assignment, profile, tests, findings, audit, export engine)
   stays state-neutral. Adding a state = adding a pack, not rewriting the app. Cheap to do now; expensive to retrofit.
+  User confirmed: build the pack structure, but **only the California pack is active**. Next state likely **Texas**;
+  Hermes does the background research for it (data source, severity, HSIP-equivalent formats) when the user says go.
 
 ## Pipeline status
 `[new-tool] Stage 2 done (LOCKED 2026-10-16) → Stage 3: design check.`
