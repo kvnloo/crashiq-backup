@@ -8,3 +8,4 @@ frontend/dist/
 *.db
 data/cache/
 .DS_Store
+data/results/

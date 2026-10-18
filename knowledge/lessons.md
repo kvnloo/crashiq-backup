@@ -1,0 +1,20 @@
+# Lessons (newest first)
+
+- 2026-10-18 · Validate the truth before scoring against it: blank/duplicate report numbers and default "parking"
+  points produced fake errors of 3–5 km. Hygiene dropped 25 of 5,333 links.
+- 2026-10-18 · Test population must match the crashes the tool will place. In SF, GPS crashes = CHP freeway; the
+  crashes we must place = SFPD city streets. A test on the former says nothing about the latter.
+- 2026-10-18 · CCRS Report Number == DataSF case_id: an agency's own open data can be both truth and a cheaper
+  placement method. Look for it in every city first.
+- 2026-10-18 · Offsets are worth it: 2 m vs 38 m median error. But CCRS drops the offset in ~10% of SFPD crashes.
+- 2026-10-18 · "Miles" offsets over 2 inside a city are feet. 3 of 5,309.
+- 2026-10-18 · Leading directionals are part of names (SOUTH VAN NESS). Never strip them in the exact tier.
+- 2026-10-18 · Plazas and malls (Fulton St plaza, Buchanan St mall) break intersections unless named footways are loaded.
+- 2026-10-18 · Limit the street network to the reporting agency's jurisdiction, or same-named streets next door win.
+- 2026-10-18 · Gate each tier on its own measured accuracy (dev/test split), not the blended number: a good overall
+  98% can hide a 60% tier.
+- 2026-10-18 · Jev's probability was not calibrated on this task (higher cut-off ≠ more accurate). Measure before
+  trusting any model's confidence as a gate.
+- 2026-10-18 · TIMS (user's usual source) = Berkeley's geocoded SWITRS/CCRS. Good second truth; needs login; check
+  its terms before using it inside a paid product.
+- 2026-10-15 · CCRS GPS coverage depends on the reporting agency (Long Beach 97%, SF 35%). Urban corridors are weakest.
