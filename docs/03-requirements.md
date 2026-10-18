@@ -211,6 +211,11 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
 - **D10 YES:** ISOAP mode as a Stage 1 package (SPICE + conflict-point / Safe System score + observed history).
 - **Phasing DECIDED in principle:** one complete process at a time, not many in parallel. Proposed order (to confirm):
   P1 core crash profile (foundation) → P2 HSIP application → P3 ISOAP → P4 traffic-study safety section, ATP, LRSP/HIN.
+- **Market DECIDED (2026-10-18):** goal is to grow across US states, one state at a time. **California first** (user is
+  there and can reach clients), then the next state. Design implication: everything state-specific sits behind a
+  **state pack** (crash data source + field mapping, severity mapping, rate tables, countermeasure/CRF list, crash costs,
+  study-mode formats such as HSIP/ISOAP). The core (map, assignment, profile, tests, findings, audit, export engine)
+  stays state-neutral. Adding a state = adding a pack, not rewriting the app. Cheap to do now; expensive to retrofit.
 
 ## Pipeline status
 `[new-tool] Stage 2 done (LOCKED 2026-10-16) → Stage 3: design check.`
