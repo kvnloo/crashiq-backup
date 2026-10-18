@@ -77,6 +77,24 @@ MIGRATIONS: list[str] = [
         payload   TEXT NOT NULL
     );
     """,
+    # 5 — #13 findings that passed the validator, and rejected ones with reasons (never shown)
+    """
+    CREATE TABLE finding (
+        study_id   TEXT NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        id         TEXT NOT NULL,
+        body       TEXT NOT NULL,
+        status     TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (study_id, id)
+    );
+    CREATE TABLE finding_rejected (
+        study_id   TEXT NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        finding_id TEXT NOT NULL,
+        body       TEXT NOT NULL,
+        reasons    TEXT NOT NULL,
+        created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    """,
 ]
 
 
