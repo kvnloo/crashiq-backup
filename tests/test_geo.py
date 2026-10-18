@@ -2,7 +2,7 @@ import math
 
 import pytest
 
-from crashiq.geo import FT_PER_M, LocalProjection, Polyline, angle_diff, haversine_ft
+from crashiq.geo import FT_PER_M, LocalProjection, Polyline, angle_diff, buffer_ring, haversine_ft
 
 
 def vincenty_ft(p, q):
@@ -84,3 +84,13 @@ def test_polyline_needs_two_distinct_points():
         Polyline([(1.0, 1.0)])
     with pytest.raises(ValueError):
         Polyline([(1.0, 1.0), (1.0, 1.0)])
+
+
+def test_buffer_ring_is_closed_and_at_the_buffer_distance():
+    line = Polyline([(33.8953, -118.32662), (33.9040, -118.32662), (33.9123, -118.3250)])
+    ring = buffer_ring(line, 100)
+    assert ring[0] == ring[-1] and len(ring) > 20
+    offs = [line.project(lat, lon).offset_ft for lat, lon in ring[:-1]]
+    assert max(offs) <= 100.5                     # never wider than the buffer
+    assert min(offs) >= 97                        # inner side of a bend can sit slightly inside (display only)
+    assert sum(abs(o - 100) <= 0.5 for o in offs) / len(offs) > 0.98

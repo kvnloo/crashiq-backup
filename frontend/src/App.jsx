@@ -5,10 +5,11 @@ import { STEPS } from './steps'
 import { StudyProvider, useStudy } from './study'
 import Placeholder from './screens/Placeholder'
 import Setup from './screens/Setup'
+import Corridor from './screens/Corridor'
 
 const SCREENS = {
   setup: Setup,
-  corridor: () => <Placeholder title="Corridor" />,
+  corridor: Corridor,
   profile: () => <Placeholder title="Crash profile" />,
   findings: () => <Placeholder title="Findings" />,
   export: () => <Placeholder title="Export" />,

@@ -123,3 +123,35 @@ def angle_diff(a: float, b: float) -> float:
     """Smallest difference between two undirected bearings in [0, 180)."""
     d = abs(a - b) % 180
     return min(d, 180 - d)
+
+
+def buffer_ring(line: Polyline, ft: float, step_ft: float = 40.0, cap_steps: int = 10) -> list[tuple[float, float]]:
+    """Closed (lat, lon) ring of the area within `ft` of the line: offsets on both sides + round end caps.
+    For drawing the corridor buffer on the map; assignment itself measures distances directly."""
+    n = max(2, int(line.length_ft // step_ft) + 1)
+    stations = [line.length_ft * i / (n - 1) for i in range(n)]
+    for c in line.cum[1:-1]:                       # keep the corners exact
+        stations.append(c)
+    stations.sort()
+    left, right = [], []
+    for st in stations:
+        lat, lon = line.point_at(st)
+        x, y = line.proj.to_xy(lat, lon)
+        p = line.project_xy(x, y)
+        (x1, y1), (x2, y2) = line.xy[p.index], line.xy[p.index + 1]
+        L = math.hypot(x2 - x1, y2 - y1) or 1.0
+        nx, ny = -(y2 - y1) / L, (x2 - x1) / L
+        left.append((x + nx * ft, y + ny * ft))
+        right.append((x - nx * ft, y - ny * ft))
+
+    def cap(cx, cy, start_angle):
+        return [(cx + ft * math.cos(start_angle + math.pi * k / cap_steps),
+                 cy + ft * math.sin(start_angle + math.pi * k / cap_steps)) for k in range(1, cap_steps)]
+
+    (ex1, ey1), (ex2, ey2) = line.xy[-2], line.xy[-1]
+    end_ang = math.atan2(ey2 - ey1, ex2 - ex1) + math.pi / 2
+    (sx1, sy1), (sx2, sy2) = line.xy[0], line.xy[1]
+    start_ang = math.atan2(sy2 - sy1, sx2 - sx1) - math.pi / 2
+    ring = left + cap(*line.xy[-1], end_ang - math.pi) + right[::-1] + cap(*line.xy[0], start_ang - math.pi)
+    ring.append(ring[0])
+    return [tuple(round(v, 7) for v in line.proj.to_ll(x, y)) for x, y in ring]
