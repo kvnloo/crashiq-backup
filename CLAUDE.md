@@ -37,4 +37,11 @@ Read by every agent working in this repo: Claude Code (writes the code) and Herm
 - Stack: FastAPI + Vite/React + Leaflet, reusing the DemandIQ shell. SQLite locally.
 
 ## Commands
-To be filled in when Stage 4 scaffolds the app (test, lint, run backend, run frontend).
+First time: `make setup` (Python venv in `.venv/` + `npm ci` in `frontend/`).
+| Task | Command |
+|---|---|
+| Run backend (API on :8000, auto-reload) | `make backend` |
+| Run frontend (app on :3000, proxies `/api` to :8000) | `make frontend` |
+| Run all tests (no network) | `make test` |
+| Lint (ruff + eslint) | `make lint` |
+| Production build served by one process on :8000 | `make serve` |
