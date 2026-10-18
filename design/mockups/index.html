@@ -1,0 +1,751 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CrashIQ Mockups</title>
+<link rel="stylesheet" href="signal-flow/tokens.css">
+<link rel="stylesheet" href="signal-flow/components.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/deck.gl@^9.0.0/dist.min.js"></script>
+<script src="signal-flow/signal-flow.js"></script>
+<script src="example-data.js"></script>
+<style>
+/* ---------- CrashIQ additions on top of Signal Flow tokens ---------- */
+:root { --sev-f: var(--stop); --sev-i: var(--amber); --sev-p: var(--muted); --rail: 248px; --top: 56px; }
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body { overflow: hidden; font-size: 15px; }
+button { font: inherit; color: inherit; }
+
+/* Shell */
+.top { height: var(--top); display: flex; align-items: center; gap: 14px; padding: 0 18px; border-bottom: 1px solid var(--line); background: var(--surface); position: relative; z-index: 5; }
+.brand { display: flex; align-items: center; gap: 10px; font: 900 19px/1 var(--font-display); letter-spacing: -.02em; }
+.brand b { color: var(--go); }
+.top .proj { color: var(--muted); font: 13px var(--font-mono); padding-left: 14px; border-left: 1px solid var(--line); }
+.top .sp { flex: 1; }
+.ex-badge { font: 600 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--amber); border: 1px solid color-mix(in srgb, var(--amber) 45%, transparent); padding: 5px 8px 4px; border-radius: 4px; }
+.icon-btn { width: 34px; height: 34px; border-radius: var(--radius); border: 1px solid var(--line); background: transparent; cursor: pointer; display: grid; place-items: center; }
+.icon-btn:hover { border-color: var(--muted); }
+.icon-btn:focus-visible, .step:focus-visible, .mode:focus-visible, .yr button:focus-visible, .fcard:focus-visible { outline: 2px solid var(--go); outline-offset: 2px; }
+
+.app { display: grid; grid-template-columns: var(--rail) 1fr; height: calc(100% - var(--top)); }
+.rail { border-right: 1px solid var(--line); background: var(--surface); padding: 22px 14px; display: flex; flex-direction: column; gap: 4px; overflow: auto; }
+.rail .sf-eyebrow { padding: 0 10px 10px; }
+.step { display: grid; grid-template-columns: 22px 1fr; gap: 12px; align-items: center; text-align: left; padding: 10px; border-radius: var(--radius); border: 1px solid transparent; background: none; cursor: pointer; }
+.step:hover { background: var(--surface-2); }
+.step .lamp { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; font: 700 11px var(--font-mono); border: 1px solid var(--line); color: var(--muted); }
+.step.done .lamp { background: var(--go); color: var(--on-go); border-color: transparent; }
+.step.on { background: var(--surface-2); border-color: var(--line); }
+.step.on .lamp { border-color: var(--fg); color: var(--fg); box-shadow: 0 0 0 3px color-mix(in srgb, var(--fg) 12%, transparent); }
+.step .t { font: 600 14px/1.2 var(--font-body); padding: 2px 0; }
+.step .s { font: 11px var(--font-mono); color: var(--muted); margin-top: 2px; }
+.step.later { opacity: .55; }
+.rail .foot { margin-top: auto; padding: 12px 10px 0; border-top: 1px solid var(--line); font: 11px/1.5 var(--font-mono); color: var(--muted); }
+
+.stage { position: relative; overflow: hidden; }
+.screen { position: absolute; inset: 0; overflow: auto; opacity: 0; visibility: hidden; transform: translateY(8px); transition: opacity .35s ease, transform .35s ease, visibility 0s .35s; }
+.screen.on { opacity: 1; visibility: visible; transform: none; transition: opacity .35s ease, transform .35s ease; }
+@media (prefers-reduced-motion: reduce) { .screen, .screen.on { transition: none; transform: none; } }
+
+h1, h2, h3 { margin: 0; }
+.h1 { font: 900 clamp(34px, 4.2vw, 52px)/.98 var(--font-display); letter-spacing: -.03em; }
+.h2 { font: 800 24px/1.1 var(--font-display); letter-spacing: -.02em; }
+.h3 { font: 800 16px/1.2 var(--font-display); }
+.muted { color: var(--muted); }
+.mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; }
+.pad { padding: 18px; }
+.row { display: flex; gap: 12px; align-items: center; }
+.cta-bar { display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+.kbd { font: 11px var(--font-mono); padding: 2px 6px; border: 1px solid var(--line); border-radius: 4px; color: var(--muted); }
+
+/* ---------- 1 Setup ---------- */
+.setup { max-width: 1080px; margin: 0 auto; padding: 44px 32px 48px; display: grid; gap: 22px; grid-auto-rows: max-content; }
+.intro p { margin: 12px 0 0; font-size: 17px; max-width: 560px; }
+.setup .sf-road canvas { height: clamp(220px, 30vw, 320px); }
+.startbar { display: grid; grid-template-columns: 260px 1fr 200px auto; gap: 14px; align-items: end; }
+.field label { display: block; font: 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); margin-bottom: 8px; }
+.input { width: 100%; padding: 12px 14px 11px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--surface); color: var(--fg); font: 15px var(--font-body); }
+select.input { appearance: none; cursor: pointer; padding-right: 34px; background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%); background-position: calc(100% - 18px) 50%, calc(100% - 13px) 50%; background-size: 5px 5px; background-repeat: no-repeat; }
+.input:focus { outline: 2px solid var(--go); outline-offset: 1px; }
+.startbar .sf-btn { height: 44px; }
+.yr-note { font: 12px var(--font-mono); color: var(--amber); min-height: 1em; }
+
+/* ---------- Map screens ---------- */
+.mapwrap { position: absolute; inset: 0; }
+.mapslot { position: absolute; inset: 0; background: var(--road-verge); }
+#map { position: absolute; inset: 0; }
+.map-fallback { position: absolute; inset: 0; display: none; place-items: center; color: var(--muted); font: 13px var(--font-mono); text-align: center; padding: 24px; }
+.float { position: absolute; z-index: 3; background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 20px 50px -24px rgba(0,0,0,.55); }
+.toolbar { left: calc((100% - 412px) / 2); top: 16px; transform: translateX(-50%); display: flex; gap: 4px; padding: 5px; }
+.tool { display: flex; gap: 8px; align-items: center; padding: 9px 12px 8px; border-radius: 6px; border: 0; background: transparent; cursor: pointer; font: 600 13px var(--font-body); color: var(--muted); }
+.tool.on { background: var(--fg); color: var(--bg); }
+.hint { left: calc((100% - 412px) / 2); bottom: 22px; transform: translateX(-50%); padding: 10px 14px; font: 13px var(--font-body); display: flex; gap: 10px; align-items: center; white-space: nowrap; }
+.side { right: 16px; top: 16px; bottom: 16px; width: min(380px, calc(100% - 32px)); display: flex; flex-direction: column; overflow: hidden; }
+.side .hd { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); }
+.side .bd { padding: 14px 18px; overflow: auto; flex: 1; display: grid; gap: 14px; align-content: start; }
+.side .ft { padding: 12px 18px; border-top: 1px solid var(--line); }
+.loclist { display: grid; gap: 2px; }
+.loc { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; padding: 8px 6px; border-radius: 6px; }
+.loc:hover { background: var(--surface-2); }
+.loc .pin { width: 14px; height: 14px; margin-left: 4px; border-radius: 50%; border: 2px solid var(--fg); display: grid; place-items: center; font: 700 10px var(--font-mono); }
+.loc .pin.end { width: 22px; height: 22px; margin-left: 0; background: var(--go); border-color: var(--go); color: var(--on-go); }
+.loc.seg { padding: 0 6px; font: 11px var(--font-mono); color: var(--muted); }
+.loc.seg span:nth-child(2) { border-left: 1px dashed var(--line); padding-left: 10px; margin-left: -25px; line-height: 20px; }
+.loc .n { font-weight: 600; font-size: 14px; }
+.loc .m { font: 11px var(--font-mono); color: var(--muted); }
+.provbar { display: flex; height: 10px; border-radius: 5px; overflow: hidden; background: var(--surface-2); }
+.provbar i { display: block; height: 100%; }
+.legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 11px var(--font-mono); color: var(--muted); }
+.legend span { display: inline-flex; gap: 6px; align-items: center; }
+.legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.alias { display: grid; gap: 6px; }
+.alias .a { display: grid; grid-template-columns: 1fr 14px auto; gap: 8px; align-items: center; font: 12px var(--font-mono); padding: 7px 9px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); }
+.alias .a .raw { color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.alias .a .to { color: var(--fg); }
+.tier { font: 600 10px var(--font-mono); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
+.slider { width: 100%; accent-color: var(--go); }
+details.adv summary { cursor: pointer; font: 600 13px var(--font-body); color: var(--muted); list-style: none; display: flex; justify-content: space-between; }
+details.adv summary::after { content: "+"; font-family: var(--font-mono); }
+details.adv[open] summary::after { content: "−"; }
+
+/* ---------- 4 Profile ---------- */
+.profile { display: grid; grid-template-columns: minmax(0, 1.25fr) minmax(380px, 1fr); height: 100%; }
+.profile .mapcol { position: relative; border-right: 1px solid var(--line); }
+.profile .datacol { overflow: auto; padding: 22px 24px 40px; display: grid; gap: 22px; align-content: start; }
+.map-title { left: 16px; top: 16px; padding: 12px 14px; max-width: 340px; }
+.map-legend { left: 16px; bottom: 16px; padding: 10px 12px; }
+.bars { display: grid; gap: 8px; }
+.bar { display: grid; grid-template-columns: 128px 1fr 42px; gap: 10px; align-items: center; font-size: 13px; }
+.bar .tr { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; display: flex; }
+.bar .tr i { display: block; height: 100%; transform-origin: left; animation: grow .9s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes grow { from { transform: scaleX(0); } }
+@media (prefers-reduced-motion: reduce) { .bar .tr i { animation: none; } }
+.bar .v { text-align: right; font: 600 13px var(--font-mono); }
+.heat { display: grid; grid-template-columns: 34px repeat(24, 1fr); gap: 2px; font: 10px var(--font-mono); color: var(--muted); }
+.heat .c { aspect-ratio: 1; border-radius: 2px; background: var(--surface-2); }
+.heat .lab { display: flex; align-items: center; }
+.sect-h { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 12px; }
+.sect-h .src { font: 11px var(--font-mono); color: var(--muted); }
+.sevbar { display: flex; height: 8px; width: 90px; border-radius: 4px; overflow: hidden; background: var(--surface-2); }
+.sevbar i { display: block; height: 100%; }
+
+/* ---------- 5 Findings ---------- */
+.findings { display: grid; grid-template-columns: 340px minmax(0, 1fr); height: 100%; }
+.flist { border-right: 1px solid var(--line); overflow: auto; padding: 20px 14px 80px; display: grid; gap: 10px; align-content: start; background: var(--surface); }
+.fcard { text-align: left; padding: 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--bg); cursor: pointer; display: grid; gap: 8px; }
+.fcard.sel { border-color: var(--fg); }
+.fcard .loc-l { font: 11px var(--font-mono); color: var(--muted); letter-spacing: .04em; text-transform: uppercase; }
+.fcard .tt { font: 700 15px/1.3 var(--font-body); }
+.fcard .meta { display: flex; gap: 8px; align-items: center; font: 11px var(--font-mono); color: var(--muted); }
+.st { font: 600 10px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; padding: 3px 6px 2px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
+.st.acc { color: var(--go); border-color: color-mix(in srgb, var(--go) 45%, transparent); }
+.st.rej { color: var(--stop); border-color: color-mix(in srgb, var(--stop) 45%, transparent); }
+.fdetail { overflow: auto; padding: 22px 26px 40px; display: grid; gap: 18px; align-content: start; grid-auto-rows: max-content; }
+.profile .datacol, .side .bd, .flist { grid-auto-rows: max-content; }
+.replay { position: relative; }
+.replay canvas { display: block; width: 100%; height: clamp(260px, 30vw, 360px); }
+.replay .sf-chip { pointer-events: none; }
+.replay .ctrl { position: absolute; right: 12px; top: 12px; display: flex; gap: 6px; }
+.replay .ctrl button { background: rgba(7,9,11,.82); color: #E6EAEE; border: 1px solid #29323B; border-radius: 6px; padding: 7px 10px 6px; font: 600 12px var(--font-mono); cursor: pointer; }
+.replay .phases { position: absolute; left: 12px; right: 12px; bottom: 12px; display: flex; gap: 6px; }
+.replay .phases span { flex: 1; font: 600 11px var(--font-mono); color: #8E9AA6; padding: 7px 10px 6px; background: rgba(7,9,11,.78); border-radius: 6px; border-top: 2px solid #29323B; }
+.replay .phases span.on { color: #E6EAEE; border-top-color: #E6EAEE; }
+.claim { font: 600 19px/1.45 var(--font-body); max-width: 760px; }
+.claim .num { font-family: var(--font-mono); border-bottom: 1.5px dashed var(--info); cursor: help; }
+.why { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 12px; }
+.why > div { padding-top: 12px; border-top: 1px solid var(--line); display: grid; gap: 6px; align-content: start; font-size: 14px; }
+.why .k { font: 11px var(--font-mono); letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.tabs { display: flex; gap: 4px; border-bottom: 1px solid var(--line); }
+.tabs button { padding: 10px 12px 9px; border: 0; background: none; cursor: pointer; font: 600 13px var(--font-body); color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.tabs button.on { color: var(--fg); border-bottom-color: var(--fg); }
+.decide { position: sticky; bottom: 0; display: flex; gap: 10px; align-items: center; padding: 12px 14px; margin: 0 -14px; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-top: 1px solid var(--line); }
+.chat { position: absolute; left: 14px; bottom: 14px; width: 312px; z-index: 4; }
+.chat.min { width: 312px; }
+.chat.min .cb, .chat.min .ci, .chat.min .note { display: none; }
+.chat .head { display: flex; gap: 10px; align-items: center; padding: 10px 14px; border-bottom: 1px solid var(--line); cursor: pointer; background: none; border-width: 0 0 1px; width: 100%; text-align: left; }
+.chat.min .head { border-bottom: 0; }
+.chat .cb { padding: 12px 14px; display: grid; gap: 10px; max-height: 300px; overflow: auto; }
+.msg { font-size: 14px; line-height: 1.45; }
+.msg.q { justify-self: end; background: var(--surface-2); border: 1px solid var(--line); padding: 8px 11px; border-radius: 10px 10px 2px 10px; max-width: 85%; }
+.msg.a .tool-call { font: 11px var(--font-mono); color: var(--muted); margin-bottom: 4px; }
+.chat .ci { display: flex; gap: 8px; padding: 10px 12px; border-top: 1px solid var(--line); }
+.chat .ci input { flex: 1; }
+.diagram svg { width: 100%; height: auto; display: block; }
+
+/* ---------- 6 Export ---------- */
+.export { max-width: 1180px; margin: 0 auto; padding: 28px 32px 60px; display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(320px, 1fr); gap: 28px; }
+.pages { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; perspective: 1400px; }
+.page { aspect-ratio: 8.5/11; background: #FBFBF8; color: #1A1F24; border-radius: 4px; padding: 14px; box-shadow: 0 30px 60px -30px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.08); font: 7px/1.45 var(--font-body); overflow: hidden; transform: rotateY(-8deg) rotateX(4deg); transition: transform .4s cubic-bezier(.2,.8,.2,1); }
+.page:hover { transform: none; }
+.page h4 { font: 800 11px/1.1 var(--font-display); margin: 0 0 6px; }
+.page .ln { height: 4px; background: #E3E5E2; border-radius: 2px; margin: 4px 0; }
+.page .blk { background: #22282E; border-radius: 2px; margin: 6px 0; }
+.page table { width: 100%; border-collapse: collapse; font: 6px var(--font-mono); }
+.page td { border-bottom: 1px solid #E3E5E2; padding: 2px 0; }
+.opts { display: grid; gap: 12px; align-content: start; }
+.opt { display: grid; grid-template-columns: 22px 1fr; gap: 12px; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); cursor: pointer; }
+.opt input { accent-color: var(--go); margin-top: 3px; }
+.audit { font: 12px/1.6 var(--font-mono); color: var(--muted); }
+.audit b { color: var(--fg); font-weight: 600; }
+
+@media (max-width: 920px) {
+  :root { --rail: 0px; }
+  .rail { display: none; }
+  .profile, .findings, .export, .startbar { grid-template-columns: 1fr; }
+  .profile .mapcol { height: 60vh; }
+  .pages { grid-template-columns: repeat(2, 1fr); }
+  .top .proj { display: none; }
+}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><span class="sf-sig sf-sig--anim"><i></i><i></i><i></i></span><span>Crash<b>IQ</b></span></div>
+  <div class="proj">Crenshaw Blvd · Marine Ave → 132nd St</div>
+  <div class="sp"></div>
+  <span class="ex-badge" title="Real CCRS crashes; findings are illustrative and unreviewed">Example data</span>
+  <button class="icon-btn" id="themeBtn" aria-label="Toggle light/dark theme">◐</button>
+</header>
+
+<div class="app">
+  <nav class="rail" aria-label="Study steps">
+    <div class="sf-eyebrow">Safety study</div>
+    <div id="steps"></div>
+    <div class="foot">Data: CCRS (CHP)<br>Map © OpenStreetMap, © CARTO</div>
+  </nav>
+
+  <main class="stage" id="stage">
+
+    <!-- 1 SETUP -->
+    <section class="screen" data-screen="1">
+      <div class="setup">
+        <div class="intro">
+          <div class="h1">What's going wrong on this corridor?</div>
+          <p class="muted">Draw a corridor. CrashIQ pulls every reported crash and shows you the patterns, traced back to the records.</p>
+        </div>
+        <div class="sf-road"><canvas id="heroSim" aria-hidden="true"></canvas></div>
+        <div class="startbar">
+          <div class="field"><label for="mode">Study</label>
+            <select class="input" id="mode"><option>Traffic-study safety section</option><option>Corridor screening</option></select></div>
+          <div class="field grow"><label for="pname">Project</label><input class="input" id="pname" value="Crenshaw Blvd safety"></div>
+          <div class="field"><label for="years">Crash history</label>
+            <select class="input" id="years"></select></div>
+          <button class="sf-btn sf-btn--go" data-go="2">Draw the corridor →</button>
+        </div>
+        <div class="yr-note" id="yrNote"></div>
+      </div>
+    </section>
+
+    <!-- 2 CORRIDOR -->
+    <section class="screen" data-screen="2">
+      <div class="mapwrap"><div class="mapslot" data-slot="2"></div></div>
+      <div class="float toolbar" role="toolbar"><button class="tool on">✎ Corridor</button><button class="tool">↺ Redraw</button></div>
+      <div class="float hint">Drag <b>A</b> or <b>B</b> to change the study limits</div>
+      <div class="float side">
+        <div class="hd"><div class="h2">Crenshaw Blvd</div><div class="muted mono" style="font-size:12px;margin-top:6px" id="corrLen"></div></div>
+        <div class="bd">
+          <div id="prov"></div>
+          <div class="loclist" id="loclist"></div>
+          <details class="adv">
+            <summary>Street-name matches</summary>
+            <div class="alias" id="alias" style="margin-top:12px"></div>
+          </details>
+          <details class="adv">
+            <summary>Assignment rules &amp; volumes</summary>
+            <div style="display:grid;gap:12px;margin-top:12px">
+              <div class="field"><label>Intersection influence radius <span class="mono" id="rv">250 ft</span></label><input type="range" class="slider" min="100" max="500" step="25" value="250" id="radius"></div>
+              <div class="field"><label>Crash rates</label><button class="sf-btn" style="width:100%;justify-content:center">+ Enter AADT to compute rates</button></div>
+            </div>
+          </details>
+        </div>
+        <div class="ft cta-bar"><button class="sf-btn sf-btn--go" data-go="3">Build the profile →</button></div>
+      </div>
+    </section>
+
+    <!-- 4 PROFILE -->
+    <section class="screen" data-screen="3">
+      <div class="profile">
+        <div class="mapcol">
+          <div class="mapslot" data-slot="3"></div>
+          <div class="float map-title"><div class="h3">Crashes by location</div><div class="muted" style="font-size:12px;margin-top:4px">Height = crashes · color = injury share</div></div>
+          <div class="float map-legend legend"><span><i style="background:var(--sev-i)"></i>Injury</span><span><i style="background:var(--sev-p)"></i>Property damage</span><span><i style="background:var(--sev-f)"></i>Fatal</span></div>
+        </div>
+        <div class="datacol">
+          <div class="sf-kpis" id="kpis"></div>
+          <div>
+            <div class="sect-h"><div class="h3">Collision type</div></div>
+            <div class="bars" id="typeBars"></div>
+          </div>
+          <div>
+            <div class="sect-h"><div class="h3">When crashes happen</div></div>
+            <div class="heat" id="heat"></div>
+          </div>
+          <div>
+            <div class="sect-h"><div class="h3">Locations</div></div>
+            <div class="sf-table-wrap"><table class="sf-table"><thead><tr><th>Location</th><th class="sf-num">Crashes</th><th class="sf-num">Injury</th><th class="sf-num">Night</th><th>Severity</th></tr></thead><tbody id="locTable"></tbody></table></div>
+          </div>
+          <div class="cta-bar"><button class="sf-btn sf-btn--go" data-go="4">See findings →</button></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- 5 FINDINGS -->
+    <section class="screen" data-screen="4">
+      <div class="findings">
+        <aside class="flist" id="flist" aria-label="Findings"></aside>
+        <div class="fdetail" id="fdetail"></div>
+      </div>
+      <div class="float chat min" id="chat">
+        <button class="head" id="chatToggle" aria-expanded="false"><span class="sf-sig" data-s="g"><i></i><i></i><i></i></span><span class="h3">Ask about this corridor</span><span class="sp" style="flex:1"></span><span class="muted mono note" style="font-size:11px">query tools only</span><span class="mono muted" id="chatIc">+</span></button>
+        <div class="cb" id="chatBody"></div>
+        <div class="ci"><input class="input" placeholder="e.g. rear-ends at 135th after dark" style="padding:9px 12px"><button class="sf-btn">Ask</button></div>
+      </div>
+    </section>
+
+    <!-- 6 EXPORT -->
+    <section class="screen" data-screen="5">
+      <div class="export">
+        <div>
+          <div class="sf-eyebrow">Export</div>
+          <div class="h1" style="margin:10px 0 22px">Ready for the<br>safety section.</div>
+          <div class="pages" id="pages"></div>
+        </div>
+        <div class="opts">
+          <label class="opt"><input type="checkbox" checked><div><div class="h3">PDF report</div><div class="muted" style="font-size:13px;margin-top:4px">Traffic-study safety section: profile, accepted findings, collision diagrams, audit block</div></div></label>
+          <label class="opt"><input type="checkbox" checked><div><div class="h3">Excel workbook</div><div class="muted mono" style="font-size:12px;margin-top:4px">T1 Locations · T2 Collision type · T3 PCF · T4 Hour×Day · T5 Lighting · Collision list</div></div></label>
+          <details class="adv card pad"><summary>Printed with every finding</summary><div class="audit" id="audit" style="margin-top:12px"></div></details>
+          <div class="cta-bar"><button class="sf-btn sf-btn--go">Export 2 files ↓</button></div>
+        </div>
+      </div>
+    </section>
+
+    <div id="mapHome" style="display:none"><div id="map"></div><div class="map-fallback" id="mapFallback">Map couldn't load (offline?).<br>The live app uses MapLibre + deck.gl over an OSM basemap.</div></div>
+  </main>
+</div>
+
+<script>
+(function () {
+'use strict';
+var $ = function (s, r) { return (r || document).querySelector(s); };
+var $$ = function (s, r) { return Array.prototype.slice.call((r || document).querySelectorAll(s)); };
+var css = function (n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
+var reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ================= DATA (all numbers below are computed here, from the records) ================= */
+var C = window.CRASHES.map(function (r) {
+  return { lat: r[0], lon: r[1], type: r[2], sev: r[3], light: r[4], dow: r[5], hour: r[6], key: r[7], prim: r[8], sec: r[9], date: r[10], pcf: r[11] };
+});
+// Intersection nodes along Crenshaw Blvd (south → north). Positions approximate the OSM nodes.
+var NODES = [
+  { id: 'MARINE', name: 'Marine Ave', lat: 33.8953, lon: -118.32662 },
+  { id: '147TH', name: '147th St', lat: 33.8978, lon: -118.32662 },
+  { id: '144TH', name: '144th St', lat: 33.8999, lon: -118.32662 },
+  { id: 'ROSECRANS', name: 'Rosecrans Ave', lat: 33.9016, lon: -118.32662 },
+  { id: '135TH', name: '135th St', lat: 33.9093, lon: -118.32662 },
+  { id: '132ND', name: '132nd St', lat: 33.9123, lon: -118.32662 }
+];
+var FT = 0.3048;
+function dist(a, b) { // metres
+  var R = 6371000, toR = Math.PI / 180, dLat = (b.lat - a.lat) * toR, dLon = (b.lon - a.lon) * toR;
+  var h = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(a.lat * toR) * Math.cos(b.lat * toR) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+var radiusFt = 250;
+function assign() { // HSM convention: within radius of an intersection → that intersection, else the segment between
+  C.forEach(function (c) {
+    var best = null, bd = Infinity;
+    NODES.forEach(function (n) { var d = dist(c, n); if (d < bd) { bd = d; best = n; } });
+    if (bd <= radiusFt * FT) { c.loc = best.id; c.kind = 'int'; }
+    else {
+      var i = 0; while (i < NODES.length - 1 && c.lat > NODES[i + 1].lat) i++;
+      c.loc = 'SEG' + i; c.kind = 'seg';
+    }
+  });
+}
+assign();
+function locName(id) {
+  if (id.indexOf('SEG') === 0) { var i = +id.slice(3); return NODES[i].name + ' – ' + (NODES[i + 1] ? NODES[i + 1].name : 'end'); }
+  return NODES.filter(function (n) { return n.id === id; })[0].name;
+}
+function by(arr, f) { var m = {}; arr.forEach(function (x) { var k = f(x); (m[k] = m[k] || []).push(x); }); return m; }
+var isNight = function (c) { return c.light.indexOf('DARK') === 0; };
+var years = (function () { var s = {}; C.forEach(function (c) { s[c.date.slice(0, 4)] = 1; }); return Object.keys(s).sort(); })();
+var lenMi = dist(NODES[0], NODES[NODES.length - 1]) / 1609.344;
+
+/* ================= NAV ================= */
+var STEPS = ['Setup', 'Corridor', 'Crash profile', 'Findings', 'Export'];
+var cur = 1;
+$('#steps').innerHTML = STEPS.map(function (s, i) {
+  return '<button class="step" data-go="' + (i + 1) + '"><span class="lamp">' + (i + 1) + '</span><span class="t">' + s + '</span></button>';
+}).join('');
+function go(n) {
+  cur = n;
+  $$('.screen').forEach(function (s) { s.classList.toggle('on', +s.dataset.screen === n); });
+  $$('#steps .step[data-go]').forEach(function (b) {
+    var k = +b.dataset.go; b.classList.toggle('on', k === n); b.classList.toggle('done', k < n);
+    b.querySelector('.lamp').textContent = k < n ? '✓' : k;
+  });
+  if (n === 2 || n === 3) mountMap(n); else unmountMap();
+  if (n === 4) startReplay(); else stopReplay();
+  if (location.hash !== '#' + n) history.replaceState(null, '', '#' + n);
+}
+document.addEventListener('click', function (e) { var t = e.target.closest('[data-go]'); if (t) go(+t.dataset.go); });
+
+/* ================= THEME ================= */
+$('#themeBtn').onclick = function () {
+  var r = document.documentElement; r.dataset.theme = r.dataset.theme === 'dark' ? 'light' : 'dark';
+  if (map) { map.setStyle(basemap()); map.once('styledata', function () { applyLayers(cur); }); }
+  if (cur === 4) drawDiagram();
+};
+
+/* ================= 1 SETUP ================= */
+var heroApi = SignalFlow.intersection($('#heroSim'), { crossAt: 0.62 });
+var LAST = 2025;
+$('#years').innerHTML = Array.from({ length: 10 }, function (_, i) {
+  var n = i + 1; return '<option value="' + n + '"' + (n === 5 ? ' selected' : '') + '>' + n + ' year' + (n > 1 ? 's' : '') + ' · ' + (LAST - n + 1) + (n > 1 ? '–' + LAST : '') + '</option>';
+}).join('');
+$('#years').onchange = function () { $('#yrNote').textContent = LAST - this.value + 1 <= 2020 ? 'Includes 2020 (COVID year): it will be flagged in the report.' : ''; };
+
+/* ================= MAP (one MapLibre + deck.gl instance moved between screens) ================= */
+var map = null, overlay = null;
+var CENTER = [-118.3266, 33.9038];
+function basemap() {
+  return document.documentElement.dataset.theme === 'dark'
+    ? 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json'
+    : 'https://basemaps.cartocdn.com/gl/positron-gl-style/style.json';
+}
+function rgb(hex, a) { hex = hex.replace('#', ''); var n = parseInt(hex, 16); return [(n >> 16) & 255, (n >> 8) & 255, n & 255, a == null ? 255 : a]; }
+var BOUNDS = [[-118.3290, 33.8945], [-118.3242, 33.9131]];
+var VIEWS = {
+  2: { padding: { top: 70, bottom: 70, left: 60, right: 440 }, pitch: 0, bearing: 0 },
+  3: { padding: { top: 40, bottom: 40, left: 40, right: 40 }, pitch: 58, bearing: -28 }
+};
+function camera(n) {
+  var v = VIEWS[n], cam = map.cameraForBounds(BOUNDS, { padding: v.padding, bearing: v.bearing }) || {};
+  return { center: cam.center, zoom: (cam.zoom || 15) + (n === 3 ? 0.1 : 0), bearing: v.bearing, pitch: v.pitch };
+}
+function mountMap(n) {
+  var slot = $('.mapslot[data-slot="' + n + '"]');
+  var home = $('#mapHome');
+  slot.appendChild($('#map')); slot.appendChild($('#mapFallback'));
+  if (!window.maplibregl || !window.deck) { $('#mapFallback').style.display = 'grid'; return; }
+  if (!map) {
+    map = new maplibregl.Map({ container: 'map', style: basemap(), center: CENTER, zoom: 15, attributionControl: { compact: true }, maxPitch: 70 });
+    map.jumpTo(camera(n));
+    overlay = new deck.MapboxOverlay({ interleaved: false, layers: [], getTooltip: tooltip });
+    map.addControl(overlay);
+    map.on('load', function () { applyLayers(cur); });
+  } else {
+    map.resize();
+    var v = camera(n);
+    if (reduced) map.jumpTo(v); else map.flyTo(Object.assign({ duration: 1600, essential: true }, v));
+    applyLayers(n);
+  }
+  home.style.display = 'none';
+}
+function unmountMap() { if (map) $('#mapHome').appendChild($('#map')); }
+function tooltip(info) {
+  var o = info.object; if (!o) return null;
+  if (o.date) return { html: '<b>' + o.type + '</b><br>' + o.date + ' · ' + o.hour + ':00 · ' + o.light.toLowerCase() + '<br><span style="opacity:.7">' + o.prim + ' / ' + o.sec + '</span>', style: tipStyle() };
+  if (o.count != null) return { html: '<b>' + o.name + '</b><br>' + o.count + ' crashes · ' + o.inj + ' injury', style: tipStyle() };
+  return null;
+}
+function tipStyle() { return { background: css('--surface'), color: css('--fg'), border: '1px solid ' + css('--line'), borderRadius: '6px', font: '12px ' + css('--font-body'), padding: '8px 10px' }; }
+var t0 = performance.now(), pulseRaf = 0;
+function applyLayers(n) {
+  if (!overlay) return;
+  cancelAnimationFrame(pulseRaf);
+  var go = rgb(css('--go')), fg = rgb(css('--fg')), stop = rgb(css('--stop')), amber = rgb(css('--amber')), muted = rgb(css('--muted'));
+  var path = [[-118.32662, 33.8953], [-118.32662, 33.9123]];
+  var corridor = new deck.PathLayer({ id: 'corr', data: [{ path: path }], getPath: function (d) { return d.path; }, getColor: go, getWidth: 10, widthUnits: 'pixels', capRounded: true, opacity: n === 3 ? .35 : .9 });
+  var ends = new deck.ScatterplotLayer({ id: 'ends', data: [{ p: path[0], t: 'A' }, { p: path[1], t: 'B' }], getPosition: function (d) { return d.p; }, getRadius: 10, radiusUnits: 'pixels', getFillColor: go, stroked: true, getLineColor: rgb(css('--bg')), lineWidthMinPixels: 3 });
+  var endLbl = new deck.TextLayer({ id: 'endl', data: [{ p: path[0], t: 'A' }, { p: path[1], t: 'B' }], getPosition: function (d) { return d.p; }, getText: function (d) { return d.t; }, getSize: 11, getColor: rgb(css('--on-go')), getTextAnchor: 'middle', getAlignmentBaseline: 'center', getPixelOffset: [0, 0], fontFamily: 'Overpass, sans-serif', fontWeight: 700, fontSettings: { sdf: true } });
+  var layers = [corridor];
+  if (n === 2) {
+    var crashes = new deck.ScatterplotLayer({ id: 'c3', data: C, pickable: true, getPosition: function (d) { return [d.lon, d.lat]; }, getRadius: 4, radiusUnits: 'pixels', getFillColor: function (d) { return d.kind === 'int' ? fg : muted; }, opacity: .8 });
+    var rings = new deck.ScatterplotLayer({ id: 'r3', data: NODES, getPosition: function (d) { return [d.lon, d.lat]; }, getRadius: radiusFt * FT, radiusUnits: 'meters', filled: true, getFillColor: rgb(css('--fg'), 14), stroked: true, getLineColor: rgb(css('--fg'), 110), lineWidthMinPixels: 1, updateTriggers: { getRadius: radiusFt } });
+    var lbl = new deck.TextLayer({ id: 'l3', data: NODES, getPosition: function (d) { return [d.lon, d.lat]; }, getText: function (d) { return d.name; }, getSize: 12, getColor: fg, getTextAnchor: 'start', getPixelOffset: [Math.round(radiusFt / 6) + 22, 0], fontFamily: 'Overpass, sans-serif', fontWeight: 600, outlineWidth: 3, outlineColor: rgb(css('--bg')), fontSettings: { sdf: true }, updateTriggers: { getPixelOffset: radiusFt } });
+    layers.push(rings, crashes, lbl, ends, endLbl);
+  }
+  if (n === 3) {
+    var groups = by(C, function (c) { return c.loc; });
+    var cols = Object.keys(groups).map(function (k) {
+      var g = groups[k], lat = 0, lon = 0;
+      g.forEach(function (c) { lat += c.lat; lon += c.lon; });
+      var node = NODES.filter(function (x) { return x.id === k; })[0];
+      return { seg: !node, name: locName(k), count: g.length, inj: g.filter(function (c) { return c.sev !== 'P'; }).length, fatal: g.some(function (c) { return c.sev === 'F'; }),
+        pos: node ? [node.lon, node.lat] : [lon / g.length, lat / g.length] };
+    });
+    var colColor = function (d) { if (d.fatal) return stop; var s = d.inj / d.count; return s >= .4 ? amber : muted; };
+    var start = performance.now();
+    var mk = function (grow) {
+      return new deck.ColumnLayer({ id: 'col', data: cols, pickable: true, diskResolution: 24, radius: 22, extruded: true, getPosition: function (d) { return d.pos; },
+        getElevation: function (d) { return d.count * (d.seg ? 9 : 18) * grow; }, getFillColor: function (d) { var c = colColor(d).slice(); if (d.seg) c[3] = 110; return c; }, material: { ambient: .55, diffuse: .6, shininess: 24 }, updateTriggers: { getElevation: grow } });
+    };
+    var pts = new deck.ScatterplotLayer({ id: 'p4', data: C, pickable: true, getPosition: function (d) { return [d.lon, d.lat]; }, getRadius: 3, radiusUnits: 'pixels', getFillColor: function (d) { return d.sev === 'F' ? stop : d.sev === 'I' ? amber : muted; }, opacity: .9 });
+    var tick = function () {
+      var k = reduced ? 1 : Math.min(1, (performance.now() - start) / 1400); k = 1 - Math.pow(1 - k, 3);
+      overlay.setProps({ layers: [corridor, pts, mk(k)] });
+      if (k < 1) pulseRaf = requestAnimationFrame(tick);
+    };
+    tick();
+    return;
+  }
+  overlay.setProps({ layers: layers });
+}
+
+/* ================= 2 + 3 panels ================= */
+$('#corrLen').textContent = lenMi.toFixed(2) + ' mi · ' + NODES.length + ' intersections · ' + years[0] + '–' + years[years.length - 1];
+function renderReview() {
+  var g = by(C, function (c) { return c.loc; });
+
+  // Provenance: every record in this example has GPS. Other tiers shown at zero so the bar reads honestly.
+  var tiers = [['GPS', C.length, css('--fg')], ['Exact name', 0, css('--info')], ['Fuzzy', 0, css('--info')], ['Jev', 0, css('--amber')], ['Review', 0, css('--stop')]];
+  var placed = tiers.filter(function (t) { return t[1]; });
+  $('#prov').innerHTML = placed.length === 1
+    ? '<div class="muted" style="font-size:13px">All <b style="color:var(--fg)">' + C.length + '</b> crashes have GPS coordinates.</div>'
+    : '<div class="provbar">' + placed.map(function (t) { return '<i style="width:' + (100 * t[1] / C.length) + '%;background:' + t[2] + '"></i>'; }).join('') + '</div><div class="legend" style="margin-top:8px">' + placed.map(function (t) { return '<span><i style="background:' + t[2] + '"></i>' + t[0] + ' <b style="color:var(--fg)">' + t[1] + '</b></span>'; }).join('') + '</div>';
+  var rows = [];
+  NODES.slice().reverse().forEach(function (n, i) {
+    var idx = NODES.length - 1 - i;
+    var end = idx === NODES.length - 1 ? 'B' : idx === 0 ? 'A' : '';
+    rows.push('<div class="loc"><span class="pin' + (end ? ' end' : '') + '">' + end + '</span><div class="n">' + n.name + '</div><span class="mono">' + ((g[n.id] || []).length) + '</span></div>');
+    if (idx > 0) { var s = 'SEG' + (idx - 1); rows.push('<div class="loc seg"><span></span><span>between</span><span class="mono">' + ((g[s] || []).length) + '</span></div>'); }
+  });
+  $('#loclist').innerHTML = rows.join('');
+}
+renderReview();
+// Real messy names from these records → the location the 250 ft rule put them in
+(function () {
+  var seen = {}, out = [];
+  C.forEach(function (c) {
+    var raw = /CRENSHAW/i.test(c.prim) ? c.sec : c.prim;
+    if (!raw || seen[raw] || !/147|132|MARINE/i.test(raw)) return; seen[raw] = 1;
+    out.push('<div class="a"><span class="raw" title="' + raw + '">' + raw + '</span><span class="muted">→</span><span class="to">' + locName(c.loc) + '</span></div>');
+  });
+  $('#alias').innerHTML = out.slice(0, 7).join('') + '<div class="muted" style="font-size:12px;margin-top:4px">Same street, many spellings. Crashes without coordinates are matched this way: code first, Jev only for leftovers.</div>';
+})();
+$('#radius').addEventListener('input', function (e) { radiusFt = +e.target.value; $('#rv').textContent = radiusFt + ' ft'; assign(); renderReview(); applyLayers(2); renderProfile(); });
+
+/* ================= 4 PROFILE ================= */
+function renderProfile() {
+  var inj = C.filter(function (c) { return c.sev === 'I'; }).length, fat = C.filter(function (c) { return c.sev === 'F'; }).length;
+  var ped = C.filter(function (c) { return /PEDESTRIAN/.test(c.type); }).length, night = C.filter(isNight).length;
+  var k = [['Crashes', C.length, years.length + ' yr'], ['Injury', inj, Math.round(100 * inj / C.length) + '%'], ['Fatal', fat, ''], ['Per mile · yr', (C.length / lenMi / years.length).toFixed(1), '']];
+  $('#kpis').innerHTML = k.map(function (x) { return '<div class="sf-kpi"><div class="sf-kpi__label">' + x[0] + '</div><div class="sf-kpi__value">' + x[1] + (x[2] ? '<small>' + x[2] + '</small>' : '') + '</div></div>'; }).join('');
+  var types = by(C, function (c) { return c.type; }), max = 0;
+  var tl = Object.keys(types).map(function (t) { var a = types[t]; max = Math.max(max, a.length); return [t, a.length, a.filter(function (c) { return c.sev !== 'P'; }).length]; }).sort(function (a, b) { return b[1] - a[1]; });
+  $('#typeBars').innerHTML = tl.map(function (t, i) {
+    var name = t[0].charAt(0) + t[0].slice(1).toLowerCase();
+    return '<div class="bar"><span>' + name + '</span><span class="tr"><i style="width:' + (100 * t[2] / max) + '%;background:var(--sev-i);animation-delay:' + i * 60 + 'ms"></i><i style="width:' + (100 * (t[1] - t[2]) / max) + '%;background:color-mix(in srgb,var(--sev-p) 60%,transparent);animation-delay:' + i * 60 + 'ms"></i></span><span class="v">' + t[1] + '</span></div>';
+  }).join('');
+  var days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'], m = {}, hmax = 0;
+  C.forEach(function (c) { var key = c.dow + c.hour; m[key] = (m[key] || 0) + 1; hmax = Math.max(hmax, m[key]); });
+  var h = '<span></span>' + Array.from({ length: 24 }, function (_, i) { return '<span style="text-align:center">' + (i % 6 === 0 ? i : '') + '</span>'; }).join('');
+  days.forEach(function (d) {
+    h += '<span class="lab">' + d.slice(0, 3) + '</span>';
+    for (var i = 0; i < 24; i++) { var v = m[d + i] || 0; h += '<span class="c" title="' + d + ' ' + i + ':00 · ' + v + '" style="' + (v ? 'background:color-mix(in srgb,var(--info) ' + (20 + 80 * v / hmax) + '%,var(--surface-2))' : '') + '"></span>'; }
+  });
+  $('#heat').innerHTML = h;
+  var g = by(C, function (c) { return c.loc; });
+  $('#locTable').innerHTML = Object.keys(g).map(function (k) { return [k, g[k]]; }).sort(function (a, b) { return b[1].length - a[1].length; }).map(function (r) {
+    var a = r[1], i = a.filter(function (c) { return c.sev !== 'P'; }).length, n = a.filter(isNight).length;
+    return '<tr><td>' + locName(r[0]) + '</td><td class="sf-num">' + a.length + '</td><td class="sf-num">' + i + '</td><td class="sf-num">' + n + '</td><td><span class="sevbar"><i style="width:' + 100 * i / a.length + '%;background:var(--sev-i)"></i><i style="width:' + 100 * (a.length - i) / a.length + '%;background:var(--sev-p);opacity:.6"></i></span></td></tr>';
+  }).join('');
+}
+renderProfile();
+
+/* ================= 5 FINDINGS (text is illustrative; every number is computed from the records) ================= */
+function at(id) { return C.filter(function (c) { return c.loc === id; }); }
+function pct(a, b) { return Math.round(100 * a / b); }
+var corridorShare = function (f) { return C.filter(f).length / C.length; };
+var FINDINGS = [
+  (function () {
+    var a = at('MARINE'), b = a.filter(function (c) { return c.type === 'BROADSIDE'; });
+    return { id: 'F1', loc: 'Marine Ave', anim: 'broadside', status: 'pending', conf: 'Strong', records: b,
+      title: 'Broadside crashes dominate at Marine Ave',
+      claim: [b.length, ' of ', a.length, ' crashes at Marine Ave are broadside (', pct(b.length, a.length) + '%', ' vs ', Math.round(100 * corridorShare(function (c) { return c.type === 'BROADSIDE'; })) + '%', ' corridor-wide).'],
+      pattern: 'HSM Ch. 6 · Right-angle collisions at signalized intersections', factors: 'Poor visibility of signals · inadequate yellow/all-red · excessive approach speed · sight distance', field: 'Verify signal visibility, clearance intervals and approach speeds in the field' };
+  })(),
+  (function () {
+    var a = at('135TH'), n = a.filter(isNight);
+    return { id: 'F2', loc: '135th St', anim: 'night', status: 'pending', conf: 'Moderate', records: n,
+      title: 'Most crashes at 135th St happen after dark',
+      claim: [n.length, ' of ', a.length, ' crashes at 135th St occurred after dark (', pct(n.length, a.length) + '%', ' vs ', Math.round(100 * corridorShare(isNight)) + '%', ' corridor-wide), all recorded with street lights on.'],
+      pattern: 'HSM Ch. 6 · Nighttime crashes', factors: 'Inadequate lighting levels · poor delineation · visibility of signs and markings', field: 'Night visit: measure illuminance, check delineation and retroreflectivity' };
+  })(),
+  (function () {
+    var a = at('132ND'), s = a.filter(function (c) { return c.type === 'SIDE SWIPE'; });
+    return { id: 'F3', loc: '132nd St', anim: 'sideswipe', status: 'accepted', conf: 'Moderate', records: s,
+      title: 'Sideswipes concentrate at 132nd St',
+      claim: [s.length, ' of ', a.length, ' crashes at 132nd St are sideswipes (', pct(s.length, a.length) + '%', ' vs ', Math.round(100 * corridorShare(function (c) { return c.type === 'SIDE SWIPE'; })) + '%', ' corridor-wide).'],
+      pattern: 'HSM Ch. 6 · Sideswipe collisions', factors: 'Lane drops or narrow lanes · unclear lane assignment · driveway weaving', field: 'Check lane widths, lane-use signs and pavement markings approaching 132nd St' };
+  })()
+];
+var selF = 0, tab = 'records';
+function renderFList() {
+  var nAcc = FINDINGS.filter(function (x) { return x.status === 'accepted'; }).length;
+  $('#flist').innerHTML = '<div class="sf-eyebrow" style="padding:0 4px 4px">' + FINDINGS.length + ' findings · ' + nAcc + ' accepted</div>' + FINDINGS.map(function (f, i) {
+    var st = f.status === 'accepted' ? '<span class="st acc">Accepted</span>' : f.status === 'rejected' ? '<span class="st rej">Rejected</span>' : '<span class="st">Needs review</span>';
+    return '<button class="fcard' + (i === selF ? ' sel' : '') + '" data-f="' + i + '"><div class="loc-l">' + f.loc + '</div><div class="tt">' + f.title + '</div><div class="meta">' + st + '<span>' + f.records.length + ' records</span><span>· ' + f.conf + '</span></div></button>';
+  }).join('') + '<div class="muted" style="font-size:12px;padding:6px 4px;line-height:1.5">Findings are suggestions. Nothing goes in the report until you accept it.</div>';
+}
+$('#flist').addEventListener('click', function (e) { var b = e.target.closest('.fcard'); if (!b) return; selF = +b.dataset.f; renderFList(); renderDetail(); startReplay(); });
+function renderDetail() {
+  var f = FINDINGS[selF], cl = f.claim.map(function (p, i) { return typeof p === 'number' || /%$/.test(p) ? '<span class="num" title="Computed from table T1/T2 · click to see records">' + p + '</span>' : p; }).join('');
+  $('#fdetail').innerHTML =
+    '<div class="sf-eyebrow">' + f.id + ' · ' + f.loc + '</div>' +
+    '<div class="replay sf-road"><canvas id="replay"></canvas><div class="sf-chip"><span class="sf-sig" data-s="r"><i></i><i></i><i></i></span><span>Pattern replay<small>' + ({ broadside: 'Right-angle conflict', night: 'Nighttime conflict', sideswipe: 'Same-direction lane conflict' })[f.anim] + ' · schematic</small></span></div>' +
+    '<div class="ctrl"><button id="rpPlay">❚❚ Pause</button><button id="rpRe">↺ Replay</button></div><div class="phases"><span data-p="0">1 · Approach</span><span data-p="1">2 · Conflict</span><span data-p="2">3 · The record</span></div></div>' +
+    '<div class="claim">' + cl + '</div>' +
+    '<div class="why"><div><span class="k">Pattern library</span><span>' + f.pattern + '</span></div><div><span class="k">Possible contributing factors</span><span>' + f.factors + '</span></div><div><span class="k">Verify in the field</span><span>' + f.field + '</span></div></div>' +
+    '<div><div class="tabs"><button data-t="records" class="' + (tab === 'records' ? 'on' : '') + '">Records (' + f.records.length + ')</button><button data-t="diagram" class="' + (tab === 'diagram' ? 'on' : '') + '">Collision diagram</button><button data-t="audit" class="' + (tab === 'audit' ? 'on' : '') + '">Audit</button></div><div id="tabBody" style="padding-top:14px"></div></div>' +
+    '<div class="decide"><button class="sf-btn sf-btn--go" data-set="accepted">✓ Accept</button><button class="sf-btn">✎ Edit</button><button class="sf-btn sf-btn--stop" data-set="rejected">✗ Reject</button><span class="sp" style="flex:1"></span><span class="muted mono" style="font-size:11px">validator: all numbers traced ✓</span></div>';
+  $('#rpPlay').onclick = function () { paused = !paused; this.textContent = paused ? '▶ Play' : '❚❚ Pause'; };
+  $('#rpRe').onclick = function () { rp.t = 0; paused = false; $('#rpPlay').textContent = '❚❚ Pause'; };
+  $$('[data-set]').forEach(function (b) { b.onclick = function () { f.status = b.dataset.set; renderFList(); }; });
+  $$('.tabs button').forEach(function (b) { b.onclick = function () { tab = b.dataset.t; renderDetail(); startReplay(); }; });
+  renderTab();
+}
+function renderTab() {
+  var f = FINDINGS[selF], el = $('#tabBody');
+  if (tab === 'records') {
+    el.innerHTML = '<div class="sf-table-wrap"><table class="sf-table"><thead><tr><th>Date</th><th>Hour</th><th>Type</th><th>Severity</th><th>Lighting</th><th>As written in CCRS</th></tr></thead><tbody>' +
+      f.records.map(function (c) { return '<tr><td class="mono">' + c.date + '</td><td class="sf-num">' + c.hour + ':00</td><td>' + c.type.toLowerCase() + '</td><td>' + ({ F: 'Fatal', I: 'Injury', P: 'PDO' })[c.sev] + '</td><td>' + c.light.toLowerCase() + '</td><td class="mono muted" style="font-size:12px">' + c.prim + ' / ' + c.sec + '</td></tr>'; }).join('') + '</tbody></table></div>';
+  } else if (tab === 'diagram') { el.innerHTML = '<div class="card pad diagram" id="diag"></div>'; drawDiagram(); }
+  else {
+    el.innerHTML = '<div class="card pad audit">' + auditText(f) + '</div>';
+  }
+}
+function auditText(f) {
+  return '<b>Data</b> CCRS ' + years[0] + '–' + years[years.length - 1] + ' · ' + C.length + ' crashes in study area<br><b>Assignment</b> ' + radiusFt + ' ft influence area (HSM)<br><b>Location source</b> GPS ' + C.length + ' · street-matched 0 · review 0<br><b>Test</b> share vs corridor (v1 will use the HSM threshold-proportion test)<br><b>Library</b> ' + (f ? f.pattern : 'per finding') + '<br><b>Caveats</b> small numbers; regression to the mean; police-reported crashes only, so injury counts are a lower bound';
+}
+function drawDiagram() {
+  var el = $('#diag'); if (!el) return;
+  var f = FINDINGS[selF], fg = css('--fg'), mu = css('--muted'), road = css('--surface-2'), ln = css('--line'), am = css('--amber'), st = css('--stop');
+  // Schematic collision diagram: one glyph per record, placed by collision type
+  var glyph = function (c, i) {
+    var x = 150 + (i % 6) * 18 - 45, y = 150 + Math.floor(i / 6) * 18 - 30, col = c.sev === 'P' ? mu : am;
+    if (c.type === 'BROADSIDE') return '<g transform="translate(' + x + ',' + y + ')" stroke="' + col + '" stroke-width="2" fill="none"><path d="M-7 0h7M0 7v-7"/><circle r="2.5" fill="' + st + '" stroke="none"/></g>';
+    if (c.type === 'REAR END') return '<g transform="translate(' + x + ',' + y + ')" stroke="' + col + '" stroke-width="2" fill="none"><path d="M0 9v-5M0 2v-9"/><circle cy="3" r="2.5" fill="' + st + '" stroke="none"/></g>';
+    if (c.type === 'SIDE SWIPE') return '<g transform="translate(' + x + ',' + y + ')" stroke="' + col + '" stroke-width="2" fill="none"><path d="M-3 8v-14M3 8v-14"/><circle r="2.5" fill="' + st + '" stroke="none"/></g>';
+    return '<g transform="translate(' + x + ',' + y + ')"><circle r="3" fill="' + col + '"/></g>';
+  };
+  el.innerHTML = '<svg viewBox="0 0 300 300" role="img" aria-label="Collision diagram"><rect width="300" height="300" fill="none"/>' +
+    '<rect x="0" y="118" width="300" height="64" fill="' + road + '"/><rect x="118" y="0" width="64" height="300" fill="' + road + '"/>' +
+    '<path d="M150 0v118M150 182v118" stroke="' + ln + '" stroke-dasharray="6 6"/><path d="M0 150h118M182 150h118" stroke="' + ln + '" stroke-dasharray="6 6"/>' +
+    '<text x="190" y="14" fill="' + mu + '" font-family="Overpass Mono" font-size="10">CRENSHAW BLVD</text><text x="6" y="112" fill="' + mu + '" font-family="Overpass Mono" font-size="10">' + f.loc.toUpperCase() + '</text>' +
+    f.records.map(glyph).join('') + '</svg><div class="legend" style="margin-top:10px"><span><i style="background:' + am + '"></i>injury</span><span><i style="background:' + mu + '"></i>PDO</span><span><i style="background:' + st + '"></i>point of impact</span><span>schematic · one glyph per record</span></div>';
+}
+renderFList(); renderDetail();
+
+$('#chatToggle').onclick = function () { var c = $('#chat'), m = c.classList.toggle('min'); this.setAttribute('aria-expanded', !m); $('#chatIc').textContent = m ? '+' : '−'; };
+// Chat: the answer is computed by a query tool, not written by the model
+(function () {
+  var q = at('135TH').filter(function (c) { return c.type === 'REAR END' && isNight(c); }).length, all = at('135TH').filter(function (c) { return c.type === 'REAR END'; }).length;
+  $('#chatBody').innerHTML = '<div class="msg q">How many rear-ends at 135th happen after dark?</div><div class="msg a"><div class="tool-call">→ query_crashes(location="135th St", type="REAR END", lighting="dark")</div><b class="mono">' + q + '</b> of ' + all + ' rear-end crashes at 135th St were after dark. Want me to add this to F2?</div>';
+})();
+
+/* ---------- Pattern replay: schematic animation of the finding's conflict, then the real records ---------- */
+var rp = { t: 0, raf: 0 }, paused = false;
+window.__replay = { rp: rp, pause: function (v) { paused = v; } }; // debug hook for design review
+function stopReplay() { cancelAnimationFrame(rp.raf); }
+function startReplay() {
+  stopReplay();
+  var cv = $('#replay'); if (!cv) return;
+  var f = FINDINGS[selF], dpr = Math.min(devicePixelRatio || 1, 2), last = performance.now();
+  rp.t = reduced ? 7.5 : 0;
+  function size() { var r = cv.getBoundingClientRect(); cv.width = r.width * dpr; cv.height = r.height * dpr; return r; }
+  var R = size();
+  var pts = f.records.map(function (c, i) { var a = (i * 2.399) % (Math.PI * 2), d = 16 + (i * 13) % 44; return [Math.cos(a) * d, Math.sin(a) * d * .8]; });
+  function frame(now) {
+    var dt = Math.min(.05, (now - last) / 1000); last = now; if (!paused && !reduced) rp.t += dt;
+    if (rp.t > 10) rp.t = 0;
+    var ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    var W = R.width, H = R.height, cx = W * .5, cy = H * .5, HALF = Math.round(H * .13), sc = HALF / 34, t = rp.t;
+    var c = { road: css('--road'), verge: css('--road-verge'), paint: css('--paint'), y: css('--paint-yellow'), car: css('--car'), stop: css('--lamp-stop'), amber: css('--lamp-amber'), go: css('--lamp-go') };
+    var night = f.anim === 'night';
+    ctx.fillStyle = c.verge; ctx.fillRect(0, 0, W, H);
+    ctx.fillStyle = c.road; ctx.fillRect(0, cy - HALF, W, HALF * 2); ctx.fillRect(cx - HALF, 0, HALF * 2, H);
+    ctx.strokeStyle = c.y; ctx.globalAlpha = .8; ctx.lineWidth = 1;
+    [[0, cy - 1.5, cx - HALF - 12, cy - 1.5], [0, cy + 1.5, cx - HALF - 12, cy + 1.5], [cx + HALF + 12, cy - 1.5, W, cy - 1.5], [cx + HALF + 12, cy + 1.5, W, cy + 1.5],
+     [cx - 1.5, 0, cx - 1.5, cy - HALF - 12], [cx + 1.5, 0, cx + 1.5, cy - HALF - 12], [cx - 1.5, cy + HALF + 12, cx - 1.5, H], [cx + 1.5, cy + HALF + 12, cx + 1.5, H]].forEach(function (l) { ctx.beginPath(); ctx.moveTo(l[0], l[1]); ctx.lineTo(l[2], l[3]); ctx.stroke(); });
+    ctx.globalAlpha = .35; ctx.fillStyle = c.paint;
+    for (var k = -HALF + 3; k < HALF; k += 8) { ctx.fillRect(cx - HALF - 14, cy + k, 11, 3.5); ctx.fillRect(cx + HALF + 3, cy + k, 11, 3.5); ctx.fillRect(cx + k, cy - HALF - 14, 3.5, 11); ctx.fillRect(cx + k, cy + HALF + 3, 3.5, 11); }
+    ctx.globalAlpha = 1;
+    // street lights pools for the night pattern
+    if (night) {
+      [[cx - HALF - 20, cy - HALF - 20], [cx + HALF + 20, cy + HALF + 20]].forEach(function (p) {
+        var g = ctx.createRadialGradient(p[0], p[1], 2, p[0], p[1], 70 * sc); g.addColorStop(0, 'rgba(255,214,140,.22)'); g.addColorStop(1, 'rgba(255,214,140,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(p[0], p[1], 70 * sc, 0, Math.PI * 2); ctx.fill();
+      });
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(0, 0, W, H);
+    }
+    var phase = t < 3.2 ? 0 : t < 5 ? 1 : 2;
+    $$('.replay .phases span').forEach(function (s) { s.classList.toggle('on', +s.dataset.p === phase); });
+    var ease = function (x) { return x < 0 ? 0 : x > 1 ? 1 : 1 - Math.pow(1 - x, 3); };
+    function car(x, y, ang, col, glow, label, below) {
+      ctx.save(); ctx.translate(x, y); ctx.rotate(ang); ctx.scale(sc, sc);
+      if (glow) { ctx.shadowColor = col; ctx.shadowBlur = 14; }
+      ctx.fillStyle = col; ctx.beginPath(); ctx.roundRect ? ctx.roundRect(-8, -4.5, 16, 9, 2) : ctx.rect(-8, -4.5, 16, 9); ctx.fill(); ctx.shadowBlur = 0;
+      ctx.fillStyle = '#FFF4CF'; ctx.fillRect(6.5, -3.5, 1.6, 1.6); ctx.fillRect(6.5, 2, 1.6, 1.6);
+      if (night) { var g = ctx.createLinearGradient(8, 0, 60, 0); g.addColorStop(0, 'rgba(255,244,207,.35)'); g.addColorStop(1, 'rgba(255,244,207,0)'); ctx.fillStyle = g; ctx.beginPath(); ctx.moveTo(8, -3); ctx.lineTo(60, -14); ctx.lineTo(60, 14); ctx.lineTo(8, 3); ctx.fill(); }
+      ctx.restore();
+      if (label) { ctx.fillStyle = col; ctx.font = '600 10px "Overpass Mono", monospace'; ctx.fillText(label, x + 12 * sc, below ? y + 20 * sc : y - 10 * sc); }
+    }
+    var A = c.car, B = c.amber, hit = Math.min(t, 4.2), k1 = ease(hit / 4.2);
+    if (f.anim === 'broadside' || f.anim === 'night') {
+      // A: northbound through on Crenshaw; B: eastbound cross-street vehicle entering against the phase
+      var ay = H + 20 - (H + 20 - (cy + 8 * sc)) * k1, bx = -20 + (cx - 14 * sc + 20) * k1;
+      if (t > 4.2) { ay -= (t - 4.2) * 6; bx += (t - 4.2) * 5; }
+      car(cx + 10 * sc, Math.max(ay, cy + 4 * sc), -Math.PI / 2, A, phase < 2, phase < 2 ? 'A · through' : '');
+      car(Math.min(bx, cx - 4 * sc), cy + 18 * sc, 0, B, phase < 2, phase < 2 ? 'B · crossing' : '', true);
+    } else {
+      // sideswipe: two northbound vehicles, B drifts across the lane line
+      var y1 = H + 20 - (H * .62) * k1, drift = ease((t - 2) / 2.2) * 12;
+      car(cx + 9 * sc, y1, -Math.PI / 2, A, phase < 2, phase < 2 ? 'A' : '');
+      car(cx + (25 - drift) * sc, y1 + 6 * sc, -Math.PI / 2 - .08 * ease((t - 2) / 2), B, phase < 2, phase < 2 ? 'B · lane change' : '');
+    }
+    var impact = f.anim === 'sideswipe' ? [cx + 16 * sc, cy + 10 * sc] : [cx + 2 * sc, cy + 14 * sc];
+    if (t > 4 && t < 5.2) { var r = (t - 4) * 60; ctx.strokeStyle = c.stop; ctx.globalAlpha = 1 - (t - 4) / 1.2; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(impact[0], impact[1], r, 0, Math.PI * 2); ctx.stroke(); ctx.globalAlpha = 1; }
+    // phase 3: the real records appear one by one around the point of impact
+    if (t > 5) {
+      var shown = Math.min(pts.length, Math.floor((t - 5) * 6));
+      for (var i = 0; i < shown; i++) {
+        var rec = f.records[i], col = rec.sev === 'P' ? css('--car') : c.amber;
+        ctx.fillStyle = col; ctx.shadowColor = col; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(impact[0] + pts[i][0] * sc, impact[1] + pts[i][1] * sc, 3.6, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+      }
+      ctx.fillStyle = 'rgba(7,9,11,.8)'; var label = shown + ' / ' + pts.length + ' records', tw = ctx.measureText(label).width;
+      ctx.font = '700 13px "Overpass Mono", monospace'; tw = ctx.measureText(label).width;
+      ctx.fillRect(impact[0] + 52, impact[1] - 34, tw + 18, 26); ctx.fillStyle = '#E6EAEE'; ctx.fillText(label, impact[0] + 61, impact[1] - 16);
+    }
+    rp.raf = requestAnimationFrame(frame);
+  }
+  rp.raf = requestAnimationFrame(frame);
+}
+
+/* ================= 6 EXPORT ================= */
+(function () {
+  var g = by(C, function (c) { return c.loc; });
+  var top = Object.keys(g).sort(function (a, b) { return g[b].length - g[a].length; }).slice(0, 6);
+  var rows = top.map(function (k) { return '<tr><td>' + locName(k) + '</td><td style="text-align:right">' + g[k].length + '</td></tr>'; }).join('');
+  var lines = function (n) { var s = ''; for (var i = 0; i < n; i++) s += '<div class="ln" style="width:' + (60 + (i * 37) % 40) + '%"></div>'; return s; };
+  $('#pages').innerHTML =
+    '<div class="page"><h4>Crenshaw Blvd<br>Safety Analysis</h4><div style="font:6px var(--font-mono);color:#57636F">Marine Ave to 132nd St · CCRS ' + years[0] + '–' + years[years.length - 1] + '</div><div class="blk" style="height:70px"></div>' + lines(9) + '</div>' +
+    '<div class="page"><h4>Crash Profile</h4><table><tbody>' + rows + '</tbody></table><div class="blk" style="height:40px;background:#E3E5E2"></div>' + lines(7) + '</div>' +
+    '<div class="page"><h4>Findings</h4>' + FINDINGS.map(function (f) { return '<div style="font-weight:700;margin-top:6px">' + f.id + ' ' + f.title + '</div>' + lines(3); }).join('') + '</div>';
+  $('#audit').innerHTML = auditText(null);
+})();
+
+/* ================= START ================= */
+var start = +(location.hash.slice(1)) || 1;
+go(start >= 1 && start <= 5 ? start : 1);
+addEventListener('hashchange', function () { var n = +location.hash.slice(1); if (n >= 1 && n <= 5 && n !== cur) go(n); });
+addEventListener('keydown', function (e) { if (e.target.tagName === 'INPUT') return; if (e.key === 'ArrowRight' && cur < 5) go(cur + 1); if (e.key === 'ArrowLeft' && cur > 1) go(cur - 1); });
+})();
+</script>
+</body>
+</html>
