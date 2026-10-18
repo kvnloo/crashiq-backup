@@ -115,3 +115,235 @@ def _fetch(year: int, where: str, cache_dir: Path, page: int = 5000) -> dict:
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(data))
     return data
+
+
+# =====================================================================================================
+# Product adapter (C3, #9): the three CCRS tables for one corridor study, cleaned, in a state-neutral shape.
+# Everything California-specific (resource names, column names, code values, severity mapping) lives here,
+# so a later state pack replaces this file and the rest of CrashIQ is unchanged (#19).
+# =====================================================================================================
+
+TABLE_PREFIX = {"crashes": "crashes_", "parties": "parties_", "iwp": "injuredwitnesspassengers_"}
+
+# Logical field -> candidate column names (resolved against the live datastore at runtime; CHP has renamed
+# columns between exports, and the published layout doc doesn't always match the datastore).
+CRASH_COLS = {
+    "collision_id": ["Collision Id", "CollisionId"],
+    "report_version": ["Report Version", "ReportVersion"],
+    "is_preliminary": ["Is Preliminary", "IsPreliminary"],
+    "is_deleted": ["IsDeleted", "Is Deleted"],
+    "datetime": ["Crash Date Time", "CrashDateTime"],
+    "collision_time": ["Collision Time", "CollisionTime"],
+    "day_of_week": ["Day of Week", "DayOfWeek"],
+    "lat": ["Latitude"],
+    "lon": ["Longitude"],
+    "primary_road": ["PrimaryRoad", "Primary Road", "Primary Rd"],
+    "secondary_road": ["SecondaryRoad", "Secondary Road", "Secondary Rd"],
+    "sec_distance": ["SecondaryDistance"],
+    "sec_direction": ["SecondaryDirection"],
+    "sec_unit": ["SecondaryUnitOfMeasure"],
+    "city_code": ["City Code", "CityCode"],
+    "city_name": ["City Name", "CityName"],
+    "county_code": ["County Code", "CountyCode"],
+    "ncic": ["NCIC Code", "NCICCode"],
+    "collision_type": ["Collision Type Description", "CollisionTypeDescription"],
+    "killed": ["NumberKilled", "Number Killed"],
+    "injured": ["NumberInjured", "Number Injured"],
+    "lighting": ["LightingDescription", "Lighting Description"],
+    "weather": ["Weather 1", "Weather1"],
+    "surface": ["RoadwaySurfaceDescription", "Roadway Surface Description", "RoadwaySurfaceCode"],
+    "pcf": ["PrimaryCollisionFactorViolation", "Primary Collision Factor Violation", "PCF Violation"],
+    "pcf_category": ["PrimaryCollisionFactorDescription", "Primary Collision Factor Description"],
+    "involved_with": ["MotorVehicleInvolvedWithDesc", "Motor Vehicle Involved With Desc"],
+    "ped_action": ["PedestrianActionDesc"],
+    "hit_run": ["HitRun", "Hit Run"],
+    "is_freeway": ["IsFreeway", "IsFreeWay"],
+}
+CRASH_REQUIRED = ("collision_id", "datetime", "lat", "lon", "primary_road", "secondary_road", "killed", "injured")
+
+PARTY_COLS = {
+    "collision_id": ["CollisionId", "Collision Id"],
+    "party_number": ["PartyNumber", "Party Number"],
+    "party_type": ["PartyType", "Party Type"],
+    "at_fault": ["IsAtFault", "Is At Fault"],
+    "movement": ["MovementPrecCollDescription", "Movement Prec Coll Description", "MovementPrecCollCode"],
+    "vehicle_type": ["Vehicle1TypeDesc", "Vehicle 1 Type Desc"],
+    "age": ["StatedAge", "Stated Age"],
+    "direction": ["DirectionOfTravel", "Direction Of Travel"],
+}
+IWP_COLS = {
+    "collision_id": ["CollisionId", "Collision Id"],
+    "extent": ["ExtentOfInjury", "Extent Of Injury", "ExtentOfInjuryCode"],
+    "person_type": ["InjuredPersonType", "Injured Person Type"],
+    "witness_only": ["IsWitnessOnly", "Is Witness Only"],
+}
+
+SURFACE_CODES = {"A": "DRY", "B": "WET", "C": "SNOWY-ICY", "D": "SLIPPERY (MUDDY, OILY, ETC.)"}
+
+# Extent of injury -> KABCO. CCRS uses the 2020+ wording; older SWITRS wording mapped for safety (nuance N3).
+KABCO = {
+    "FATAL INJURY": "K", "FATAL": "K", "KILLED": "K",
+    "SUSPECTED SERIOUS INJURY": "A", "SEVERE INJURY": "A",
+    "SUSPECTED MINOR INJURY": "B", "OTHER VISIBLE INJURY": "B",
+    "POSSIBLE INJURY": "C", "COMPLAINT OF PAIN": "C",
+}
+SEVERITY_ORDER = "KABCUO"   # U = injured but the injury level wasn't reported (no IWP row); O = property damage only
+
+TRUCK_WORDS = ("TRUCK TRACTOR", "TRACTOR", "SEMI", "HEAVY TRUCK", "TRUCK OR TRUCK TRACTOR")
+MOTORCYCLE_WORDS = ("MOTORCYCLE", "MOTOR CYCLE", "MOTORCYCLE/SCOOTER", "MOTOR SCOOTER", "MOPED")
+
+
+def _norm_col(s: str) -> str:
+    return "".join(ch for ch in s.lower() if ch.isalnum())
+
+
+def resolve_columns(fields: list[dict], wanted: dict[str, list[str]]) -> tuple[dict[str, dict], list[str]]:
+    """Map logical names to the datastore's real columns ({id, type}); returns (mapping, missing logical names)."""
+    by_norm = {_norm_col(f["id"]): f for f in fields}
+    out, missing = {}, []
+    for logical, cands in wanted.items():
+        hit = next((by_norm[_norm_col(c)] for c in cands if _norm_col(c) in by_norm), None)
+        if hit:
+            out[logical] = hit
+        else:
+            missing.append(logical)
+    return out, missing
+
+
+def table_resources(package: dict) -> dict[str, dict[int, str]]:
+    """{'crashes': {2021: id, ...}, 'parties': {...}, 'iwp': {...}}; datastore-queryable resources only."""
+    out: dict[str, dict[int, str]] = {k: {} for k in TABLE_PREFIX}
+    for res in package.get("resources", []):
+        name = str(res.get("name", "")).lower().replace(" ", "")
+        if not res.get("datastore_active"):
+            continue
+        for table, prefix in TABLE_PREFIX.items():
+            if name.startswith(prefix):
+                tail = name[len(prefix):][:4]
+                if tail.isdigit():
+                    out[table][int(tail)] = res["id"]
+    return out
+
+
+def q(col: str) -> str:
+    return '"' + col.replace('"', '""') + '"'
+
+
+def num_expr(field: dict) -> str:
+    """A numeric SQL expression for a column, whether the datastore stored it as number or text."""
+    col = q(field["id"])
+    if field.get("type", "text") in ("numeric", "float8", "int4", "int8", "float", "int"):
+        return col
+    return f"CAST(NULLIF({col}, '') AS float)"
+
+
+def _truthy(v) -> bool:
+    return str(v).strip().lower() in ("true", "1", "t", "yes", "y")
+
+
+def _num(v) -> float | None:
+    try:
+        return float(v) if v not in (None, "") else None
+    except (TypeError, ValueError):
+        return None
+
+
+def _hour(dt: str, ctime) -> int | None:
+    t = str(ctime or "").strip()
+    if t.isdigit() and len(t) <= 4:
+        t = t.zfill(4)
+        h = int(t[:2])
+        return h if 0 <= h <= 23 else None
+    if dt and len(dt) >= 13 and dt[10] in "T ":
+        try:
+            return int(dt[11:13])
+        except ValueError:
+            return None
+    return None
+
+
+def crash_record(raw: dict, cols: dict[str, dict]) -> dict:
+    """One CCRS Crashes row -> the shared crash shape (no severity yet; that needs IWP)."""
+    g = lambda k: raw.get(cols[k]["id"]) if k in cols else None
+    dt = str(g("datetime") or "")
+    lat, lon = _num(g("lat")), _num(g("lon"))
+    has = lat is not None and lon is not None and lat != 0 and lon != 0
+    dist, unit = _num(g("sec_distance")), str(g("sec_unit") or "F").strip().upper()[:1]
+    offset = dist * _UNIT_FT.get(unit, 1.0) if dist is not None else None
+    fixed = offset is not None and unit == "M" and dist > 2
+    if fixed:                                                 # feet typed as miles (2026-10-18 cleaning rule)
+        offset = dist
+    surface = g("surface")
+    surface = SURFACE_CODES.get(str(surface).strip(), surface) if surface is not None else None
+    s = lambda v: (str(v).strip() or None) if v is not None else None
+    return {
+        "crash_id": str(g("collision_id")),
+        "report_version": int(_num(g("report_version")) or 0),
+        "preliminary": _truthy(g("is_preliminary")),
+        "deleted": _truthy(g("is_deleted")),
+        "date": dt[:10],
+        "year": int(dt[:4]) if dt[:4].isdigit() else None,
+        "hour": _hour(dt, g("collision_time")),
+        "day_of_week": s(g("day_of_week")),
+        "lat": lat if has else None,
+        "lon": lon if has else None,
+        "primary_road": s(g("primary_road")),
+        "secondary_road": s(g("secondary_road")),
+        "offset_ft": offset,
+        "offset_dir": s(g("sec_direction")),
+        "offset_fixed": fixed,
+        "city": s(g("city_name")) or s(g("city_code")),
+        "city_code": s(g("city_code")),
+        "collision_type": s(g("collision_type")),
+        "killed": int(_num(g("killed")) or 0),
+        "injured": int(_num(g("injured")) or 0),
+        "lighting": s(g("lighting")),
+        "weather": s(g("weather")),
+        "surface": s(surface),
+        "pcf": s(g("pcf")),
+        "pcf_category": s(g("pcf_category")),
+        "involved_with": s(g("involved_with")),
+        "ped_action": s(g("ped_action")),
+        "hit_run": s(g("hit_run")),
+        "is_freeway": _truthy(g("is_freeway")),
+    }
+
+
+def party_record(raw: dict, cols: dict[str, dict]) -> dict:
+    g = lambda k: raw.get(cols[k]["id"]) if k in cols else None
+    s = lambda v: (str(v).strip() or None) if v is not None else None
+    return {"party_type": (s(g("party_type")) or "").upper() or None, "at_fault": _truthy(g("at_fault")),
+            "movement": s(g("movement")), "vehicle_type": s(g("vehicle_type")), "age": s(g("age")),
+            "direction": s(g("direction"))}
+
+
+def severity(crash: dict, iwp_extents: list[str] | None) -> tuple[str, list[str]]:
+    """Most severe outcome of the crash, counted once (KABCO + U + O). Returns (code, unknown extent values)."""
+    unknown = []
+    best = "O"
+    for e in iwp_extents or []:
+        k = KABCO.get(str(e).strip().upper())
+        if k is None:
+            if str(e).strip():
+                unknown.append(str(e).strip())
+            continue
+        if SEVERITY_ORDER.index(k) < SEVERITY_ORDER.index(best):
+            best = k
+    if crash["killed"] > 0:
+        best = "K"
+    elif best == "O" and crash["injured"] > 0:
+        best = "U"                                   # injured, level not reported
+    return best, unknown
+
+
+def mode_flags(crash: dict, parties: list[dict]) -> dict:
+    types = {p["party_type"] for p in parties if p["party_type"]}
+    vehicles = " | ".join((p["vehicle_type"] or "").upper() for p in parties)
+    iw = (crash.get("involved_with") or "").upper()
+    ct = (crash.get("collision_type") or "").upper()
+    return {
+        "ped": "PEDESTRIAN" in types or "PEDESTRIAN" in iw or "PEDESTR" in ct,
+        "bike": "BICYCLIST" in types or "BICYCLE" in iw,
+        "motorcycle": any(w in vehicles for w in MOTORCYCLE_WORDS),
+        "heavy_truck": any(w in vehicles for w in TRUCK_WORDS),
+    }
