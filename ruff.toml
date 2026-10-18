@@ -1,0 +1,11 @@
+line-length = 120
+target-version = "py312"
+extend-exclude = ["frontend", ".venv"]
+
+[lint]
+# Default rule set (pyflakes + core pycodestyle). Lambdas-as-names and one-letter names are style, not bugs.
+ignore = ["E731", "E741"]
+
+[lint.per-file-ignores]
+# Research scripts from the geocoding bake-off: compact one-off code, kept as written.
+"backend/scripts/*" = ["E401", "E701", "E702"]
