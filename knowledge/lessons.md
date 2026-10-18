@@ -1,5 +1,8 @@
 # Lessons (newest first)
 
+- 2026-10-18 · A reliable clue is not automatically a useful one: beat is right 95% of the time but did not help (Long Beach got worse), because the candidates in contention share a beat. Test whether a clue *separates the candidates*, not just whether it is true.
+- 2026-10-18 · Two maps (OSM + TIGER) add 1–2 points of coverage at the same accuracy; the remaining misses are in the records, not the maps.
+
 - 2026-10-18 · Officer GPS is not ground truth either: only 73% of Long Beach PD records have GPS consistent with their own street names; some are hundreds of km off. Check record self-consistency before using GPS as an answer key.
 - 2026-10-18 · Hidden-GPS test in a second city (Long Beach) agrees with SF: Jev loses to code matching at equal review rate (92.6% vs 95.2% on clean GPS). Code is the method.
 

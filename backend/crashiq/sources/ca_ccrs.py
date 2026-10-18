@@ -22,7 +22,7 @@ PACKAGE = "ccrs"
 CRASH_FIELDS = (
     "crash_id", "report_number", "agency_code", "datetime", "lat", "lon",
     "primary_road", "secondary_road", "offset_ft", "offset_dir", "is_freeway",
-    "collision_type", "killed", "injured",
+    "collision_type", "killed", "injured", "beat",
 )
 
 _COLUMNS = {
@@ -31,7 +31,7 @@ _COLUMNS = {
     "primary_road": "PrimaryRoad", "secondary_road": "SecondaryRoad",
     "_dist": "SecondaryDistance", "offset_dir": "SecondaryDirection", "_unit": "SecondaryUnitOfMeasure",
     "is_freeway": "IsFreeway", "collision_type": "Collision Type Description",
-    "killed": "NumberKilled", "injured": "NumberInjured", "_deleted": "IsDeleted",
+    "killed": "NumberKilled", "injured": "NumberInjured", "_deleted": "IsDeleted", "beat": "Beat",
 }
 _UNIT_FT = {"F": 1.0, "M": 5280.0, "Y": 3.0}  # feet, miles, yards
 
@@ -75,8 +75,8 @@ def _normalize(rec: dict) -> dict:
     c["is_freeway"] = str(c["is_freeway"]) == "True"
     c["report_number"] = str(c["report_number"] or "").strip()
     c["agency_code"] = str(c["agency_code"] or "").strip()
-    for k in ("primary_road", "secondary_road", "offset_dir"):
-        c[k] = (c[k] or "").strip() or None
+    for k in ("primary_road", "secondary_road", "offset_dir", "beat"):
+        c[k] = (str(c[k]) if c[k] is not None else "").strip() or None
     return c
 
 

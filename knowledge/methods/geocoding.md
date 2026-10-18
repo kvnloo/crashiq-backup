@@ -123,3 +123,34 @@ The user's order held (names high, distance/direction low), except **beat ranks 
 higher than expected. Log-odds weights = ln(p / (1 − p)): the naive-Bayes way to add independent clues. Next: score
 candidate locations with these weights and test on the hidden-GPS halves (#17). Parties_2025 is download-only
 (not in the API), so driver clues cover 2023–24.
+
+## Test 1: weighted-clue scorer (2026-10-18) — no gain over the current rules
+`backend/crashiq/clues.py`, `validate_geocode.py --method scored`. Candidates = every plausible intersection; points
+= primary 1.9 + cross street 2.1 (scaled by match quality) ± beat 2.9, beat territory learned from the *other* half.
+Dev halves; current rules (all tiers) as the comparison.
+
+| | Current rules | Scorer, names only | Scorer, names + beat |
+|---|---|---|---|
+| SF, at the 98% bar (Wilson low ≥ 98%) | 94.4% placed / 98.5% | 94.7% / 98.5% | 94.6% / 98.6% |
+| Long Beach, at the same coverage (~88%) | 88.0% / 85.6% | 88.7% / 84.7% | 88.6% / 84.1% |
+| Long Beach, at the same accuracy (~85.7%) | 88.0% | 85.4% | 81.2% |
+
+- **No gain.** Our rules already use the names well; the scorer only adds a dial (SF: 97.4% placed at 97.5%).
+- **Beat made Long Beach worse**, although beat agrees with neighbours 95% of the time: the candidates being
+  decided between are usually in the *same* beat (no help), and near beat boundaries a noisy beat map (learned from
+  officer GPS, 27% inconsistent) vetoes the right answer. Beat may still help the specific "streets meet twice far
+  apart" case; not tested separately.
+- Lesson: a clue being reliable ≠ a clue being *useful*. It has to separate the candidates actually in contention.
+
+## Test 2: two maps (OSM + TIGER) — small, real gain
+`validate_geocode.py --network both`. Dev halves, all code tiers.
+
+| | SF placed / accuracy (W95 low) | Long Beach placed / accuracy |
+|---|---|---|
+| OSM only (today) | 94.4% / 98.5% (98.0%) | 88.0% / 85.6% |
+| TIGER only | 93.9% / 98.4% (98.0%) | 87.7% / 85.1% |
+| **Union** (OSM, TIGER where OSM can't) | **95.5% / 98.3% (97.9%)** | **90.0% / 85.2%** |
+| **Consensus** (both agree ≤250 ft) | 92.7% / **98.7% (98.3%)** | 85.2% / **86.0%** |
+
+Maps disagree rarely (SF 7 crashes, LB 31). Union = +1–2 points placed at about the same accuracy; consensus =
+fewer placed, slightly more accurate. Both are cheap (TIGER is a free download per county).

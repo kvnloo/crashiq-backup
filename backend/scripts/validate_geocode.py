@@ -151,6 +151,108 @@ def int_ok(net, node, c):
     return any(same_core(a, k) for k in keys) and any(same_core(b, k) for k in keys)
 
 
+def run_scored(a, net, sample, other, aliases):
+    """Weighted clues. Beat territory learned from the other half's known locations. Ranks once per crash, then
+    sweeps the decision thresholds, and compares with the current rules (arm B) at equal coverage and accuracy."""
+    from crashiq import clues
+    beats = clues.BeatMap([(c["truth"][0], c["truth"][1], c.get("beat")) for c in other])
+    from crashiq.names import same_core as _sc
+    base, recs = [], []
+    for c in sample:
+        b = locate.place(net, c, aliases=aliases)
+        auto_b = b.tier in ("exact", "relaxed", "near", "fuzzy")
+        base.append((auto_b, auto_b and (score(net, b, c, a.city) or 1e9) <= TOL_M))
+        ranked = clues.score(net, c, None, aliases)          # names only; beat added below (it's independent)
+        if not ranked:
+            recs += [(False, None, None, False), (True, None, None, False)]
+            continue
+        beat = str(c.get("beat") or "").strip()
+        kp = street_key(c.get("primary_road"), aliases)
+        def ok_at(node):
+            prim = [s for s in net.keys_at[node] if kp and (_sc(kp, s) or similarity(kp, s) >= 0.75)]
+            lat, lon = locate.offset(net, node, prim, c.get("offset_ft"), c.get("offset_dir"))
+            pl = locate.Placement("scored", lat, lon, node)
+            e = score(net, pl, c, a.city)
+            return e is not None and e <= TOL_M
+        for use_beat in (False, True):
+            sc = []
+            for r in ranked:
+                v = r.score
+                if use_beat and beat:
+                    maj, share = beats.majority(*net.coord[r.node])
+                    if maj is not None and share >= 0.6:
+                        v += clues.WEIGHTS["beat"] * (1 if maj == beat else -1)
+                sc.append((v, r.node))
+            sc.sort(key=lambda t: -t[0])
+            lead = sc[0][0] - (sc[1][0] if len(sc) > 1 else -10.0)
+            recs.append((use_beat, sc[0][0], lead, ok_at(sc[0][1])))
+    n = len(sample)
+    bp = sum(1 for x in base if x[0]); bk = sum(1 for x in base if x[0] and x[1])
+    print(f"\nCurrent rules (all tiers): placed {bp/n:.1%}, accuracy {bk/max(1,bp):.1%}, Wilson low {wilson_low(bk, bp):.1%}")
+    out = {"baseline": {"coverage": bp/n, "accuracy": bk/max(1, bp)}, "scored": {}}
+    for use_beat in (False, True):
+        R_ = [r for r in recs if r[0] == use_beat and r[1] is not None]
+        label = "names + beat" if use_beat else "names only"
+        best_same_cov, best_same_acc = None, None
+        grid = []
+        for ms in (0, 1, 2, 3, 4, 5, 6):
+            for ml in (0, 0.5, 1, 2, 3, 4):
+                sel = [r for r in R_ if r[1] >= ms and r[2] >= ml]
+                k = sum(r[3] for r in sel)
+                grid.append((ms, ml, len(sel) / n, k / max(1, len(sel)), wilson_low(k, len(sel))))
+        cov_ok = [g for g in grid if g[2] >= bp / n]
+        acc_ok = [g for g in grid if g[3] >= bk / max(1, bp)]
+        if cov_ok:
+            best_same_cov = max(cov_ok, key=lambda g: g[3])
+        if acc_ok:
+            best_same_acc = max(acc_ok, key=lambda g: g[2])
+        print(f"Scored, {label}:")
+        if best_same_cov:
+            print(f"   at >= the same coverage: placed {best_same_cov[2]:.1%}, accuracy {best_same_cov[3]:.1%} "
+                  f"(min score {best_same_cov[0]}, min lead {best_same_cov[1]})")
+        if best_same_acc:
+            print(f"   at >= the same accuracy: placed {best_same_acc[2]:.1%}, accuracy {best_same_acc[3]:.1%} "
+                  f"(min score {best_same_acc[0]}, min lead {best_same_acc[1]})")
+        out["scored"][label] = {"same_coverage": best_same_cov, "same_accuracy": best_same_acc, "grid": grid}
+    path = ROOT / "data" / "results" / f"scored_{a.city}_{a.split}.json"
+    path.write_text(json.dumps(out, indent=1))
+    print("wrote", path)
+
+
+def run_both(a, osm_net, tiger_net, sample, addresses, aliases):
+    """Two maps. Union: OSM, and TIGER where OSM can't place. Consensus: auto only when both place within 250 ft."""
+    auto = ("exact", "relaxed", "near", "fuzzy")
+    res = Counter()
+    n = len(sample)
+    for c in sample:
+        o = locate.place(osm_net, c, aliases=aliases)
+        t = locate.place(tiger_net, c, aliases=aliases)
+        oa, ta = o.tier in auto, t.tier in auto
+        oe, te = score(osm_net, o, c, a.city), score(tiger_net, t, c, a.city)
+        ook, tok = oa and oe <= TOL_M, ta and te <= TOL_M
+        res["osm_n"] += oa; res["osm_k"] += ook
+        res["tiger_n"] += ta; res["tiger_k"] += tok
+        if oa:
+            res["union_n"] += 1; res["union_k"] += ook
+        elif ta:
+            res["union_n"] += 1; res["union_k"] += tok
+        if oa and ta and osm.metres((o.lat, o.lon), (t.lat, t.lon)) <= TOL_M:
+            res["consensus_n"] += 1; res["consensus_k"] += ook
+        if oa and ta and osm.metres((o.lat, o.lon), (t.lat, t.lon)) > TOL_M:
+            res["disagree_n"] += 1; res["disagree_osm_k"] += ook; res["disagree_tiger_k"] += tok
+    print(f"\n{'Two maps (all code tiers)':38s} {'placed':>8s} {'accuracy':>9s} {'W95 low':>8s}")
+    out = {}
+    for key, label in (("osm", "OSM only"), ("tiger", "TIGER only"), ("union", "Union: OSM, else TIGER"),
+                       ("consensus", "Consensus: both agree (<=250 ft)")):
+        m, k = res[f"{key}_n"], res[f"{key}_k"]
+        out[key] = {"coverage": m / n, "accuracy": k / max(1, m), "wilson_low": wilson_low(k, m)}
+        print(f"{label:38s} {m/n:8.1%} {k/max(1,m):9.1%} {wilson_low(k, m):8.1%}")
+    print(f"Maps disagree (>250 ft apart): {res['disagree_n']} crashes; OSM right {res['disagree_osm_k']}, TIGER right {res['disagree_tiger_k']}")
+    path = ROOT / "data" / "results" / f"twomaps_{a.city}_{a.split}.json"
+    path.write_text(json.dumps({"results": out, "disagree": {k: res[k] for k in ("disagree_n", "disagree_osm_k", "disagree_tiger_k")}}, indent=1))
+    print("wrote", path)
+
+
 def arm_line(name, rows, auto):
     sel = [r for r in rows if auto(r)]
     k = sum(r["ok"] for r in sel)
@@ -167,7 +269,8 @@ def main():
     ap.add_argument("--jev", action="store_true", help="ask Jev for a suggestion on every non-exact crash")
     ap.add_argument("--jev-model", default="jev-1.13.0")
     ap.add_argument("--no-address", action="store_true", help="skip the OSM address tier (large cities)")
-    ap.add_argument("--network", choices=["osm", "tiger"], default="osm", help="street network: OSM or Census TIGER")
+    ap.add_argument("--method", choices=["tiers", "scored"], default="tiers", help="tiers = current rules; scored = weighted clues")
+    ap.add_argument("--network", choices=["osm", "tiger", "both"], default="osm", help="street network: OSM or Census TIGER")
     ap.add_argument("--normalizer", default="ours", help="ours | ours_usps | usaddress | libpostal (bake-off)")
     a = ap.parse_args()
 
@@ -175,7 +278,7 @@ def main():
     from crashiq import names
     names.use(a.normalizer)  # before the network is built: OSM names go through the same normalizer
     osm_net = osm.Network(osm.fetch(wikidata, CACHE))
-    if a.network == "tiger":
+    if a.network in ("tiger", "both"):
         # Same jurisdiction as the OSM run: keep TIGER segments whose midpoint is within ~150 m of an OSM road node.
         from crashiq import tiger
         cell = lambda la, lo: (round(la / 0.0015), round(lo / 0.0015))
@@ -186,6 +289,9 @@ def main():
                                          CACHE / "tiger" / f"tl_2024_{fips}_featnames.zip", keep))
         print(f"TIGER network: {len(net.streets)} street names, {len(net.intersections)} intersections "
               f"(OSM: {len(osm_net.streets)}, {len(osm_net.intersections)})")
+        tiger_net = net
+        if a.network == "both":
+            net = osm_net
     else:
         net = osm_net
     addresses = None if a.no_address else locate.AddressIndex(osm.fetch_addresses(wikidata, CACHE))
@@ -195,6 +301,10 @@ def main():
     sample = linked[:half] if a.split == "dev" else linked[half:]
     print(f"{cname} · agency {ncic} · years {years} · {a.split} half: {len(sample)} crashes · aliases: {len(aliases)}")
     print("cleaning:", json.dumps(cleaning))
+    if a.method == "scored":
+        return run_scored(a, net, sample, linked[half:] if a.split == "dev" else linked[:half], aliases)
+    if a.network == "both":
+        return run_both(a, osm_net, tiger_net, sample, addresses, aliases)
 
     rows = []
     for c in sample:
