@@ -251,3 +251,7 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
 ## Pipeline status
 `[new-tool] Stage 2 done (LOCKED 2026-10-16) → Stage 3: design check.`
 Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then Stage 3 design check.
+
+- **Two maps DECIDED (user, 2026-10-18):** use both OSM and Census TIGER street networks for crash placement
+  (practice data: +1–2 crashes placed per 100 at about the same accuracy; free). Scheduled as a later task under #17,
+  not part of PR #16.
