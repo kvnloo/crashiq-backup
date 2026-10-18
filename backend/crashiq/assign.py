@@ -38,6 +38,10 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float) -
     out = []
     for c in crashes:
         base = {"crash_id": c["crash_id"], "location_provenance": c.get("location_source", "gps")}
+        if c.get("outside_corridor"):   # report's cross street isn't on this corridor (placement.py)
+            out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None,
+                        "rule": "cross_street_not_on_corridor"})
+            continue
         if c.get("lat") is None or c.get("lon") is None:
             out.append({**base, "kind": "unmatched", "location_id": None, "distance_ft": None, "rule": "no_coordinates"})
             continue

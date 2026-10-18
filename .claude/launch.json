@@ -6,6 +6,19 @@
       "runtimeExecutable": "python3",
       "runtimeArgs": ["-m", "http.server", "8765", "--directory", "design/mockups"],
       "port": 8765
+    },
+    {
+      "name": "crashiq-backend",
+      "runtimeExecutable": "/Users/Ak47/Desktop/Crash/.venv/bin/python",
+      "runtimeArgs": ["-m", "uvicorn", "crashiq.server:_default_app", "--factory", "--app-dir", "backend", "--port", "8000"],
+      "port": 8000,
+      "url": "http://localhost:8000"
+    },
+    {
+      "name": "crashiq-frontend",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["--prefix", "frontend", "vite", "frontend", "--port", "3100", "--strictPort"],
+      "port": 3100
     }
   ]
 }

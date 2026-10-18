@@ -118,6 +118,9 @@ def test_api_assignment_follows_radius(client):
     client.patch(f"/api/studies/{sid}", json={"radius_ft": 150})
     a150 = client.get(f"/api/studies/{sid}/assignment").json()
     assert a250["counts"]["total"] == a150["counts"]["total"] == 124
-    assert a250["counts"]["unmatched"] == 3
+    # The 3 no-GPS Crenshaw reports are now placed by the locator (PR #16 engine wired in, fix/34): exact matches.
+    assert a250["counts"]["unmatched"] == 0
+    prov = {r["crash_id"]: r["location_provenance"] for r in a250.get("crashes", a250.get("assignments", []))}
+    assert all(prov.get(i) == "exact" for i in ("9200001", "9200002", "9200003"))
     assert a150["counts"]["intersection"] < a250["counts"]["intersection"]
     json.dumps(a150)

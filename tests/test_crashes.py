@@ -155,3 +155,41 @@ def test_api_errors(client, sid):
     s2 = client.post("/api/studies", json={"name": "x", "mode": "profile"}).json()["id"]
     assert client.post(f"/api/studies/{s2}/crashes/pull").status_code == 409     # no corridor yet
     assert client.get(f"/api/studies/{s2}/crashes").status_code == 404
+
+
+def _no_gps_fixture():
+    """The Crenshaw fixture with every coordinate blanked: like Union City PD (0% GPS), 2026-10-18."""
+    d = json.loads((FIXTURES / "ckan_crenshaw.json").read_text())
+    for rid, t in d["tables"].items():
+        if rid.startswith("cra-"):
+            for r in t["rows"]:
+                r["Latitude"], r["Longitude"] = "", ""
+    return d
+
+
+NET_X = {**NET, "intersections": [{"name": "Marine Avenue"}, {"name": "West 144th Street"},
+                                  {"name": "Rosecrans Avenue"}]}
+
+
+def test_city_found_from_street_names_when_no_gps_nearby():
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(_no_gps_fixture())))
+    log = out["cleaning"]
+    assert log["city_source"].startswith("street names")
+    assert log["cities"] == ["HAWTHORNE"]
+    ids = {c["crash_id"] for c in out["crashes"]}
+    assert {"9200001", "9200002", "9200003"} <= ids          # Crenshaw & 144th / Rosecrans / Marine
+    assert "9200005" not in ids                               # Gardena: another city
+    assert all(c["location_source"] == "unmatched" for c in out["crashes"])
+    assert "warning" not in log
+
+
+def test_empty_pull_explains_itself():
+    net = {**NET, "corridor_name": "Nowhere Road", "intersections": [{"name": "Imaginary Lane"}]}
+    out = crashes.pull(STUDY, net, Ckan(FakeCkan(_no_gps_fixture())))
+    assert out["crashes"] == [] and "No city could be identified" in out["cleaning"]["warning"]
+
+
+def test_gps_city_path_unchanged(fake):
+    out = crashes.pull(STUDY, NET_X, Ckan(fake))
+    assert out["cleaning"]["city_source"] == "gps crashes near the corridor"
+    assert out["cleaning"]["cities"] == ["HAWTHORNE"]

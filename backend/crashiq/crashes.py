@@ -69,6 +69,37 @@ def _corridor_cores(net: dict) -> list[str]:
     return [k.core] if k else []
 
 
+def _cross_cores(net: dict, cores: list[str]) -> list[str]:
+    """Cross-street name cores from the corridor's intersections (e.g. 'ROSE', 'DELORES')."""
+    out = []
+    for i in net.get("intersections") or []:
+        for part in str(i.get("name") or "").replace("/", "&").split("&"):
+            k = street_key(part)
+            if k and k.core not in cores and k.core not in out and len(k.core) >= 3:
+                out.append(k.core)
+    return out
+
+
+def _cities_by_street_names(ckan: Ckan, head: str, cols: dict, no_xy_where: str, cores: list[str],
+                            cross: list[str]) -> list[str]:
+    """When no GPS crash is near the corridor (e.g. Union City PD records GPS on 0% of reports), find the
+    corridor's city from the reports themselves: crashes naming the corridor street AND one of its cross streets.
+    Cities with >= 2 such crashes (or the single best city) are searched. 2026-10-18, user's Union City study."""
+    if not cores or not cross or "city_code" not in cols:
+        return []
+    pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
+    like = lambda col, words: " OR ".join(f"UPPER({col}) LIKE '%{w.replace(chr(39), '')}%'" for w in words)
+    pair = f"(({like(pr, cores)}) AND ({like(sr, cross)})) OR (({like(sr, cores)}) AND ({like(pr, cross)}))"
+    code = cc.q(cols["city_code"]["id"])
+    rows = ckan.sql(f"SELECT {code} AS city_code, COUNT(*) AS n FROM {head.split(' FROM ', 1)[1]} "
+                    f"WHERE {no_xy_where} AND ({pair}) GROUP BY {code} ORDER BY n DESC LIMIT 20")
+    rows = [(str(r["city_code"]).strip(), int(r["n"])) for r in rows if r.get("city_code")]
+    if not rows:
+        return []
+    keep = [c for c, n in rows if n >= 2]
+    return keep or [rows[0][0]]
+
+
 def _by_ids(ckan: Ckan, rid: str, cols: dict[str, dict], ids: list[str]) -> list[dict]:
     idcol = cols["collision_id"]
     rows = []
@@ -90,6 +121,9 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
            "missing_fields": {}, "unknown_injury_values": [], "cities": []}
     s, w, n, e = bbox(net["line"], margin_ft(study))
     cores = _corridor_cores(net)
+    cross = _cross_cores(net, cores)
+    name_cities: list[str] | None = None   # found once from street names, reused for every year
+    log["city_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
 
     for y in years:
@@ -110,13 +144,24 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
         recs = [(cc.crash_record(r, cols), "gps") for r in with_xy]
         cities = sorted({r["city_code"] for r, _ in recs if r["city_code"]})
         log["cities"] = sorted(set(log["cities"]) | {r["city"] for r, _ in recs if r["city"]})
+        no_xy_where = f"({lat} IS NULL OR {lat} = 0 OR {lon} IS NULL OR {lon} = 0)"
+        if cities:
+            log["city_source"] = log["city_source"] or "gps crashes near the corridor"
+        elif cores:
+            if name_cities is None or not name_cities:
+                name_cities = _cities_by_street_names(ckan, head, cols, no_xy_where, cores, cross)
+            cities = name_cities
+            if cities:
+                log["city_source"] = "street names (no GPS crashes near the corridor)"
         no_xy = []
         if cores and cities and "city_code" in cols:
             pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
             names = " OR ".join(f"UPPER({c}) LIKE '%{core.replace(chr(39), '')}%'" for core in cores for c in (pr, sr))
             city_in = ", ".join("'" + c.replace("'", "''") + "'" for c in cities)
-            no_xy = _paged(ckan, f"{head} WHERE ({lat} IS NULL OR {lat} = 0 OR {lon} IS NULL OR {lon} = 0) "
+            no_xy = _paged(ckan, f"{head} WHERE {no_xy_where} "
                                  f"AND {cc.q(cols['city_code']['id'])} IN ({city_in}) AND ({names})", cid)
+            if not log["cities"]:
+                log["cities"] = sorted({cc.crash_record(r, cols)["city"] for r in no_xy if cc.crash_record(r, cols)["city"]})
         log["no_coords_read"] += len(no_xy)
         for r in no_xy:
             c = cc.crash_record(r, cols)
@@ -189,6 +234,10 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
         out.append(c)
     log["unknown_injury_values"] = sorted(unknown)
     log["kept"] = len(out)
+    if not out:  # never a silent empty study
+        log["warning"] = ("No crashes found. " + ("No city could be identified for this corridor (no GPS crashes nearby, "
+                          "and no reports name the corridor street with one of its cross streets)."
+                          if not log["city_source"] else "The corridor's city was found, but no report names this street."))
     log["with_coords"] = sum(c["location_source"] == "gps" for c in out)
     log["without_coords"] = sum(c["location_source"] == "unmatched" for c in out)
     return {"crashes": out, "cleaning": log, "source": SOURCE, "years": years,
@@ -210,6 +259,8 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False) -> tuple[d
     if cached and not refresh and cached["cache_key"] == key:
         return cached, True
     result = pull(study, net, ckan)
+    from .placement import place_unmatched   # C4: place crashes without coordinates (validated in PR #16)
+    place_unmatched(db, net, result)
     db.execute("INSERT OR REPLACE INTO crash_pull (study_id, cache_key, pulled_at, payload) VALUES (?,?,?,?)",
                (sid, key, result["pulled_at"], json.dumps(result)))
     return {**result, "cache_key": key}, False
