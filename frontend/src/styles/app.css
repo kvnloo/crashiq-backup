@@ -69,7 +69,6 @@ details.adv[open] summary::after { content: "−"; }
   backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); border: 1px solid var(--line); border-radius: 10px;
   box-shadow: 0 20px 50px -24px rgba(0,0,0,.55); }
 
-.placeholder { max-width: 760px; margin: 0 auto; padding: 44px 32px; display: grid; gap: 12px; }
 
 /* Leaflet sits on our dark surface */
 .leaflet-container { background: var(--road-verge); font-family: var(--font-body); }
@@ -77,8 +76,11 @@ details.adv[open] summary::after { content: "−"; }
 .leaflet-control-attribution a { color: var(--fg) !important; }
 
 @media (max-width: 920px) {
-  :root { --rail: 0px; }
-  .rail { display: none; }
+  /* Phone/tablet: the rail becomes a horizontal step strip above the stage. */
+  .app { grid-template-columns: minmax(0, 1fr); grid-template-rows: auto minmax(0, 1fr); }
+  .rail { flex-direction: row; padding: 8px 12px; border-right: 0; border-bottom: 1px solid var(--line); gap: 6px; }
+  .rail .sf-eyebrow, .rail .foot { display: none; }
+  .step { grid-template-columns: 22px auto; gap: 8px; padding: 6px 10px; white-space: nowrap; flex: none; }
   .top .proj { display: none; }
 }
 @media (prefers-reduced-motion: reduce) { * { scroll-behavior: auto !important; } }

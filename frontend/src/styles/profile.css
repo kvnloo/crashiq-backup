@@ -53,7 +53,8 @@
 .linkbtn { justify-self: start; background: none; border: 0; padding: 4px 0; color: var(--info); font: 600 13px var(--font-body); cursor: pointer; }
 
 @media (max-width: 920px) {
-  .profile { grid-template-columns: 1fr; height: auto; }
+  .profile { grid-template-columns: minmax(0, 1fr); height: auto; }
+  .profile .datacol { grid-template-columns: minmax(0, 1fr); padding: 18px 16px 40px; }
   .profile .mapcol { height: 50vh; }
 }
 @media (prefers-reduced-motion: reduce) { .bar .tr i { animation: none; } }
