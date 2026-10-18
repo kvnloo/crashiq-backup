@@ -24,10 +24,18 @@ export default function Corridor() {
   useEffect(() => {
     let alive = true
     api(`/studies/${studyId}/network`)
-      .then((n) => {
+      .then(async (n) => {
         if (!alive) return
         setNet(n)
-        if (n.line) setFit({ key: `load-${studyId}`, points: n.line })
+        if (n.line) { setFit({ key: `load-${studyId}`, points: n.line }); return }
+        // A context object imported from another tile (e.g. DemandIQ) can carry the corridor line: start from it.
+        const pre = await api(`/studies/${studyId}/context/prefill`).catch(() => null)
+        const line = pre?.prefill?.line
+        if (alive && line?.length >= 2) {
+          setDraft(line)
+          setFinished(true)
+          setFit({ key: `prefill-${studyId}`, points: line })
+        }
       })
       .catch((e) => alive && setErr(errorText(e)))
     return () => { alive = false }

@@ -99,4 +99,15 @@ describe('Corridor screen', () => {
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH' && c.body.aadt === 32000)).toBe(true))
     expect(screen.getAllByLabelText(/approach AADT/)).toHaveLength(6)
   })
+
+  it('starts from the corridor line in an imported project context', async () => {
+    const calls = mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': EMPTY,
+      'GET /studies/:id/context/prefill': { prefill: { line: [[33.8953, -118.32662], [33.9123, -118.32662]] } },
+      'PUT /studies/:id/corridor': NET })
+    renderAt('/s/s1/corridor')
+    await waitFor(() => expect(screen.getByRole('button', { name: 'Find intersections →' })).toBeEnabled())
+    expect(screen.getByTestId('map')).toHaveAttribute('data-mode', 'review')
+    fireEvent.click(screen.getByRole('button', { name: 'Find intersections →' }))
+    await waitFor(() => expect(calls.find((c) => c.method === 'PUT')?.body.line).toHaveLength(2))
+  })
 })

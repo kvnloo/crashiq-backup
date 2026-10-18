@@ -1,0 +1,16 @@
+{
+  "project": {"name": "Crenshaw Blvd corridor", "agency": "City of Hawthorne", "scope_refs": ["intake-2026-10"], "created": "2026-10-01", "version": 3},
+  "corridor": {
+    "name": "Crenshaw Blvd", "termini": {"from": "Marine Ave", "to": "132nd St"}, "orientation": "N-S",
+    "length_mi": 1.17, "functional_class": "principal arterial",
+    "geometry_ref": {"type": "Feature", "geometry": {"type": "LineString", "coordinates": [[-118.32662, 33.8953], [-118.32662, 33.9040], [-118.32662, 33.9123]]}},
+    "lane_profile": [{"from_node": "Marine Ave", "to_node": "Rosecrans Ave", "lanes_nb_or_eb": 3, "lanes_sb_or_wb": 3}],
+    "drops_merges": [], "intersections": [], "feeds": [{"facility": "I-405", "type": "interstate", "at": "south"}],
+    "grade_separations": []
+  },
+  "context": {"setting": "urban", "generators": [{"type": "retail", "name": "South Bay Galleria", "distance_mi": 0.8, "governing_implication": "Saturday midday"}]},
+  "analysis": {"governing_period_rec": "Weekday PM", "count_program_rec": ["TMC 7-9a 4-6p"], "flags": [{"type": "bottleneck", "detail": "SB queue at Rosecrans PM"}], "completed": ["corridor_recon", "demandiq_existing"]},
+  "data_holdings": [{"kind": "TMC", "period": "2026-09", "location": "6 intersections", "path_or_ref": "demandiq:proj/42/tmc"}],
+  "demand": {"aadt": {"Crenshaw Blvd": 38000}, "note": "field another tile owns"},
+  "provenance": {"corridor.length_mi": {"source": "OSM", "method": "auto", "date": "2026-10-01"}, "demand.aadt": {"source": "Caltrans Traffic Census", "method": "auto", "date": "2026-10-02"}}
+}
