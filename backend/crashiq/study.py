@@ -20,6 +20,8 @@ from .db import Database
 CCRS_FIRST_YEAR = 2016
 MIN_YEARS, MAX_YEARS, DEFAULT_YEARS = 1, 10, 5
 COVID_YEAR = 2020
+RADIUS_RANGE = (50.0, 1000.0)   # intersection influence radius, ft (default 250, R2.4)
+BUFFER_RANGE = (10.0, 500.0)    # corridor buffer each side of the line, ft
 
 # v1 modes only (R1). Unavailable modes are hidden, not listed as "coming soon" (principle 3).
 MODES: dict[str, str] = {
@@ -112,14 +114,20 @@ def update(db: Database, sid: str, **changes) -> dict:
     mode = changes.get("mode", cur["mode"])
     fy = changes.get("from_year", cur["from_year"])
     ty = changes.get("to_year", cur["to_year"])
+    radius = changes.get("radius_ft", cur["radius_ft"])
+    buffer = changes.get("buffer_ft", cur["buffer_ft"])
     if not (name or "").strip():
         raise ValueError("Give the project a name.")
     if mode not in MODES:
         raise ValueError(f"Unknown study mode '{mode}'.")
     validate_window(fy, ty)
-    db.execute("UPDATE study SET name=?, mode=?, from_year=?, to_year=?, covid_years_in_window=?, "
-               "updated_at=datetime('now') WHERE id=?",
-               (name.strip(), mode, fy, ty, int(covid_in_window(fy, ty)), sid))
+    if not RADIUS_RANGE[0] <= radius <= RADIUS_RANGE[1]:
+        raise ValueError(f"Influence radius must be {RADIUS_RANGE[0]:.0f}–{RADIUS_RANGE[1]:.0f} ft.")
+    if not BUFFER_RANGE[0] <= buffer <= BUFFER_RANGE[1]:
+        raise ValueError(f"Corridor buffer must be {BUFFER_RANGE[0]:.0f}–{BUFFER_RANGE[1]:.0f} ft.")
+    db.execute("UPDATE study SET name=?, mode=?, from_year=?, to_year=?, covid_years_in_window=?, radius_ft=?, "
+               "buffer_ft=?, updated_at=datetime('now') WHERE id=?",
+               (name.strip(), mode, fy, ty, int(covid_in_window(fy, ty)), radius, buffer, sid))
     return get(db, sid)
 
 
@@ -143,6 +151,8 @@ class StudyPatch(BaseModel):
     mode: str | None = None
     from_year: int | None = None
     to_year: int | None = None
+    radius_ft: float | None = None
+    buffer_ft: float | None = None
 
 
 router = APIRouter()

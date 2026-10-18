@@ -1,0 +1,597 @@
+{
+ "version": 0.6,
+ "generator": "hand-built fixture (see make_crenshaw_overpass.py)",
+ "elements": [
+  {
+   "type": "way",
+   "id": 5001,
+   "nodes": [
+    1003,
+    1004,
+    1002,
+    1001,
+    1005,
+    1006
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "West 153rd Street"
+   }
+  },
+  {
+   "type": "way",
+   "id": 5002,
+   "nodes": [
+    1009,
+    1010,
+    1008,
+    1007,
+    1011,
+    1012
+   ],
+   "tags": {
+    "highway": "secondary",
+    "name": "Marine Avenue"
+   }
+  },
+  {
+   "type": "way",
+   "id": 5003,
+   "nodes": [
+    1015,
+    1016,
+    1014
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "West 147th Street"
+   }
+  },
+  {
+   "type": "way",
+   "id": 5004,
+   "nodes": [
+    1019,
+    1020,
+    1018,
+    1017,
+    1021,
+    1022
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "West 144th Street"
+   }
+  },
+  {
+   "type": "way",
+   "id": 5005,
+   "nodes": [
+    1025,
+    1026,
+    1024,
+    1023,
+    1027,
+    1028
+   ],
+   "tags": {
+    "highway": "secondary",
+    "name": "Rosecrans Avenue"
+   }
+  },
+  {
+   "type": "way",
+   "id": 5006,
+   "nodes": [
+    1031,
+    1032,
+    1030,
+    1029,
+    1033,
+    1034
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "West 135th Street"
+   }
+  },
+  {
+   "type": "way",
+   "id": 5007,
+   "nodes": [
+    1037,
+    1038,
+    1036,
+    1035,
+    1039,
+    1040
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "West 132nd Street"
+   }
+  },
+  {
+   "type": "way",
+   "id": 5008,
+   "nodes": [
+    1043,
+    1044,
+    1042,
+    1041,
+    1045,
+    1046
+   ],
+   "tags": {
+    "highway": "residential",
+    "name": "West 131st Street"
+   }
+  },
+  {
+   "type": "way",
+   "id": 6001,
+   "nodes": [
+    1055,
+    1056,
+    1025
+   ],
+   "tags": {
+    "highway": "primary_link",
+    "oneway": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 7001,
+   "nodes": [
+    1057,
+    1001,
+    1007,
+    1013,
+    1017,
+    1047,
+    1023,
+    1049
+   ],
+   "tags": {
+    "highway": "primary",
+    "name": "Crenshaw Boulevard",
+    "oneway": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 7002,
+   "nodes": [
+    1049,
+    1051,
+    1029,
+    1053,
+    1035,
+    1041,
+    1059
+   ],
+   "tags": {
+    "highway": "primary",
+    "name": "Crenshaw Boulevard",
+    "oneway": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 7003,
+   "nodes": [
+    1060,
+    1042,
+    1036,
+    1054,
+    1030,
+    1052,
+    1050,
+    1055
+   ],
+   "tags": {
+    "highway": "primary",
+    "name": "Crenshaw Boulevard",
+    "oneway": "yes"
+   }
+  },
+  {
+   "type": "way",
+   "id": 7004,
+   "nodes": [
+    1055,
+    1024,
+    1048,
+    1018,
+    1014,
+    1008,
+    1002,
+    1058
+   ],
+   "tags": {
+    "highway": "primary",
+    "name": "Crenshaw Boulevard",
+    "oneway": "yes"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1001,
+   "lat": 33.8925,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1002,
+   "lat": 33.8925,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1003,
+   "lat": 33.8925,
+   "lon": -118.33
+  },
+  {
+   "type": "node",
+   "id": 1004,
+   "lat": 33.8925,
+   "lon": -118.3269
+  },
+  {
+   "type": "node",
+   "id": 1005,
+   "lat": 33.8925,
+   "lon": -118.32634
+  },
+  {
+   "type": "node",
+   "id": 1006,
+   "lat": 33.8925,
+   "lon": -118.323
+  },
+  {
+   "type": "node",
+   "id": 1007,
+   "lat": 33.8953,
+   "lon": -118.32652,
+   "tags": {
+    "highway": "traffic_signals"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1008,
+   "lat": 33.8953,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1009,
+   "lat": 33.8953,
+   "lon": -118.33
+  },
+  {
+   "type": "node",
+   "id": 1010,
+   "lat": 33.8953,
+   "lon": -118.3269
+  },
+  {
+   "type": "node",
+   "id": 1011,
+   "lat": 33.8953,
+   "lon": -118.32634
+  },
+  {
+   "type": "node",
+   "id": 1012,
+   "lat": 33.8953,
+   "lon": -118.323
+  },
+  {
+   "type": "node",
+   "id": 1013,
+   "lat": 33.8978,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1014,
+   "lat": 33.8978,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1015,
+   "lat": 33.8978,
+   "lon": -118.33
+  },
+  {
+   "type": "node",
+   "id": 1016,
+   "lat": 33.8978,
+   "lon": -118.3269,
+   "tags": {
+    "highway": "stop"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1017,
+   "lat": 33.8999,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1018,
+   "lat": 33.8999,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1019,
+   "lat": 33.8999,
+   "lon": -118.33
+  },
+  {
+   "type": "node",
+   "id": 1020,
+   "lat": 33.8999,
+   "lon": -118.3269
+  },
+  {
+   "type": "node",
+   "id": 1021,
+   "lat": 33.8999,
+   "lon": -118.32634
+  },
+  {
+   "type": "node",
+   "id": 1022,
+   "lat": 33.8999,
+   "lon": -118.323
+  },
+  {
+   "type": "node",
+   "id": 1023,
+   "lat": 33.9016,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1024,
+   "lat": 33.9016,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1025,
+   "lat": 33.9016,
+   "lon": -118.33
+  },
+  {
+   "type": "node",
+   "id": 1026,
+   "lat": 33.9016,
+   "lon": -118.3269,
+   "tags": {
+    "highway": "traffic_signals"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1027,
+   "lat": 33.9016,
+   "lon": -118.32634,
+   "tags": {
+    "highway": "traffic_signals"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1028,
+   "lat": 33.9016,
+   "lon": -118.323
+  },
+  {
+   "type": "node",
+   "id": 1029,
+   "lat": 33.9093,
+   "lon": -118.32652,
+   "tags": {
+    "highway": "traffic_signals"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1030,
+   "lat": 33.9093,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1031,
+   "lat": 33.9093,
+   "lon": -118.33
+  },
+  {
+   "type": "node",
+   "id": 1032,
+   "lat": 33.9093,
+   "lon": -118.3269
+  },
+  {
+   "type": "node",
+   "id": 1033,
+   "lat": 33.9093,
+   "lon": -118.32634
+  },
+  {
+   "type": "node",
+   "id": 1034,
+   "lat": 33.9093,
+   "lon": -118.323
+  },
+  {
+   "type": "node",
+   "id": 1035,
+   "lat": 33.9123,
+   "lon": -118.32652,
+   "tags": {
+    "highway": "traffic_signals"
+   }
+  },
+  {
+   "type": "node",
+   "id": 1036,
+   "lat": 33.9123,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1037,
+   "lat": 33.9123,
+   "lon": -118.33
+  },
+  {
+   "type": "node",
+   "id": 1038,
+   "lat": 33.9123,
+   "lon": -118.3269
+  },
+  {
+   "type": "node",
+   "id": 1039,
+   "lat": 33.9123,
+   "lon": -118.32634
+  },
+  {
+   "type": "node",
+   "id": 1040,
+   "lat": 33.9123,
+   "lon": -118.323
+  },
+  {
+   "type": "node",
+   "id": 1041,
+   "lat": 33.914,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1042,
+   "lat": 33.914,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1043,
+   "lat": 33.914,
+   "lon": -118.33
+  },
+  {
+   "type": "node",
+   "id": 1044,
+   "lat": 33.914,
+   "lon": -118.3269
+  },
+  {
+   "type": "node",
+   "id": 1045,
+   "lat": 33.914,
+   "lon": -118.32634
+  },
+  {
+   "type": "node",
+   "id": 1046,
+   "lat": 33.914,
+   "lon": -118.323
+  },
+  {
+   "type": "node",
+   "id": 1047,
+   "lat": 33.9005,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1048,
+   "lat": 33.9005,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1049,
+   "lat": 33.904,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1050,
+   "lat": 33.904,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1051,
+   "lat": 33.9065,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1052,
+   "lat": 33.9065,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1053,
+   "lat": 33.9108,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1054,
+   "lat": 33.9108,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1055,
+   "lat": 33.902,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1056,
+   "lat": 33.9018,
+   "lon": -118.32701999999999
+  },
+  {
+   "type": "node",
+   "id": 1057,
+   "lat": 33.89,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1058,
+   "lat": 33.89,
+   "lon": -118.32672
+  },
+  {
+   "type": "node",
+   "id": 1059,
+   "lat": 33.9165,
+   "lon": -118.32652
+  },
+  {
+   "type": "node",
+   "id": 1060,
+   "lat": 33.9165,
+   "lon": -118.32672
+  }
+ ]
+}

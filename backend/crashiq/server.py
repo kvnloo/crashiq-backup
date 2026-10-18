@@ -86,9 +86,10 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
 
 def _mount_routers(api: APIRouter, app: FastAPI) -> None:
     """Component routers register here (one line per issue)."""
-    from . import study
+    from . import network, study
 
     api.include_router(study.router)
+    api.include_router(network.router)
 
 
 def _mount_spa(app: FastAPI, dist: Path, require_auth) -> None:
