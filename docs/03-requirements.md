@@ -205,9 +205,14 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   (crash type → accepted countermeasures); FHWA PSC only as a tag; every finding says "possible cause, verify in field".
 - **D6 pending:** user likes the traceability but worries it's too much info for the end user. Proposal: collapsed by
   default (one small "Sources" link per finding); full audit detail in the PDF appendix for reviewers.
-- **D7 pending:** not answered (kappa agreement score in the bake-off).
+- **D7 YES (2026-10-18):** bake-off also scores agreement with the user's findings (kappa); internal only.
 - **D8 LATER:** build the base product first; then review competitors (Citian etc.) and add features. Trademark later.
-- **D9 open:** user uses the CMF Clearinghouse for ISOAP and calls it "a whole digging game"; asked how we'd approach it.
+- **D9 YES (2026-10-18), matching method to confirm:** user uses the CMF Clearinghouse for ISOAP ("a whole digging game").
+  Matching proposal: (1) code knows each location's over-represented crash types (D2), location type and conditions;
+  (2) a curated, versioned countermeasure table, each row tagged with crash types addressed, location type, conditions,
+  CRF/CMF, star rating, source ID (LRSM row or Clearinghouse CMF ID); built once, refreshed periodically, not scraped
+  per study; (3) code filters by tag match, ranks by expected crashes reduced on that location's own target crashes,
+  then star rating; (4) user picks; combination rules enforced (Caltrans max 3; warn when multiplying >2 CMFs).
   Proposal to confirm: HSIP mode uses Caltrans' own LRSM countermeasure table (closed list, required by HSIP);
   Clearinghouse used in ISOAP/general modes as a curated shortlist (star rating, crash types), not a full ingest.
 - **D10 YES:** ISOAP mode as a Stage 1 package (SPICE + conflict-point / Safe System score + observed history).
