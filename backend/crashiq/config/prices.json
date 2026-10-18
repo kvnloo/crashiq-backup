@@ -1,0 +1,9 @@
+{
+  "as_of": "2026-10-18",
+  "note": "USD per million tokens. A model with no price here can't be called: the budget wrapper refuses it, so a missing price never means 'free'. Fill the Claude rows from https://platform.claude.com/docs/en/about-claude/pricing when the Anthropic key is set up (deferred to the end of the build, user 2026-10-18).",
+  "models": {
+    "jev-1.13.0": {"provider": "jev", "input": 0.042, "output": 0.0, "source": "docs.typesafe.ai/models, 2026-10-18 (as recorded in crashiq/jev.py)"},
+    "claude-sonnet-5-5": {"provider": "claude", "input": null, "output": null, "cache_read": null, "source": "TO FILL from the Claude pricing page"},
+    "claude-haiku-5-5": {"provider": "claude", "input": null, "output": null, "cache_read": null, "source": "TO FILL from the Claude pricing page"}
+  }
+}
