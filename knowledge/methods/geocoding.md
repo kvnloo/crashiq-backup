@@ -66,3 +66,19 @@ Jev spend: 1.13 run 169 calls, 69,900 input tokens, $0.0029 (5 failed calls); 1.
 - LA naming differs from SF: more `relaxed` matches (3,027 vs 1,909 exact) because of N/S/E/W halves and
   missing suffixes. Directional halves (N vs S Figueroa) deserve their own handling and test.
 - Performance: whole-network scans were too slow for LA (8 min); street index by core added (O(1) lookups).
+
+## The user's original test: hidden GPS, same record (Long Beach PD, NCIC 1941), 2026-10-18
+Design: crashes from a police agency that records GPS; hide the record's own lat/long, place from its street
+names, compare. No second source. LBPD 2023–25: 13,181 crashes, 96% with GPS; 146 feet-typed-as-miles fixed.
+- **Officer GPS is itself noisy.** Only 72.6% of LBPD records have GPS on their own primary street (≤30 m) and
+  near their own cross street; ~1.6% are >1 km off (one 446 km, one 1,223 km away). Against raw GPS, no method
+  can show 98%: the answer key is wrong several % of the time.
+- **Raw GPS, dev half (6,326):** exact 88.6% (44% coverage), all code tiers 85.4% (87%); Jev vs fuzzy at equal
+  review rate 77.7% vs 82.1%. Jev spend $0.017.
+- **Clean-GPS subset (records whose GPS agrees with their own street names):** exact 97.0% (W95 96.2%, 54% coverage);
+  all code tiers 96.2% (98% coverage); relaxed alone 95.3%; exact + Jev 96.1%. **Jev vs fuzzy: 92.6% vs 95.2%.**
+- Long Beach writes names without the OSM directional ("7TH ST" for East/West 7th St), so `relaxed` carries 44% of
+  crashes there vs ~2% in SF. City writing style changes which tier does the work.
+- **Conclusion across SF and Long Beach: Jev does not beat code matching on this task.** Code is the method; Jev
+  stays a review suggestion at most. The 98% bar on the clean subset is not yet met in Long Beach (97.0%):
+  remaining misses are mostly 100–250 m, worth investigating (offset handling, GPS taken away from the scene).

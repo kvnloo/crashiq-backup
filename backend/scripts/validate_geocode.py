@@ -28,6 +28,10 @@ CITIES = {
     # name, CCRS agency (NCIC), OSM boundary (Wikidata), years, truth source
     "sf": ("San Francisco", "3801", "Q62", (2023, 2024, 2025), "datasf"),
     "la": ("Los Angeles", "1942", "Q65", (2024, 2025), "lapd"),
+    # Hidden-GPS test (the user's original design): local police that record GPS. Truth = the crash's own
+    # coordinates from the same CCRS record, hidden from the locator. No second source involved.
+    "lb": ("Long Beach", "1941", "Q16739", (2023, 2024, 2025), "gps"),
+    "riv": ("Riverside", "3313", "Q49243", (2023, 2024, 2025), "gps"),
 }
 # LAPD's open-data points sit at the intersection even when the report gives a distance (2026-10-18: median 6 m
 # from the intersection vs 92 m from the offset point, n=472). There, score the chosen intersection, not the offset.
@@ -92,6 +96,13 @@ def load_linked(city, seed):
             log[f"ccrs_{k}"] += v
     for c in crashes:  # LAPD writes 2401-07452 in CCRS and 240107452 in its own data
         c["report_number"] = c["report_number"].replace("-", "")
+    if kind == "gps":  # hidden-GPS: the record's own coordinates are the truth; the locator never sees them
+        linked = [dict(c, truth=(c["lat"], c["lon"]), truth_streets=(None, None), truth_offset=0.0)
+                  for c in crashes if c["lat"] and c["lon"]]
+        log["with_gps"], log["without_gps"] = len(linked), len(crashes) - len(linked)
+        log["linked"] = len(linked)
+        random.Random(seed).shuffle(linked)
+        return linked, dict(log)
     truth = truth_rows(kind, years)
     log["truth_records"] = len(truth)
     n_ccrs = Counter(c["report_number"] for c in crashes)

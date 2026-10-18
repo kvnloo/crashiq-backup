@@ -1,5 +1,8 @@
 # Lessons (newest first)
 
+- 2026-10-18 · Officer GPS is not ground truth either: only 73% of Long Beach PD records have GPS consistent with their own street names; some are hundreds of km off. Check record self-consistency before using GPS as an answer key.
+- 2026-10-18 · Hidden-GPS test in a second city (Long Beach) agrees with SF: Jev loses to code matching at equal review rate (92.6% vs 95.2% on clean GPS). Code is the method.
+
 - 2026-10-18 · A city's open data is not automatically good truth: LAPD points are snapped to intersections and some are km off (Canoga & Burbank 1.6 km). Check the truth on known intersections before scoring.
 - 2026-10-18 · CCRS has 12,851 LAPD crashes for 2024; LAPD open data has 16,720. CCRS may miss ~23% of LAPD collisions (or LAPD publishes non-reportable ones). Follow up (F2).
 
