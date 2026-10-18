@@ -29,7 +29,7 @@ _COLUMNS = {
     "primary_road": "PrimaryRoad", "secondary_road": "SecondaryRoad",
     "_dist": "SecondaryDistance", "offset_dir": "SecondaryDirection", "_unit": "SecondaryUnitOfMeasure",
     "is_freeway": "IsFreeway", "collision_type": "Collision Type Description",
-    "killed": "NumberKilled", "injured": "NumberInjured",
+    "killed": "NumberKilled", "injured": "NumberInjured", "_deleted": "IsDeleted",
 }
 _UNIT_FT = {"F": 1.0, "M": 5280.0, "Y": 3.0}  # feet, miles, yards
 
@@ -56,6 +56,7 @@ def crash_resource_ids() -> dict[int, str]:
 
 def _normalize(rec: dict) -> dict:
     c = {k: rec.get(v) for k, v in _COLUMNS.items()}
+    c.pop("_deleted")
     dist, unit = c.pop("_dist"), (c.pop("_unit") or "F").strip().upper()
     c["offset_ft"] = float(dist) * _UNIT_FT.get(unit, 1.0) if dist not in (None, "") else None
     # Cleaning rule (2026-10-18): a "miles" offset over 2 is feet typed as miles (73 "miles" from 3rd St).
@@ -81,7 +82,7 @@ def fetch(year: int, where: str, cache_dir: Path, page: int = 5000) -> list[dict
     while True:
         sql = f'SELECT {cols} FROM "{rid}" WHERE {where} ORDER BY "Collision Id" LIMIT {page} OFFSET {offset}'
         batch = _get("datastore_search_sql", sql=sql)["records"]
-        rows += [_normalize(r) for r in batch]
+        rows += [_normalize(r) for r in batch if str(r.get("IsDeleted")) != "True"]  # CHP-deleted reports
         if len(batch) < page:
             break
         offset += page

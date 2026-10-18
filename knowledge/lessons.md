@@ -1,5 +1,8 @@
 # Lessons (newest first)
 
+- 2026-10-18 · CCRS has an `IsDeleted` flag (found by Hermes): drop those rows in every pull. None among SFPD 2023–24.
+- 2026-10-18 · CCRS includes property-damage-only crashes: 59% of 2024 rows have 0 killed and 0 injured (found by Hermes). TIMS lacks most PDO.
+
 - 2026-10-18 · Validate the truth before scoring against it: blank/duplicate report numbers and default "parking"
   points produced fake errors of 3–5 km. Hygiene dropped 25 of 5,333 links.
 - 2026-10-18 · Test population must match the crashes the tool will place. In SF, GPS crashes = CHP freeway; the
