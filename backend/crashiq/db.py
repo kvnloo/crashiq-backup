@@ -34,6 +34,40 @@ MIGRATIONS: list[str] = [
         updated_at            TEXT NOT NULL DEFAULT (datetime('now'))
     );
     """,
+    # 3 — #7 network: drawn corridor, detected/edited intersections, segment AADT; study assignment settings
+    """
+    ALTER TABLE study ADD COLUMN radius_ft REAL NOT NULL DEFAULT 250;
+    ALTER TABLE study ADD COLUMN buffer_ft REAL NOT NULL DEFAULT 100;
+    CREATE TABLE corridor (
+        study_id      TEXT PRIMARY KEY REFERENCES study(id) ON DELETE CASCADE,
+        line_json     TEXT NOT NULL,
+        length_ft     REAL NOT NULL,
+        corridor_name TEXT,
+        detected_at   TEXT NOT NULL
+    );
+    CREATE TABLE intersection (
+        study_id     TEXT NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        id           TEXT NOT NULL,
+        name         TEXT NOT NULL,
+        station_ft   REAL NOT NULL,
+        lat          REAL NOT NULL,
+        lon          REAL NOT NULL,
+        osm_node_ids TEXT NOT NULL,
+        control      TEXT NOT NULL,
+        is_study     INTEGER NOT NULL DEFAULT 1,
+        provenance   TEXT NOT NULL,
+        name_source  TEXT NOT NULL,
+        major_aadt   REAL,
+        minor_aadt   REAL,
+        PRIMARY KEY (study_id, id)
+    );
+    CREATE TABLE segment_aadt (
+        study_id   TEXT NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        segment_id TEXT NOT NULL,
+        aadt       REAL NOT NULL,
+        PRIMARY KEY (study_id, segment_id)
+    );
+    """,
 ]
 
 
