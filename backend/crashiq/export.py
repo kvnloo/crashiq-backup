@@ -120,8 +120,10 @@ def methodology(d: dict) -> str:
             f"corridor segment when within {s['buffer_ft']:g} ft of the corridor line. Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed. Severity: each crash counted once at its most severe outcome (KABCO). Rates appear only where "
-            "AADT was entered. This profile does not compare the corridor's crash rates with statewide or peer-group "
-            "averages.")
+            "AADT was entered (intersections per million entering vehicles from two-way AADT, a T counting half the "
+            "minor road; segments per 100 million vehicle-miles). Where 3 or more similar locations have AADT, each "
+            "location's rate is compared with its critical rate (HSM Ch. 4, 95% confidence) against the average of the "
+            "corridor's own intersections or segments. This profile does not compare rates with statewide averages.")
 
 
 def to_pdf(d: dict) -> bytes:
@@ -176,12 +178,15 @@ def to_pdf(d: dict) -> bytes:
                     cols(W - 1.4 * inch, 1), (1,)), src("T1")]
     t2 = _t(p, "T2")
     has_rate = any(r["values"]["rate"] is not None for r in t2["rows"])
-    head = ["Location", "Crashes", "Per yr", "KSI", "Injury", "Dark"] + (["Rate"] if has_rate else [])
+    has_crit = any(r["values"].get("critical_rate") is not None for r in t2["rows"])
+    head = (["Location", "Crashes", "Per yr", "KSI", "Injury", "Dark"] + (["Rate"] if has_rate else [])
+            + (["Critical (95%)", "Over?"] if has_crit else []))
     data = [head] + [[Paragraph(r["label"], cellp), _fmt(r["values"]["crashes"]), _fmt(r["values"]["crashes_per_year"]),
                       _fmt(r["values"]["ksi_crashes"]), _fmt(r["values"]["injury_crashes"]),
                       _fmt(r["values"]["dark_crashes"])] + ([_fmt(r["values"]["rate"])] if has_rate else [])
+                     + ([_fmt(r["values"].get("critical_rate")), r["values"].get("over_critical") or "—"] if has_crit else [])
                      for r in t2["rows"]]
-    w = cols(3.1 * inch, len(head) - 1)
+    w = cols(2.6 * inch if has_crit else 3.1 * inch, len(head) - 1)
     story += [Paragraph("Locations (corridor order)", h2), table(data, w, range(1, len(head))), src("T2")]
     t3 = _t(p, "T3")
     story += [KeepTogether([Paragraph("Severity (each crash counted once)", h2),

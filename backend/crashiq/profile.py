@@ -11,6 +11,7 @@ are reported in the caveats; excluded crashes are outside the study.
 
 from __future__ import annotations
 
+import math
 import re
 from collections import Counter
 
@@ -106,6 +107,29 @@ def tables_for(crashes: list[dict], years: int, suffix: str = "") -> list[dict]:
     return out
 
 
+CRITICAL_K = 1.645          # 95% confidence (PIARC: 1.036 85%, 1.282 90%, 1.645 95%, 2.326 99%)
+CRITICAL_MIN_SITES = 3      # a reference average needs at least this many similar sites with exposure
+
+
+def exposure(kind: str, years: float, aadt_or_tev: float | None, length_mi: float | None = None) -> float | None:
+    """Exposure in the units the rate uses: MEV for intersections, 100M VMT for segments (HSM Ch. 4)."""
+    if not aadt_or_tev or not years:
+        return None
+    if kind == "intersection":
+        return aadt_or_tev * 365 * years / 1e6
+    return aadt_or_tev * 365 * years * length_mi / 1e8 if length_mi else None
+
+
+def critical_rates(sites: list[tuple[str, int, float]], k: float = CRITICAL_K) -> tuple[float | None, dict]:
+    """sites = (id, crashes, exposure) of one kind. Returns (reference average rate, {id: critical rate}).
+    Critical rate = Ra + K·sqrt(Ra / E) + 1 / (2E), Ra = Σ crashes / Σ exposure (HSM Ch. 4 critical rate method)."""
+    use = [s for s in sites if s[2]]
+    if len(use) < CRITICAL_MIN_SITES:
+        return None, {}
+    ra = sum(n for _, n, _ in use) / sum(e for _, _, e in use)
+    return ra, {lid: ra + k * math.sqrt(ra / e) + 1 / (2 * e) for lid, _, e in use}
+
+
 def _counts(crashes):
     sev = Counter(c["severity"] for c in crashes)
     return {"crashes": len(crashes), "ksi_crashes": sev["K"] + sev["A"], "fatal_crashes": sev["K"],
@@ -194,6 +218,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     order.sort(key=lambda t: t[2])
     rates_any = False
     loc_rows = []
+    expo: dict[str, tuple[str, int, float | None, float | None]] = {}   # id -> (kind, crashes, exposure, rate)
     for kind, lid, _ in order:
         cs = groups.get(lid, [])
         k = _counts(cs)
@@ -203,6 +228,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         if kind == "segment":
             s = seg_by[lid]
             rate = segment_rate(k["crashes"], years, s.get("aadt"), s["length_mi"])
+            expo[lid] = (kind, k["crashes"], exposure(kind, years, s.get("aadt"), s["length_mi"]), rate)
             vals.update(length_mi=round(s["length_mi"], 3),
                         crashes_per_mi_yr=r2(k["crashes"] / s["length_mi"] / years) if years and s["length_mi"] else None,
                         aadt=s.get("aadt"), rate=r2(rate), rate_unit="per 100M VMT" if rate is not None else None)
@@ -210,15 +236,33 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         else:
             it = names[lid]
             rate = intersection_rate(k["crashes"], years, it.get("major_aadt"), it.get("minor_aadt"), it.get("legs"))
+            tev = entering_volume(it.get("major_aadt"), it.get("minor_aadt"), it.get("legs"))
+            expo[lid] = (kind, k["crashes"], exposure(kind, years, tev), rate)
             vals.update(length_mi=None, crashes_per_mi_yr=None, control=it["control"], rate=r2(rate),
                         rate_unit="per MEV" if rate is not None else None)
             label = it["name"]
         rates_any |= rate is not None
         loc_rows.append(_row(lid, label, **vals))
+    # Critical rates: each location against the average rate of the corridor's own sites of the same kind (#34 item 7)
+    critical = {}
+    for kind in ("intersection", "segment"):
+        ra, rc = critical_rates([(lid, n, e) for lid, (kd, n, e, _) in expo.items() if kd == kind])
+        critical[kind] = {"reference_rate": ra, "sites": sum(1 for kd, _, e, _ in expo.values() if kd == kind and e)}
+        for r in loc_rows:
+            if r["key"] in rc:
+                rate = expo[r["key"]][3]
+                r["values"].update(critical_rate=r2(rc[r["key"]]), reference_rate=r2(ra),
+                                   over_critical="Yes" if rate > rc[r["key"]] else "No")
+    for r in loc_rows:
+        r["values"].setdefault("critical_rate", None)
+        r["values"].setdefault("reference_rate", None)
+        r["values"].setdefault("over_critical", None)
     tables.append(_table("T2", "Locations (corridor order)", [
         ("crashes", "Crashes"), ("crashes_per_year", "Per year"), ("ksi_crashes", "KSI"), ("fatal_crashes", "Fatal"),
         ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"),
-        ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate")], loc_rows, placed))
+        ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate"),
+        ("reference_rate", "Average rate, similar sites"), ("critical_rate", "Critical rate (95%)"),
+        ("over_critical", "Over critical rate?")], loc_rows, placed))
     tables += tables_for(placed, years)
     from . import signals as signals_mod          # C7; imported here because signals imports this module
     scr = signals_mod.screen(placed, [(r["key"], r["label"]) for r in loc_rows])
@@ -254,6 +298,17 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                         "text": f"CCRS has no queryable data for {', '.join(map(str, years_missing))}; those years are not in the profile."})
     if not rates_any:
         caveats.append({"key": "rates_not_computed", "text": "Crash rates were not computed (no AADT entered)."})
+    for kind, c in critical.items():
+        if 0 < c["sites"] < CRITICAL_MIN_SITES:
+            caveats.append({"key": f"critical_{kind}", "text": f"Critical rates need AADT at {CRITICAL_MIN_SITES} or more "
+                            f"{kind}s to form a reference average ({c['sites']} entered)."})
+    over = [r for r in loc_rows if r["values"].get("over_critical") == "Yes"]
+    if any(c["reference_rate"] is not None for c in critical.values()):
+        caveats.append({"key": "critical_rate", "count": len(over),
+                        "text": f"Critical rates (95% confidence) compare each location with the average rate of this "
+                                f"corridor's own intersections or segments, not statewide averages. "
+                                f"Locations above their critical rate: {len(over)} of "
+                                f"{sum(1 for r in loc_rows if r['values'].get('critical_rate') is not None)}."})
     if exclude:
         caveats.append({"key": "excluded_provenance", "text": f"Crashes placed by {', '.join(sorted(exclude))} are left out of this run."})
 
