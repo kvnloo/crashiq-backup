@@ -215,6 +215,9 @@ def to_pdf(d: dict) -> bytes:
             Spacer(1, 6)]))
     if not d.get("findings"):
         story.append(Paragraph("No findings accepted yet.", body))
+    if p.get("screen_tests"):
+        story.append(Paragraph(f"The screen ran {p['screen_tests']} location × crash-type tests at P ≥ 0.80, so a few patterns "
+                               "can pass by chance. Treat findings as leads to verify in the field.", small))
     if d.get("stale_findings"):
         story.append(Paragraph(f"{d['stale_findings']} accepted finding(s) no longer match the data after a study "
                                "change and are left out until reviewed again.", small))

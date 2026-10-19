@@ -29,6 +29,7 @@ describe('map categories', () => {
     expect(catOf('tod', { hour: 23 })).toBe('night')
     expect(catOf('tod', { hour: null })).toBe('none')
     expect(catOf('light', { lighting: 'DARK - STREET LIGHTS' })).toBe('dark')
+    expect(catOf('light', { lighting: 'DARK - NO STREET LIGHTS' })).toBe('unlit')
     expect(catOf('light', { lighting: 'DUSK - DAWN' })).toBe('dusk')
     expect(catOf('light', { lighting: 'DAYLIGHT' })).toBe('day')
     expect(catOf('severity', { severity: 'B' })).toBe('I')

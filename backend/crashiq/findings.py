@@ -60,6 +60,7 @@ class RecordFilter(BaseModel):
     bike: bool | None = None
     motorcycle: bool | None = None
     surface_wet: bool | None = None
+    lighting_unlit: bool | None = None
     day_of_week: list[str] | None = None
     hour_from: int | None = Field(default=None, ge=0, le=23)
     hour_to: int | None = Field(default=None, ge=0, le=23)
@@ -120,6 +121,8 @@ def select_records(crashes: list[dict], f: RecordFilter) -> list[dict]:
         if f.collision_type and (c.get("collision_type") or "").upper() not in {x.upper() for x in f.collision_type}:
             continue
         if f.lighting_dark is not None and profile_mod.is_dark(c) != f.lighting_dark:
+            continue
+        if f.lighting_unlit is not None and profile_mod.is_unlit(c) != f.lighting_unlit:
             continue
         if f.ped is not None and bool(c.get("ped")) != f.ped:
             continue

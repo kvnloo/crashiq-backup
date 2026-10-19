@@ -19,7 +19,10 @@ from .db import Database
 
 CCRS_FIRST_YEAR = 2016
 MIN_YEARS, MAX_YEARS, DEFAULT_YEARS = 1, 10, 5
-COVID_YEAR = 2020
+COVID_YEARS = (2020, 2021)    # #34 item 13: both years noted
+FINAL_LAG_MONTHS = 18          # #34 item 8: CHP data entry lags 12-18 months (TIMS); a year is treated as final
+                               # once 18 months have passed since it ended
+SHORT_WINDOW_YEARS = 3         # #34 item 15: warn below this (Caltrans LRSM: at least 3, preferably 5)
 RADIUS_RANGE = (50.0, 1000.0)   # intersection influence radius, ft (default 250, R2.4)
 BUFFER_RANGE = (10.0, 500.0)    # corridor buffer each side of the line, ft
 
@@ -34,11 +37,19 @@ today: Callable[[], date] = date.today
 
 
 def last_complete_year(on: date | None = None) -> int:
+    """Last calendar year that has ended (the latest year an engineer may choose)."""
     return (on or today()).year - 1
 
 
+def last_final_year(on: date | None = None) -> int:
+    """Last year whose CHP data should be final: it ended at least FINAL_LAG_MONTHS ago (#34 item 8)."""
+    d = on or today()
+    months = d.year * 12 + (d.month - 1) - FINAL_LAG_MONTHS
+    return months // 12 - 1
+
+
 def default_window(on: date | None = None) -> tuple[int, int]:
-    to = last_complete_year(on)
+    to = last_final_year(on)
     return to - DEFAULT_YEARS + 1, to
 
 
@@ -57,12 +68,12 @@ def validate_window(from_year: int, to_year: int, on: date | None = None) -> Non
 
 
 def covid_in_window(from_year: int, to_year: int) -> bool:
-    return from_year <= COVID_YEAR <= to_year
+    return any(from_year <= y <= to_year for y in COVID_YEARS)
 
 
 def window_options(on: date | None = None) -> list[dict]:
-    """The dropdown choices: last N complete years for N = 1..10 (stopping at 2016)."""
-    to = last_complete_year(on)
+    """The dropdown choices: last N finalized years for N = 1..10 (stopping at 2016)."""
+    to = last_final_year(on)
     out = []
     for n in range(MIN_YEARS, MAX_YEARS + 1):
         fy = to - n + 1
@@ -70,7 +81,8 @@ def window_options(on: date | None = None) -> list[dict]:
             break
         span = f"{fy}–{to}" if n > 1 else f"{to}"
         out.append({"years": n, "from_year": fy, "to_year": to, "covid": covid_in_window(fy, to),
-                    "label": f"Last {n} complete year{'s' if n > 1 else ''} ({span})"})
+                    "short": n < SHORT_WINDOW_YEARS,
+                    "label": f"Last {n} year{'s' if n > 1 else ''} ({span})"})
     return out
 
 
@@ -80,6 +92,7 @@ def _row(r: dict | None) -> dict | None:
         return None
     r = dict(r)
     r["covid_years_in_window"] = bool(r["covid_years_in_window"])
+    r["include_freeway"] = bool(r.get("include_freeway", 0))
     r["mode_label"] = MODES.get(r["mode"], r["mode"])
     r["years"] = r["to_year"] - r["from_year"] + 1
     return r
@@ -116,6 +129,7 @@ def update(db: Database, sid: str, **changes) -> dict:
     ty = changes.get("to_year", cur["to_year"])
     radius = changes.get("radius_ft", cur["radius_ft"])
     buffer = changes.get("buffer_ft", cur["buffer_ft"])
+    fwy = bool(changes.get("include_freeway", cur["include_freeway"]))
     if not (name or "").strip():
         raise ValueError("Give the project a name.")
     if mode not in MODES:
@@ -126,8 +140,8 @@ def update(db: Database, sid: str, **changes) -> dict:
     if not BUFFER_RANGE[0] <= buffer <= BUFFER_RANGE[1]:
         raise ValueError(f"Corridor buffer must be {BUFFER_RANGE[0]:.0f}–{BUFFER_RANGE[1]:.0f} ft.")
     db.execute("UPDATE study SET name=?, mode=?, from_year=?, to_year=?, covid_years_in_window=?, radius_ft=?, "
-               "buffer_ft=?, updated_at=datetime('now') WHERE id=?",
-               (name.strip(), mode, fy, ty, int(covid_in_window(fy, ty)), radius, buffer, sid))
+               "buffer_ft=?, include_freeway=?, updated_at=datetime('now') WHERE id=?",
+               (name.strip(), mode, fy, ty, int(covid_in_window(fy, ty)), radius, buffer, int(fwy), sid))
     return get(db, sid)
 
 
@@ -153,6 +167,7 @@ class StudyPatch(BaseModel):
     to_year: int | None = None
     radius_ft: float | None = None
     buffer_ft: float | None = None
+    include_freeway: bool | None = None
 
 
 router = APIRouter()

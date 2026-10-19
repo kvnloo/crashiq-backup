@@ -49,8 +49,11 @@ def targets(crashes: list[dict]) -> list[dict]:
                     "test": (lambda c, ct=ct: (c.get("collision_type") or "").upper() == ct),
                     "filter": {"collision_type": [ct]}})
     out += [
-        {"key": "dark", "noun": "Crashes after dark", "pattern": "dark", "test": profile_mod.is_dark,
-         "filter": {"lighting_dark": True}},
+        {"key": "dark_lit", "noun": "Crashes after dark under street lights", "pattern": "dark",
+         "test": lambda c: profile_mod.is_dark(c) and not profile_mod.is_unlit(c),
+         "filter": {"lighting_dark": True, "lighting_unlit": False}},
+        {"key": "dark_unlit", "noun": "Crashes after dark without working street lights", "pattern": "dark_unlit",
+         "test": profile_mod.is_unlit, "filter": {"lighting_dark": True, "lighting_unlit": True}},
         {"key": "ped", "noun": "Pedestrian crashes", "pattern": "ped", "test": lambda c: bool(c.get("ped")),
          "filter": {"ped": True}},
         {"key": "bike", "noun": "Bicycle crashes", "pattern": "bike", "test": lambda c: bool(c.get("bike")),
@@ -146,7 +149,7 @@ def screen(placed: list[dict], locations: list[tuple[str, str]]) -> dict:
         if c.get("location_id") in by_loc:
             by_loc[c["location_id"]].append(c)
     label = dict(locations)
-    rows, signals = [], []
+    rows, signals, tests_run = [], [], 0
     for t in targets(placed):
         x_all = {lid: sum(1 for c in cs if t["test"](c)) for lid, cs in by_loc.items()}
         n_all = {lid: len(cs) for lid, cs in by_loc.items()}
@@ -161,6 +164,7 @@ def screen(placed: list[dict], locations: list[tuple[str, str]]) -> dict:
                 x, n = x_all[lid], n_all[lid]
                 if n < MIN_LOCATION_CRASHES or x < MIN_TARGET_CRASHES or x / n <= p_star:
                     continue
+                tests_run += 1
                 if prior:
                     prob, method = 1.0 - betainc(prior[0] + x, prior[1] + n - x, p_star), "beta"
                 else:
@@ -197,4 +201,4 @@ def screen(placed: list[dict], locations: list[tuple[str, str]]) -> dict:
         ("method", "Method"), ("reference_target", "Reference crashes of this type"),
         ("reference_crashes", "Reference crashes")],
         rows, [c for cs in by_loc.values() for c in cs])
-    return {"table": table, "signals": kept}
+    return {"table": table, "signals": kept, "tests_run": tests_run}

@@ -43,6 +43,12 @@ def is_dark(c) -> bool:
     return bool(_DARK.search((c.get("lighting") or "").upper()))
 
 
+def is_unlit(c) -> bool:
+    """Dark with no street lights or street lights not functioning (#34 item 14: split from lit darkness)."""
+    t = (c.get("lighting") or "").upper()
+    return is_dark(c) and ("NO STREET" in t or "NOT FUNCTION" in t)
+
+
 def _table(tid, title, columns, rows, crashes):
     prov = Counter(c.get("location_provenance", "gps") for c in crashes)
     return {"id": tid, "title": title, "columns": [{"key": k, "label": lbl} for k, lbl in columns],
@@ -116,12 +122,21 @@ def segment_rate(crashes: int, years: float, aadt: float | None, length_mi: floa
     return crashes * 1e8 / (365 * years * aadt * length_mi)
 
 
-def intersection_rate(crashes: int, years: float, major_aadt: float | None, minor_aadt: float | None) -> float | None:
-    """Crashes per million entering vehicles (FHWA): N × 10^6 / (365 × years × entering volume),
-    entering volume = major-road AADT + minor-road AADT (R3)."""
-    if not major_aadt or minor_aadt is None or not years:
+def entering_volume(major_aadt: float | None, minor_aadt: float | None, legs: int | None) -> float | None:
+    """Total entering vehicles per day from two-way AADTs (#34 item 11): a through cross street brings its whole
+    two-way AADT into the intersection (major + minor); a T has one minor leg, so half of it (major + minor/2)."""
+    if not major_aadt or minor_aadt is None:
         return None
-    return crashes * 1e6 / (365 * years * (major_aadt + minor_aadt))
+    return major_aadt + (minor_aadt / 2 if legs == 3 else minor_aadt)
+
+
+def intersection_rate(crashes: int, years: float, major_aadt: float | None, minor_aadt: float | None,
+                      legs: int | None = None) -> float | None:
+    """Crashes per million entering vehicles (HSM Ch. 4 Eq. 4-2, 4-3): N × 10^6 / (365 × years × TEV)."""
+    tev = entering_volume(major_aadt, minor_aadt, legs)
+    if not tev or not years:
+        return None
+    return crashes * 1e6 / (365 * years * tev)
 
 
 def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str] | None = None) -> dict:
@@ -194,7 +209,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             label = s["name"]
         else:
             it = names[lid]
-            rate = intersection_rate(k["crashes"], years, it.get("major_aadt"), it.get("minor_aadt"))
+            rate = intersection_rate(k["crashes"], years, it.get("major_aadt"), it.get("minor_aadt"), it.get("legs"))
             vals.update(length_mi=None, crashes_per_mi_yr=None, control=it["control"], rate=r2(rate),
                         rate_unit="per MEV" if rate is not None else None)
             label = it["name"]
@@ -216,7 +231,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         caveats.append({"key": "preliminary", "count": prelim,
                         "text": f"{prelim} crash report{'s are' if prelim != 1 else ' is'} still preliminary (CHP may revise them)."})
     if study.get("covid_years_in_window"):
-        caveats.append({"key": "covid", "text": "The window includes 2020, when COVID-19 changed travel and crash patterns."})
+        caveats.append({"key": "covid", "text": "The window includes 2020 or 2021, when COVID-19 changed travel and crash "
+                                                "patterns; compare those years with care."})
     total_known = len(placed) + len(unmatched)
     share = len(unmatched) / total_known if total_known else 0.0
     if unmatched:
@@ -247,7 +263,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                                  "years_with_data": years},
             "kpis": {"crashes": "T1/crashes/value", "ksi_crashes": "T1/ksi_crashes/value",
                      "injury_crashes": "T1/injury_crashes/value", "crashes_per_mi_yr": "T1/crashes_per_mi_yr/value"},
-            "tables": tables, "signals": scr["signals"], "caveats": caveats, "location_provenance": dict(sorted(prov.items())),
+            "tables": tables, "signals": scr["signals"], "screen_tests": scr["tests_run"], "caveats": caveats, "location_provenance": dict(sorted(prov.items())),
             "source": pull["source"], "pulled_at": pull["pulled_at"], "excluded_provenance": sorted(exclude)}
 
 

@@ -30,7 +30,7 @@ def _pick_intersection(cands: list[tuple[float, dict]]) -> tuple[float, dict, st
     return d, it, "influence_radius" if len(cands) == 1 else "nearest_of_overlapping_radii"
 
 
-def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float) -> dict:
+def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, include_freeway: bool = False) -> dict:
     line = Polyline([tuple(p) for p in net["line"]])
     studies = [i for i in net["intersections"] if i["is_study"]]
     pts = {i["id"]: line.proj.to_xy(i["lat"], i["lon"]) for i in studies}
@@ -38,7 +38,7 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float) -
     out = []
     for c in crashes:
         base = {"crash_id": c["crash_id"], "location_provenance": c.get("location_source", "gps")}
-        if c.get("is_freeway"):     # CHP's IsFreeway: mainline/ramp crashes under or beside an arterial study
+        if c.get("is_freeway") and not include_freeway:     # CHP's IsFreeway: mainline/ramp crashes under or beside an arterial study
             out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None, "rule": "freeway"})
             continue
         if c.get("lat") is None or c.get("lon") is None:
@@ -91,7 +91,8 @@ def for_study(db, sid: str) -> tuple[dict, dict, dict, dict]:
     if pull.get("cache_key") != crashes_mod.cache_key(study, net):
         # the window, corridor or radius changed since this pull: never compute from the old crashes
         raise HTTPException(409, "The study changed since the crashes were pulled. Open Crash profile to pull them again.")
-    return study, net, pull, assign(pull["crashes"], net, study["radius_ft"], study["buffer_ft"])
+    return study, net, pull, assign(pull["crashes"], net, study["radius_ft"], study["buffer_ft"],
+                                    bool(study.get("include_freeway")))
 
 
 router = APIRouter()

@@ -121,6 +121,11 @@ MIGRATIONS: list[str] = [
         updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     """,
+    # 8 — #34 decisions: intersection leg count (3-leg entering volume rule), freeway include switch
+    """
+    ALTER TABLE intersection ADD COLUMN legs INTEGER;
+    ALTER TABLE study ADD COLUMN include_freeway INTEGER NOT NULL DEFAULT 0;
+    """,
 ]
 
 

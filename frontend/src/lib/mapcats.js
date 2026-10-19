@@ -33,7 +33,7 @@ export function catOf(dim, c) {
   if (dim === 'light') {
     const l = (c.lighting || '').toUpperCase()
     if (!l || l.startsWith('NOT')) return 'none'
-    if (isDark(c)) return 'dark'
+    if (isDark(c)) return l.includes('NO STREET') || l.includes('NOT FUNCTION') ? 'unlit' : 'dark'
     if (l.includes('DUSK') || l.includes('DAWN')) return 'dusk'
     return 'day'
   }
@@ -58,7 +58,8 @@ export function categories(dim, crashes) {
   } else if (dim === 'tod') {
     list = [['peak', 'Peak (6–9, 15–19)', SLOTS[0]], ['midday', 'Midday (9–15)', SLOTS[2]], ['night', 'Evening & night (19–6)', SLOTS[1]], ['none', 'Hour not stated', OTHER]]
   } else {
-    list = [['day', 'Daylight', SLOTS[1]], ['dusk', 'Dusk or dawn', SLOTS[2]], ['dark', 'Dark', SLOTS[0]], ['none', 'Not stated', OTHER]]
+    list = [['day', 'Daylight', SLOTS[1]], ['dark', 'Dark, street lights', SLOTS[0]], ['unlit', 'Dark, no working lights', SLOTS[2]],
+      ['dusk', 'Dusk or dawn', OTHER], ['none', 'Not stated', OTHER]]
   }
   return list.filter(([k]) => dim === 'severity' || has(k)).map(([key, label, color]) => ({ key, label, color, count: n.get(key) || 0 }))
 }

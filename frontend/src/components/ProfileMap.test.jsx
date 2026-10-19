@@ -59,8 +59,8 @@ describe('ProfileMap', () => {
     await screen.findByText(/Showing/)
     fireEvent.click(screen.getByRole('radio', { name: 'Lighting' }))
     const legend = screen.getByLabelText('Map legend and filters')
-    const dark = within(legend).getByRole('button', { name: /^Dark/ })
-    const nDark = C.filter((c) => (c.lighting || '').toUpperCase().startsWith('DARK')).length
+    const dark = within(legend).getByRole('button', { name: /^Dark, street lights/ })
+    const nDark = C.filter((c) => { const l = (c.lighting || '').toUpperCase(); return l.startsWith('DARK') && !l.includes('NO STREET') && !l.includes('NOT FUNCTION') }).length
     fireEvent.click(dark)
     expect(dark).toHaveAttribute('aria-pressed', 'false')
     expect(screen.getByText(new RegExp(`Showing ${C.length - nDark} of ${C.length}`))).toBeInTheDocument()
