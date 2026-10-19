@@ -1,0 +1,260 @@
+{
+  "_about": "CrashIQ pattern library SEED (2026-10-18, issue #45). Per D5: pattern -> possible contributing factors (after HSM Part B Ch. 6 diagnosis tables) -> field checks -> candidate countermeasure categories (after Caltrans LRSM App. B; LRSM row IDs to be added). Every finding states possible causes to verify in the field. Wording is paraphrased, not quoted. Status: seed, awaiting the user's review; entries change only with the user's approval (CLAUDE.md).",
+  "version": "seed-2026-10-18",
+  "status": "seed, user review pending",
+  "patterns": {
+    "broadside": {
+      "label": "Broadside (right-angle)",
+      "phrase": "Broadside (right-angle) crashes",
+      "ref": "HSM Ch. 6, right-angle collisions",
+      "factors_intersection": [
+        "limited sight distance on the approaches",
+        "drivers running the signal or stop control",
+        "signal heads hard to see",
+        "yellow change or all-red clearance too short",
+        "high approach speeds"
+      ],
+      "factors_segment": [
+        "drivers entering from driveways or side streets with limited sight distance",
+        "high speeds on the main road",
+        "unclear right-of-way at access points"
+      ],
+      "field_checks": [
+        "sight lines from each approach",
+        "signal head visibility and placement",
+        "yellow and all-red timing",
+        "approach speeds",
+        "stop sign and stop bar condition"
+      ],
+      "countermeasure_categories": [
+        "signal hardware visibility (back-plates, lens size, head per lane)",
+        "signal timing (change and clearance intervals)",
+        "protected turn phasing",
+        "sight-distance clearing",
+        "roundabout conversion"
+      ]
+    },
+    "rear_end": {
+      "label": "Rear-end",
+      "phrase": "Rear-end crashes",
+      "ref": "HSM Ch. 6, rear-end collisions",
+      "factors_intersection": [
+        "queues that drivers don't expect",
+        "unexpected stops for turning vehicles",
+        "signal timing or coordination problems",
+        "signal heads hard to see",
+        "slippery pavement"
+      ],
+      "factors_segment": [
+        "congestion and stop-and-go flow",
+        "frequent turning in and out of driveways",
+        "following too closely at high speed"
+      ],
+      "field_checks": [
+        "queue lengths at peak hours",
+        "turning volumes and turn-lane storage",
+        "signal coordination and yellow timing",
+        "pavement friction and drainage"
+      ],
+      "countermeasure_categories": [
+        "signal timing and coordination",
+        "advance warning or detection",
+        "turn lanes or longer storage",
+        "pavement friction treatment",
+        "access management"
+      ]
+    },
+    "sideswipe": {
+      "label": "Sideswipe",
+      "phrase": "Sideswipe crashes",
+      "ref": "HSM Ch. 6, sideswipe collisions",
+      "factors_intersection": [
+        "unclear lane assignment on the approaches",
+        "lanes that drop or shift through the intersection",
+        "narrow lanes"
+      ],
+      "factors_segment": [
+        "lane drops or merges",
+        "narrow lanes",
+        "frequent lane changes near access points"
+      ],
+      "field_checks": [
+        "lane-use signs and arrows",
+        "lane widths",
+        "lane alignment through the intersection",
+        "marking condition"
+      ],
+      "countermeasure_categories": [
+        "lane-use signs and markings",
+        "lane widening or realignment",
+        "advance lane-drop warning"
+      ]
+    },
+    "head_on": {
+      "label": "Head-on",
+      "phrase": "Head-on crashes",
+      "ref": "HSM Ch. 6, head-on collisions",
+      "factors_intersection": [
+        "drivers entering the wrong way",
+        "confusing channelization",
+        "left turns across opposing traffic"
+      ],
+      "factors_segment": [
+        "no physical separation between directions",
+        "worn or missing centerline markings",
+        "curves with limited sight distance",
+        "high speeds"
+      ],
+      "field_checks": [
+        "centerline and median condition",
+        "curve warning signs",
+        "sight distance on curves",
+        "wrong-way signing at ramps and medians"
+      ],
+      "countermeasure_categories": [
+        "raised median or separation",
+        "centerline markings or rumble strips",
+        "curve signing and delineation",
+        "wrong-way signing"
+      ]
+    },
+    "hit_object": {
+      "label": "Hit object",
+      "phrase": "Hit-object crashes",
+      "ref": "HSM Ch. 6, fixed-object collisions",
+      "factors_intersection": [
+        "fixed objects close to the curb (poles, signal cabinets)",
+        "poor delineation of islands and curbs"
+      ],
+      "factors_segment": [
+        "fixed objects near the travel lane",
+        "roadway departure on curves",
+        "poor delineation at night",
+        "high speeds"
+      ],
+      "field_checks": [
+        "objects within the clear zone",
+        "curb and island delineation",
+        "night-time visibility of edges",
+        "curve signing"
+      ],
+      "countermeasure_categories": [
+        "remove or relocate fixed objects",
+        "delineation and reflectors",
+        "guardrail or crash cushions",
+        "edge-line rumble strips"
+      ]
+    },
+    "pedestrian": {
+      "label": "Pedestrian",
+      "phrase": "Pedestrian crashes",
+      "ref": "HSM Ch. 6, vehicle-pedestrian collisions",
+      "factors_intersection": [
+        "long crossing distances",
+        "turning vehicles failing to yield",
+        "too little crossing time",
+        "poor lighting at the crosswalk",
+        "drivers' view of pedestrians blocked"
+      ],
+      "factors_segment": [
+        "long distances between marked crossings",
+        "mid-block crossing without a treatment",
+        "high speeds",
+        "poor lighting"
+      ],
+      "field_checks": [
+        "crossing distance and refuge",
+        "pedestrian signal timing",
+        "turning-vehicle yielding behavior",
+        "crosswalk lighting",
+        "where people actually cross"
+      ],
+      "countermeasure_categories": [
+        "high-visibility crosswalks",
+        "leading pedestrian interval",
+        "pedestrian countdown signals",
+        "curb extensions or refuge islands",
+        "crossing lighting",
+        "rectangular rapid flashing beacons"
+      ]
+    },
+    "bicycle": {
+      "label": "Bicycle",
+      "phrase": "Bicycle crashes",
+      "ref": "HSM Ch. 6, vehicle-bicycle collisions",
+      "factors_intersection": [
+        "turning vehicles crossing the bike path",
+        "no space for bicyclists at the approach",
+        "bicyclists hard to see"
+      ],
+      "factors_segment": [
+        "no bike lane or a narrow one",
+        "door-zone conflicts with parked cars",
+        "driveway conflicts",
+        "high speeds"
+      ],
+      "field_checks": [
+        "bike lane presence and width",
+        "conflict points with turning traffic",
+        "parking next to the bike lane",
+        "night-time visibility"
+      ],
+      "countermeasure_categories": [
+        "bike lanes or separated bikeways",
+        "conflict-zone green markings",
+        "bike boxes",
+        "protected intersection elements"
+      ]
+    },
+    "dark": {
+      "label": "Dark conditions",
+      "phrase": "Crashes in the dark",
+      "ref": "HSM Ch. 6, night-time collisions",
+      "factors_intersection": [
+        "poor intersection lighting",
+        "signs and markings hard to see at night",
+        "pedestrians hard to see at night"
+      ],
+      "factors_segment": [
+        "poor or no street lighting",
+        "worn retroreflective markings",
+        "curves or edges hard to see at night"
+      ],
+      "field_checks": [
+        "lighting levels and outages (night visit)",
+        "sign and marking retroreflectivity",
+        "edge and curve visibility at night"
+      ],
+      "countermeasure_categories": [
+        "intersection or segment lighting",
+        "retroreflective signs and markings",
+        "delineation"
+      ]
+    },
+    "ksi": {
+      "label": "Fatal and serious-injury (KSI)",
+      "phrase": "Fatal and serious-injury (KSI) crashes",
+      "ref": "HSM Ch. 6, severe-crash diagnosis; Safe System",
+      "factors_intersection": [
+        "high speeds through the intersection",
+        "high-energy angle conflicts",
+        "vulnerable road users exposed to traffic"
+      ],
+      "factors_segment": [
+        "high operating speeds",
+        "head-on or roadway-departure conflicts",
+        "vulnerable road users exposed to traffic"
+      ],
+      "field_checks": [
+        "operating speeds vs posted speed",
+        "conflict types behind the severe crashes",
+        "protection for people walking and biking"
+      ],
+      "countermeasure_categories": [
+        "speed management",
+        "roundabout or conflict-reducing control",
+        "separation for vulnerable road users"
+      ]
+    }
+  }
+}

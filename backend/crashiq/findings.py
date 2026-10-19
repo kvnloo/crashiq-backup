@@ -223,6 +223,25 @@ def post_findings(sid: str, body: list[Finding], request: Request) -> dict:
     return submit(request.app.state.db, sid, body)
 
 
+def generate(db, sid: str) -> dict:
+    from . import patterns
+    prof, _, _ = context(db, sid)
+    t12 = next(t for t in prof["tables"] if t["id"] == "T12")
+    kept = {r["id"]: r["status"] for r in db.query("SELECT id, status FROM finding WHERE study_id = ?", (sid,))}
+    fresh = [Finding(**f, status=kept.get(f["id"], "proposed")) for f in patterns.findings_from(t12)]
+    ids = {f.id for f in fresh}
+    for old, status in kept.items():          # patterns that no longer apply disappear unless the user decided on them
+        if old.startswith("auto-") and old not in ids and status == "proposed":
+            db.execute("DELETE FROM finding WHERE study_id = ? AND id = ?", (sid, old))
+    res = submit(db, sid, fresh)
+    return {**res, "method": t12["method"], "flagged": len(t12["rows"])}
+
+
+@router.post("/studies/{sid}/findings/generate")
+def post_generate(sid: str, request: Request) -> dict:
+    return generate(request.app.state.db, sid)
+
+
 @router.get("/studies/{sid}/findings")
 def get_findings(sid: str, request: Request) -> dict:
     db = request.app.state.db

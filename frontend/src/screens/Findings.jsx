@@ -3,8 +3,9 @@ import { useNavigate, useParams } from 'react-router-dom'
 import { api, errorText } from '../lib/api'
 import '../styles/findings.css'
 
-// Step 4. Findings come from the AI analyst (C9) after the validator (C10) checks every number.
-// Until the analyst is switched on, this screen says so plainly and lists any validated findings.
+// Step 4. Findings come from code first (#45): the HSM over-representation test finds which crash patterns
+// stand out at each location, the pattern library adds possible factors and field checks, and the validator
+// (C10) checks every number. The AI analyst (C9) will later rewrite the same findings in plainer prose.
 export default function Findings() {
   const { studyId } = useParams()
   const navigate = useNavigate()
@@ -12,9 +13,20 @@ export default function Findings() {
 
   useEffect(() => {
     let alive = true
-    Promise.all([api('/config'), api(`/studies/${studyId}/findings`)])
-      .then(([config, f]) => alive && setState({ config, findings: f.findings, rejected: f.rejected_count }))
-      .catch((e) => alive && setState({ error: errorText(e) }))
+    ;(async () => {
+      try {
+        const [config, f] = await Promise.all([api('/config'), api(`/studies/${studyId}/findings`)])
+        let findings = f.findings
+        let generated = null
+        if (findings.length === 0) {     // first visit: find the patterns now (code only, no AI cost)
+          generated = await api(`/studies/${studyId}/findings/generate`, { method: 'POST' })
+          findings = generated.shown
+        }
+        if (alive) setState({ config, findings, rejected: f.rejected_count, generated })
+      } catch (e) {
+        if (alive) setState({ error: errorText(e) })
+      }
+    })()
     return () => { alive = false }
   }, [studyId])
 
@@ -23,7 +35,7 @@ export default function Findings() {
     setState((s) => ({ ...s, findings: s.findings.map((x) => (x.id === id ? f : x)) }))
   }
 
-  const { config, findings = [], error, loading } = state
+  const { findings = [], error, loading } = state
   return (
     <section className="findings-screen" aria-label="Findings">
       <div className="fhead">
@@ -34,13 +46,13 @@ export default function Findings() {
       {error ? <div className="err" role="alert">{error}</div> : null}
       {!loading && !error && findings.length === 0 && (
         <div className="empty-state">
-          <span className="sf-sig" data-s={config?.ai?.claude_configured ? 'y' : 'r'}><i /><i /><i /></span>
+          <span className="sf-sig" data-s="g"><i /><i /><i /></span>
           <div>
-            <h2 className="h3">{config?.ai?.claude_configured ? 'No findings yet' : 'The AI analyst isn’t switched on yet'}</h2>
+            <h2 className="h3">No crash pattern stands out</h2>
             <p className="muted">
-              {config?.ai?.claude_configured
-                ? 'The analyst hasn’t written findings for this study.'
-                : 'Findings need an Anthropic API key on the server. Until then, the crash profile is complete and ready to export.'}
+              No crash type, condition or severity is over-represented at any location compared with the corridor’s
+              similar locations (HSM threshold-proportion test, 90% probability, at least two crashes). The crash
+              profile is complete and ready to export.
             </p>
           </div>
         </div>

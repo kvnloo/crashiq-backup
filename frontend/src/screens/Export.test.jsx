@@ -29,12 +29,24 @@ describe('Export screen', () => {
 })
 
 describe('Findings screen', () => {
-  it('says plainly when the AI analyst is not switched on, and points to export', async () => {
+  it('finds patterns on first visit (code only) and says plainly when none stand out', async () => {
     mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY,
-      'GET /config': { ai: { claude_configured: false } }, 'GET /studies/:id/findings': { findings: [], rejected_count: 0 } })
+      'GET /config': { ai: { claude_configured: false } }, 'GET /studies/:id/findings': { findings: [], rejected_count: 0 },
+      'POST /studies/:id/findings/generate': { shown: [], rejected: [], flagged: 0 } })
     renderAt('/s/s1/findings')
-    expect(await screen.findByText('The AI analyst isn’t switched on yet')).toBeInTheDocument()
+    expect(await screen.findByText('No crash pattern stands out')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Go to export →' })).toHaveClass('sf-btn--go')
+  })
+
+  it('shows generated findings without needing the AI key', async () => {
+    const f = { id: 'auto-osm-1-broadside', status: 'proposed', pattern_ref: 'HSM Ch. 6, right-angle collisions',
+      text: 'Broadside (right-angle) crashes are over-represented at Dyer Street: 7 of 11 crashes (64%)…' }
+    mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY,
+      'GET /config': { ai: { claude_configured: false } }, 'GET /studies/:id/findings': { findings: [], rejected_count: 0 },
+      'POST /studies/:id/findings/generate': { shown: [f], rejected: [], flagged: 1 } })
+    renderAt('/s/s1/findings')
+    expect(await screen.findByText(/over-represented at Dyer Street/)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Accept' })).toBeInTheDocument()
   })
 
   it('lists validated findings with accept and reject', async () => {

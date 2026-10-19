@@ -200,6 +200,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"),
         ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate")], loc_rows, placed))
     tables += tables_for(placed, years)
+    from . import patterns   # C7: over-represented patterns per location (HSM threshold-proportion test)
+    tables.append(patterns.table_t12(patterns.screen(placed, loc_rows)))
 
     # Caveats (computed; shown only when they apply)
     caveats = []
