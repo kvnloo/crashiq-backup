@@ -275,3 +275,12 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   all work moves to Claude Code on the Max plan: issues, docs, builds and reviews. Parallel work = separate Claude Code
   sessions (one issue/branch/worktree each, Remote Control allowed); a different session reviews each PR; decisions are
   asked in chat, not over WhatsApp. Rules: `CLAUDE.md`.
+- **#39 DECIDED (user, 2026-10-18, in the PM session):** a corridor keeps only crashes on the corridor street and at the
+  intersections it actually passes through. Crashes on side streets (cross street not one of the corridor's own
+  intersections) are excluded. This is the user's standard practice. Like buffer exclusions (C5), excluded crashes are
+  counted and listed with the rule, never dropped silently. The match is against the corridor's intersections, not any
+  street that happens to be nearby on the map.
+- **Grade separation (user, 2026-10-18, nuance N7):** a road that passes over or under the corridor (an interchange,
+  overcrossing or undercrossing) is not an intersection of the corridor. Its crashes must not count for the corridor,
+  and for a freeway corridor the crossing road's and interchange crashes must not count as freeway crashes. Detection
+  rules: issue for N7.

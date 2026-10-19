@@ -1,5 +1,12 @@
 # Lessons (newest first)
 
+- 2026-10-18 · Git must never touch the live database. A `git stash` + checkout restored a stale, committed
+  `data/crashiq.sqlite-wal`, and SQLite replayed it into the db and corrupted it. Recovered with `sqlite3 .recover`
+  (backup in `data/backup/`), corrupt cache rows deleted and re-pulled. `*.sqlite-wal` / `*.sqlite-shm` are now
+  untracked and ignored (#35, PR #36). Side effect: the user's Union City corridor came back wrong and was redrawn.
+  With several sessions running, each works in its own worktree and never switches branches over `data/`.
+- 2026-10-18 · Parallel sessions built the same thing twice (#40 vs #44, #46 vs #42/#51) because the stack was based on
+  an old main. Before building, check open and merged PRs and claim the issue (CLAUDE.md).
 - 2026-10-18 · A reliable clue is not automatically a useful one: beat is right 95% of the time but did not help (Long Beach got worse), because the candidates in contention share a beat. Test whether a clue *separates the candidates*, not just whether it is true.
 - 2026-10-18 · Two maps (OSM + TIGER) add 1–2 points of coverage at the same accuracy; the remaining misses are in the records, not the maps.
 
