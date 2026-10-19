@@ -257,3 +257,17 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   not part of PR #16.
 - **#49 DECIDED (user, 2026-10-18):** option 1, strict backup rule when locations look alike (fewer, stronger findings;
   every number still visible in the tables).
+- **#34 Stage 4 defaults DECIDED (user, 2026-10-18, product-kickoff roundtable, relayed by Claude Code on #34):**
+  (1) corridor buffer 100 ft (keep); (5) screen thresholds ≥5 crashes at the location, ≥3 of the type, P ≥ 0.80 (keep);
+  (7) expected-rate comparison = both: critical rate vs similar sites on the corridor (HSM Ch. 4) + TASAS averages when the
+  corridor is a state highway; (8) default window ends at the last finalized CHP year, engineer can override;
+  (3/11) intersection volumes = two-way AADT for major and minor road; code computes entering volume = major + minor (4-leg),
+  major + minor/2 (T); (9) freeway crashes excluded by default, include switch for ramp-terminal studies;
+  (10) segment length center to center (HSM Part C Sec. C.6.2), stated in the report; (12) injury level unknown (U) kept as
+  its own level; (13) COVID note for both 2020 and 2021; (14) dark split into with / without street lights;
+  (15) warn when the window is under 3 years; (16) multiple-comparisons disclosure note.
+  **Still open:** item 6 (user approves the pattern library; stays "draft" until then); items 2 and 4 (AI cap, Claude prices)
+  parked with #55, AI analyst stays off, no API key.
+  Roundtable build order ("first real corridor"): user runs live contract test on his Mac → build these decisions →
+  critical rate + TASAS comparison → PCF categories + DUI/speed rows from an official code table → flag crashes whose GPS
+  point is far from the stated road → one real corridor end to end (Stage 5 gate).
