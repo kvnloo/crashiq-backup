@@ -207,7 +207,9 @@ def to_pdf(d: dict) -> bytes:
         story.append(KeepTogether([
             Paragraph(f"<b>F{i}. {escape(f.get('title') or '')}</b>", body),
             Paragraph(escape(f["text"]), body),
-            Paragraph(escape(f"Strength: {m.get('strength', '—')} · P(share > corridor) {m.get('probability', '—')} · "
+            Paragraph(escape(f"Strength: {m.get('strength', '—')} · "
+                             f"{'binomial confidence' if str(m.get('method', '')).startswith('Binomial') else 'P(share > reference)'} "
+                             f"{m.get('probability', '—')} · compared with the {m.get('reference', 'corridor')} · "
                              f"{m.get('method', '')}. Pattern library: {f.get('pattern_ref') or 'no entry'}"
                              + (" (draft)" if m.get("library_status") == "draft" else "") + ". Source: table T12."), small),
             Spacer(1, 6)]))

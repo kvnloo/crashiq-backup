@@ -9,15 +9,15 @@ const STUDY = { id: 's1', name: 'Crenshaw', mode: 'tis', from_year: 2021, to_yea
 const F1 = {
   id: 'c7-osm_1029_dark', location_id: 'osm-1029', source: 'screen', status: 'proposed',
   title: 'Crashes after dark over-represented at West 135th Street',
-  text: 'Crashes after dark are over-represented at West 135th Street: 12 of 20 crashes here (60%) vs 36.2% corridor-wide.',
+  text: 'Crashes after dark are over-represented at West 135th Street: 12 of 20 crashes here (60%) vs 36.2% across the corridor intersections.',
   numbers: [
     { value: 12, table_id: 'T12', cell: 'osm-1029~dark/target_crashes' },
     { value: 20, table_id: 'T12', cell: 'osm-1029~dark/location_crashes' },
     { value: 60, table_id: 'T12', cell: 'osm-1029~dark/share_pct' },
-    { value: 36.2, table_id: 'T12', cell: 'osm-1029~dark/corridor_share_pct' }],
+    { value: 36.2, table_id: 'T12', cell: 'osm-1029~dark/reference_share_pct' }],
   pattern_ref: 'HSM Part B, Ch. 6 diagnosis: nighttime collisions', evidence_refs: { tables: ['T12'], records: {} },
-  meta: { strength: 'Strong', probability: 0.97, method: 'Beta prior from corridor locations', excess_pct: 23.8,
-    corridor_crashes: 105, pattern: 'dark', location: 'West 135th Street', kind: 'intersection', library_status: 'draft' },
+  meta: { strength: 'Strong', probability: 0.97, method: 'HSM excess proportion (beta prior from reference sites)', excess_pct: 23.8,
+    corridor_crashes: 105, reference: 'corridor intersections', reference_crashes: 80, pattern: 'dark', location: 'West 135th Street', kind: 'intersection', library_status: 'draft' },
 }
 const F2 = { ...F1, id: 'c7-seg_x_type_broadside', title: 'Broadside crashes over-represented at Marine Avenue – West 147th Street',
   meta: { ...F1.meta, strength: 'Moderate', pattern: 'type_broadside', location: 'Marine Avenue – West 147th Street', kind: 'segment' } }
@@ -42,7 +42,7 @@ describe('Findings screen', () => {
     expect(calls.some((c) => c.method === 'POST' && c.path.endsWith('/findings/screen'))).toBe(true)
     const nums = [...document.querySelectorAll('.claim .num')]
     expect(nums.map((n) => n.textContent)).toEqual(['12', '20', '60%', '36.2%'])
-    expect(nums[3]).toHaveAttribute('title', 'From table T12, cell osm-1029~dark/corridor_share_pct')
+    expect(nums[3]).toHaveAttribute('title', 'From table T12, cell osm-1029~dark/reference_share_pct')
     expect(screen.getByText(/Pattern library · draft/)).toBeInTheDocument()
     expect(screen.getByText('Poor visibility or lighting')).toBeInTheDocument()
     expect(await screen.findByRole('tab', { name: 'Records (12)' })).toBeInTheDocument()
@@ -56,7 +56,7 @@ describe('Findings screen', () => {
     fireEvent.click(screen.getByRole('tab', { name: 'Collision diagram' }))
     expect(screen.getByRole('img', { name: 'Collision diagram, 12 records, schematic' })).toBeInTheDocument()
     fireEvent.click(screen.getByRole('tab', { name: 'Audit' }))
-    expect(screen.getByText(/P\(true share > corridor share\) = 0.97/)).toBeInTheDocument()
+    expect(screen.getByText(/P\(true share > reference share\) = 0.97/)).toBeInTheDocument()
     expect(screen.getByText('Code, from table T12 (no AI)')).toBeInTheDocument()
   })
 

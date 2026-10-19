@@ -92,8 +92,8 @@ function Detail({ f, i, lib, records, corridor, study, onDecide }) {
             <dl className="card-pad audit">
               <dt>Data</dt><dd>CCRS {study?.from_year}–{study?.to_year} · {m.corridor_crashes ?? '—'} crashes placed on the corridor</dd>
               <dt>Assignment</dt><dd>{study?.radius_ft ?? 250} ft intersection influence area; {study?.buffer_ft ?? 100} ft corridor buffer</dd>
-              <dt>Test</dt><dd>Excess proportion of specific crash types (HSM Part B screening), reference = this corridor’s locations. {m.method}.</dd>
-              <dt>Result</dt><dd>P(true share &gt; corridor share) = {m.probability} · {m.strength} · excess {m.excess_pct} points</dd>
+              <dt>Test</dt><dd>Excess proportion of specific crash types (HSM Part B screening), compared with the {m.reference || 'corridor locations'}. {m.method}.</dd>
+              <dt>Result</dt><dd>{String(m.method || '').startsWith('Binomial') ? 'Binomial confidence' : 'P(true share > reference share)'} = {m.probability} · {m.strength} · excess {m.excess_pct} points</dd>
               <dt>Numbers</dt><dd>{f.numbers.map((n) => `${n.table_id}/${n.cell}`).join(' · ')}</dd>
               <dt>Written by</dt><dd>{f.source === 'screen' ? 'Code, from table T12 (no AI)' : 'AI analyst; every number checked by the validator'}</dd>
               <dt>Caveats</dt><dd>Small numbers; regression to the mean; police-reported crashes only, so injury counts are a lower bound.</dd>

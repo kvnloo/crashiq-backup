@@ -1,18 +1,22 @@
 """C7 crosstab: per-location over-representation screen (deterministic; no AI).
 
 For each location and each target crash type (a collision type, crashes after dark, pedestrian, KSI, ...) this
-asks: is the share of that type at the location higher than along the corridor as a whole, by more than chance
-would explain? Method: excess proportion of specific crash types (HSM Part B network screening, after Heydecker &
-Wu 1991), with the corridor's locations as the reference population:
+asks: is the share of that type at the location higher than at comparable locations on the corridor, by more than
+chance would explain? Method: excess proportion of specific crash types (HSM 1st ed. Part B, Ch. 4 network
+screening, after Heydecker & Wu 1991). Reference population = the corridor's locations OF THE SAME KIND
+(intersections with intersections, segments with segments):
 
-  p_i  = x_i / n_i                  observed share at location i (x target crashes of n)
-  p*   = sum(x) / sum(n)            threshold share = corridor-wide share
-  s^2  = sum((p_i - p*)^2) / (m-1)  over the m locations with at least 2 crashes
-  alpha = (p*^2 - p*^3 - s^2 p*) / s^2,  beta = (p* - 2p*^2 + p*^3 - s^2 (1 - p*)) / s^2   (method of moments)
+  p_i  = x_i / n_i                       observed share at site i (x target crashes of n)
+  p*   = sum(x) / sum(n)                 threshold proportion over the reference population
+  s^2  = 1/(m-1) * [ sum((x^2 - x)/(n^2 - n)) - (1/m) * (sum(x/n))^2 ]   over the m sites with n >= 2
+         (HSM's variance: the (x^2 - x)/(n^2 - n) term removes the binomial sampling noise from each site's share)
+  alpha = (p*^2 - p*^3 - s^2 p*) / s^2,  beta = (p* - 2p*^2 + p*^3 - s^2 (1 - p*)) / s^2
   P(true share > p*) = 1 - I_p*(alpha + x_i, beta + n_i - x_i)    (I = regularized incomplete beta)
+  Sites passing the probability threshold are ranked by excess proportion p_i - p* (HSM ranking measure).
 
-When the moments give no valid beta prior (too few locations, no spread, or alpha/beta <= 0) the screen falls back
-to an exact one-sided binomial test against p* and says so. Every number lands in table T12, which findings cite.
+When the moments give no valid beta prior (fewer than 3 sites, no spread, or alpha/beta <= 0) the screen falls back
+to an exact one-sided binomial test against p* and labels the value a binomial confidence, not a probability of
+excess. Every number lands in table T12, which findings cite. Check the variance form against your HSM copy.
 """
 
 from __future__ import annotations
@@ -103,17 +107,34 @@ def binom_sf(x: int, n: int, p: float) -> float:
     return sum(math.comb(n, k) * p ** k * (1 - p) ** (n - k) for k in range(x, n + 1))
 
 
-def beta_prior(shares: list[float], p_star: float) -> tuple[float, float] | None:
-    """Method-of-moments beta prior from the reference locations' shares, or None when it isn't valid."""
-    m = len(shares)
-    if m < 3 or not 0 < p_star < 1:
+def hsm_variance(sites: list[tuple[int, int]]) -> float | None:
+    """HSM excess-proportion variance over sites (x target, n total) with n >= 2; None with fewer than 3 sites."""
+    use = [(x, n) for x, n in sites if n >= 2]
+    m = len(use)
+    if m < 3:
         return None
-    s2 = sum((p - p_star) ** 2 for p in shares) / (m - 1)
-    if s2 <= 0:
+    a = sum((x * x - x) / (n * n - n) for x, n in use)
+    b = sum(x / n for x, n in use) ** 2 / m
+    return (a - b) / (m - 1)
+
+
+def beta_prior(sites: list[tuple[int, int]], p_star: float) -> tuple[float, float] | None:
+    """Method-of-moments beta prior (HSM) from the reference sites, or None when it isn't valid."""
+    if not 0 < p_star < 1:
+        return None
+    s2 = hsm_variance(sites)
+    if s2 is None or s2 <= 0:
         return None
     a = (p_star ** 2 - p_star ** 3 - s2 * p_star) / s2
     b = (p_star - 2 * p_star ** 2 + p_star ** 3 - s2 * (1 - p_star)) / s2
     return (a, b) if a > 0 and b > 0 else None
+
+
+def kind_of(location_id: str) -> str:
+    return "segment" if str(location_id).startswith("seg") else "intersection"
+
+
+PLURAL = {"intersection": "intersections", "segment": "segments"}
 
 
 # -- the screen -------------------------------------------------------------------------------------------
@@ -125,38 +146,42 @@ def screen(placed: list[dict], locations: list[tuple[str, str]]) -> dict:
         if c.get("location_id") in by_loc:
             by_loc[c["location_id"]].append(c)
     label = dict(locations)
-    total = sum(len(v) for v in by_loc.values())
     rows, signals = [], []
     for t in targets(placed):
         x_all = {lid: sum(1 for c in cs if t["test"](c)) for lid, cs in by_loc.items()}
         n_all = {lid: len(cs) for lid, cs in by_loc.items()}
-        corr_x = sum(x_all.values())
-        if not total or corr_x == 0:
-            continue
-        p_star = corr_x / total
-        prior = beta_prior([x_all[k] / n_all[k] for k in by_loc if n_all[k] >= 2], p_star)
-        for lid, _ in locations:
-            x, n = x_all[lid], n_all[lid]
-            if n < MIN_LOCATION_CRASHES or x < MIN_TARGET_CRASHES or x / n <= p_star:
+        for kind in ("intersection", "segment"):
+            pop = [lid for lid, _ in locations if kind_of(lid) == kind]
+            ref_x, ref_n = sum(x_all[k] for k in pop), sum(n_all[k] for k in pop)
+            if not ref_n or ref_x == 0:
                 continue
-            if prior:
-                prob, method = 1.0 - betainc(prior[0] + x, prior[1] + n - x, p_star), "beta"
-            else:
-                prob, method = 1.0 - binom_sf(x, n, p_star), "binomial"
-            if prob < PROB_MODERATE:
-                continue
-            share, corr = profile_mod.pct(x, n), profile_mod.pct(corr_x, total)
-            key = f"{lid}~{t['key']}"
-            rows.append(profile_mod._row(
-                key, f"{label[lid]} · {t['noun'].lower()}", location=label[lid], crash_type=t["noun"],
-                target_crashes=x, location_crashes=n, share_pct=share, corridor_target=corr_x,
-                corridor_crashes=total, corridor_share_pct=corr, excess_pct=round(share - corr, 1),
-                probability=min(round(prob, 2), 0.99), strength="Strong" if prob >= PROB_STRONG else "Moderate",
-                method="Beta prior from corridor locations" if method == "beta" else "Binomial test vs corridor share"))
-            signals.append({"row": key, "location_id": lid, "location": label[lid], "target": t["key"],
-                            "noun": t["noun"], "pattern": t["pattern"], "filter": {"location_id": lid, **t["filter"]},
-                            "probability": prob, "excess": share - corr, "method": method})
-    signals.sort(key=lambda s: (-s["probability"], -s["excess"], s["row"]))
+            p_star = ref_x / ref_n
+            prior = beta_prior([(x_all[k], n_all[k]) for k in pop], p_star)
+            for lid in pop:
+                x, n = x_all[lid], n_all[lid]
+                if n < MIN_LOCATION_CRASHES or x < MIN_TARGET_CRASHES or x / n <= p_star:
+                    continue
+                if prior:
+                    prob, method = 1.0 - betainc(prior[0] + x, prior[1] + n - x, p_star), "beta"
+                else:
+                    prob, method = 1.0 - binom_sf(x, n, p_star), "binomial"
+                if prob < PROB_MODERATE:
+                    continue
+                share, ref = profile_mod.pct(x, n), profile_mod.pct(ref_x, ref_n)
+                key = f"{lid}~{t['key']}"
+                rows.append(profile_mod._row(
+                    key, f"{label[lid]} · {t['noun'].lower()}", location=label[lid], crash_type=t["noun"],
+                    reference=f"corridor {PLURAL[kind]}", target_crashes=x, location_crashes=n, share_pct=share,
+                    reference_share_pct=ref, excess_pct=round(share - ref, 1),
+                    probability=min(round(prob, 2), 0.99), strength="Strong" if prob >= PROB_STRONG else "Moderate",
+                    method=("HSM excess proportion (beta prior from reference sites)" if method == "beta"
+                            else "Binomial test vs reference share (a confidence, not a probability of excess)"),
+                    reference_target=ref_x, reference_crashes=ref_n))
+                signals.append({"row": key, "location_id": lid, "location": label[lid], "target": t["key"],
+                                "noun": t["noun"], "pattern": t["pattern"], "kind": kind,
+                                "filter": {"location_id": lid, **t["filter"]},
+                                "probability": prob, "excess": share - ref, "method": method})
+    signals.sort(key=lambda s: (-s["excess"], -s["probability"], s["row"]))   # HSM: rank passing sites by excess
     per_loc, kept = Counter(), []
     for s in signals:
         if per_loc[s["location_id"]] < MAX_PER_LOCATION and len(kept) < MAX_SIGNALS:
@@ -165,10 +190,11 @@ def screen(placed: list[dict], locations: list[tuple[str, str]]) -> dict:
     order = {s["row"]: i for i, s in enumerate(signals)}
     rows.sort(key=lambda r: order[r["key"]])
     table = profile_mod._table("T12", "Over-represented crash types (excess-proportion screen)", [
-        ("location", "Location"), ("crash_type", "Crash type"), ("target_crashes", "Crashes of this type"),
-        ("location_crashes", "All crashes here"), ("share_pct", "Share here %"),
-        ("corridor_share_pct", "Corridor share %"), ("excess_pct", "Excess (points)"),
-        ("probability", "P(share > corridor), max 0.99"), ("strength", "Strength"), ("method", "Method"),
-        ("corridor_target", "Corridor crashes of this type"), ("corridor_crashes", "Corridor crashes")],
+        ("location", "Location"), ("crash_type", "Crash type"), ("reference", "Compared with"),
+        ("target_crashes", "Crashes of this type"), ("location_crashes", "All crashes here"),
+        ("share_pct", "Share here %"), ("reference_share_pct", "Reference share %"), ("excess_pct", "Excess (points)"),
+        ("probability", "P(share > reference) or binomial confidence, max 0.99"), ("strength", "Strength"),
+        ("method", "Method"), ("reference_target", "Reference crashes of this type"),
+        ("reference_crashes", "Reference crashes")],
         rows, [c for cs in by_loc.values() for c in cs])
     return {"table": table, "signals": kept}

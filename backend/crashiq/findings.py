@@ -237,6 +237,10 @@ def _num(v: float) -> str:
     return str(int(v)) if float(v).is_integer() else f"{v:.1f}"
 
 
+def prof_total(prof: dict):
+    return profile_mod.cell(prof["tables"], "T1/crashes/value")
+
+
 def screen_findings(prof: dict, tables: list[dict]) -> list[Finding]:
     """C7 → findings, written by code from T12. Every number cites its T12 cell; the validator still checks them."""
     t12 = next(t for t in tables if t["id"] == "T12")
@@ -248,8 +252,8 @@ def screen_findings(prof: dict, tables: list[dict]) -> list[Finding]:
         entry = lib["entries"].get(sg["pattern"])
         text = (f"{sg['noun']} are over-represented at {sg['location']}: {v['target_crashes']} of "
                 f"{v['location_crashes']} crashes here ({_num(v['share_pct'])}%) vs "
-                f"{_num(v['corridor_share_pct'])}% corridor-wide.")
-        cells = ("target_crashes", "location_crashes", "share_pct", "corridor_share_pct")
+                f"{_num(v['reference_share_pct'])}% across the {v['reference']}.")
+        cells = ("target_crashes", "location_crashes", "share_pct", "reference_share_pct")
         out.append(Finding(
             id="c7-" + signals_mod.slug(sg["row"]), location_id=sg["location_id"], text=text,
             title=f"{sg['noun']} over-represented at {sg['location']}",
@@ -257,8 +261,9 @@ def screen_findings(prof: dict, tables: list[dict]) -> list[Finding]:
             pattern_ref=entry["ref"] if entry else None,
             evidence_refs=Evidence(tables=["T12"], records=RecordFilter(**sg["filter"])), source="screen",
             meta={"strength": v["strength"], "probability": v["probability"], "method": v["method"],
-                  "excess_pct": v["excess_pct"], "corridor_crashes": v["corridor_crashes"], "pattern": sg["pattern"], "location": sg["location"],
-                  "kind": "segment" if sg["location_id"].startswith("seg") else "intersection",
+                  "excess_pct": v["excess_pct"], "reference": v["reference"],
+                  "reference_crashes": v["reference_crashes"], "corridor_crashes": prof_total(prof), "pattern": sg["pattern"], "location": sg["location"],
+                  "kind": sg["kind"],
                   "library_status": lib["status"] if entry else None}))
     return out
 
