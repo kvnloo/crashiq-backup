@@ -216,6 +216,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     for s in net["segments"]:
         order.append(("segment", s["id"], (s["from_station_ft"] + s["to_station_ft"]) / 2))
     order.sort(key=lambda t: t[2])
+    # Volumes as the engineer entered them: daily AADT, or peak-hour counts converted with the K factor
+    peak = study.get("volume_basis") == "peak_hour"
+    kf = study.get("k_factor") or 0.10
+    daily = (lambda v: v / kf if v is not None else None) if peak else (lambda v: v)
     rates_any = False
     loc_rows = []
     expo: dict[str, tuple[str, int, float | None, float | None]] = {}   # id -> (kind, crashes, exposure, rate)
@@ -227,16 +231,19 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                 "crashes_per_year": r2(k["crashes"] / years) if years else None}
         if kind == "segment":
             s = seg_by[lid]
-            rate = segment_rate(k["crashes"], years, s.get("aadt"), s["length_mi"])
-            expo[lid] = (kind, k["crashes"], exposure(kind, years, s.get("aadt"), s["length_mi"]), rate)
+            seg_aadt = daily(s.get("aadt"))
+            rate = segment_rate(k["crashes"], years, seg_aadt, s["length_mi"])
+            expo[lid] = (kind, k["crashes"], exposure(kind, years, seg_aadt, s["length_mi"]), rate)
             vals.update(length_mi=round(s["length_mi"], 3),
                         crashes_per_mi_yr=r2(k["crashes"] / s["length_mi"] / years) if years and s["length_mi"] else None,
-                        aadt=s.get("aadt"), rate=r2(rate), rate_unit="per 100M VMT" if rate is not None else None)
+                        aadt=round(seg_aadt) if seg_aadt is not None else None, rate=r2(rate),
+                        rate_unit="per 100M VMT" if rate is not None else None)
             label = s["name"]
         else:
             it = names[lid]
-            rate = intersection_rate(k["crashes"], years, it.get("major_aadt"), it.get("minor_aadt"), it.get("legs"))
-            tev = entering_volume(it.get("major_aadt"), it.get("minor_aadt"), it.get("legs"))
+            maj, mnr = daily(it.get("major_aadt")), daily(it.get("minor_aadt"))
+            rate = intersection_rate(k["crashes"], years, maj, mnr, it.get("legs"))
+            tev = entering_volume(maj, mnr, it.get("legs"))
             expo[lid] = (kind, k["crashes"], exposure(kind, years, tev), rate)
             vals.update(length_mi=None, crashes_per_mi_yr=None, control=it["control"], rate=r2(rate),
                         rate_unit="per MEV" if rate is not None else None)
@@ -298,6 +305,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                         "text": f"CCRS has no queryable data for {', '.join(map(str, years_missing))}; those years are not in the profile."})
     if not rates_any:
         caveats.append({"key": "rates_not_computed", "text": "Crash rates were not computed (no AADT entered)."})
+    elif peak:
+        caveats.append({"key": "aadt_from_peak_hour", "k_factor": kf,
+                        "text": f"AADT was estimated from peak-hour counts (AADT = peak-hour volume / K, K = {kf:.0%})."})
     for kind, c in critical.items():
         if 0 < c["sites"] < CRITICAL_MIN_SITES:
             caveats.append({"key": f"critical_{kind}", "text": f"Critical rates need AADT at {CRITICAL_MIN_SITES} or more "

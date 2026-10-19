@@ -126,6 +126,11 @@ MIGRATIONS: list[str] = [
     ALTER TABLE intersection ADD COLUMN legs INTEGER;
     ALTER TABLE study ADD COLUMN include_freeway INTEGER NOT NULL DEFAULT 0;
     """,
+    # 9 — volumes entered as peak-hour counts, converted to AADT with a K factor (user, 2026-10-18: 10% typical)
+    """
+    ALTER TABLE study ADD COLUMN volume_basis TEXT NOT NULL DEFAULT 'aadt';
+    ALTER TABLE study ADD COLUMN k_factor REAL NOT NULL DEFAULT 0.10;
+    """,
 ]
 
 

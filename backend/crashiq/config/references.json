@@ -66,6 +66,11 @@
       "title": "Road Safety Manual, Appendix 10.2: procedures and examples (critical rate K values)",
       "publisher": "PIARC",
       "url": "https://roadsafety.piarc.org/en/planning-design-operation/appendices/appx-102-methods-cases"
+    },
+    "ct_kd": {
+      "title": "Peak Hour Definitions: K and D Factors (Traffic Census Program)",
+      "publisher": "Caltrans",
+      "url": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/peak-hour/f0017710-peak-hour-definitions-k-and-d-factors.pdf"
     }
   },
   "methods": [
@@ -171,6 +176,17 @@
         [
           "ct_lrsm",
           "Sec. 3.1, p. 24"
+        ]
+      ]
+    },
+    {
+      "topic": "Traffic volumes",
+      "status": "follows",
+      "what": "Entered by the engineer for the project (no automatic source). Either daily two-way AADT, or two-way peak-hour volumes converted with a K factor: AADT = peak-hour volume / K, with K = 10% by default (typical; the engineer can set 4-25%). The report states which basis and K were used.",
+      "cite": [
+        [
+          "ct_kd",
+          "K = percentage of AADT during the peak hour, both directions"
         ]
       ]
     },

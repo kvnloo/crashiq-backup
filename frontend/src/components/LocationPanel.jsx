@@ -38,12 +38,12 @@ function AadtInput({ label, short, value, onCommit }) {
   )
 }
 
-function SegmentRow({ seg, rates, onSegmentAadt }) {
+function SegmentRow({ seg, rates, onSegmentAadt, peak }) {
   return (
     <div className="loc seg">
       <span aria-hidden="true" />
       <span className="mono">{fmtMi(seg.length_mi)}</span>
-      {rates ? <AadtInput key={`${seg.id}-${seg.aadt}`} label={`Segment AADT, ${seg.name}`} short="AADT" value={seg.aadt}
+      {rates ? <AadtInput key={`${seg.id}-${seg.aadt}`} label={`Segment ${peak ? 'peak-hour volume' : 'AADT'}, ${seg.name}`} short={peak ? 'Peak hr' : 'AADT'} value={seg.aadt}
         onCommit={(a) => onSegmentAadt(seg.id, a)} /> : <span />}
     </div>
   )
@@ -57,6 +57,9 @@ export default function LocationPanel({
   const [editingId, setEditingId] = useState(null)
   const anyAadt = Boolean(net?.segments?.some((s) => s.aadt != null) || net?.intersections?.some((i) => i.major_aadt != null))
   const [rates, setRates] = useState(anyAadt)
+  const peak = study?.volume_basis === 'peak_hour'
+  const vol = peak ? 'peak-hour volume' : 'AADT'
+  const volShort = peak ? 'peak hr' : 'AADT'
   const [radius, setRadius] = useState(study?.radius_ft ?? 250)
   const [buffer, setBuffer] = useState(study?.buffer_ft ?? 100)
   const listRef = useRef(null)
@@ -113,7 +116,7 @@ export default function LocationPanel({
                       <span className="pin end">{r.label}</span><span className="muted">{r.name}</span><span />
                     </div>
                   )
-                  if (r.kind === 'seg') return <SegmentRow key={`s-${r.seg.id}-${k}`} seg={r.seg} rates={rates} onSegmentAadt={onSegmentAadt} />
+                  if (r.kind === 'seg') return <SegmentRow key={`s-${r.seg.id}-${k}`} seg={r.seg} rates={rates} peak={peak} onSegmentAadt={onSegmentAadt} />
                   const it = r.it
                   return (
                     <div key={it.id} data-id={it.id} role="listitem"
@@ -130,9 +133,9 @@ export default function LocationPanel({
                         </div>
                         {rates && it.is_study ? (
                           <div className="aadts">
-                            <AadtInput key={`ma-${it.id}-${it.major_aadt}`} label={`Major road two-way AADT, ${it.name}`} short="Major AADT" value={it.major_aadt}
+                            <AadtInput key={`ma-${it.id}-${it.major_aadt}`} label={`Major road two-way ${vol}, ${it.name}`} short={`Major ${volShort}`} value={it.major_aadt}
                               onCommit={(a) => onIntersectionAadt(it.id, { major_aadt: a })} />
-                            <AadtInput key={`mi-${it.id}-${it.minor_aadt}`} label={`Minor road two-way AADT, ${it.name}`} short="Minor AADT" value={it.minor_aadt}
+                            <AadtInput key={`mi-${it.id}-${it.minor_aadt}`} label={`Minor road two-way ${vol}, ${it.name}`} short={`Minor ${volShort}`} value={it.minor_aadt}
                               onCommit={(a) => onIntersectionAadt(it.id, { minor_aadt: a })} />
                             <label className="aadt">
                               <span>Legs</span>
@@ -181,6 +184,25 @@ export default function LocationPanel({
                   <input type="checkbox" checked={rates} onChange={(e) => setRates(e.target.checked)} />
                   <span>Enter AADT to compute rates</span>
                 </label>
+                {rates ? (
+                  <div className="field vbasis">
+                    <label htmlFor="vbasis">Volumes entered as</label>
+                    <div className="row">
+                      <select id="vbasis" className="input" value={study?.volume_basis || 'aadt'}
+                        onChange={(e) => onSetting({ volume_basis: e.target.value })}>
+                        <option value="aadt">Daily (AADT)</option>
+                        <option value="peak_hour">Peak hour (converted with K)</option>
+                      </select>
+                      {peak ? (
+                        <label className="kf">K
+                          <input className="input" type="number" min="4" max="25" step="0.5" aria-label="K factor, percent of daily traffic"
+                            defaultValue={Math.round((study?.k_factor ?? 0.1) * 1000) / 10}
+                            onBlur={(e) => { const v = Number(e.target.value) / 100; if (v && v !== study?.k_factor) onSetting({ k_factor: v }) }} />%
+                        </label>
+                      ) : null}
+                    </div>
+                  </div>
+                ) : null}
                 <label className="check">
                   <input type="checkbox" checked={Boolean(study?.include_freeway)}
                     onChange={(e) => onSetting({ include_freeway: e.target.checked })} />
