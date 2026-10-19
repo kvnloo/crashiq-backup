@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import json
 import re
+from datetime import datetime, timezone
 from functools import lru_cache
 from pathlib import Path
 import uuid
@@ -290,15 +291,43 @@ def schema() -> dict:
 
 @router.post("/studies/{sid}/findings")
 def post_findings(sid: str, body: list[Finding], request: Request) -> dict:
-    return submit(request.app.state.db, sid, body)
+    """The analyst's entry point. The server owns status, source and id: nothing submitted here can arrive
+    accepted, pass as code-written, or overwrite an existing finding. Only the user's PATCH accepts."""
+    db = request.app.state.db
+    taken = {r["id"] for r in db.query("SELECT id FROM finding WHERE study_id = ?", (sid,))}
+    for f in body:
+        f.status, f.source = "proposed", "analyst"
+        if f.id.startswith("c7-") or f.id in taken:
+            f.id = "f-" + uuid.uuid4().hex[:8]
+        f.meta = {k: v for k, v in f.meta.items() if k not in ("decided_at", "decided_status")}
+    return submit(db, sid, body)
+
+
+def check_stored(db, sid: str) -> list[dict]:
+    """Every stored finding re-validated against the data as it is now. A finding whose numbers no longer match
+    (radius, window or corridor changed) is marked stale and is never exported."""
+    rows = db.query("SELECT body FROM finding WHERE study_id = ? ORDER BY rowid", (sid,))
+    if not rows:
+        return []
+    try:
+        prof, tables, placed = context(db, sid)
+        window = (prof["window"]["from_year"], prof["window"]["to_year"])
+    except HTTPException:
+        return [{**json.loads(r["body"]), "stale": True, "stale_reasons": ["the study's crashes need re-pulling"]}
+                for r in rows]
+    out = []
+    for r in rows:
+        f = json.loads(r["body"])
+        reasons = validate(Finding(**f), tables, placed, window)
+        out.append({**f, "stale": bool(reasons), "stale_reasons": reasons})
+    return out
 
 
 @router.get("/studies/{sid}/findings")
 def get_findings(sid: str, request: Request) -> dict:
     db = request.app.state.db
-    rows = db.query("SELECT body FROM finding WHERE study_id = ? ORDER BY rowid", (sid,))
     rej = db.one("SELECT COUNT(*) AS n FROM finding_rejected WHERE study_id = ?", (sid,))["n"]
-    return {"findings": [json.loads(r["body"]) for r in rows], "rejected_count": rej}
+    return {"findings": check_stored(db, sid), "rejected_count": rej}
 
 
 @router.post("/studies/{sid}/findings/screen")
@@ -330,6 +359,14 @@ def set_status(sid: str, fid: str, request: Request, status: Literal["accepted",
     r = db.one("SELECT body FROM finding WHERE study_id = ? AND id = ?", (sid, fid))
     if not r:
         raise HTTPException(404, "Finding not found.")
-    body = {**json.loads(r["body"]), "status": status}
+    body = json.loads(r["body"])
+    if status == "accepted":
+        prof, tables, placed = context(db, sid)
+        reasons = validate(Finding(**body), tables, placed, (prof["window"]["from_year"], prof["window"]["to_year"]))
+        if reasons:
+            raise HTTPException(409, "This finding no longer matches the data (the study changed). Re-run the screen.")
+    meta = {**(body.get("meta") or {}), "decided_status": status,
+            "decided_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+    body = {**body, "status": status, "meta": meta}
     db.execute("UPDATE finding SET body = ?, status = ? WHERE study_id = ? AND id = ?", (json.dumps(body), status, sid, fid))
-    return body
+    return {**body, "stale": False, "stale_reasons": []}

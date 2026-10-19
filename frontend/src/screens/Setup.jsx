@@ -22,8 +22,8 @@ export default function Setup() {
   return (
     <section className="setup" aria-label="Setup">
       <div className="intro">
-        <h1 className="h1">What&rsquo;s going wrong on this corridor?</h1>
-        <p className="muted">Draw a corridor. CrashIQ pulls every reported crash and shows you the patterns, traced back to the records.</p>
+        <h1 className="h1">Where are crashes concentrating on this corridor?</h1>
+        <p className="muted">Draw a corridor. CrashIQ pulls the police-reported crashes on it (CCRS), places each one, and shows the patterns, every number traced back to the records.</p>
       </div>
       <SignalFlowHero />
       {meta && !waitingForStudy

@@ -117,7 +117,7 @@ def test_api_assignment_follows_radius(client):
     a250 = client.get(f"/api/studies/{sid}/assignment").json()
     client.patch(f"/api/studies/{sid}", json={"radius_ft": 150})
     a150 = client.get(f"/api/studies/{sid}/assignment").json()
-    assert a250["counts"]["total"] == a150["counts"]["total"] == 124
-    assert a250["counts"]["unmatched"] == 3
+    assert a250["counts"]["total"] == a150["counts"]["total"] == 125
+    assert a250["counts"]["unmatched"] == 4
     assert a150["counts"]["intersection"] < a250["counts"]["intersection"]
     json.dumps(a150)

@@ -101,8 +101,12 @@ function Detail({ f, i, lib, records, corridor, study, onDecide }) {
           )}
         </div>
       </div>
+      {f.stale && (
+        <div className="err" role="alert">This finding no longer matches the data (the study changed since it was written), so it
+          can’t be accepted and won’t be exported.</div>
+      )}
       <div className="decide">
-        <button type="button" className="sf-btn sf-btn--go" disabled={f.status === 'accepted'} onClick={() => onDecide(f.id, 'accepted')}>✓ Accept</button>
+        <button type="button" className="sf-btn sf-btn--go" disabled={f.status === 'accepted' || f.stale} onClick={() => onDecide(f.id, 'accepted')}>✓ Accept</button>
         <button type="button" className="sf-btn sf-btn--stop" disabled={f.status === 'rejected'} onClick={() => onDecide(f.id, 'rejected')}>✗ Reject</button>
         <span className="sp" />
         <span className="muted mono small">validator: all numbers traced ✓</span>
@@ -175,7 +179,8 @@ export default function Findings() {
           <button key={f.id} type="button" className={`fcard${f === cur ? ' sel' : ''}`} onClick={() => setSel(i)} aria-pressed={f === cur}>
             <span className="loc-l">{f.meta?.location || f.location_id}</span>
             <span className="tt">{f.title || f.text}</span>
-            <span className="meta"><Status s={f.status} /><span>{f.meta?.strength}</span></span>
+            <span className="meta"><Status s={f.status} /><span>{f.meta?.strength}</span>
+              {f.stale ? <span className="st rej" title={(f.stale_reasons || []).join('; ')}>Stale</span> : null}</span>
           </button>
         ))}
         <p className="muted small">Findings are suggestions. Only accepted findings go in the report.</p>

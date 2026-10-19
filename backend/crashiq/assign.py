@@ -38,6 +38,9 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float) -
     out = []
     for c in crashes:
         base = {"crash_id": c["crash_id"], "location_provenance": c.get("location_source", "gps")}
+        if c.get("is_freeway"):     # CHP's IsFreeway: mainline/ramp crashes under or beside an arterial study
+            out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None, "rule": "freeway"})
+            continue
         if c.get("lat") is None or c.get("lon") is None:
             out.append({**base, "kind": "unmatched", "location_id": None, "distance_ft": None, "rule": "no_coordinates"})
             continue
@@ -85,6 +88,9 @@ def for_study(db, sid: str) -> tuple[dict, dict, dict, dict]:
     pull = crashes_mod.get_cached(db, sid)
     if pull is None:
         raise HTTPException(409, "Pull the crashes first.")
+    if pull.get("cache_key") != crashes_mod.cache_key(study, net):
+        # the window, corridor or radius changed since this pull: never compute from the old crashes
+        raise HTTPException(409, "The study changed since the crashes were pulled. Open Crash profile to pull them again.")
     return study, net, pull, assign(pull["crashes"], net, study["radius_ft"], study["buffer_ft"])
 
 

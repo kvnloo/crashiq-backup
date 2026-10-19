@@ -9,6 +9,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import math
+import re
 import time
 import urllib.error
 import urllib.parse
@@ -225,6 +227,54 @@ def table_resources(package: dict) -> dict[str, dict[int, str]]:
     return out
 
 
+# CHP stores many description fields with their code letter ("C-DARK-STREET LIGHTS", "A - Clear", "F – Felony")
+# and keeps its own spellings ("VEHICLE/PEDESTRAIN"). Normalize once here so every table and test sees one form.
+_CODE_PREFIX = re.compile(r"^\s*[A-Z]\s*[-\u2013\u2014]\s*(?=\S)")
+_SPELLING = {"VEHICLE/PEDESTRAIN": "VEHICLE/PEDESTRIAN", "PEDESTRAIN": "PEDESTRIAN"}
+CODED_FIELDS = ("collision_type", "lighting", "weather", "surface", "involved_with", "ped_action", "hit_run")
+
+
+def clean_coded(v):
+    if v is None:
+        return None
+    t = _CODE_PREFIX.sub("", str(v)).strip()
+    return _SPELLING.get(t.upper(), t) or None
+
+
+# California's extent, with a small margin: anything outside is a bad coordinate, not a location.
+CA_LAT, CA_LON = (32.4, 42.1), (-124.6, -114.0)
+
+
+def plausible(lat, lon) -> bool:
+    return (lat is not None and lon is not None and not math.isnan(lat) and not math.isnan(lon)
+            and CA_LAT[0] <= lat <= CA_LAT[1] and CA_LON[0] <= lon <= CA_LON[1])
+
+
+_ISO = re.compile(r"^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{1,2}):(\d{2}))?")
+_US = re.compile(r"^(\d{1,2})/(\d{1,2})/(\d{4})(?:\s+(\d{1,2}):(\d{2})(?::\d{2})?\s*([AP]M)?)?", re.I)
+
+
+def parse_dt(raw) -> tuple[str | None, int | None, int | None]:
+    """(ISO date, year, hour or None) from 'YYYY-MM-DD[ T]HH:MM…' or 'MM/DD/YYYY[ HH:MM[:SS] [AM|PM]]'.
+    (None, None, None) when the text isn't a date we recognize; the caller counts those."""
+    t = str(raw or "").strip()
+    m = _ISO.match(t)
+    if m:
+        y, mo, d = int(m[1]), int(m[2]), int(m[3])
+        h = int(m[4]) if m[4] else None
+    else:
+        m = _US.match(t)
+        if not m:
+            return None, None, None
+        mo, d, y = int(m[1]), int(m[2]), int(m[3])
+        h = int(m[4]) if m[4] else None
+        if h is not None and m[6]:
+            h = h % 12 + (12 if m[6].upper() == "PM" else 0)
+    if not (1 <= mo <= 12 and 1 <= d <= 31 and 1990 <= y <= 2100) or (h is not None and not 0 <= h <= 23):
+        return None, None, None
+    return f"{y:04d}-{mo:02d}-{d:02d}", y, h
+
+
 def q(col: str) -> str:
     return '"' + col.replace('"', '""') + '"'
 
@@ -248,42 +298,38 @@ def _num(v) -> float | None:
         return None
 
 
-def _hour(dt: str, ctime) -> int | None:
+def _hour(dt_hour: int | None, ctime) -> int | None:
     t = str(ctime or "").strip()
     if t.isdigit() and len(t) <= 4:
         t = t.zfill(4)
         h = int(t[:2])
         return h if 0 <= h <= 23 else None
-    if dt and len(dt) >= 13 and dt[10] in "T ":
-        try:
-            return int(dt[11:13])
-        except ValueError:
-            return None
-    return None
+    return dt_hour
 
 
 def crash_record(raw: dict, cols: dict[str, dict]) -> dict:
     """One CCRS Crashes row -> the shared crash shape (no severity yet; that needs IWP)."""
     g = lambda k: raw.get(cols[k]["id"]) if k in cols else None
-    dt = str(g("datetime") or "")
+    date, year, dt_hour = parse_dt(g("datetime"))
     lat, lon = _num(g("lat")), _num(g("lon"))
-    has = lat is not None and lon is not None and lat != 0 and lon != 0
+    has = plausible(lat, lon)
     dist, unit = _num(g("sec_distance")), str(g("sec_unit") or "F").strip().upper()[:1]
     offset = dist * _UNIT_FT.get(unit, 1.0) if dist is not None else None
     fixed = offset is not None and unit == "M" and dist > 2
     if fixed:                                                 # feet typed as miles (2026-10-18 cleaning rule)
         offset = dist
     surface = g("surface")
-    surface = SURFACE_CODES.get(str(surface).strip(), surface) if surface is not None else None
+    surface = SURFACE_CODES.get(str(surface).strip()[:1], surface) if surface is not None and len(str(surface).strip()) == 1 else surface
     s = lambda v: (str(v).strip() or None) if v is not None else None
     return {
         "crash_id": str(g("collision_id")),
         "report_version": int(_num(g("report_version")) or 0),
         "preliminary": _truthy(g("is_preliminary")),
         "deleted": _truthy(g("is_deleted")),
-        "date": dt[:10],
-        "year": int(dt[:4]) if dt[:4].isdigit() else None,
-        "hour": _hour(dt, g("collision_time")),
+        "date": date or "",
+        "year": year,
+        "hour": _hour(dt_hour, g("collision_time")),
+        "bad_coords": lat is not None and lon is not None and (lat, lon) != (0, 0) and not has,
         "day_of_week": s(g("day_of_week")),
         "lat": lat if has else None,
         "lon": lon if has else None,
@@ -294,17 +340,18 @@ def crash_record(raw: dict, cols: dict[str, dict]) -> dict:
         "offset_fixed": fixed,
         "city": s(g("city_name")) or s(g("city_code")),
         "city_code": s(g("city_code")),
-        "collision_type": s(g("collision_type")),
+        "county_code": s(g("county_code")),
+        "collision_type": clean_coded(s(g("collision_type"))),
         "killed": int(_num(g("killed")) or 0),
         "injured": int(_num(g("injured")) or 0),
-        "lighting": s(g("lighting")),
-        "weather": s(g("weather")),
-        "surface": s(surface),
+        "lighting": clean_coded(s(g("lighting"))),
+        "weather": clean_coded(s(g("weather"))),
+        "surface": clean_coded(s(surface)),
         "pcf": s(g("pcf")),
         "pcf_category": s(g("pcf_category")),
-        "involved_with": s(g("involved_with")),
-        "ped_action": s(g("ped_action")),
-        "hit_run": s(g("hit_run")),
+        "involved_with": clean_coded(s(g("involved_with"))),
+        "ped_action": clean_coded(s(g("ped_action"))),
+        "hit_run": clean_coded(s(g("hit_run"))),
         "is_freeway": _truthy(g("is_freeway")),
     }
 
@@ -312,7 +359,8 @@ def crash_record(raw: dict, cols: dict[str, dict]) -> dict:
 def party_record(raw: dict, cols: dict[str, dict]) -> dict:
     g = lambda k: raw.get(cols[k]["id"]) if k in cols else None
     s = lambda v: (str(v).strip() or None) if v is not None else None
-    return {"party_type": (s(g("party_type")) or "").upper() or None, "at_fault": _truthy(g("at_fault")),
+    return {"party_number": s(g("party_number")),
+            "party_type": (s(g("party_type")) or "").upper() or None, "at_fault": _truthy(g("at_fault")),
             "movement": s(g("movement")), "vehicle_type": s(g("vehicle_type")), "age": s(g("age")),
             "direction": s(g("direction"))}
 
