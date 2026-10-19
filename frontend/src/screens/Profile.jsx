@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProfileMap from '../components/ProfileMap'
+import { locationPoints } from '../lib/mapcats'
 import { api, errorText } from '../lib/api'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
@@ -152,6 +153,13 @@ function Drill({ row, data, onClose }) {
   )
 }
 
+// Crashes the profile counts (placed at a study location), with their location id.
+function placedCrashes(crashes, asg) {
+  const at = new Map((asg?.assignments || []).filter((a) => a.kind === 'intersection' || a.kind === 'segment')
+    .map((a) => [a.crash_id, a.location_id]))
+  return crashes.filter((c) => at.has(c.crash_id)).map((c) => ({ ...c, location_id: at.get(c.crash_id) }))
+}
+
 // Step 3: crash profile dashboard. Every number shown comes from the C6 API response.
 export default function Profile() {
   const { studyId } = useParams()
@@ -168,8 +176,9 @@ export default function Profile() {
         if (!net.line) { if (alive) setState({ phase: 'nocorridor' }); return }
         if (alive) setState({ phase: 'pulling', line: net.line })
         const pull = await api(`/studies/${studyId}/crashes/pull`, { method: 'POST' })
-        const [p, cr] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`)])
-        if (alive) setState({ phase: 'ready', line: net.line, pull, profile: p, crashes: cr.crashes })
+        const [p, cr, asg] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`),
+          api(`/studies/${studyId}/assignment`)])
+        if (alive) setState({ phase: 'ready', line: net.line, net, pull, profile: p, crashes: placedCrashes(cr.crashes, asg) })
       } catch (e) {
         if (alive) setState((s) => ({ ...s, phase: 'error', error: errorText(e) }))
       }
@@ -181,8 +190,9 @@ export default function Profile() {
     setRefreshing(true)
     try {
       const pull = await api(`/studies/${studyId}/crashes/pull?refresh=true`, { method: 'POST' })
-      const [p, cr] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`)])
-      setState((s) => ({ ...s, pull, profile: p, crashes: cr.crashes }))
+      const [p, cr, asg] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`),
+        api(`/studies/${studyId}/assignment`)])
+      setState((s) => ({ ...s, pull, profile: p, crashes: placedCrashes(cr.crashes, asg) }))
       setDrill(null)
     } catch (e) {
       setState((s) => ({ ...s, refreshError: errorText(e) }))
@@ -195,19 +205,14 @@ export default function Profile() {
     setDrill({ row, data })
   }
 
+  const locs = useMemo(() => locationPoints(state.net), [state.net])
   const highlight = useMemo(() => (drill?.data ? new Set(drill.data.crashes.map((c) => c.crash_id)) : null), [drill])
   const p = state.profile
 
   return (
     <section className="profile" aria-label="Crash profile">
       <div className="mapcol">
-        <ProfileMap line={state.line} crashes={state.crashes || []} highlight={highlight} />
-        <div className="float map-legend legend" aria-label="Severity legend">
-          <span><i style={{ background: 'var(--sev-k)' }} />Fatal</span>
-          <span><i style={{ background: 'var(--sev-a)' }} />Serious injury</span>
-          <span><i style={{ background: 'var(--sev-i)' }} />Other injury</span>
-          <span><i style={{ background: 'var(--sev-p)' }} />Property damage</span>
-        </div>
+        <ProfileMap line={state.line} crashes={state.crashes || []} locations={locs} highlight={highlight} />
       </div>
       <div className="datacol">
         {state.phase === 'nocorridor' && (

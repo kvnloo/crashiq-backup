@@ -24,6 +24,7 @@ with TestClient(create_app(s, Database(":memory:"))) as c:
     crashes = c.get(f"/api/studies/{sid}/crashes").json()
     first = prof["tables"][1]["rows"][0]["key"]
     loc = c.get(f"/api/studies/{sid}/profile/locations/{first}").json()
-    for name, obj in {"network": net, "pull": pull, "profile": prof, "crashes": crashes, "location": loc}.items():
+    asg = c.get(f"/api/studies/{sid}/assignment").json()
+    for name, obj in {"network": net, "pull": pull, "profile": prof, "crashes": crashes, "location": loc, "assignment": asg}.items():
         (OUT / f"{name}.json").write_text(json.dumps(obj))
 print("wrote", sorted(p.name for p in OUT.glob("*.json")))

@@ -3,7 +3,7 @@
 .profile .mapcol { position: relative; border-right: 1px solid var(--line); min-height: 320px; }
 .profile .mapcol .ciq-map { position: absolute; inset: 0; }
 .profile .datacol { overflow: auto; padding: 22px 24px 40px; display: grid; gap: 24px; align-content: start; grid-auto-rows: max-content; min-width: 0; }
-.map-legend { left: 16px; bottom: 16px; padding: 10px 12px; }
+
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 11px var(--font-mono); color: var(--muted); }
 .legend span { display: inline-flex; gap: 6px; align-items: center; }
 .legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
@@ -55,10 +55,50 @@
 @media (max-width: 920px) {
   .profile { grid-template-columns: minmax(0, 1fr); height: auto; }
   .profile .datacol { grid-template-columns: minmax(0, 1fr); padding: 18px 16px 40px; }
-  .profile .mapcol { height: 50vh; }
+
 }
 @media (prefers-reduced-motion: reduce) { .bar .tr i { animation: none; } }
 .profile .sf-kpis { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 .profile .sf-kpi { padding: 12px 14px; }
 .profile .sf-kpi__value { font-size: 26px; }
 @media (max-width: 1180px) { .profile .sf-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+/* ---------- 3D crash map: view tools (top right), color-by + filter legend (bottom left) ---------- */
+.pmap { position: absolute; inset: 0; }
+.pmap .ciq-map { position: absolute; inset: 0; }
+.map-tools { right: 14px; top: 14px; display: flex; gap: 4px; padding: 4px; }
+.tbtn { min-width: 34px; height: 34px; border-radius: 7px; border: 1px solid transparent; background: none; color: var(--fg);
+  font: 700 14px var(--font-mono); cursor: pointer; display: grid; place-items: center; padding: 0 8px; }
+.tbtn:hover { background: var(--surface-2); }
+.tbtn.on { border-color: var(--line); background: var(--surface-2); color: var(--go); }
+.tbtn.compass svg { transition: transform .2s; }
+.tbtn.wide { font: 600 12px var(--font-body); }
+.map-legend2 { left: 14px; bottom: 34px; right: 14px; max-width: 640px; padding: 10px 12px; display: grid; gap: 8px; }
+.map-legend2 .seg { display: flex; gap: 2px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 2px;
+  overflow-x: auto; scrollbar-width: none; }
+.map-legend2 .seg button { flex: none; border: 0; background: none; color: var(--muted); font: 600 12px var(--font-body);
+  padding: 6px 10px; border-radius: 6px; cursor: pointer; white-space: nowrap; }
+.map-legend2 .seg button.on { background: var(--surface-2); color: var(--fg); }
+.map-legend2 .chips { display: flex; flex-wrap: wrap; gap: 6px; max-height: 92px; overflow: auto; }
+.chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line); background: var(--surface);
+  color: var(--fg); border-radius: 999px; padding: 4px 10px 4px 8px; font: 12px var(--font-body); cursor: pointer; }
+.chip i { width: 9px; height: 9px; border-radius: 50%; box-shadow: 0 0 0 2px var(--surface); }
+.chip b { font-weight: 600; color: var(--muted); font-size: 11px; }
+.chip.off { opacity: .45; text-decoration: line-through; }
+.chip.off i { background: transparent !important; box-shadow: inset 0 0 0 1.5px var(--muted); }
+.map-legend2 .foot { display: flex; gap: 10px; justify-content: space-between; align-items: center; font-size: 11px; color: var(--muted); }
+.map-legend2 .link { border: 0; background: none; color: var(--go); font: 600 12px var(--font-body); cursor: pointer; padding: 0; }
+.ciq-pop .maplibregl-popup-content { background: var(--surface); color: var(--fg); border: 1px solid var(--line); border-radius: 6px;
+  font: 12px var(--font-body); padding: 8px 10px; }
+.ciq-pop .maplibregl-popup-tip { display: none; }
+.maplibregl-ctrl-attrib { background: color-mix(in srgb, var(--surface) 80%, transparent) !important; color: var(--muted); }
+.maplibregl-ctrl-attrib a { color: var(--fg); }
+@media (max-width: 920px) {
+  .profile .mapcol { height: 72vh; }
+  .map-legend2 { left: 8px; right: 8px; bottom: 26px; padding: 8px; }
+  .map-legend2 .chips { flex-wrap: nowrap; overflow-x: auto; max-height: none; }
+  .chip { flex: none; }
+  .map-tools { right: 8px; top: 8px; }
+}
+.ciq-label { font: 600 11px var(--font-mono); color: var(--fg); background: color-mix(in srgb, var(--bg) 78%, transparent);
+  border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; white-space: nowrap; pointer-events: none; }
