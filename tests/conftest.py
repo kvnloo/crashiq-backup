@@ -38,3 +38,12 @@ def db(settings):
 def client(settings, db):
     with TestClient(create_app(settings, db)) as c:
         yield c
+
+
+@pytest.fixture(autouse=True)
+def pin_final_year(monkeypatch):
+    """The Crenshaw fixture covers 2021–2025; pin 'today' so the default window (last 5 finalized years) is 2021–2025.
+    Tests that need another date set study.today themselves."""
+    from datetime import date
+    from crashiq import study
+    monkeypatch.setattr(study, "today", lambda: date(2027, 10, 18))

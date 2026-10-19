@@ -97,7 +97,13 @@ describe('Corridor screen', () => {
     fireEvent.change(seg, { target: { value: '32000' } })
     fireEvent.blur(seg)
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH' && c.body.aadt === 32000)).toBe(true))
-    expect(screen.getAllByLabelText(/approach AADT/)).toHaveLength(6)
+    expect(screen.getAllByLabelText(/two-way AADT/)).toHaveLength(6)
+    const legs = screen.getAllByLabelText(/^Legs, /)
+    expect(legs).toHaveLength(3)
+    fireEvent.change(legs[0], { target: { value: '3' } })
+    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH' && c.body.legs === 3)).toBe(true))
+    fireEvent.click(screen.getByLabelText(/Include freeway and ramp crashes/))
+    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH' && c.body.include_freeway === true)).toBe(true))
   })
 
   it('starts from the corridor line in an imported project context', async () => {

@@ -2,35 +2,142 @@
   "status": "draft",
   "note": "Seed pattern library (C8 data). DRAFT: written from the general crash-type diagnosis lists in HSM (1st ed.) Part B, Chapter 6. Not yet reviewed or approved by the user; findings label every entry as draft until it is (CLAUDE.md: nothing is learned without user approval).",
   "entries": {
-    "type_broadside": {"title": "Right-angle (broadside) collisions", "ref": "HSM Part B, Ch. 6 diagnosis: right-angle collisions", "anim": "broadside",
-      "factors": ["Restricted sight distance", "Excessive approach speed", "Poor visibility of traffic signals", "Inadequate signal timing (yellow change / all-red)", "Red-light running"],
-      "verify": "Check signal visibility, change and clearance intervals, approach speeds and sight distance on each approach."},
-    "type_rear_end": {"title": "Rear-end collisions", "ref": "HSM Part B, Ch. 6 diagnosis: rear-end collisions", "anim": "rear_end",
-      "factors": ["Inappropriate approach speeds", "Poor visibility of signals", "Unexpected lane changes or sudden stops", "Slippery pavement", "Driveways close to the intersection", "Inadequate signal timing"],
-      "verify": "Observe queues and stopping behavior at peak; check signal visibility, timing and nearby driveways."},
-    "type_side_swipe": {"title": "Sideswipe collisions", "ref": "HSM Part B, Ch. 6 diagnosis: sideswipe collisions", "anim": "sideswipe",
-      "factors": ["Narrow lanes", "Unclear lane assignment or lane drops", "Inadequate lane-use signs and pavement markings", "Weaving to and from driveways"],
-      "verify": "Check lane widths, lane-use signs and markings, lane drops and driveway weaving on the approach."},
-    "type_head_on": {"title": "Head-on collisions", "ref": "HSM Part B, Ch. 6 diagnosis: head-on collisions", "anim": "head_on",
-      "factors": ["Inadequate pavement markings", "Narrow lanes", "Excessive speed", "No or inadequate median"],
-      "verify": "Check centerline markings, lane widths, median treatment and speeds."},
-    "type_hit_object": {"title": "Fixed-object collisions", "ref": "HSM Part B, Ch. 6 diagnosis: fixed-object collisions", "anim": "generic",
-      "factors": ["Obstruction in or near the roadway", "Inadequate lighting", "Inadequate pavement markings or delineation", "Slippery pavement"],
-      "verify": "Inventory roadside objects and clear zone; check delineation and lighting."},
-    "type_vehicle_pedestrian": {"title": "Vehicle–pedestrian collisions", "ref": "HSM Part B, Ch. 6 diagnosis: pedestrian collisions", "anim": "ped",
-      "factors": ["Limited sight distance", "Inadequate pedestrian facilities", "Inadequate signal phasing or crossing time", "Excessive speed", "Inadequate lighting"],
-      "verify": "Observe crossings; check crosswalks, signal phasing and crossing time, lighting and sight lines."},
-    "ped": {"title": "Pedestrian crashes", "ref": "HSM Part B, Ch. 6 diagnosis: pedestrian collisions", "anim": "ped",
-      "factors": ["Limited sight distance", "Inadequate pedestrian facilities", "Inadequate signal phasing or crossing time", "Excessive speed", "Inadequate lighting"],
-      "verify": "Observe crossings; check crosswalks, signal phasing and crossing time, lighting and sight lines."},
-    "bike": {"title": "Bicycle crashes", "ref": "HSM Part B, Ch. 6 diagnosis: bicycle collisions", "anim": "generic",
-      "factors": ["Limited sight distance", "Inadequate bicycle facilities", "Driveway crossings", "Excessive speed"],
-      "verify": "Check bike facilities, driveway conflicts and sight lines along the location."},
-    "dark": {"title": "Nighttime crashes", "ref": "HSM Part B, Ch. 6 diagnosis: nighttime collisions", "anim": "night",
-      "factors": ["Poor visibility or lighting", "Poor sign visibility", "Inadequate channelization or delineation", "Excessive speed", "Inadequate sight distance"],
-      "verify": "Night visit: measure lighting, check delineation, sign and marking retroreflectivity."},
-    "wet": {"title": "Wet-pavement crashes", "ref": "HSM Part B, Ch. 6 diagnosis: wet-pavement collisions", "anim": "generic",
-      "factors": ["Slippery pavement", "Inadequate drainage", "Inadequate skid resistance"],
-      "verify": "Check pavement friction, drainage and ponding locations."}
+    "type_broadside": {
+      "title": "Right-angle (broadside) collisions",
+      "ref": "HSM Part B, Ch. 6 diagnosis: right-angle collisions",
+      "anim": "broadside",
+      "factors": [
+        "Restricted sight distance",
+        "Excessive approach speed",
+        "Poor visibility of traffic signals",
+        "Inadequate signal timing (yellow change / all-red)",
+        "Red-light running"
+      ],
+      "verify": "Check signal visibility, change and clearance intervals, approach speeds and sight distance on each approach."
+    },
+    "type_rear_end": {
+      "title": "Rear-end collisions",
+      "ref": "HSM Part B, Ch. 6 diagnosis: rear-end collisions",
+      "anim": "rear_end",
+      "factors": [
+        "Inappropriate approach speeds",
+        "Poor visibility of signals",
+        "Unexpected lane changes or sudden stops",
+        "Slippery pavement",
+        "Driveways close to the intersection",
+        "Inadequate signal timing"
+      ],
+      "verify": "Observe queues and stopping behavior at peak; check signal visibility, timing and nearby driveways."
+    },
+    "type_side_swipe": {
+      "title": "Sideswipe collisions",
+      "ref": "HSM Part B, Ch. 6 diagnosis: sideswipe collisions",
+      "anim": "sideswipe",
+      "factors": [
+        "Narrow lanes",
+        "Unclear lane assignment or lane drops",
+        "Inadequate lane-use signs and pavement markings",
+        "Weaving to and from driveways"
+      ],
+      "verify": "Check lane widths, lane-use signs and markings, lane drops and driveway weaving on the approach."
+    },
+    "type_head_on": {
+      "title": "Head-on collisions",
+      "ref": "HSM Part B, Ch. 6 diagnosis: head-on collisions",
+      "anim": "head_on",
+      "factors": [
+        "Inadequate pavement markings",
+        "Narrow lanes",
+        "Excessive speed",
+        "No or inadequate median"
+      ],
+      "verify": "Check centerline markings, lane widths, median treatment and speeds."
+    },
+    "type_hit_object": {
+      "title": "Fixed-object collisions",
+      "ref": "HSM Part B, Ch. 6 diagnosis: fixed-object collisions",
+      "anim": "generic",
+      "factors": [
+        "Obstruction in or near the roadway",
+        "Inadequate lighting",
+        "Inadequate pavement markings or delineation",
+        "Slippery pavement"
+      ],
+      "verify": "Inventory roadside objects and clear zone; check delineation and lighting."
+    },
+    "type_vehicle_pedestrian": {
+      "title": "Vehicle–pedestrian collisions",
+      "ref": "HSM Part B, Ch. 6 diagnosis: pedestrian collisions",
+      "anim": "ped",
+      "factors": [
+        "Limited sight distance",
+        "Inadequate pedestrian facilities",
+        "Inadequate signal phasing or crossing time",
+        "Excessive speed",
+        "Inadequate lighting"
+      ],
+      "verify": "Observe crossings; check crosswalks, signal phasing and crossing time, lighting and sight lines."
+    },
+    "ped": {
+      "title": "Pedestrian crashes",
+      "ref": "HSM Part B, Ch. 6 diagnosis: pedestrian collisions",
+      "anim": "ped",
+      "factors": [
+        "Limited sight distance",
+        "Inadequate pedestrian facilities",
+        "Inadequate signal phasing or crossing time",
+        "Excessive speed",
+        "Inadequate lighting"
+      ],
+      "verify": "Observe crossings; check crosswalks, signal phasing and crossing time, lighting and sight lines."
+    },
+    "bike": {
+      "title": "Bicycle crashes",
+      "ref": "HSM Part B, Ch. 6 diagnosis: bicycle collisions",
+      "anim": "generic",
+      "factors": [
+        "Limited sight distance",
+        "Inadequate bicycle facilities",
+        "Driveway crossings",
+        "Excessive speed"
+      ],
+      "verify": "Check bike facilities, driveway conflicts and sight lines along the location."
+    },
+    "dark": {
+      "title": "Nighttime crashes under street lights",
+      "ref": "HSM Part B, Ch. 6 diagnosis: nighttime collisions",
+      "anim": "night",
+      "factors": [
+        "Poor visibility or lighting",
+        "Poor sign visibility",
+        "Inadequate channelization or delineation",
+        "Excessive speed",
+        "Inadequate sight distance"
+      ],
+      "verify": "Night visit: measure lighting, check delineation, sign and marking retroreflectivity."
+    },
+    "wet": {
+      "title": "Wet-pavement crashes",
+      "ref": "HSM Part B, Ch. 6 diagnosis: wet-pavement collisions",
+      "anim": "generic",
+      "factors": [
+        "Slippery pavement",
+        "Inadequate drainage",
+        "Inadequate skid resistance"
+      ],
+      "verify": "Check pavement friction, drainage and ponding locations."
+    },
+    "dark_unlit": {
+      "title": "Nighttime crashes without working street lights",
+      "ref": "HSM Part B, Ch. 6 diagnosis: nighttime collisions",
+      "anim": "night",
+      "factors": [
+        "No street lighting, or lights not functioning",
+        "Poor delineation",
+        "Poor visibility of pedestrians and signs",
+        "Excessive speed"
+      ],
+      "verify": "Night visit: confirm which lights are missing or out, and check delineation and sign retroreflectivity."
+    }
   }
 }

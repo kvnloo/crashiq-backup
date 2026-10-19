@@ -159,12 +159,14 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
         if w["id"] in corridor_ids:
             corridor_nodes.update(w.get("nodes", []))
     cross_names: dict[int, list[str]] = defaultdict(list)
+    cross_sides: dict[int, set[int]] = defaultdict(set)   # sides of the corridor the named cross streets leave on
     is_candidate: set[int] = set()
     for w in ways:
         if w["id"] in corridor_ids:
             continue
         names = [n for n in _names(w.get("tags", {})) if _core(n) not in corridor_cores]
-        for nid in w.get("nodes", []):
+        wn = w.get("nodes", [])
+        for k, nid in enumerate(wn):
             if nid in corridor_nodes and nid in proj:
                 p = proj[nid]
                 if p.offset_ft <= ALONG_FT and -END_TOL_FT <= p.station_ft <= line.length_ft + END_TOL_FT:
@@ -172,6 +174,11 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
                     for n in names:
                         if n not in cross_names[nid]:
                             cross_names[nid].append(n)
+                    if names:
+                        for step in (-1, 1):
+                            side = _leaving_side(line, nodes, proj, corridor_nodes, wn, k, step)
+                            if side:
+                                cross_sides[nid].add(side)
 
     # 4. cluster along the line
     cands = sorted(is_candidate, key=lambda n: proj[n].station_ft)
@@ -207,14 +214,30 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
             names.update(cross_names[n])
         name = " / ".join(n for n, _ in names.most_common()) or "Unnamed road"
 
+        sides = set().union(*(cross_sides[n] for n in c))
+        legs = 2 + len(sides) if sides else None     # 3 = T (cross street on one side), 4 = through cross street
         control = ("signal" if _any_within(line, signals, cx, cy, CONTROL_FT)
                    else "stop" if _any_within(line, stops, cx, cy, CONTROL_FT) else "unknown")
         out.append({
             "id": f"osm-{min(c)}", "name": name, "station_ft": round(max(0.0, min(line.length_ft, st)), 1),
             "lat": round(lat, 7), "lon": round(lon, 7), "osm_node_ids": sorted(c), "control": control,
-            "is_study": True, "provenance": "auto", "name_source": "osm",
+            "is_study": True, "provenance": "auto", "name_source": "osm", "legs": legs,
         })
     return {"corridor_name": corridor_name, "length_ft": round(line.length_ft, 1), "intersections": out}
+
+
+LEG_MIN_FT = 40.0   # a cross street must leave the corridor by this much to count as a leg on that side
+
+
+def _leaving_side(line, nodes, proj, corridor_nodes, way_nodes, k, step) -> int:
+    """Walk along a cross way from its corridor node; the side of the line it ends up on (0 if it never leaves)."""
+    j = k + step
+    while 0 <= j < len(way_nodes):
+        n = way_nodes[j]
+        if n in proj and n not in corridor_nodes and proj[n].offset_ft >= LEG_MIN_FT:
+            return line.side_xy(*line.proj.to_xy(nodes[n]["lat"], nodes[n]["lon"]))
+        j += step
+    return 0
 
 
 def _any_within(line: Polyline, pts: list[dict], cx: float, cy: float, ft: float) -> bool:
@@ -283,9 +306,9 @@ def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: 
                      (sid, json.dumps([list(p) for p in line]), found["length_ft"], found["corridor_name"]))
         for i in found["intersections"]:
             conn.execute("INSERT INTO intersection (study_id, id, name, station_ft, lat, lon, osm_node_ids, control, "
-                         "is_study, provenance, name_source) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                         "is_study, provenance, name_source, legs) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
                          (sid, i["id"], i["name"], i["station_ft"], i["lat"], i["lon"], json.dumps(i["osm_node_ids"]),
-                          i["control"], 1, "auto", "osm"))
+                          i["control"], 1, "auto", "osm", i.get("legs")))
     return network(db, sid)
 
 
@@ -323,6 +346,12 @@ def edit_intersection(db: Database, sid: str, iid: str, changes: dict) -> dict:
     if "is_study" in changes:
         sets.append("is_study = ?")
         vals.append(int(bool(changes["is_study"])))
+    if "legs" in changes:
+        v = changes["legs"]
+        if v is not None and not 3 <= v <= 6:
+            raise ValueError("An intersection has 3 to 6 legs.")
+        sets.append("legs = ?")
+        vals.append(v)
     for k in ("major_aadt", "minor_aadt"):
         if k in changes:
             v = changes[k]
@@ -374,6 +403,7 @@ class IntersectionPatch(BaseModel):
     is_study: bool | None = None
     major_aadt: float | None = None
     minor_aadt: float | None = None
+    legs: int | None = None
 
 
 class SegmentPatch(BaseModel):

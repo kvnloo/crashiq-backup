@@ -2,59 +2,286 @@
   "updated": "2026-10-18",
   "note": "Every method CrashIQ uses, the source it follows, and what is still open. Sources were opened and checked when this list was written; section numbers are as cited by those sources. Status: follows = implemented as the source describes; decision = waiting on the engineer (GitHub issue #34); planned = not built yet.",
   "sources": {
-    "hsm": {"title": "Highway Safety Manual, 1st Edition (2010)", "publisher": "AASHTO", "url": "https://www.highwaysafetymanual.org"},
-    "fhwa_rsf4": {"title": "Road Safety Fundamentals, Unit 4: Solving Safety Problems", "publisher": "FHWA", "url": "https://highways.dot.gov/safety/learn-safety/road-safety-fundamentals-html-version/unit-4-solving-safety-problems"},
-    "fhwa_int": {"title": "Intersection Safety: A Manual for Local Rural Road Owners, Section 3, Safety Analysis", "publisher": "FHWA", "url": "https://highways.dot.gov/safety/local-rural/intersection-safety-manual-local-rural-road-owners/3-safety-analysis"},
-    "fhwa_ihsdm": {"title": "IHSDM Crash Prediction Module Engineer's Manual, Section 2", "publisher": "FHWA", "url": "https://ihsdm.org/public/html/user/cpm/cpm_em.2.html"},
-    "fhwa_costs": {"title": "Crash Costs for Highway Safety Analysis Tool", "publisher": "FHWA", "url": "https://highways.dot.gov/safety/hsip/crash-costs-highway-safety-analysis-tool"},
-    "usdot_mmucc": {"title": "MMUCC Injury Severity Definitions (KABCO)", "publisher": "U.S. DOT", "url": "https://www.transportation.gov/government/traffic-records/mmucc-4th-edition-injury-severity-definitions"},
-    "ct_lrsm": {"title": "Local Roadway Safety Manual (2026)", "publisher": "Caltrans", "url": "https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/lrsm2026final.pdf"},
-    "ct_hccl": {"title": "Methods for Identifying High Collision Concentrations, Phase II", "publisher": "Caltrans", "url": "https://dot.ca.gov/-/media/dot-media/programs/research-innovation-system-information/documents/f0017221-final-report-hccl-phaseii.pdf"},
-    "ccrs": {"title": "California Crash Reporting System (CCRS) open data", "publisher": "California Highway Patrol via data.ca.gov", "url": "https://lab.data.ca.gov/dataset/ccrs"},
-    "osm": {"title": "OpenStreetMap (street network, intersections)", "publisher": "OpenStreetMap contributors (ODbL)", "url": "https://www.openstreetmap.org/copyright"}
+    "hsm": {
+      "title": "Highway Safety Manual, 1st Edition (2010)",
+      "publisher": "AASHTO",
+      "url": "https://www.highwaysafetymanual.org"
+    },
+    "fhwa_rsf4": {
+      "title": "Road Safety Fundamentals, Unit 4: Solving Safety Problems",
+      "publisher": "FHWA",
+      "url": "https://highways.dot.gov/safety/learn-safety/road-safety-fundamentals-html-version/unit-4-solving-safety-problems"
+    },
+    "fhwa_int": {
+      "title": "Intersection Safety: A Manual for Local Rural Road Owners, Section 3, Safety Analysis",
+      "publisher": "FHWA",
+      "url": "https://highways.dot.gov/safety/local-rural/intersection-safety-manual-local-rural-road-owners/3-safety-analysis"
+    },
+    "fhwa_ihsdm": {
+      "title": "IHSDM Crash Prediction Module Engineer's Manual, Section 2",
+      "publisher": "FHWA",
+      "url": "https://ihsdm.org/public/html/user/cpm/cpm_em.2.html"
+    },
+    "fhwa_costs": {
+      "title": "Crash Costs for Highway Safety Analysis Tool",
+      "publisher": "FHWA",
+      "url": "https://highways.dot.gov/safety/hsip/crash-costs-highway-safety-analysis-tool"
+    },
+    "usdot_mmucc": {
+      "title": "MMUCC Injury Severity Definitions (KABCO)",
+      "publisher": "U.S. DOT",
+      "url": "https://www.transportation.gov/government/traffic-records/mmucc-4th-edition-injury-severity-definitions"
+    },
+    "ct_lrsm": {
+      "title": "Local Roadway Safety Manual (2026)",
+      "publisher": "Caltrans",
+      "url": "https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/lrsm2026final.pdf"
+    },
+    "ct_hccl": {
+      "title": "Methods for Identifying High Collision Concentrations, Phase II",
+      "publisher": "Caltrans",
+      "url": "https://dot.ca.gov/-/media/dot-media/programs/research-innovation-system-information/documents/f0017221-final-report-hccl-phaseii.pdf"
+    },
+    "ccrs": {
+      "title": "California Crash Reporting System (CCRS) open data",
+      "publisher": "California Highway Patrol via data.ca.gov",
+      "url": "https://lab.data.ca.gov/dataset/ccrs"
+    },
+    "osm": {
+      "title": "OpenStreetMap (street network, intersections)",
+      "publisher": "OpenStreetMap contributors (ODbL)",
+      "url": "https://www.openstreetmap.org/copyright"
+    },
+    "tims": {
+      "title": "TIMS crash data notes: SWITRS/CCRS provisional and final years",
+      "publisher": "UC Berkeley SafeTREC (TIMS)",
+      "url": "https://tims.berkeley.edu/help/crashdata/switrs.php"
+    },
+    "ncdot_cr": {
+      "title": "TEAAS Chapter 15, Analysis Techniques: critical crash rates",
+      "publisher": "NCDOT",
+      "url": "https://connect.ncdot.gov/resources/safety/Documents/TEAAS/Chapter%2015%20Analysis%20Techniques.pdf"
+    },
+    "piarc": {
+      "title": "Road Safety Manual, Appendix 10.2: procedures and examples (critical rate K values)",
+      "publisher": "PIARC",
+      "url": "https://roadsafety.piarc.org/en/planning-design-operation/appendices/appx-102-methods-cases"
+    }
   },
   "methods": [
-    {"topic": "Crash data", "status": "follows",
-     "what": "Police-reported crashes from CCRS (CHP), all severities including property damage only. Deleted reports dropped; the newest report version kept; preliminary reports flagged.",
-     "cite": [["ccrs", ""], ["ct_lrsm", "Sec. 2.1: SWITRS/CCRS as the statewide crash repository"]]},
-    {"topic": "Study period", "status": "decision",
-     "what": "Default: the last 5 complete calendar years (1-10 allowed). Open: end on the last finalized CHP year, and warn under 3 years (#34 items 8, 15).",
-     "cite": [["ct_lrsm", "Sec. 2, p. 14: at least 3, preferably 5 years"], ["fhwa_rsf4", "Ch. 10: typically three to five years"]]},
-    {"topic": "Severity (KABCO)", "status": "follows",
-     "what": "Each crash counted once at its most severe outcome: K fatal, A suspected serious, B suspected minor, C possible, O property damage only. Injury crashes with no reported level are kept as U and disclosed (#34 item 12).",
-     "cite": [["usdot_mmucc", ""], ["fhwa_costs", "KABCO scale definitions"]]},
-    {"topic": "Intersection vs. segment crashes", "status": "follows",
-     "what": "A crash within 250 ft of a study intersection's center is assigned to that intersection; when two intersections compete, the nearest wins. Other crashes within the corridor buffer go to the segment they fall in.",
-     "cite": [["fhwa_ihsdm", "Sec. 2: crashes within 250 ft of an intersection center are attributed to it; closest intersection when centers are under 500 ft apart"], ["hsm", "Part C, Sec. C.6.2: intersection vs. segment crashes"]]},
-    {"topic": "Segment length", "status": "follows",
-     "what": "Segments run from intersection center to intersection center; this is the length used for per-mile figures and segment rates.",
-     "cite": [["hsm", "Part C, Sec. C.6.2: a segment begins and ends at the center of an intersection"]]},
-    {"topic": "Freeway crashes", "status": "decision",
-     "what": "Crashes CHP flags as freeway (IsFreeway) are excluded from an arterial study and reported by rule. Open: an include option for ramp-terminal studies (#34 item 9).",
-     "cite": [["ccrs", "IsFreeway field"]]},
-    {"topic": "Crash rates", "status": "follows",
-     "what": "Shown only where AADT is entered. Intersections: crashes per million entering vehicles (MEV = entering vehicles per day x 365 x years / 10^6). Segments: crashes per 100 million vehicle-miles.",
-     "cite": [["hsm", "Ch. 4, Eq. 4-2 and 4-3"], ["fhwa_int", "intersection crash rate per MEV"], ["ct_lrsm", "Sec. 3.1, p. 24"]]},
-    {"topic": "Entering volume", "status": "decision",
-     "what": "Today: major-road AADT + minor-road AADT (right for a 4-leg intersection with two-way leg AADTs). Open: 3-leg intersections use major + minor/2, and the inputs need a stated definition (#34 item 11).",
-     "cite": [["hsm", "Ch. 4, Eq. 4-2: TEV = total entering vehicles per day"]]},
-    {"topic": "Comparison with expected rates", "status": "decision",
-     "what": "Not provided; the PDF says so. Open: critical-rate test against similar sites, or TASAS averages on state highways (#34 item 7).",
-     "cite": [["hsm", "Ch. 4, Sec. 4.2.3: critical rate from the average rate at similar sites"], ["fhwa_int", "compare with the average intersection; build jurisdiction averages"], ["ct_lrsm", "Sec. 3.1, p. 23: compare with similar areas around the state"]]},
-    {"topic": "Over-represented crash types (findings)", "status": "follows",
-     "what": "Excess proportion of specific crash types: each location compared with locations of the same kind on the corridor (intersections with intersections, segments with segments), HSM variance and beta prior, ranked by excess proportion. A binomial test is used, and labelled, when the reference group is too small.",
-     "cite": [["hsm", "Ch. 4, Sec. 4.2.3 and 4.4.2: excess proportions of specific crash types"], ["fhwa_rsf4", "Ch. 10: only similar location types analyzed together"], ["ct_hccl", "high-proportion screening; P = 1 - betadist(p*, a + x, b + n - x)"]]},
-    {"topic": "Contributing factors and field checks", "status": "decision",
-     "what": "A draft pattern library from the HSM diagnosis step, labelled draft until the engineer approves it (#34 item 6).",
-     "cite": [["hsm", "Part B, Ch. 6: diagnosis"], ["fhwa_rsf4", "Ch. 10: collision diagrams and pattern identification"]]},
-    {"topic": "Severity weighting (EPDO)", "status": "planned",
-     "what": "Not built (#52). Weight = crash cost of the severity / PDO crash cost; FHWA publishes current KABCO crash costs.",
-     "cite": [["hsm", "Ch. 4, Eq. 4-4 and 4-5"], ["fhwa_costs", ""]]},
-    {"topic": "Hot spot and systemic approaches", "status": "follows",
-     "what": "CrashIQ is a site (hot-spot) analysis of one corridor; the findings name crash types that systemic countermeasures also target.",
-     "cite": [["ct_lrsm", "Sec. 1.6: combine spot and systemic approaches"]]},
-    {"topic": "Street network", "status": "follows",
-     "what": "Intersections and traffic control come from OpenStreetMap; the engineer reviews and edits them on the Corridor step.",
-     "cite": [["osm", ""]]}
+    {
+      "topic": "Crash data",
+      "status": "follows",
+      "what": "Police-reported crashes from CCRS (CHP), all severities including property damage only. Deleted reports dropped; the newest report version kept; preliminary reports flagged.",
+      "cite": [
+        [
+          "ccrs",
+          ""
+        ],
+        [
+          "ct_lrsm",
+          "Sec. 2.1: SWITRS/CCRS as the statewide crash repository"
+        ]
+      ]
+    },
+    {
+      "topic": "Study period",
+      "status": "follows",
+      "what": "Default: the last 5 finalized years. A year is treated as final once 18 months have passed since it ended (CHP data entry lags 12-18 months), so in October 2026 the default ends on 2024. The engineer can choose 1-10 years and later years; under 3 years the app warns. Windows that include 2020 or 2021 carry a COVID note.",
+      "cite": [
+        [
+          "ct_lrsm",
+          "Sec. 2, p. 14: at least 3, preferably 5 years"
+        ],
+        [
+          "fhwa_rsf4",
+          "Ch. 10: typically three to five years"
+        ],
+        [
+          "tims",
+          "CHP data entry lags 12-18 months; 2025 and later provisional"
+        ]
+      ]
+    },
+    {
+      "topic": "Severity (KABCO)",
+      "status": "follows",
+      "what": "Each crash counted once at its most severe outcome: K fatal, A suspected serious, B suspected minor, C possible, O property damage only. Injury crashes with no reported level are kept as a separate level (U) and disclosed.",
+      "cite": [
+        [
+          "usdot_mmucc",
+          ""
+        ],
+        [
+          "fhwa_costs",
+          "KABCO scale definitions"
+        ]
+      ]
+    },
+    {
+      "topic": "Intersection vs. segment crashes",
+      "status": "follows",
+      "what": "A crash within 250 ft of a study intersection's center is assigned to that intersection; when two intersections compete, the nearest wins. Other crashes within the corridor buffer go to the segment they fall in.",
+      "cite": [
+        [
+          "fhwa_ihsdm",
+          "Sec. 2: crashes within 250 ft of an intersection center are attributed to it; closest intersection when centers are under 500 ft apart"
+        ],
+        [
+          "hsm",
+          "Part C, Sec. C.6.2: intersection vs. segment crashes"
+        ]
+      ]
+    },
+    {
+      "topic": "Segment length",
+      "status": "follows",
+      "what": "Segments run from intersection center to intersection center; this is the length used for per-mile figures and segment rates.",
+      "cite": [
+        [
+          "hsm",
+          "Part C, Sec. C.6.2: a segment begins and ends at the center of an intersection"
+        ]
+      ]
+    },
+    {
+      "topic": "Freeway crashes",
+      "status": "follows",
+      "what": "Crashes CHP flags as freeway (IsFreeway) are excluded from an arterial study and reported by rule. Ramp-terminal studies can include them with a switch on the Corridor step.",
+      "cite": [
+        [
+          "ccrs",
+          "IsFreeway field"
+        ]
+      ]
+    },
+    {
+      "topic": "Crash rates",
+      "status": "follows",
+      "what": "Shown only where AADT is entered. Intersections: crashes per million entering vehicles (MEV = entering vehicles per day x 365 x years / 10^6). Segments: crashes per 100 million vehicle-miles.",
+      "cite": [
+        [
+          "hsm",
+          "Ch. 4, Eq. 4-2 and 4-3"
+        ],
+        [
+          "fhwa_int",
+          "intersection crash rate per MEV"
+        ],
+        [
+          "ct_lrsm",
+          "Sec. 3.1, p. 24"
+        ]
+      ]
+    },
+    {
+      "topic": "Entering volume",
+      "status": "follows",
+      "what": "The engineer enters two-way AADT for the major and minor road. Total entering volume = major + minor at a 4-leg intersection and major + minor/2 at a T (the minor road enters from one side only). Leg count comes from OpenStreetMap and the engineer can change it.",
+      "cite": [
+        [
+          "hsm",
+          "Ch. 4, Eq. 4-2: TEV = total entering vehicles per day"
+        ]
+      ]
+    },
+    {
+      "topic": "Comparison with expected rates",
+      "status": "planned",
+      "what": "Decided (#34 item 7): critical rate against similar sites on the corridor (HSM Ch. 4), plus Caltrans TASAS averages when the corridor is a state highway. Being built; until then the PDF says no comparison is included.",
+      "cite": [
+        [
+          "hsm",
+          "Ch. 4, Sec. 4.2.3: critical rate from the average rate at similar sites"
+        ],
+        [
+          "ncdot_cr",
+          "critical rate = average rate + K·√(average rate / exposure) + 1 / (2 × exposure), K = 1.645 at 95%"
+        ],
+        [
+          "piarc",
+          "K = 1.036 (85%), 1.282 (90%), 1.645 (95%), 2.326 (99%)"
+        ],
+        [
+          "fhwa_int",
+          "compare with the average intersection"
+        ],
+        [
+          "ct_lrsm",
+          "Sec. 3.1, p. 23: compare with similar areas around the state"
+        ]
+      ]
+    },
+    {
+      "topic": "Over-represented crash types (findings)",
+      "status": "follows",
+      "what": "Excess proportion of specific crash types: each location compared with locations of the same kind on the corridor (intersections with intersections, segments with segments), HSM variance and beta prior, ranked by excess proportion. A binomial test is used, and labelled, when the reference group is too small. Darkness is split into 'under street lights' and 'without working street lights'. The report states how many tests ran, since a few patterns can pass by chance at P ≥ 0.80.",
+      "cite": [
+        [
+          "hsm",
+          "Ch. 4, Sec. 4.2.3 and 4.4.2: excess proportions of specific crash types"
+        ],
+        [
+          "fhwa_rsf4",
+          "Ch. 10: only similar location types analyzed together"
+        ],
+        [
+          "ct_hccl",
+          "high-proportion screening; P = 1 - betadist(p*, a + x, b + n - x)"
+        ]
+      ]
+    },
+    {
+      "topic": "Contributing factors and field checks",
+      "status": "decision",
+      "what": "A draft pattern library from the HSM diagnosis step, labelled draft until the engineer approves it (#34 item 6).",
+      "cite": [
+        [
+          "hsm",
+          "Part B, Ch. 6: diagnosis"
+        ],
+        [
+          "fhwa_rsf4",
+          "Ch. 10: collision diagrams and pattern identification"
+        ]
+      ]
+    },
+    {
+      "topic": "Severity weighting (EPDO)",
+      "status": "planned",
+      "what": "Not built (#52). Weight = crash cost of the severity / PDO crash cost; FHWA publishes current KABCO crash costs.",
+      "cite": [
+        [
+          "hsm",
+          "Ch. 4, Eq. 4-4 and 4-5"
+        ],
+        [
+          "fhwa_costs",
+          ""
+        ]
+      ]
+    },
+    {
+      "topic": "Hot spot and systemic approaches",
+      "status": "follows",
+      "what": "CrashIQ is a site (hot-spot) analysis of one corridor; the findings name crash types that systemic countermeasures also target.",
+      "cite": [
+        [
+          "ct_lrsm",
+          "Sec. 1.6: combine spot and systemic approaches"
+        ]
+      ]
+    },
+    {
+      "topic": "Street network",
+      "status": "follows",
+      "what": "Intersections and traffic control come from OpenStreetMap; the engineer reviews and edits them on the Corridor step.",
+      "cite": [
+        [
+          "osm",
+          ""
+        ]
+      ]
+    }
   ]
 }

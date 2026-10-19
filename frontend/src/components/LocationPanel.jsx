@@ -125,14 +125,24 @@ export default function LocationPanel({
                           setEditing={(on) => setEditingId(on ? it.id : null)} onRename={onRename} />
                         <div className="m">
                           {CONTROL[it.control] ? <span className="tier">{CONTROL[it.control]}</span> : null}
+                          {it.legs === 3 ? <span className="tier" title="Cross street on one side only">T</span> : null}
                           {it.provenance === 'manual' ? <span className="tier">Added by you</span> : null}
                         </div>
                         {rates && it.is_study ? (
                           <div className="aadts">
-                            <AadtInput key={`ma-${it.id}-${it.major_aadt}`} label={`Major approach AADT, ${it.name}`} short="Major AADT" value={it.major_aadt}
+                            <AadtInput key={`ma-${it.id}-${it.major_aadt}`} label={`Major road two-way AADT, ${it.name}`} short="Major AADT" value={it.major_aadt}
                               onCommit={(a) => onIntersectionAadt(it.id, { major_aadt: a })} />
-                            <AadtInput key={`mi-${it.id}-${it.minor_aadt}`} label={`Minor approach AADT, ${it.name}`} short="Minor AADT" value={it.minor_aadt}
+                            <AadtInput key={`mi-${it.id}-${it.minor_aadt}`} label={`Minor road two-way AADT, ${it.name}`} short="Minor AADT" value={it.minor_aadt}
                               onCommit={(a) => onIntersectionAadt(it.id, { minor_aadt: a })} />
+                            <label className="aadt">
+                              <span>Legs</span>
+                              <select className="input" aria-label={`Legs, ${it.name}`} value={it.legs ?? ''}
+                                title="A T (3 legs) counts half the minor road's AADT as entering"
+                                onChange={(e) => onIntersectionAadt(it.id, { legs: e.target.value ? Number(e.target.value) : null })}>
+                                <option value="">?</option>
+                                {[3, 4, 5, 6].map((n) => <option key={n} value={n}>{n}</option>)}
+                              </select>
+                            </label>
                           </div>
                         ) : null}
                       </div>
@@ -170,6 +180,11 @@ export default function LocationPanel({
                 <label className="check">
                   <input type="checkbox" checked={rates} onChange={(e) => setRates(e.target.checked)} />
                   <span>Enter AADT to compute rates</span>
+                </label>
+                <label className="check">
+                  <input type="checkbox" checked={Boolean(study?.include_freeway)}
+                    onChange={(e) => onSetting({ include_freeway: e.target.checked })} />
+                  <span>Include freeway and ramp crashes (ramp-terminal studies)</span>
                 </label>
               </div>
             </details>

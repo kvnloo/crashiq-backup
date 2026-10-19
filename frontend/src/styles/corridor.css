@@ -41,7 +41,7 @@
 .loc.seg > span:first-child { border-left: 1px dashed var(--line); height: 100%; min-height: 22px; margin-left: 11px; }
 .loc.endrow { align-items: center; font-size: 13px; }
 .tier { font: 600 10px var(--font-mono); padding: 2px 6px; border-radius: 3px; border: 1px solid var(--line); color: var(--muted); }
-.aadts { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.aadts { display: grid; grid-template-columns: 1fr 1fr 64px; gap: 6px; }
 .aadt { display: grid; gap: 3px; font: 10px var(--font-mono); color: var(--muted); }
 .aadt .input { padding: 5px 8px; font-size: 13px; }
 .loc.seg .aadt { grid-template-columns: auto 100px; align-items: center; gap: 6px; justify-self: end; }

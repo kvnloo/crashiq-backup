@@ -99,6 +99,13 @@ class Polyline:
         d, st, i, fx, fy, ext = best
         return Projected(st, d, i, fx, fy, ext)
 
+    def side_xy(self, x: float, y: float) -> int:
+        """Which side of the line a point lies on: +1 left, -1 right (looking from A to B), 0 on the line."""
+        p = self.project_xy(x, y)
+        (x1, y1), (x2, y2) = self.xy[p.index], self.xy[p.index + 1]
+        cross = (x2 - x1) * (y - p.y) - (y2 - y1) * (x - p.x)
+        return 0 if abs(cross) < 1e-9 else (1 if cross > 0 else -1)
+
     def project(self, lat: float, lon: float) -> Projected:
         return self.project_xy(*self.proj.to_xy(lat, lon))
 

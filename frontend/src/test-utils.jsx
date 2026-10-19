@@ -42,8 +42,8 @@ export const META = {
   default_mode: 'profile',
   default_window: { from_year: 2021, to_year: 2025 },
   window_options: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => ({
-    years: n, from_year: 2026 - n, to_year: 2025, covid: 2026 - n <= 2020,
-    label: `Last ${n} complete year${n > 1 ? 's' : ''} (${n > 1 ? `${2026 - n}–2025` : '2025'})`,
+    years: n, from_year: 2026 - n, to_year: 2025, covid: 2026 - n <= 2021, short: n < 3,
+    label: `Last ${n} year${n > 1 ? 's' : ''} (${n > 1 ? `${2026 - n}–2025` : '2025'})`,
   })),
   first_year: 2016, last_year: 2026, min_years: 1, max_years: 10,
 }

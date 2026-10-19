@@ -64,10 +64,10 @@ function SetupForm({ meta, study }) {
     if (win === CUSTOM) {
       const fy = Number(custom.from)
       const ty = Number(custom.to)
-      return fy && ty ? { from_year: fy, to_year: ty, covid: fy <= 2020 && 2020 <= ty } : null
+      return fy && ty ? { from_year: fy, to_year: ty, covid: fy <= 2021 && ty >= 2020, short: ty - fy + 1 < 3 } : null
     }
     const o = meta.window_options.find((x) => String(x.years) === win)
-    return o ? { from_year: o.from_year, to_year: o.to_year, covid: o.covid } : null
+    return o ? { from_year: o.from_year, to_year: o.to_year, covid: o.covid, short: o.short } : null
   }, [meta, win, custom])
 
   async function submit(e) {
@@ -132,7 +132,8 @@ function SetupForm({ meta, study }) {
           </div>
         )}
       </form>
-      {chosen?.covid ? <div className="note">Includes 2020 (COVID year). The report will flag it.</div> : null}
+      {chosen?.covid ? <div className="note">Includes 2020 or 2021 (COVID years). The report will flag it.</div> : null}
+      {chosen?.short ? <div className="note">Under 3 years of crashes. Caltrans recommends at least 3, preferably 5.</div> : null}
       {err ? <div className="err" role="alert">{err}</div> : null}
     </>
   )

@@ -18,18 +18,18 @@ describe('Setup', () => {
     renderAt('/')
     const years = await screen.findByLabelText('Crash history')
     await waitFor(() => expect(years.value).toBe('5'))
-    expect(years.options[years.selectedIndex].textContent).toBe('Last 5 complete years (2021–2025)')
+    expect(years.options[years.selectedIndex].textContent).toBe('Last 5 years (2021–2025)')
     expect(Array.from(years.options).at(-1).textContent).toBe('Custom range')
   })
 
-  it('flags a window that includes 2020', async () => {
+  it('flags a window that includes 2020 or 2021', async () => {
     mockApi({ 'GET /studies/meta': META })
     renderAt('/')
     const years = await screen.findByLabelText('Crash history')
     await waitFor(() => expect(years.value).toBe('5'))
+    expect(screen.getByText(/Includes 2020 or 2021/)).toBeInTheDocument()     // 2021–2025 touches 2021
+    fireEvent.change(years, { target: { value: '4' } })                       // 2022–2025
     expect(screen.queryByText(/COVID/)).toBeNull()
-    fireEvent.change(years, { target: { value: '7' } })
-    expect(screen.getByText(/Includes 2020/)).toBeInTheDocument()
   })
 
   it('creates the study with the chosen window and one primary action', async () => {
@@ -47,5 +47,14 @@ describe('Setup', () => {
     await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
     const post = calls.find((c) => c.method === 'POST')
     expect(post.body).toEqual({ name: 'Crenshaw', mode: 'tis', from_year: 2021, to_year: 2025 })
+  })
+
+  it('warns when the window is under 3 years', async () => {
+    mockApi({ 'GET /studies/meta': META })
+    renderAt('/')
+    fireEvent.change(await screen.findByLabelText('Crash history'), { target: { value: '2' } })
+    expect(screen.getByText(/Under 3 years of crashes/)).toBeInTheDocument()
+    fireEvent.change(screen.getByLabelText('Crash history'), { target: { value: '5' } })
+    expect(screen.queryByText(/Under 3 years of crashes/)).toBeNull()
   })
 })
