@@ -196,5 +196,5 @@ def test_pdf_states_the_method_and_what_it_does_not_do(client):
     text = " ".join(p.extract_text() for p in PdfReader(io.BytesIO(client.get(f"/api/studies/{sid}/export.pdf").content)).pages)
     flat = " ".join(text.split())
     assert "nearest study intersection within 250 ft" in flat
-    assert "does not compare the corridor's crash rates with statewide" in flat
+    assert "does not compare rates with statewide averages" in flat
     assert "including 1 fatal or serious-injury crash(es) not in the KSI count" in flat   # 9200003 (A), unplaced

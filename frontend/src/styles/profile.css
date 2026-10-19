@@ -2,7 +2,7 @@
 .profile { display: grid; grid-template-columns: minmax(0, 1.2fr) minmax(400px, 1fr); height: 100%; }
 .profile .mapcol { position: relative; border-right: 1px solid var(--line); min-height: 320px; }
 .profile .mapcol .ciq-map { position: absolute; inset: 0; }
-.profile .datacol { overflow: auto; padding: 22px 24px 40px; display: grid; gap: 24px; align-content: start; grid-auto-rows: max-content; min-width: 0; }
+.profile .datacol { overflow: auto; padding: 22px 24px 40px; display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; align-content: start; grid-auto-rows: max-content; min-width: 0; }
 
 .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 11px var(--font-mono); color: var(--muted); }
 .legend span { display: inline-flex; gap: 6px; align-items: center; }
@@ -102,3 +102,14 @@
 }
 .ciq-label { font: 600 11px var(--font-mono); color: var(--fg); background: color-mix(in srgb, var(--bg) 78%, transparent);
   border: 1px solid var(--line); border-radius: 4px; padding: 2px 6px; white-space: nowrap; pointer-events: none; }
+
+/* rate vs critical rate (T2): bar = rate, tick = critical rate, stop-red when over */
+.ratecell { display: flex; align-items: center; gap: 6px; min-width: 90px; }
+.ratecell .mono { width: 34px; text-align: right; font-size: 13px; }
+.ratecell .mono.over { color: var(--stop); font-weight: 700; }
+.rbar { position: relative; flex: 1; height: 8px; border-radius: 4px; background: var(--surface-2); }
+.rbar i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 4px; background: var(--muted); }
+.rbar i.over { background: var(--stop); }
+.rbar b { position: absolute; top: -3px; bottom: -3px; width: 2px; margin-left: -1px; background: var(--fg); border-radius: 1px; }
+.profile .datacol .sf-table th, .profile .datacol .sf-table td { padding: 8px 8px; }
+.profile .datacol .sf-table td:first-child { min-width: 140px; }

@@ -85,4 +85,18 @@ describe('Crash profile screen', () => {
     expect(document.querySelectorAll('.sf-btn--go')).toHaveLength(1)
     expect(screen.getByRole('button', { name: 'See findings →' })).toBeInTheDocument()
   })
+
+  it('shows each rate against its critical rate, red when over', async () => {
+    const prof = JSON.parse(JSON.stringify(profile))
+    const t2 = prof.tables.find((x) => x.id === 'T2')
+    const ints = t2.rows.filter((r) => r.values.kind === 'intersection')
+    ints.forEach((r, i) => Object.assign(r.values, { rate: 1 + i * 0.2, rate_unit: 'per MEV', critical_rate: 1.5,
+      reference_rate: 1.2, over_critical: 1 + i * 0.2 > 1.5 ? 'Yes' : 'No' }))
+    mockApi({ ...routes, 'GET /studies/:id/profile': prof })
+    renderAt('/s/s1/profile')
+    expect(await screen.findByText('Rate vs critical')).toBeInTheDocument()
+    const over = ints.filter((r) => r.values.over_critical === 'Yes').length
+    expect(document.querySelectorAll('.rbar i.over')).toHaveLength(over)
+    expect(document.querySelectorAll('.rbar b')).toHaveLength(ints.length)
+  })
 })

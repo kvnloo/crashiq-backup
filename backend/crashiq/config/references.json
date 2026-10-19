@@ -186,9 +186,9 @@
       ]
     },
     {
-      "topic": "Comparison with expected rates",
-      "status": "planned",
-      "what": "Decided (#34 item 7): critical rate against similar sites on the corridor (HSM Ch. 4), plus Caltrans TASAS averages when the corridor is a state highway. Being built; until then the PDF says no comparison is included.",
+      "topic": "Comparison with expected rates (critical rate)",
+      "status": "follows",
+      "what": "Where 3 or more similar locations have AADT, each location's rate is compared with its critical rate at 95% confidence: average rate of the corridor's own intersections (or segments) + K·√(average rate / exposure) + 1 / (2 × exposure), K = 1.645. Locations above it are flagged. Statewide TASAS averages for state highways are decided (#34 item 7) but not built yet.",
       "cite": [
         [
           "hsm",
@@ -206,6 +206,17 @@
           "fhwa_int",
           "compare with the average intersection"
         ],
+        [
+          "ct_lrsm",
+          "Sec. 3.1, p. 23: compare with similar areas around the state"
+        ]
+      ]
+    },
+    {
+      "topic": "Comparison with statewide averages (TASAS)",
+      "status": "planned",
+      "what": "Decided for corridors on the State Highway System (#34 item 7): compare with Caltrans TASAS average rates by rate group. Not built yet; needs the Caltrans average-rate tables as a data source.",
+      "cite": [
         [
           "ct_lrsm",
           "Sec. 3.1, p. 23: compare with similar areas around the state"

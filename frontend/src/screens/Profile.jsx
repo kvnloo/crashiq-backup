@@ -75,15 +75,42 @@ function Heat({ t }) {
   )
 }
 
+// Rate against its critical rate: bar = rate, tick = critical rate, red when over. Scaled per kind (units differ).
+function RateCell({ v, max }) {
+  if (v.rate == null) return <td className="sf-num">—</td>
+  const crit = v.critical_rate
+  const over = v.over_critical === 'Yes'
+  const pct = (x) => `${Math.min(100, (100 * x) / max)}%`
+  return (
+    <td title={`${fmt(v.rate)} ${v.rate_unit || ''}${crit != null ? ` · critical ${fmt(crit)} (95%)` : ''}`}>
+      <div className="ratecell">
+        <span className={`mono${over ? ' over' : ''}`}>{fmt(v.rate)}</span>
+        {crit != null ? (
+          <span className="rbar" aria-label={over ? 'over its critical rate' : 'under its critical rate'}>
+            <i className={over ? 'over' : ''} style={{ width: pct(v.rate) }} />
+            <b style={{ left: pct(crit) }} />
+          </span>
+        ) : null}
+      </div>
+    </td>
+  )
+}
+
 function Locations({ t, onOpen }) {
   const hasRate = t.rows.some((r) => r.values.rate != null)
+  const hasCrit = t.rows.some((r) => r.values.critical_rate != null)
+  const maxBy = {}
+  for (const r of t.rows) {
+    const k = r.values.kind
+    maxBy[k] = Math.max(maxBy[k] || 0, r.values.rate || 0, r.values.critical_rate || 0)
+  }
   return (
     <div className="sf-table-wrap">
       <table className="sf-table">
         <thead>
           <tr><th>Location</th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th>
             <th className="sf-num">Injury</th><th className="sf-num">Dark</th><th className="sf-num">Per yr</th>
-            {hasRate ? <th className="sf-num">Rate</th> : null}</tr>
+            {hasRate ? <th className={hasCrit ? '' : 'sf-num'}>{hasCrit ? 'Rate vs critical' : 'Rate'}</th> : null}</tr>
         </thead>
         <tbody>
           {t.rows.map((r) => (
@@ -95,7 +122,8 @@ function Locations({ t, onOpen }) {
               <td className="sf-num">{fmt(r.values.injury_crashes)}</td>
               <td className="sf-num">{fmt(r.values.dark_crashes)}</td>
               <td className="sf-num">{fmt(r.values.crashes_per_year)}</td>
-              {hasRate ? <td className="sf-num" title={r.values.rate_unit || ''}>{fmt(r.values.rate)}</td> : null}
+              {hasRate ? (hasCrit ? <RateCell v={r.values} max={maxBy[r.values.kind] || 1} />
+                : <td className="sf-num" title={r.values.rate_unit || ''}>{fmt(r.values.rate)}</td>) : null}
             </tr>
           ))}
         </tbody>
