@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { NavLink } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import { STEPS, stepPath } from '../steps'
 
 // Left rail: the five steps. Steps after Setup open once a study exists (they need its id).
@@ -31,7 +31,7 @@ export default function Rail({ studyId, current, reached = 0 }) {
           <div key={s.key} className={cls} title="Start the study in Setup first">{body}</div>
         )
       })}
-      <div className="foot">Data: CCRS (CHP)<br />Map © OpenStreetMap contributors</div>
+      <div className="foot">Data: CCRS (CHP)<br />Map © OpenStreetMap contributors<br /><Link to="/methods">Methods &amp; references</Link></div>
     </nav>
   )
 }

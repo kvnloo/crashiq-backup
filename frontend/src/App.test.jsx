@@ -27,13 +27,13 @@ describe('app shell', () => {
   it('keeps later steps closed until a study exists', () => {
     renderAt('/')
     const rail = screen.getByRole('navigation', { name: 'Study steps' })
-    expect(within(rail).getAllByRole('link')).toHaveLength(1) // only Setup
+    expect(within(rail).getAllByRole('link').filter((a) => a.classList.contains('step'))).toHaveLength(1) // only Setup
   })
 
   it('opens every step once a study exists, marks the current one, shows the project name', async () => {
     renderAt('/s/abc/profile')
     const rail = screen.getByRole('navigation', { name: 'Study steps' })
-    expect(within(rail).getAllByRole('link')).toHaveLength(5)
+    expect(within(rail).getAllByRole('link').filter((a) => a.classList.contains('step'))).toHaveLength(5)
     expect(within(rail).getByRole('link', { current: 'step' })).toHaveTextContent('Crash profile')
     expect(await screen.findByText('Crenshaw')).toBeInTheDocument()
   })

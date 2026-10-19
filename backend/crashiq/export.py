@@ -219,6 +219,12 @@ def to_pdf(d: dict) -> bytes:
         story.append(Paragraph(f"{d['stale_findings']} accepted finding(s) no longer match the data after a study "
                                "change and are left out until reviewed again.", small))
     story += [Paragraph(NO_AI, small), Spacer(1, 14), Paragraph(CREDITS, small)]
+    from .references import cited_sources
+    story += [Paragraph("References", h2),
+              Paragraph("Each method in this report and the source it follows are listed in CrashIQ under "
+                        "Methods &amp; references.", small)]
+    story += [Paragraph(f"[{i}] {escape(r['publisher'])}, <i>{escape(r['title'])}</i>. {escape(r['url'])}", small)
+              for i, r in enumerate(cited_sources(), start=1)]
 
     def footer(canvas, _doc):
         canvas.saveState()
