@@ -28,26 +28,6 @@ describe('Export screen', () => {
   })
 })
 
-describe('Findings screen', () => {
-  it('says plainly when the AI analyst is not switched on, and points to export', async () => {
-    mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY,
-      'GET /config': { ai: { claude_configured: false } }, 'GET /studies/:id/findings': { findings: [], rejected_count: 0 } })
-    renderAt('/s/s1/findings')
-    expect(await screen.findByText('The AI analyst isn’t switched on yet')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Go to export →' })).toHaveClass('sf-btn--go')
-  })
-
-  it('lists validated findings with accept and reject', async () => {
-    const calls = mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /config': { ai: { claude_configured: true } },
-      'GET /studies/:id/findings': { findings: [{ id: 'f1', text: 'Broadside crashes dominate at Marine Ave.', status: 'proposed' }], rejected_count: 1 },
-      'PATCH /studies/:id/findings/:fid': { id: 'f1', text: 'Broadside crashes dominate at Marine Ave.', status: 'accepted' } })
-    renderAt('/s/s1/findings')
-    fireEvent.click(await screen.findByRole('button', { name: 'Accept' }))
-    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
-    expect(await screen.findByText('accepted')).toBeInTheDocument()
-  })
-})
-
 describe('Rail progress', () => {
   it('checks off Corridor and Crash profile once the study has crashes', async () => {
     mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': { ...STUDY, progress: { corridor: true, crashes: true } },

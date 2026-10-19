@@ -16,3 +16,6 @@ export function fmt(v, digits) {
 }
 
 export const titleCase = (s) => (s || '').toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase())
+
+// How the backend writes a number into a finding: integers bare, everything else with one decimal.
+export const fmtNum = (v) => (Number.isInteger(v) ? String(v) : Number(v).toFixed(1))

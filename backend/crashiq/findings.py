@@ -20,6 +20,8 @@ from __future__ import annotations
 
 import json
 import re
+from functools import lru_cache
+from pathlib import Path
 import uuid
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal
@@ -29,6 +31,7 @@ from pydantic import BaseModel, Field
 
 from . import assign as assign_mod
 from . import profile as profile_mod
+from . import signals as signals_mod
 
 SPELLED = {w: i for i, w in enumerate(
     "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
@@ -54,6 +57,8 @@ class RecordFilter(BaseModel):
     lighting_dark: bool | None = None
     ped: bool | None = None
     bike: bool | None = None
+    motorcycle: bool | None = None
+    surface_wet: bool | None = None
     day_of_week: list[str] | None = None
     hour_from: int | None = Field(default=None, ge=0, le=23)
     hour_to: int | None = Field(default=None, ge=0, le=23)
@@ -73,6 +78,10 @@ class Finding(BaseModel):
     pattern_ref: str | None = None
     evidence_refs: Evidence = Evidence()
     status: Literal["proposed", "accepted", "rejected", "edited"] = "proposed"
+    title: str | None = Field(default=None, max_length=200)
+    source: Literal["analyst", "screen"] = Field(default="analyst",
+                                                description="screen = written by code from T12 (C7); analyst = Claude (C9)")
+    meta: dict = Field(default_factory=dict, description="screen findings: strength, probability, method, pattern")
     audit: dict = Field(default_factory=dict, description="reserved; fields wait for #3 Q6")
 
 
@@ -114,6 +123,10 @@ def select_records(crashes: list[dict], f: RecordFilter) -> list[dict]:
         if f.ped is not None and bool(c.get("ped")) != f.ped:
             continue
         if f.bike is not None and bool(c.get("bike")) != f.bike:
+            continue
+        if f.motorcycle is not None and bool(c.get("motorcycle")) != f.motorcycle:
+            continue
+        if f.surface_wet is not None and (c.get("surface") or "").upper().startswith("WET") != f.surface_wet:
             continue
         if f.day_of_week and c.get("day_of_week") not in f.day_of_week:
             continue
@@ -210,6 +223,63 @@ def submit(db, sid: str, findings: list[Finding]) -> dict:
     return {"shown": shown, "rejected": rejected}
 
 
+PATTERNS_FILE = Path(__file__).parent / "config" / "patterns.json"
+
+
+@lru_cache(maxsize=1)
+def patterns() -> dict:
+    return json.loads(PATTERNS_FILE.read_text())
+
+
+def _num(v: float) -> str:
+    """How a T12 value is written in a finding: integers bare, everything else with one decimal."""
+    return str(int(v)) if float(v).is_integer() else f"{v:.1f}"
+
+
+def screen_findings(prof: dict, tables: list[dict]) -> list[Finding]:
+    """C7 → findings, written by code from T12. Every number cites its T12 cell; the validator still checks them."""
+    t12 = next(t for t in tables if t["id"] == "T12")
+    rows = {r["key"]: r for r in t12["rows"]}
+    lib = patterns()
+    out = []
+    for sg in prof["signals"]:
+        v = rows[sg["row"]]["values"]
+        entry = lib["entries"].get(sg["pattern"])
+        text = (f"{sg['noun']} are over-represented at {sg['location']}: {v['target_crashes']} of "
+                f"{v['location_crashes']} crashes here ({_num(v['share_pct'])}%) vs "
+                f"{_num(v['corridor_share_pct'])}% corridor-wide.")
+        cells = ("target_crashes", "location_crashes", "share_pct", "corridor_share_pct")
+        out.append(Finding(
+            id="c7-" + signals_mod.slug(sg["row"]), location_id=sg["location_id"], text=text,
+            title=f"{sg['noun']} over-represented at {sg['location']}",
+            numbers=[Number(value=v[k], table_id="T12", cell=f"{sg['row']}/{k}") for k in cells],
+            pattern_ref=entry["ref"] if entry else None,
+            evidence_refs=Evidence(tables=["T12"], records=RecordFilter(**sg["filter"])), source="screen",
+            meta={"strength": v["strength"], "probability": v["probability"], "method": v["method"],
+                  "excess_pct": v["excess_pct"], "corridor_crashes": v["corridor_crashes"], "pattern": sg["pattern"], "location": sg["location"],
+                  "kind": "segment" if sg["location_id"].startswith("seg") else "intersection",
+                  "library_status": lib["status"] if entry else None}))
+    return out
+
+
+def run_screen(db, sid: str) -> dict:
+    """(Re)write the code findings for a study. A finding keeps its accept/reject status while its text is unchanged;
+    findings the data no longer supports are removed."""
+    prof, tables, _ = context(db, sid)
+    fresh = screen_findings(prof, tables)
+    old = {r["id"]: json.loads(r["body"]) for r in db.query(
+        "SELECT id, body FROM finding WHERE study_id = ? AND id LIKE 'c7-%'", (sid,))}
+    for f in fresh:
+        if f.id in old and old[f.id]["text"] == f.text:
+            f.status = old[f.id]["status"]
+    keep = {f.id for f in fresh}
+    for fid in old:
+        if fid not in keep:
+            db.execute("DELETE FROM finding WHERE study_id = ? AND id = ?", (sid, fid))
+    db.execute("DELETE FROM finding_rejected WHERE study_id = ? AND finding_id LIKE 'c7-%'", (sid,))
+    return submit(db, sid, fresh)
+
+
 router = APIRouter()
 
 
@@ -229,6 +299,29 @@ def get_findings(sid: str, request: Request) -> dict:
     rows = db.query("SELECT body FROM finding WHERE study_id = ? ORDER BY rowid", (sid,))
     rej = db.one("SELECT COUNT(*) AS n FROM finding_rejected WHERE study_id = ?", (sid,))["n"]
     return {"findings": [json.loads(r["body"]) for r in rows], "rejected_count": rej}
+
+
+@router.post("/studies/{sid}/findings/screen")
+def post_screen(sid: str, request: Request) -> dict:
+    return run_screen(request.app.state.db, sid)
+
+
+@router.get("/studies/{sid}/findings/{fid}/records")
+def get_records(sid: str, fid: str, request: Request) -> dict:
+    db = request.app.state.db
+    r = db.one("SELECT body FROM finding WHERE study_id = ? AND id = ?", (sid, fid))
+    if not r:
+        raise HTTPException(404, "Finding not found.")
+    f = Finding(**json.loads(r["body"]))
+    _, _, placed = context(db, sid)
+    keys = ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity", "lighting", "surface", "pcf",
+            "primary_road", "secondary_road", "lat", "lon", "location_id")
+    return {"records": [{k: c.get(k) for k in keys} for c in select_records(placed, f.evidence_refs.records)]}
+
+
+@router.get("/patterns")
+def get_patterns() -> dict:
+    return patterns()
 
 
 @router.patch("/studies/{sid}/findings/{fid}")

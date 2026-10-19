@@ -200,6 +200,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"),
         ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate")], loc_rows, placed))
     tables += tables_for(placed, years)
+    from . import signals as signals_mod          # C7; imported here because signals imports this module
+    scr = signals_mod.screen(placed, [(r["key"], r["label"]) for r in loc_rows])
+    tables.append(scr["table"])
 
     # Caveats (computed; shown only when they apply)
     caveats = []
@@ -235,7 +238,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                                  "years_with_data": years},
             "kpis": {"crashes": "T1/crashes/value", "ksi_crashes": "T1/ksi_crashes/value",
                      "injury_crashes": "T1/injury_crashes/value", "crashes_per_mi_yr": "T1/crashes_per_mi_yr/value"},
-            "tables": tables, "caveats": caveats, "location_provenance": dict(sorted(prov.items())),
+            "tables": tables, "signals": scr["signals"], "caveats": caveats, "location_provenance": dict(sorted(prov.items())),
             "source": pull["source"], "pulled_at": pull["pulled_at"], "excluded_provenance": sorted(exclude)}
 
 
