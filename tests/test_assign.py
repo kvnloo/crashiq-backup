@@ -74,6 +74,12 @@ def test_no_coordinates_is_unmatched_not_dropped():
     assert a["kind"] == "unmatched" and a["location_provenance"] == "unmatched"
 
 
+def test_pull_time_exclusion_is_listed_under_its_rule():
+    c = {**crash("c", 0, 1500), "exclude_rule": "cross_street_not_on_corridor"}    # even with a point on the line
+    a = one(c)
+    assert (a["kind"], a["rule"], a["location_id"]) == ("excluded", "cross_street_not_on_corridor", None)
+
+
 def test_radius_change_reassigns():
     c = crash("c", 280, 1500)
     assert one(c)["kind"] == "excluded"
@@ -118,6 +124,6 @@ def test_api_assignment_follows_radius(client):
     client.patch(f"/api/studies/{sid}", json={"radius_ft": 150})
     a150 = client.get(f"/api/studies/{sid}/assignment").json()
     assert a250["counts"]["total"] == a150["counts"]["total"] == 125
-    assert a250["counts"]["unmatched"] == 4
+    assert a250["counts"]["unmatched"] == 0  # the 4 no-GPS Crenshaw reports are now placed by the locator (#35, PR #36)
     assert a150["counts"]["intersection"] < a250["counts"]["intersection"]
     json.dumps(a150)

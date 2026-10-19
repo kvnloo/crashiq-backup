@@ -155,7 +155,7 @@ def test_api_profile_on_crenshaw(client):
     p = client.get(f"/api/studies/{sid}/profile").json()
     a = client.get(f"/api/studies/{sid}/assignment").json()["counts"]
     assert profile.cell(p["tables"], "T1/crashes/value") == a["intersection"] + a["segment"]
-    assert profile.cell(p["tables"], "T1/unplaced/value") == 4
+    assert profile.cell(p["tables"], "T1/unplaced/value") == 0  # the 4 no-GPS Crenshaw reports are now placed by the locator (#35, PR #36)
     first = p["tables"][1]["rows"][0]["key"]
     loc = client.get(f"/api/studies/{sid}/profile/locations/{first}").json()
     assert loc["tables"][0]["id"] == f"T3@{first}"

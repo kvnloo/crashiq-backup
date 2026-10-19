@@ -75,6 +75,52 @@ def _corridor_cores(net: dict) -> list[str]:
     return [k.core] if k else []
 
 
+# Characters left out of street-name matching on both sides: spaces, apostrophes, and the LIKE wildcards % and _
+# (an OSM name must never act as a pattern). data.ca.gov refuses LIKE ... ESCAPE (no rights on like_escape, 2026-10-19),
+# so the wildcards are removed rather than escaped.
+_SQ_DROP = (" ", "'", "%", "_")
+
+
+def _sq_sql(col: str) -> str:
+    """UPPER(col) with `_SQ_DROP` characters removed, for name LIKE matching."""
+    expr = f"UPPER({col})"
+    for ch in _SQ_DROP:
+        expr = f"REPLACE({expr}, '{ch * 2 if ch == chr(39) else ch}', '')"
+    return expr
+
+
+def _like_word(w: str) -> str:
+    """A street-name word for a LIKE pattern, squeezed the same way as `_sq_sql`."""
+    for ch in _SQ_DROP:
+        w = w.replace(ch, "")
+    return w
+
+
+def _like(col_sql: str, w: str) -> str:
+    return f"{col_sql} LIKE '%{_like_word(w)}%'"
+
+
+def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_xy: str, cores: list[str],
+                          cross: list[str]) -> list[str]:
+    """Area (county or city code) from reports naming the corridor street AND one of its study cross streets.
+    Areas with >= 2 such reports are searched; otherwise the single best area."""
+    if not cores or not cross:
+        return []
+    pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
+
+    def like(col: str, words: list[str]) -> str:
+        return " OR ".join(_like(_sq_sql(col), w) for w in words)
+
+    pair = f"(({like(pr, cores)}) AND ({like(sr, cross)})) OR (({like(sr, cores)}) AND ({like(pr, cross)}))"
+    a = cc.q(cols[area_col]["id"])
+    rows = ckan.sql(f"SELECT {a} AS area, COUNT(*) AS n FROM {cc.q(rid)} WHERE ({bad_xy}) AND ({pair}) "
+                    f"GROUP BY {a} ORDER BY n DESC LIMIT 20")
+    rows = [(str(r["area"]).strip(), int(r["n"])) for r in rows if r.get("area") not in (None, "")]
+    if not rows:
+        return []
+    return [x for x, n in rows if n >= 2] or [rows[0][0]]
+
+
 def _by_ids(ckan: Ckan, rid: str, cols: dict[str, dict], ids: list[str]) -> list[dict]:
     rows = []
     for i in range(0, len(ids), ID_CHUNK):
@@ -125,7 +171,12 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     s, w, n, e = bbox(net["line"], margin_ft(study))
     cores = _corridor_cores(net)
     corridor_keys = [k for k in [street_key(net.get("corridor_name"))] if k]
-    cross_keys = [k for k in (street_key(i.get("name")) for i in net.get("intersections", []) if i.get("is_study")) if k]
+    # One corner can carry two cross-street names ("Eastin Drive / Lowry Road"): each one counts (Lowry Rd, Union City).
+    cross_keys = [k for k in (street_key(part) for i in net.get("intersections", []) if i.get("is_study")
+                              for part in str(i.get("name") or "").split("/")) if k]
+    cross_cores = [k.core for k in cross_keys if k.core not in cores and len(k.core) >= 3]
+    name_area: list[str] | None = None     # found once from street names, reused for every year
+    log["area_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
 
     for y in years:
@@ -151,16 +202,23 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
         # name; then, in code, only those whose cross street is one of the study intersections (the study stretch).
         area_col = "county_code" if "county_code" in cols else "city_code" if "city_code" in cols else None
         area = sorted({str(r[area_col]) for r, _ in recs if area_col and r.get(area_col)})
+        bad_xy = (f"{lat} IS NULL OR {lon} IS NULL OR {lat} NOT BETWEEN {cc.CA_LAT[0]} AND {cc.CA_LAT[1]} "
+                  f"OR {lon} NOT BETWEEN {cc.CA_LON[0]} AND {cc.CA_LON[1]}")
+        if area:
+            log["area_source"] = log["area_source"] or "GPS crashes in the corridor box"
+        elif cores and area_col:
+            # No GPS crash in the box (Union City PD records GPS on 0% of reports, 2026-10-18): find the area from
+            # the reports themselves.
+            if not name_area:
+                name_area = _area_by_street_names(ckan, rid, cols, area_col, bad_xy, cores, cross_cores)
+            area = name_area
+            if area:
+                log["area_source"] = "street names (no GPS crash in the corridor box)"
         no_xy = []
         if cores and area:
             pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
-            apos = "'" * 4                       # SQL literal for one apostrophe: ''''
-            squeeze = lambda c: f"REPLACE(REPLACE(UPPER({c}), ' ', ''), {apos}, '')"   # noqa: E731
-            names = " OR ".join(f"{squeeze(c)} LIKE '%{core.replace(' ', '').replace(chr(39), '')}%'"
-                                for core in cores for c in (pr, sr))
+            names = " OR ".join(_like(_sq_sql(c), core) for core in cores for c in (pr, sr))
             area_in = ", ".join("'" + c.replace("'", "''") + "'" for c in area)
-            bad_xy = (f"{lat} IS NULL OR {lon} IS NULL OR {lat} NOT BETWEEN {cc.CA_LAT[0]} AND {cc.CA_LAT[1]} "
-                      f"OR {lon} NOT BETWEEN {cc.CA_LON[0]} AND {cc.CA_LON[1]}")
             no_xy = _paged(ckan, f"{head} WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in}) "
                                  f"AND ({names})", cid)
         log["no_coords_read"] += len(no_xy)
@@ -173,9 +231,12 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
             other = [street_key(rd) for i, rd in enumerate(roads) if i not in on_idx and street_key(rd)]
             if not on:
                 log["no_coords_not_corridor_street"] += 1
-            elif cross_keys and not any(same_core(k, x) for k in other for x in cross_keys):
-                log["no_coords_off_study_stretch"] += 1
             else:
+                if cross_keys and not any(same_core(k, x) for k in other for x in cross_keys):
+                    # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
+                    # listed under its rule (#39, docs/03).
+                    log["no_coords_off_study_stretch"] += 1
+                    c["exclude_rule"] = "cross_street_not_on_corridor"
                 recs.append((c, "unmatched"))
         log["rows_read"] += len(with_xy) + len(no_xy)
         raw_by_year[y] = recs
@@ -258,8 +319,14 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
         out.append(c)
     log["unknown_injury_values"] = sorted(unknown)
     log["kept"] = len(out)
+    if not out:  # never a silent empty study
+        log["warning"] = ("No crashes found. " + (
+            "No area could be identified for this corridor: no GPS crash in the corridor box, and no report names "
+            "the corridor street with one of its study cross streets." if not log["area_source"]
+            else "Reports from this area exist, but none name this street on the study stretch."))
     log["with_coords"] = sum(c["location_source"] == "gps" for c in out)
     log["without_coords"] = sum(c["location_source"] == "unmatched" for c in out)
+    log["excluded_listed"] = sum(bool(c.get("exclude_rule")) for c in out)
     return {"crashes": out, "cleaning": log, "source": SOURCE, "years": years,
             "pulled_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
 
@@ -279,6 +346,8 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False) -> tuple[d
     if cached and not refresh and cached["cache_key"] == key:
         return cached, True
     result = pull(study, net, ckan)
+    from .placement import place_unmatched   # C4: place crashes without coordinates (locator validated in PR #16)
+    place_unmatched(db, net, result)
     db.execute("INSERT OR REPLACE INTO crash_pull (study_id, cache_key, pulled_at, payload) VALUES (?,?,?,?)",
                (sid, key, result["pulled_at"], json.dumps(result)))
     return {**result, "cache_key": key}, False
