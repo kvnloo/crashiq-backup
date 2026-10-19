@@ -6,6 +6,7 @@ import pull from '../__fixtures__/pull.json'
 import profile from '../__fixtures__/profile.json'
 import crashes from '../__fixtures__/crashes.json'
 import location from '../__fixtures__/location.json'
+import assignment from '../__fixtures__/assignment.json'
 import { cell, table } from '../lib/tables'
 
 vi.mock('../components/ProfileMap', () => ({ default: (p) => <div data-testid="map" data-n={p.crashes.length} /> }))
@@ -13,7 +14,7 @@ vi.mock('../components/ProfileMap', () => ({ default: (p) => <div data-testid="m
 const STUDY = { id: 's1', name: 'Crenshaw', mode: 'tis', from_year: 2021, to_year: 2025, radius_ft: 250, buffer_ft: 100 }
 const routes = {
   'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': network,
-  'POST /studies/:id/crashes/pull': pull, 'GET /studies/:id/profile': profile, 'GET /studies/:id/crashes': crashes,
+  'POST /studies/:id/crashes/pull': pull, 'GET /studies/:id/profile': profile, 'GET /studies/:id/crashes': crashes, 'GET /studies/:id/assignment': assignment,
   'GET /studies/:id/profile/locations/:lid': location,
 }
 const nf = new Intl.NumberFormat('en-US')
