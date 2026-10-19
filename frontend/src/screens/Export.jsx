@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { useParams } from 'react-router-dom'
+import { Link, useParams } from 'react-router-dom'
 import { api, errorText } from '../lib/api'
 import { cell, fmt, table } from '../lib/tables'
 import { useStudy } from '../study'
@@ -7,7 +7,7 @@ import '../styles/export.css'
 
 const FILES = [
   { key: 'pdf', label: 'PDF report', desc: 'Crash profile for the safety section: summary, locations, severity, collision types, factors, caveats and sources.' },
-  { key: 'xlsx', label: 'Excel workbook', desc: 'Every table behind the profile, one sheet each (T1 Summary … T11 By year), plus a study sheet.' },
+  { key: 'xlsx', label: 'Excel workbook', desc: 'Every table behind the profile, one sheet each (T1 Summary … T12 Over-represented crash types), plus a study sheet.' },
 ]
 
 // Thumbnail previews of the report, filled from the profile so they show the real numbers.
@@ -82,6 +82,7 @@ export default function Export() {
         {p?.caveats?.length ? (
           <div className="muted note-list">The report lists {p.caveats.length} caveat{p.caveats.length === 1 ? '' : 's'} with the data.</div>
         ) : null}
+        <div className="muted note-list">The PDF includes a method statement and its references (<Link to="/methods">Methods &amp; references</Link>).</div>
         <div className="cta-bar">
           <button type="button" className="sf-btn sf-btn--go" disabled={!p || n === 0} onClick={download}>
             {n === 0 ? 'Choose a file' : `Export ${n} file${n === 1 ? '' : 's'} ↓`}

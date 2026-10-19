@@ -8,6 +8,7 @@ import Corridor from './screens/Corridor'
 import Profile from './screens/Profile'
 import Findings from './screens/Findings'
 import Export from './screens/Export'
+import References from './screens/References'
 
 const SCREENS = {
   setup: Setup,
@@ -64,6 +65,7 @@ export function AppRoutes() {
         <Route index element={<Setup />} />
         <Route path="s/:studyId/:step" element={<StepScreen />} />
       </Route>
+      <Route path="methods" element={<References />} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   )

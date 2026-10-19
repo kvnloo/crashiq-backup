@@ -9,6 +9,7 @@ export default function TopBar({ projectName }) {
         <span>Crash<b>IQ</b></span>
       </Link>
       {projectName ? <div className="proj" title={projectName}>{projectName}</div> : null}
+      <Link to="/methods" className="toplink">Methods &amp; references</Link>
     </header>
   )
 }

@@ -22,6 +22,9 @@ h1, h2, h3 { margin: 0; }
 .brand b { color: var(--go); }
 .top .proj { color: var(--muted); font: 13px var(--font-mono); padding-left: 14px; border-left: 1px solid var(--line);
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.top .toplink { margin-left: auto; color: var(--muted); font: 600 12px var(--font-body); text-decoration: none; white-space: nowrap; }
+.top .toplink:hover { color: var(--fg); }
+.rail .foot a { color: var(--muted); }
 .app { display: grid; grid-template-columns: var(--rail) minmax(0, 1fr); height: calc(100% - var(--top)); }
 .rail { border-right: 1px solid var(--line); background: var(--surface); padding: 22px 14px; display: flex;
   flex-direction: column; gap: 4px; overflow: auto; }

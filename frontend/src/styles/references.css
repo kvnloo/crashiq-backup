@@ -1,0 +1,16 @@
+.refs { max-width: 900px; margin: 0 auto; padding: 32px 32px 60px; display: grid; gap: 14px; height: calc(100% - var(--top));
+  overflow: auto; align-content: start; }
+.refs .lead { max-width: 75ch; margin: 0; font-size: 14px; }
+.refs a { color: var(--info, var(--go)); }
+.methods, .sources { list-style: none; margin: 0; padding: 0; display: grid; gap: 12px; }
+.method { padding: 16px; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); display: grid; gap: 8px; }
+.method p { margin: 0; line-height: 1.5; font-size: 14px; }
+.mhead { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.mstatus { display: inline-flex; gap: 8px; align-items: center; font: 11px var(--font-mono); letter-spacing: .04em;
+  text-transform: uppercase; color: var(--muted); }
+.cites { margin: 0; padding: 0; list-style: none; display: grid; gap: 4px; font-size: 13px; color: var(--muted); }
+.cites a { text-decoration: none; margin-right: 4px; }
+.srch { margin-top: 12px; }
+.sources li { font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.sources li:target { outline: 1px solid var(--go); border-radius: 4px; }
+@media (max-width: 920px) { .refs { padding: 20px 16px 40px; } }
