@@ -206,3 +206,11 @@ def test_like_wildcards_in_street_names_cannot_act_as_patterns():
     assert crashes._like("X", "A_B") == "X LIKE '%AB%'"           # no ESCAPE: data.ca.gov refuses like_escape
     sq = crashes._sq_sql('"PrimaryRoad"')                         # the column is squeezed the same way
     assert all(f"'{c}', ''" in sq for c in (" ", "''", "%", "_"))
+
+
+def test_a_corner_with_two_cross_street_names_matches_either():
+    # Union City, 2026-10-19: OSM names the corner "Eastin Drive / Lowry Road"; reports say "LOWRY RD"
+    net = {**NET, "intersections": [{"name": "Eastin Drive / Marine Avenue", "is_study": True}]}
+    out = crashes.pull(STUDY, net, Ckan(FakeCkan(_no_gps_fixture())))
+    marine = next(c for c in out["crashes"] if c["crash_id"] == "9200003")      # Crenshaw & Marine, no GPS
+    assert not marine.get("exclude_rule")

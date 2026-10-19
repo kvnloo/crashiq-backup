@@ -171,7 +171,9 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     s, w, n, e = bbox(net["line"], margin_ft(study))
     cores = _corridor_cores(net)
     corridor_keys = [k for k in [street_key(net.get("corridor_name"))] if k]
-    cross_keys = [k for k in (street_key(i.get("name")) for i in net.get("intersections", []) if i.get("is_study")) if k]
+    # One corner can carry two cross-street names ("Eastin Drive / Lowry Road"): each one counts (Lowry Rd, Union City).
+    cross_keys = [k for k in (street_key(part) for i in net.get("intersections", []) if i.get("is_study")
+                              for part in str(i.get("name") or "").split("/")) if k]
     cross_cores = [k.core for k in cross_keys if k.core not in cores and len(k.core) >= 3]
     name_area: list[str] | None = None     # found once from street names, reused for every year
     log["area_source"] = None
