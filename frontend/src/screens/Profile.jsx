@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import ProfileMap from '../components/ProfileMap'
+import ProfileMap3D from '../components/ProfileMap3D'
 import { api, errorText } from '../lib/api'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
@@ -169,7 +169,7 @@ export default function Profile() {
         if (alive) setState({ phase: 'pulling', line: net.line })
         const pull = await api(`/studies/${studyId}/crashes/pull`, { method: 'POST' })
         const [p, cr] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`)])
-        if (alive) setState({ phase: 'ready', line: net.line, pull, profile: p, crashes: cr.crashes })
+        if (alive) setState({ phase: 'ready', line: net.line, net, pull, profile: p, crashes: cr.crashes })
       } catch (e) {
         if (alive) setState((s) => ({ ...s, phase: 'error', error: errorText(e) }))
       }
@@ -201,7 +201,8 @@ export default function Profile() {
   return (
     <section className="profile" aria-label="Crash profile">
       <div className="mapcol">
-        <ProfileMap line={state.line} crashes={state.crashes || []} highlight={highlight} />
+        <ProfileMap3D line={state.line} net={state.net} locations={state.profile ? table(state.profile, 'T2')?.rows : []}
+          crashes={state.crashes || []} highlight={highlight} />
         <div className="float map-legend legend" aria-label="Severity legend">
           <span><i style={{ background: 'var(--sev-k)' }} />Fatal</span>
           <span><i style={{ background: 'var(--sev-a)' }} />Serious injury</span>

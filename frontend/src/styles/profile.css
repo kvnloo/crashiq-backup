@@ -62,3 +62,5 @@
 .profile .sf-kpi { padding: 12px 14px; }
 .profile .sf-kpi__value { font-size: 26px; }
 @media (max-width: 1180px) { .profile .sf-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.ciq-map3d { position: absolute; inset: 0; }
+.ciq-map3d .maplibregl-ctrl-attrib { font-size: 10px; }

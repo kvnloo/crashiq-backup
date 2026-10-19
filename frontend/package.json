@@ -11,8 +11,12 @@
     "test": "vitest run"
   },
   "dependencies": {
+    "@deck.gl/core": "^9.4.0",
+    "@deck.gl/layers": "^9.4.0",
+    "@deck.gl/mapbox": "^9.4.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^1.14.0",
+    "maplibre-gl": "^4.7.1",
     "react": "^19.2.6",
     "react-dom": "^19.2.6",
     "react-leaflet": "^5.0.0",

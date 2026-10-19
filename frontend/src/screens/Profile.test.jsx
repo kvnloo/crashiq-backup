@@ -8,7 +8,7 @@ import crashes from '../__fixtures__/crashes.json'
 import location from '../__fixtures__/location.json'
 import { cell, table } from '../lib/tables'
 
-vi.mock('../components/ProfileMap', () => ({ default: (p) => <div data-testid="map" data-n={p.crashes.length} /> }))
+vi.mock('../components/ProfileMap3D', () => ({ default: (p) => <div data-testid="map" data-n={p.crashes.length} /> }))
 
 const STUDY = { id: 's1', name: 'Crenshaw', mode: 'tis', from_year: 2021, to_year: 2025, radius_ft: 250, buffer_ft: 100 }
 const routes = {
