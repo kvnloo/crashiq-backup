@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import io
 from xml.sax.saxutils import escape
-import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Request
@@ -29,9 +28,13 @@ NO_AI = ("This report has no AI narrative. Findings are written by code from the
 
 def gather(db, sid: str) -> dict:
     study, net, pull, a = for_study(db, sid)
-    rows = db.query("SELECT body FROM finding WHERE study_id = ? AND status = 'accepted' ORDER BY rowid", (sid,))
+    from .findings import check_stored        # local import: findings imports profile, which export also uses
+    accepted = [f for f in check_stored(db, sid) if f["status"] == "accepted"]
     return {"study": study, "network": net, "profile": profile_mod.build(study, net, pull, a),
-            "findings": [json.loads(r["body"]) for r in rows],
+            "findings": [f for f in accepted if not f["stale"]],
+            "stale_findings": sum(f["stale"] for f in accepted),
+            "assignment": {"counts": a["counts"], "excluded_by_rule": a["excluded_by_rule"]},
+            "pulled_at": pull.get("pulled_at"),
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
 
 
@@ -99,6 +102,26 @@ def _fmt(v, d=None):
     if isinstance(v, float) and d is not None:
         return f"{v:,.{d}f}"
     return f"{v:,}" if isinstance(v, (int, float)) else str(v)
+
+
+RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_limits": "beyond the study limits",
+             "freeway": "on a freeway or ramp (CHP IsFreeway)", "no_segment": "not on a study segment"}
+
+
+def methodology(d: dict) -> str:
+    """Plain statement of how the numbers were made, printed with every PDF (reviewers ask for it)."""
+    s, asg = d["study"], d.get("assignment") or {}
+    ex = asg.get("excluded_by_rule") or {}
+    excl = "; ".join(f"{n} {RULE_TEXT.get(k, k)}" for k, n in sorted(ex.items())) or "none"
+    unplaced = (asg.get("counts") or {}).get("unmatched", 0)
+    return (f"Crash data: CCRS (California Highway Patrol), {s['from_year']}–{s['to_year']}"
+            + (f", pulled {d['pulled_at'][:10]}" if d.get("pulled_at") else "") + ". "
+            f"A crash is assigned to the nearest study intersection within {s['radius_ft']:g} ft; otherwise to the "
+            f"corridor segment when within {s['buffer_ft']:g} ft of the corridor line. Excluded: {excl}. "
+            f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
+            "not placed. Severity: each crash counted once at its most severe outcome (KABCO). Rates appear only where "
+            "AADT was entered. This profile does not compare the corridor's crash rates with statewide or peer-group "
+            "averages.")
 
 
 def to_pdf(d: dict) -> bytes:
@@ -175,6 +198,7 @@ def to_pdf(d: dict) -> bytes:
                                                               _fmt(r["values"]["injury_crashes"]), _fmt(r["values"]["ksi_crashes"]),
                                                               _fmt(r["values"]["share_pct"], 1)] for r in rows],
             cols(W - 3.6 * inch, 4), (1, 2, 3, 4)), src(tid)])]
+    story += [Paragraph("Method", h2), Paragraph(escape(methodology(d)), body)]
     story += [Paragraph("Caveats", h2)]
     story += [Paragraph("• " + c["text"], body) for c in p["caveats"]] or [Paragraph("None.", body)]
     story += [Paragraph("Findings", h2)]
@@ -189,6 +213,9 @@ def to_pdf(d: dict) -> bytes:
             Spacer(1, 6)]))
     if not d.get("findings"):
         story.append(Paragraph("No findings accepted yet.", body))
+    if d.get("stale_findings"):
+        story.append(Paragraph(f"{d['stale_findings']} accepted finding(s) no longer match the data after a study "
+                               "change and are left out until reviewed again.", small))
     story += [Paragraph(NO_AI, small), Spacer(1, 14), Paragraph(CREDITS, small)]
 
     def footer(canvas, _doc):

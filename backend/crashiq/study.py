@@ -183,7 +183,15 @@ def get_study(sid: str, request: Request) -> dict:
     db = request.app.state.db
     s = require(db, sid)
     has = lambda t: db.one(f"SELECT 1 AS x FROM {t} WHERE study_id = ?", (sid,)) is not None  # noqa: E731
-    return {**s, "progress": {"corridor": has("corridor"), "crashes": has("crash_pull")}}
+    return {**s, "progress": {"corridor": has("corridor"), "crashes": _pull_current(db, sid, s)}}
+
+
+def _pull_current(db, sid: str, study: dict) -> bool:
+    """True only when a pull exists AND matches the study as it is now (window, corridor, radius)."""
+    from . import crashes as crashes_mod, network as network_mod       # local: those modules import this one
+    r = db.one("SELECT cache_key FROM crash_pull WHERE study_id = ?", (sid,))
+    net = network_mod.network(db, sid)
+    return bool(r and net.get("line") and r["cache_key"] == crashes_mod.cache_key(study, net))
 
 
 @router.patch("/studies/{sid}")

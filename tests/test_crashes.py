@@ -42,19 +42,20 @@ def test_pull_counts_and_cleaning_log(fake):
     log = out["cleaning"]
     # 120 of the 121 real crashes are in the box (one is 0.85 mi north at I-105) + duplicate (2 versions)
     # + deleted report + 3 no-coordinate Crenshaw crashes in Hawthorne
-    assert log["rows_read"] == 120 + 2 + 1 + 3
+    # + 9200005 (Crenshaw / 135th, no coordinates, in Gardena): found by the county-wide search
+    assert log["rows_read"] == 120 + 2 + 1 + 3 + 1
     assert log["deleted_dropped"] == 1
     assert log["duplicate_versions_dropped"] == 1
-    assert log["no_coords_read"] == 3            # SQL only reads rows naming the corridor street, in Hawthorne
+    assert log["no_coords_read"] == 4            # rows naming the corridor street, anywhere in the county
     assert log["no_coords_not_corridor_street"] == 0
-    assert (log["with_coords"], log["without_coords"]) == (121, 3)
+    assert (log["with_coords"], log["without_coords"]) == (121, 4)
     ids = {c["crash_id"] for c in out["crashes"]}
     assert "9000058" not in ids                  # real crash at the I-105 ramps, outside the corridor box
     assert "9300001" not in ids                  # far away
-    assert "9200005" not in ids                  # another city
+    assert "9200005" in ids                      # same street in the next city (Gardena): corridors cross city lines
     assert "9200004" not in ids                  # MARINE AV / AVIATION BL: not the corridor street
     assert {"9200001", "9200002", "9200003"} <= ids
-    assert log["kept"] == len(out["crashes"]) == 124
+    assert log["kept"] == len(out["crashes"]) == 125
     assert log["cities"] == ["HAWTHORNE"]
     assert log["preliminary_kept"] == sum(c["preliminary"] for c in out["crashes"]) > 0
 
@@ -87,7 +88,8 @@ def test_sql_uses_bbox_and_names(fake):
     crashes.pull(STUDY, NET, Ckan(fake))
     sqls = fake.sql_log
     assert any("BETWEEN 33.89" in s and "CAST(NULLIF(\"Latitude\", '') AS float)" in s for s in sqls)
-    assert any("UPPER(\"PrimaryRoad\") LIKE '%CRENSHAW%'" in s and "\"City Code\" IN ('1913')" in s for s in sqls)
+    assert any("REPLACE(REPLACE(UPPER(\"PrimaryRoad\")" in s and "LIKE '%CRENSHAW%'" in s
+               and "\"County Code\" IN ('19')" in s for s in sqls)
     assert any("\"CollisionId\" IN (" in s for s in sqls)
 
 
@@ -129,13 +131,13 @@ def sid(client, fake):
 
 def test_api_pull_then_cache_then_refresh(client, sid, fake):
     r = client.post(f"/api/studies/{sid}/crashes/pull").json()
-    assert r["count"] == 124 and r["from_cache"] is False
+    assert r["count"] == 125 and r["from_cache"] is False
     n_sql = len(fake.sql_log)
     assert client.post(f"/api/studies/{sid}/crashes/pull").json()["from_cache"] is True
     assert len(fake.sql_log) == n_sql                          # cache hit: no queries
     assert client.post(f"/api/studies/{sid}/crashes/pull?refresh=true").json()["from_cache"] is False
     full = client.get(f"/api/studies/{sid}/crashes").json()
-    assert len(full["crashes"]) == 124 and full["crashes"][0]["parties"]
+    assert len(full["crashes"]) == 125 and full["crashes"][0]["parties"]
 
 
 def test_api_window_change_repulls(client, sid):

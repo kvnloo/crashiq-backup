@@ -11,6 +11,7 @@ are reported in the caveats; excluded crashes are outside the study.
 
 from __future__ import annotations
 
+import re
 from collections import Counter
 
 from fastapi import APIRouter, Request
@@ -34,8 +35,12 @@ def pct(a, b):
     return round(100.0 * a / b, 1) if b else 0.0
 
 
+_DARK = re.compile(r"\bDARK\b")
+
+
 def is_dark(c) -> bool:
-    return (c.get("lighting") or "").upper().startswith("DARK")
+    """Any 'Dark …' lighting (street lights on, off, or not functioning). Dusk/dawn is not dark."""
+    return bool(_DARK.search((c.get("lighting") or "").upper()))
 
 
 def _table(tid, title, columns, rows, crashes):
@@ -217,8 +222,12 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if unmatched:
         caveats.append({"key": "unplaced", "count": len(unmatched), "share_pct": pct(len(unmatched), total_known),
                         "limitation": share > UNPLACED_LIMIT,
+                        "ksi": sum(c["severity"] in ("K", "A") for c in unmatched),
                         "text": (f"{len(unmatched)} crash{'es' if len(unmatched) != 1 else ''} on this corridor "
                                  f"({pct(len(unmatched), total_known)}%) have no coordinates and aren't placed yet"
+                                 + (f", including {sum(c['severity'] in ('K', 'A') for c in unmatched)} fatal or "
+                                    "serious-injury crash(es) not in the KSI count"
+                                    if any(c["severity"] in ("K", "A") for c in unmatched) else "")
                                  + (". This is a data limitation for this study." if share > UNPLACED_LIMIT else "."))})
     u = sum(c["severity"] == "U" for c in placed)
     if u:

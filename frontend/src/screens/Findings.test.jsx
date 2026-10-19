@@ -78,4 +78,13 @@ describe('Findings screen', () => {
     expect(await screen.findByText('No crash type stands out')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Go to export →' })).toHaveClass('sf-btn--go')
   })
+
+  it('marks a stale finding and blocks accepting it', async () => {
+    const stale = { ...F1, stale: true, stale_reasons: ['declared 12 does not match T12/osm-1029~dark/target_crashes = 9'] }
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [stale, F2], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    expect(await screen.findByText('Stale')).toBeInTheDocument()
+    expect(screen.getByRole('alert')).toHaveTextContent('no longer matches the data')
+    expect(screen.getByRole('button', { name: '✓ Accept' })).toBeDisabled()
+  })
 })

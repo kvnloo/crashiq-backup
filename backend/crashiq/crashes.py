@@ -19,7 +19,7 @@ from . import network as network_mod
 from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection
-from .names import street_key
+from .names import same_core, street_key
 from .sources import ca_ccrs as cc
 from .sources.ckan import Ckan, CkanError
 
@@ -55,13 +55,19 @@ def _select(cols: dict[str, dict]) -> str:
 
 
 def _paged(ckan: Ckan, sql_head: str, order_col: str) -> list[dict]:
-    out, offset = [], 0
+    """All rows of a query. `order_col` must order rows totally (id + report version), so pages never skip or
+    repeat a row. When the server caps rows below our page size, the page shrinks to the cap and paging goes on."""
+    out, offset, page = [], 0, PAGE
     while True:
-        batch = ckan.sql(f"{sql_head} ORDER BY {order_col} LIMIT {PAGE} OFFSET {offset}")
+        batch, truncated = ckan.sql_page(f"{sql_head} ORDER BY {order_col} LIMIT {page} OFFSET {offset}")
         out += batch
-        if len(batch) < PAGE:
+        if truncated:
+            if not batch:
+                raise PullError("data.ca.gov returned a truncated, empty page; the pull was stopped.")
+            page = len(batch)
+        elif len(batch) < page:
             return out
-        offset += PAGE
+        offset += len(batch)
 
 
 def _corridor_cores(net: dict) -> list[str]:
@@ -70,13 +76,40 @@ def _corridor_cores(net: dict) -> list[str]:
 
 
 def _by_ids(ckan: Ckan, rid: str, cols: dict[str, dict], ids: list[str]) -> list[dict]:
-    idcol = cols["collision_id"]
     rows = []
     for i in range(0, len(ids), ID_CHUNK):
         chunk = ids[i:i + ID_CHUNK]
-        lit = ", ".join(str(int(x)) if str(x).isdigit() else "'" + str(x).replace("'", "''") + "'" for x in chunk)
-        rows += ckan.sql(f"SELECT {_select(cols)} FROM {cc.q(rid)} WHERE {cc.q(idcol['id'])} IN ({lit})")
+        rows += _ids_query(ckan, rid, cols, chunk)
     return rows
+
+
+def _ids_query(ckan: Ckan, rid: str, cols: dict[str, dict], ids: list[str]) -> list[dict]:
+    """Rows for these ids; when the server caps the answer, split the id list until every part fits."""
+    idcol = cols["collision_id"]
+    numeric = idcol.get("type", "text") in ("int", "int4", "int8", "numeric", "float8", "float")
+    lit = ", ".join(str(int(x)) if numeric and str(x).isdigit() else "'" + str(x).replace("'", "''") + "'"
+                    for x in ids)               # a text id column compared to bare numbers fails in PostgreSQL
+    rows, truncated = ckan.sql_page(f"SELECT {_select(cols)} FROM {cc.q(rid)} WHERE {cc.q(idcol['id'])} IN ({lit})")
+    if not truncated:
+        return rows
+    if len(ids) == 1:
+        raise PullError(f"data.ca.gov capped the rows for one crash ({ids[0]}); the pull was stopped.")
+    mid = len(ids) // 2
+    return _ids_query(ckan, rid, cols, ids[:mid]) + _ids_query(ckan, rid, cols, ids[mid:])
+
+
+def _squeeze(t: str | None) -> str:
+    return "".join(ch for ch in (t or "").upper() if ch.isalnum())
+
+
+def _names_street(raw: str | None, keys) -> bool:
+    """Does a CCRS road field name this street? CHP sometimes writes a full address ("14605 CRENSHAW BLVD.-
+    GARDENA- CA 90249"), so fall back to the squeezed core inside the text, as the SQL prefilter does."""
+    k = street_key(raw)
+    if k and any(same_core(k, x) for x in keys):
+        return True
+    sq = _squeeze(raw)
+    return any(len(_squeeze(x.core)) >= 4 and _squeeze(x.core) in sq for x in keys)
 
 
 def pull(study: dict, net: dict, ckan: Ckan) -> dict:
@@ -85,11 +118,14 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     years = list(range(study["from_year"], study["to_year"] + 1))
     res = cc.table_resources(ckan.get("package_show", id=cc.PACKAGE))
     log = {"rows_read": 0, "outside_window_dropped": 0, "deleted_dropped": 0, "duplicate_versions_dropped": 0,
-           "no_coords_read": 0, "no_coords_not_corridor_street": 0, "preliminary_kept": 0,
+           "no_coords_read": 0, "no_coords_not_corridor_street": 0, "no_coords_off_study_stretch": 0,
+           "implausible_coords": 0, "bad_dates_dropped": 0, "duplicate_parties_dropped": 0, "preliminary_kept": 0,
            "feet_typed_as_miles_fixed": 0, "years_missing": [], "parties_missing_years": [], "iwp_missing_years": [],
            "missing_fields": {}, "unknown_injury_values": [], "cities": []}
     s, w, n, e = bbox(net["line"], margin_ft(study))
     cores = _corridor_cores(net)
+    corridor_keys = [k for k in [street_key(net.get("corridor_name"))] if k]
+    cross_keys = [k for k in (street_key(i.get("name")) for i in net.get("intersections", []) if i.get("is_study")) if k]
     raw_by_year: dict[int, list[dict]] = {}
 
     for y in years:
@@ -105,26 +141,42 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
         if missing:
             log["missing_fields"][f"crashes_{y}"] = missing
         lat, lon, cid = cc.num_expr(cols["lat"]), cc.num_expr(cols["lon"]), cc.q(cols["collision_id"]["id"])
+        if "report_version" in cols:
+            cid += ", " + cc.q(cols["report_version"]["id"])
         head = f"SELECT {_select(cols)} FROM {cc.q(rid)}"
         with_xy = _paged(ckan, f"{head} WHERE {lat} BETWEEN {s:.6f} AND {n:.6f} AND {lon} BETWEEN {w:.6f} AND {e:.6f}", cid)
         recs = [(cc.crash_record(r, cols), "gps") for r in with_xy]
-        cities = sorted({r["city_code"] for r, _ in recs if r["city_code"]})
         log["cities"] = sorted(set(log["cities"]) | {r["city"] for r, _ in recs if r["city"]})
+        # Crashes with no usable coordinates: same county (or city) as the GPS crashes, on the corridor street by
+        # name; then, in code, only those whose cross street is one of the study intersections (the study stretch).
+        area_col = "county_code" if "county_code" in cols else "city_code" if "city_code" in cols else None
+        area = sorted({str(r[area_col]) for r, _ in recs if area_col and r.get(area_col)})
         no_xy = []
-        if cores and cities and "city_code" in cols:
+        if cores and area:
             pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
-            names = " OR ".join(f"UPPER({c}) LIKE '%{core.replace(chr(39), '')}%'" for core in cores for c in (pr, sr))
-            city_in = ", ".join("'" + c.replace("'", "''") + "'" for c in cities)
-            no_xy = _paged(ckan, f"{head} WHERE ({lat} IS NULL OR {lat} = 0 OR {lon} IS NULL OR {lon} = 0) "
-                                 f"AND {cc.q(cols['city_code']['id'])} IN ({city_in}) AND ({names})", cid)
+            apos = "'" * 4                       # SQL literal for one apostrophe: ''''
+            squeeze = lambda c: f"REPLACE(REPLACE(UPPER({c}), ' ', ''), {apos}, '')"   # noqa: E731
+            names = " OR ".join(f"{squeeze(c)} LIKE '%{core.replace(' ', '').replace(chr(39), '')}%'"
+                                for core in cores for c in (pr, sr))
+            area_in = ", ".join("'" + c.replace("'", "''") + "'" for c in area)
+            bad_xy = (f"{lat} IS NULL OR {lon} IS NULL OR {lat} NOT BETWEEN {cc.CA_LAT[0]} AND {cc.CA_LAT[1]} "
+                      f"OR {lon} NOT BETWEEN {cc.CA_LON[0]} AND {cc.CA_LON[1]}")
+            no_xy = _paged(ckan, f"{head} WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in}) "
+                                 f"AND ({names})", cid)
         log["no_coords_read"] += len(no_xy)
         for r in no_xy:
             c = cc.crash_record(r, cols)
-            keys = [street_key(c["primary_road"]), street_key(c["secondary_road"])]
-            if any(k and k.core in cores for k in keys):
-                recs.append((c, "unmatched"))
-            else:
+            log["implausible_coords"] += c["bad_coords"]
+            roads = [c["primary_road"], c["secondary_road"]]
+            on_idx = [i for i, rd in enumerate(roads) if _names_street(rd, corridor_keys)]
+            on = [roads[i] for i in on_idx]
+            other = [street_key(rd) for i, rd in enumerate(roads) if i not in on_idx and street_key(rd)]
+            if not on:
                 log["no_coords_not_corridor_street"] += 1
+            elif cross_keys and not any(same_core(k, x) for k in other for x in cross_keys):
+                log["no_coords_off_study_stretch"] += 1
+            else:
+                recs.append((c, "unmatched"))
         log["rows_read"] += len(with_xy) + len(no_xy)
         raw_by_year[y] = recs
 
@@ -133,6 +185,9 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     dup_seen = 0
     for y, recs in raw_by_year.items():
         for c, loc in recs:
+            if c["year"] is None:
+                log["bad_dates_dropped"] += 1
+                continue
             if c["year"] not in years:
                 log["outside_window_dropped"] += 1
                 continue
@@ -147,6 +202,12 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
                     continue
             crashes[c["crash_id"]] = c
     log["duplicate_versions_dropped"] = dup_seen
+    if len(log["years_missing"]) == len(years):
+        raise PullError("data.ca.gov has no CCRS crash table for any year in the study window. The dataset may have "
+                        "been renamed; update the CCRS adapter.")
+    if log["bad_dates_dropped"] > max(5, 0.02 * max(1, log["rows_read"])):
+        raise PullError(f"{log['bad_dates_dropped']} of {log['rows_read']} crash records have a Crash Date Time in a "
+                        "format CrashIQ doesn't recognize. The data layout changed; update the CCRS adapter.")
 
     # Parties + IWP, per year
     by_year: dict[int, list[str]] = {}
@@ -162,8 +223,16 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
                 raise PullError(f"CCRS Parties {y} has no Collision Id column.")
             if pmiss:
                 log["missing_fields"][f"parties_{y}"] = pmiss
+            seen_party = set()
             for r in _by_ids(ckan, prid, pcols, ids):
-                parties.setdefault(str(r[pcols["collision_id"]["id"]]), []).append(cc.party_record(r, pcols))
+                pr_ = cc.party_record(r, pcols)
+                cid_ = str(r[pcols["collision_id"]["id"]])
+                if pr_["party_number"] is not None:       # one row per party, even when versions repeat it
+                    if (cid_, pr_["party_number"]) in seen_party:
+                        log["duplicate_parties_dropped"] += 1
+                        continue
+                    seen_party.add((cid_, pr_["party_number"]))
+                parties.setdefault(cid_, []).append(pr_)
         else:
             log["parties_missing_years"].append(y)
         if irid:

@@ -3,6 +3,7 @@ never touch the network."""
 
 from __future__ import annotations
 
+import http.client
 import json
 import time
 import urllib.error
@@ -30,6 +31,15 @@ def http_transport(action: str, params: dict, timeout: float = 120) -> dict:
     return body["result"]
 
 
+def _error_body(e: urllib.error.HTTPError) -> str:
+    try:
+        body = json.loads(e.read().decode("utf-8", "replace"))
+        err = body.get("error") or {}
+        return str(err.get("message") or err.get("info") or err)[:300]
+    except Exception:  # noqa: BLE001 - best effort; the status code alone is still reported
+        return "no detail"
+
+
 class Ckan:
     def __init__(self, transport: Transport | None = None, retries: int = 3, backoff_s: float = 3.0,
                  sleep: Callable[[float], None] = time.sleep):
@@ -46,15 +56,28 @@ class Ckan:
             except urllib.error.HTTPError as e:      # data.ca.gov returns 502/504 under load
                 last = f"HTTP {e.code}"
                 if e.code not in (429, 500, 502, 503, 504):
+                    last += f" ({_error_body(e)})"     # 400/409 carry the real SQL error; keep it
                     break
-            except (urllib.error.URLError, TimeoutError, OSError) as e:
+            except (urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException) as e:
                 last = str(e) or type(e).__name__
+            except ValueError:                        # an HTML error page instead of JSON
+                last = "a response that wasn't JSON"
             if attempt < self.retries:
                 self.sleep(self.backoff_s * 2 ** attempt)
         raise CkanError(f"Couldn't get crash data from data.ca.gov: {last}. Try again in a few minutes.")
 
+    def sql_page(self, sql: str) -> tuple[list[dict], bool]:
+        """(records, truncated) — for callers that page and can shrink the page when the server caps rows."""
+        res = self.get("datastore_search_sql", sql=sql)
+        return res["records"], bool(res.get("records_truncated"))
+
     def sql(self, sql: str) -> list[dict]:
-        return self.get("datastore_search_sql", sql=sql)["records"]
+        res = self.get("datastore_search_sql", sql=sql)
+        if res.get("records_truncated"):
+            # data.ca.gov caps rows per query; a capped answer must never pass as the whole answer
+            raise CkanError(f"data.ca.gov returned only part of a result ({len(res['records'])} rows; server row "
+                            "limit). The pull was stopped so crashes aren't silently missing.")
+        return res["records"]
 
     def fields(self, resource_id: str) -> list[dict]:
         """[{id, type}] for a datastore resource (column names exactly as stored)."""
