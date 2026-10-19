@@ -35,9 +35,10 @@ def test_writes_results_with_provenance(client):
     ccrs = [h for h in ctx["data_holdings"] if h["kind"] == "CCRS"]
     assert len(ccrs) == 1 and ccrs[0]["period"] == "2021–2025"
     s = ctx["safety"]
-    assert s["window"]["from_year"] == 2021 and s["locate_summary"]["unmatched"] == 4 and s["findings"] == []
+    assert s["window"]["from_year"] == 2021 and s["locate_summary"]["unmatched"] == 0 and s["findings"] == []
     assert sum(loc["crashes"] for loc in s["locations"]) + 0 >= 1
-    assert any(f["type"] == "data_gap" for f in ctx["analysis"]["flags"])
+    # data_gap appears exactly when crashes are left unplaced (none here: the locator places them, #35)
+    assert any(f["type"] == "data_gap" for f in ctx["analysis"]["flags"]) == (s["locate_summary"]["unmatched"] > 0)
     for path in ("safety", "analysis.completed", "data_holdings.CCRS", "corridor.intersections"):
         assert ctx["provenance"][path]["method"] == "auto" and ctx["provenance"][path]["date"]
     assert ctx["project"]["version"] == 4

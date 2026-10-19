@@ -197,4 +197,5 @@ def test_pdf_states_the_method_and_what_it_does_not_do(client):
     flat = " ".join(text.split())
     assert "nearest study intersection within 250 ft" in flat
     assert "does not compare rates with statewide averages" in flat
-    assert "including 1 fatal or serious-injury crash(es) not in the KSI count" in flat   # 9200003 (A), unplaced
+    # 9200003 (A) used to be unplaced and was called out here; the locator now places it (#35), so it counts in KSI.
+    assert "not in the KSI count" not in flat

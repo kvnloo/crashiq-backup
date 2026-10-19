@@ -9,3 +9,5 @@ frontend/dist/
 data/cache/
 .DS_Store
 data/results/
+*.sqlite-wal
+*.sqlite-shm

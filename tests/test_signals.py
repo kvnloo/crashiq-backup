@@ -98,7 +98,7 @@ def test_crenshaw_screen_findings_pass_the_validator(client):
     assert r["rejected"] == [] and len(r["shown"]) >= 2
     top = r["shown"][0]
     assert top["text"] == ("Crashes after dark under street lights are over-represented at West 135th Street: "
-                           "12 of 20 crashes here (60%) vs 40% across the corridor intersections.")
+                           "12 of 21 crashes here (57.1%) vs 39.8% across the corridor intersections.")  # +1 placed (#35)
     assert top["source"] == "screen" and top["meta"]["strength"] == "Moderate" and top["evidence_refs"]["tables"] == ["T12"]
     assert top["meta"]["method"].startswith("Binomial") and "not a probability" in top["meta"]["method"]
     assert top["pattern_ref"] and top["meta"]["library_status"] == "draft"
@@ -128,7 +128,7 @@ def test_tampered_screen_numbers_are_rejected(client):
     sid = _study(client)
     prof, tables, _ = findings.context(client.app.state.db, sid)
     f = findings.screen_findings(prof, tables)[0]
-    f.text = f.text.replace("12 of 20", "14 of 20")
+    f.text = f.text.replace("12 of 21", "14 of 21")
     assert any("14" in r for r in findings.validate(f, tables, findings.context(client.app.state.db, sid)[2], (2021, 2025)))
 
 
