@@ -11,3 +11,4 @@ Status: OPEN / ANSWERED (who, date) / RESEARCHED (source).
 | N4 | HSIP influence area: 250 ft, but only to mid-block when the next intersection is < 500 ft away | Crash assignment | RESEARCHED (Caltrans HSIP instructions; see research notes) |
 | N5 | COVID years 2020–2022: exclude by default in HSIP mode, or offer a toggle? | HSIP allows exclusion | OPEN (user) |
 | N6 | Preliminary (most recent) CCRS records: include or not, per mode? | Data completeness | OPEN (user) |
+| N7 | Grade separation: a road passing over or under the corridor (interchange, overcrossing, undercrossing) sits inside the buffer but never meets the corridor at grade. Its crashes, and interchange crashes on a freeway corridor, must not be counted | The 2D buffer and the 30 m "near" rule in `locate.py` can't tell levels apart, so these crashes leak in | ANSWERED (user, 2026-10-18): exclude them; only at-grade intersections the corridor passes through count. Detection: #67 |
