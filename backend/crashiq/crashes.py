@@ -75,10 +75,29 @@ def _corridor_cores(net: dict) -> list[str]:
     return [k.core] if k else []
 
 
+# Characters left out of street-name matching on both sides: spaces, apostrophes, and the LIKE wildcards % and _
+# (an OSM name must never act as a pattern). data.ca.gov refuses LIKE ... ESCAPE (no rights on like_escape, 2026-10-19),
+# so the wildcards are removed rather than escaped.
+_SQ_DROP = (" ", "'", "%", "_")
+
+
 def _sq_sql(col: str) -> str:
-    """UPPER(col) with spaces and apostrophes removed, for name LIKE matching."""
-    apos = "'" * 4                       # SQL literal for one apostrophe
-    return f"REPLACE(REPLACE(UPPER({col}), ' ', ''), {apos}, '')"
+    """UPPER(col) with `_SQ_DROP` characters removed, for name LIKE matching."""
+    expr = f"UPPER({col})"
+    for ch in _SQ_DROP:
+        expr = f"REPLACE({expr}, '{ch * 2 if ch == chr(39) else ch}', '')"
+    return expr
+
+
+def _like_word(w: str) -> str:
+    """A street-name word for a LIKE pattern, squeezed the same way as `_sq_sql`."""
+    for ch in _SQ_DROP:
+        w = w.replace(ch, "")
+    return w
+
+
+def _like(col_sql: str, w: str) -> str:
+    return f"{col_sql} LIKE '%{_like_word(w)}%'"
 
 
 def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_xy: str, cores: list[str],
@@ -90,7 +109,7 @@ def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_x
     pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
 
     def like(col: str, words: list[str]) -> str:
-        return " OR ".join(f"{_sq_sql(col)} LIKE '%{w.replace(' ', '').replace(chr(39), '')}%'" for w in words)
+        return " OR ".join(_like(_sq_sql(col), w) for w in words)
 
     pair = f"(({like(pr, cores)}) AND ({like(sr, cross)})) OR (({like(sr, cores)}) AND ({like(pr, cross)}))"
     a = cc.q(cols[area_col]["id"])
@@ -196,8 +215,7 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
         no_xy = []
         if cores and area:
             pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
-            names = " OR ".join(f"{_sq_sql(c)} LIKE '%{core.replace(' ', '').replace(chr(39), '')}%'"
-                                for core in cores for c in (pr, sr))
+            names = " OR ".join(_like(_sq_sql(c), core) for core in cores for c in (pr, sr))
             area_in = ", ".join("'" + c.replace("'", "''") + "'" for c in area)
             no_xy = _paged(ckan, f"{head} WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in}) "
                                  f"AND ({names})", cid)
@@ -211,9 +229,12 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
             other = [street_key(rd) for i, rd in enumerate(roads) if i not in on_idx and street_key(rd)]
             if not on:
                 log["no_coords_not_corridor_street"] += 1
-            elif cross_keys and not any(same_core(k, x) for k in other for x in cross_keys):
-                log["no_coords_off_study_stretch"] += 1
             else:
+                if cross_keys and not any(same_core(k, x) for k in other for x in cross_keys):
+                    # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
+                    # listed under its rule (#39, docs/03).
+                    log["no_coords_off_study_stretch"] += 1
+                    c["exclude_rule"] = "cross_street_not_on_corridor"
                 recs.append((c, "unmatched"))
         log["rows_read"] += len(with_xy) + len(no_xy)
         raw_by_year[y] = recs
@@ -303,6 +324,7 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
             else "Reports from this area exist, but none name this street on the study stretch."))
     log["with_coords"] = sum(c["location_source"] == "gps" for c in out)
     log["without_coords"] = sum(c["location_source"] == "unmatched" for c in out)
+    log["excluded_listed"] = sum(bool(c.get("exclude_rule")) for c in out)
     return {"crashes": out, "cleaning": log, "source": SOURCE, "years": years,
             "pulled_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
 

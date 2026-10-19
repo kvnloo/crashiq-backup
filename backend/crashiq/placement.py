@@ -16,7 +16,7 @@ from .db import Database
 
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None) -> dict:
     gate = gate or locate.Gate()
-    todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched"]
+    todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")]
     counts = {"tried": len(todo), "placed": {}, "suggested": 0, "still_unplaced": 0}
     if todo and net.get("line"):
         raw = network_mod.fetch_overpass(db, network_mod.overpass_query([tuple(p) for p in net["line"]]))

@@ -111,8 +111,15 @@ def test_crashes_without_coordinates_are_limited_to_the_study_stretch(client):
     client.put(f"/api/studies/{sid}/corridor", json={"line": LINE})
     r = client.post(f"/api/studies/{sid}/crashes/pull").json()
     assert r["cleaning"]["no_coords_off_study_stretch"] == 1
-    ids = {c["crash_id"] for c in client.get(f"/api/studies/{sid}/crashes").json()["crashes"]}
-    assert "9200099" not in ids and "9200005" in ids           # 135th (Gardena) is a study intersection
+    cs = {c["crash_id"]: c for c in client.get(f"/api/studies/{sid}/crashes").json()["crashes"]}
+    # #39: a side street off the corridor is excluded, but stays listed under its rule, never silently dropped
+    assert cs["9200099"]["exclude_rule"] == "cross_street_not_on_corridor"
+    assert "suggestion" not in cs["9200099"] and cs["9200099"]["lat"] is None     # never placed
+    assert not cs["9200005"].get("exclude_rule")                # 135th (Gardena) is a study intersection
+    a = client.get(f"/api/studies/{sid}/assignment").json()
+    row = next(x for x in a["assignments"] if x["crash_id"] == "9200099")
+    assert (row["kind"], row["rule"]) == ("excluded", "cross_street_not_on_corridor")
+    assert a["excluded_by_rule"]["cross_street_not_on_corridor"] == 1
 
 
 # -- parties, freeway, missing years ------------------------------------------------------------------------

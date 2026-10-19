@@ -6,7 +6,8 @@ Rules (docs/03-requirements.md R2.3-4):
    Inside more than one radius → the nearest one, which splits at mid-block when intersections are
    closer than twice the radius. (The formal HSIP < 500 ft rule is #3 Q6; it would replace `_pick_intersection` only.)
 3. Otherwise within the corridor buffer of the drawn line and between A and B → the segment it projects onto.
-4. Otherwise → `excluded`, with the reason.
+4. Otherwise → `excluded`, with the reason. Crashes the pull already ruled out (`exclude_rule`, e.g. a side street
+   that isn't one of the corridor's intersections, #39) are `excluded` under that rule: listed, not dropped.
 Distances are feet in the corridor's projected CRS.
 """
 
@@ -38,6 +39,9 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
     out = []
     for c in crashes:
         base = {"crash_id": c["crash_id"], "location_provenance": c.get("location_source", "gps")}
+        if c.get("exclude_rule"):      # decided at pull time, e.g. a side street off the corridor (#39)
+            out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None, "rule": c["exclude_rule"]})
+            continue
         if c.get("is_freeway") and not include_freeway:     # CHP's IsFreeway: mainline/ramp crashes under or beside an arterial study
             out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None, "rule": "freeway"})
             continue

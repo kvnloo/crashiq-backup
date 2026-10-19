@@ -192,3 +192,17 @@ def test_empty_pull_explains_itself():
 def test_gps_area_path_unchanged(fake):
     out = crashes.pull(STUDY, NET_X, Ckan(fake))
     assert out["cleaning"]["area_source"] == "GPS crashes in the corridor box"
+
+
+def test_corridor_without_study_cross_streets_excludes_nothing():
+    net = {**NET, "intersections": []}            # no cross streets known: nothing to judge a side street by
+    out = crashes.pull(STUDY, net, Ckan(FakeCkan(_no_gps_fixture())))
+    assert out["cleaning"]["no_coords_off_study_stretch"] == 0
+    assert not any(c.get("exclude_rule") for c in out["crashes"])
+
+
+def test_like_wildcards_in_street_names_cannot_act_as_patterns():
+    assert crashes._like_word("50%_O'NEIL ST") == "50ONEILST"
+    assert crashes._like("X", "A_B") == "X LIKE '%AB%'"           # no ESCAPE: data.ca.gov refuses like_escape
+    sq = crashes._sq_sql('"PrimaryRoad"')                         # the column is squeezed the same way
+    assert all(f"'{c}', ''" in sq for c in (" ", "''", "%", "_"))
