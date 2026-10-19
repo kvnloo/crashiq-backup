@@ -271,3 +271,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   Roundtable build order ("first real corridor"): user runs live contract test on his Mac → build these decisions →
   critical rate + TASAS comparison → PCF categories + DUI/speed rows from an official code table → flag crashes whose GPS
   point is far from the stated road → one real corridor end to end (Stage 5 gate).
+- **Hermes retired DECIDED (user, 2026-10-18):** Hermes can't run free (needs an API key or extra-usage credits), so
+  all work moves to Claude Code on the Max plan: issues, docs, builds and reviews. Parallel work = separate Claude Code
+  sessions (one issue/branch/worktree each, Remote Control allowed); a different session reviews each PR; decisions are
+  asked in chat, not over WhatsApp. Rules: `CLAUDE.md`.

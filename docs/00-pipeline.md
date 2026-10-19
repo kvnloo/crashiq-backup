@@ -18,8 +18,9 @@ Overlaps, pick one: grill-me (yours) = grill-me (O); tdd (yours) ≈ test-driven
 ≈ requesting-code-review (B). Use yours as lead (they encode your conventions), built-ins as extra checks.
 Cross-cutting: github after every step, refresh if a session drifts, model bake-off (proposed new skill).
 
-**From Stage 4 on, work runs through GitHub:** Hermes turns the design into issues → Claude Code builds one issue per
-branch and opens a PR → Hermes reviews → the user merges. Ownership and rules: `CLAUDE.md`.
+**From Stage 4 on, work runs through GitHub:** Claude Code turns the design into issues → one Claude Code session builds
+one issue per branch and opens a PR → a different session reviews → the user merges. Ownership and rules: `CLAUDE.md`.
+(Hermes ran this until 2026-10-18; the "Hermes built-in" column is history.)
 
 ## User direction log
 - **2026-10-18 (user, via Claude Code):** methodology correctness comes first. The mockup layout
