@@ -4,6 +4,8 @@ No number is computed here; values are copied from the cited tables (T1…T11) a
 from __future__ import annotations
 
 import io
+from xml.sax.saxutils import escape
+import json
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, Request
@@ -22,12 +24,14 @@ from .assign import for_study
 
 CREDITS = ("Crash data: CCRS, California Highway Patrol (data.ca.gov, public domain). "
            "Map data © OpenStreetMap contributors (ODbL).")
-NO_AI = "This profile has no AI narrative yet. Findings will be added once the analyst step is enabled."
+NO_AI = ("This report has no AI narrative. Findings are written by code from the over-representation screen (table T12, HSM excess-proportion test) and appear only after you accept them.")
 
 
 def gather(db, sid: str) -> dict:
     study, net, pull, a = for_study(db, sid)
+    rows = db.query("SELECT body FROM finding WHERE study_id = ? AND status = 'accepted' ORDER BY rowid", (sid,))
     return {"study": study, "network": net, "profile": profile_mod.build(study, net, pull, a),
+            "findings": [json.loads(r["body"]) for r in rows],
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
 
 
@@ -54,7 +58,7 @@ def to_xlsx(d: dict) -> bytes:
             ("Generated", d["generated"]), ("Data pulled", p["pulled_at"]), ("", ""), ("Caveats", "")]
     rows += [("", c["text"]) for c in p["caveats"]] or [("", "None")]
     rows += [("", ""), ("Note", NO_AI), ("Sources", CREDITS),
-             ("Tables", "Each sheet is one cited table (T1…T11). Cell = sheet / row key / column.")]
+             ("Tables", "Each sheet is one cited table (T1…T12). Cell = sheet / row key / column.")]
     for r in rows:
         ws.append(list(r))
     ws["A1"].font = Font(bold=True, size=14)
@@ -173,7 +177,19 @@ def to_pdf(d: dict) -> bytes:
             cols(W - 3.6 * inch, 4), (1, 2, 3, 4)), src(tid)])]
     story += [Paragraph("Caveats", h2)]
     story += [Paragraph("• " + c["text"], body) for c in p["caveats"]] or [Paragraph("None.", body)]
-    story += [Paragraph("Findings", h2), Paragraph(NO_AI, body), Spacer(1, 14), Paragraph(CREDITS, small)]
+    story += [Paragraph("Findings", h2)]
+    for i, f in enumerate(d.get("findings") or [], start=1):
+        m = f.get("meta") or {}
+        story.append(KeepTogether([
+            Paragraph(f"<b>F{i}. {escape(f.get('title') or '')}</b>", body),
+            Paragraph(escape(f["text"]), body),
+            Paragraph(escape(f"Strength: {m.get('strength', '—')} · P(share > corridor) {m.get('probability', '—')} · "
+                             f"{m.get('method', '')}. Pattern library: {f.get('pattern_ref') or 'no entry'}"
+                             + (" (draft)" if m.get("library_status") == "draft" else "") + ". Source: table T12."), small),
+            Spacer(1, 6)]))
+    if not d.get("findings"):
+        story.append(Paragraph("No findings accepted yet.", body))
+    story += [Paragraph(NO_AI, small), Spacer(1, 14), Paragraph(CREDITS, small)]
 
     def footer(canvas, _doc):
         canvas.saveState()
