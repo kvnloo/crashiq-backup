@@ -66,3 +66,8 @@ def test_nothing_to_place_downloads_nothing(monkeypatch):
     monkeypatch.setattr(network_mod, "fetch_overpass", boom)
     r = {"cleaning": {}, "crashes": [{"crash_id": "g", "lat": 1, "lon": 1, "location_source": "gps"}]}
     assert placement.place_unmatched(None, NET, r)["tried"] == 0
+
+
+def test_no_corridor_line_places_nothing(result):
+    counts = placement.place_unmatched(None, {"line": []}, result)
+    assert counts["placed"] == {} and all(c["lat"] is None for c in result["crashes"][:3])
