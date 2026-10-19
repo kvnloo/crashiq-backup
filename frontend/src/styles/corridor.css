@@ -67,3 +67,7 @@
   .corridor .search { width: 180px; }
   .corridor .hint { display: none; }
 }
+.vbasis .row { display: flex; gap: 8px; align-items: center; }
+.vbasis .row select { flex: 1; }
+.vbasis .kf { display: flex; align-items: center; gap: 6px; font: 12px var(--font-mono); color: var(--muted); }
+.vbasis .kf .input { width: 64px; padding: 8px; }

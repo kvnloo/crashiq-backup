@@ -22,6 +22,7 @@ MIN_YEARS, MAX_YEARS, DEFAULT_YEARS = 1, 10, 5
 COVID_YEARS = (2020, 2021)    # #34 item 13: both years noted
 FINAL_LAG_MONTHS = 18          # #34 item 8: CHP data entry lags 12-18 months (TIMS); a year is treated as final
                                # once 18 months have passed since it ended
+K_RANGE = (0.04, 0.25)         # peak-hour share of daily traffic; 10% default (user: "10% is typical")
 SHORT_WINDOW_YEARS = 3         # #34 item 15: warn below this (Caltrans LRSM: at least 3, preferably 5)
 RADIUS_RANGE = (50.0, 1000.0)   # intersection influence radius, ft (default 250, R2.4)
 BUFFER_RANGE = (10.0, 500.0)    # corridor buffer each side of the line, ft
@@ -93,6 +94,8 @@ def _row(r: dict | None) -> dict | None:
     r = dict(r)
     r["covid_years_in_window"] = bool(r["covid_years_in_window"])
     r["include_freeway"] = bool(r.get("include_freeway", 0))
+    r["volume_basis"] = r.get("volume_basis") or "aadt"
+    r["k_factor"] = r.get("k_factor") if r.get("k_factor") is not None else 0.10
     r["mode_label"] = MODES.get(r["mode"], r["mode"])
     r["years"] = r["to_year"] - r["from_year"] + 1
     return r
@@ -130,6 +133,12 @@ def update(db: Database, sid: str, **changes) -> dict:
     radius = changes.get("radius_ft", cur["radius_ft"])
     buffer = changes.get("buffer_ft", cur["buffer_ft"])
     fwy = bool(changes.get("include_freeway", cur["include_freeway"]))
+    basis = changes.get("volume_basis", cur["volume_basis"])
+    k = changes.get("k_factor", cur["k_factor"])
+    if basis not in ("aadt", "peak_hour"):
+        raise ValueError("Volumes are entered either as daily AADT or as peak-hour counts.")
+    if not K_RANGE[0] <= k <= K_RANGE[1]:
+        raise ValueError(f"K factor must be {K_RANGE[0]:.0%}–{K_RANGE[1]:.0%} of daily traffic.")
     if not (name or "").strip():
         raise ValueError("Give the project a name.")
     if mode not in MODES:
@@ -140,8 +149,8 @@ def update(db: Database, sid: str, **changes) -> dict:
     if not BUFFER_RANGE[0] <= buffer <= BUFFER_RANGE[1]:
         raise ValueError(f"Corridor buffer must be {BUFFER_RANGE[0]:.0f}–{BUFFER_RANGE[1]:.0f} ft.")
     db.execute("UPDATE study SET name=?, mode=?, from_year=?, to_year=?, covid_years_in_window=?, radius_ft=?, "
-               "buffer_ft=?, include_freeway=?, updated_at=datetime('now') WHERE id=?",
-               (name.strip(), mode, fy, ty, int(covid_in_window(fy, ty)), radius, buffer, int(fwy), sid))
+               "buffer_ft=?, include_freeway=?, volume_basis=?, k_factor=?, updated_at=datetime('now') WHERE id=?",
+               (name.strip(), mode, fy, ty, int(covid_in_window(fy, ty)), radius, buffer, int(fwy), basis, k, sid))
     return get(db, sid)
 
 
@@ -168,6 +177,8 @@ class StudyPatch(BaseModel):
     radius_ft: float | None = None
     buffer_ft: float | None = None
     include_freeway: bool | None = None
+    volume_basis: str | None = None
+    k_factor: float | None = None
 
 
 router = APIRouter()

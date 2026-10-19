@@ -104,6 +104,23 @@ describe('Corridor screen', () => {
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH' && c.body.legs === 3)).toBe(true))
     fireEvent.click(screen.getByLabelText(/Include freeway and ramp crashes/))
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH' && c.body.include_freeway === true)).toBe(true))
+    fireEvent.change(screen.getByLabelText('Volumes entered as'), { target: { value: 'peak_hour' } })
+    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH' && c.body.volume_basis === 'peak_hour')).toBe(true))
+  })
+
+  it('labels the volume boxes as peak-hour counts and shows K when volumes are peak hour', async () => {
+    const PEAK = { ...STUDY, volume_basis: 'peak_hour', k_factor: 0.1 }
+    const calls = mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': PEAK, 'GET /studies/:id/network': NET,
+      'PATCH /studies/:id': { ...PEAK, k_factor: 0.09 } })
+    renderAt('/s/s1/corridor')
+    fireEvent.click(await screen.findByText('More options'))
+    fireEvent.click(screen.getByLabelText('Enter AADT to compute rates'))
+    expect(screen.getAllByLabelText(/two-way peak-hour volume/)).toHaveLength(6)
+    const k = screen.getByLabelText('K factor, percent of daily traffic')
+    expect(k).toHaveValue(10)
+    fireEvent.change(k, { target: { value: '9' } })
+    fireEvent.blur(k)
+    await waitFor(() => expect(calls.some((c) => c.method === 'PATCH' && c.body.k_factor === 0.09)).toBe(true))
   })
 
   it('starts from the corridor line in an imported project context', async () => {

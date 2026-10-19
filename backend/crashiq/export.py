@@ -120,7 +120,8 @@ def methodology(d: dict) -> str:
             f"corridor segment when within {s['buffer_ft']:g} ft of the corridor line. Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed. Severity: each crash counted once at its most severe outcome (KABCO). Rates appear only where "
-            "AADT was entered (intersections per million entering vehicles from two-way AADT, a T counting half the "
+            "AADT was entered" + (f" (estimated from peak-hour counts with K = {s.get('k_factor', 0.1):.0%})"
+                                  if s.get("volume_basis") == "peak_hour" else "") + " (intersections per million entering vehicles from two-way AADT, a T counting half the "
             "minor road; segments per 100 million vehicle-miles). Where 3 or more similar locations have AADT, each "
             "location's rate is compared with its critical rate (HSM Ch. 4, 95% confidence) against the average of the "
             "corridor's own intersections or segments. This profile does not compare rates with statewide averages.")
