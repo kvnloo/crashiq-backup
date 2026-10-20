@@ -116,7 +116,10 @@ def drop_directional(k: StreetKey) -> StreetKey:
 
 def same_core(a: StreetKey, b: StreetKey) -> bool:
     """Relaxed tier: same core, any suffix (GEARY ST for GEARY BLVD); a leading directional may be
-    missing on one side only (W 147TH ST vs 147TH ST)."""
+    missing on one side only (W 147TH ST vs 147TH ST). A freeway is never relaxed to a street of another kind:
+    HARBOR FWY (I-110) is not HARBOR BLVD (before #67 FWY wasn't a suffix, so these never matched)."""
+    if (a.suffix == "FWY") != (b.suffix == "FWY") and a.suffix and b.suffix:
+        return False
     ca, cb = a.core.replace(" ", ""), b.core.replace(" ", "")
     if ca == cb:
         return True

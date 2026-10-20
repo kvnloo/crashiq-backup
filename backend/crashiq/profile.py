@@ -166,12 +166,15 @@ def intersection_rate(crashes: int, years: float, major_aadt: float | None, mino
 def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str] | None = None) -> dict:
     exclude = exclude or set()
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
-    placed, unmatched, excluded_n = [], [], 0
+    placed, unmatched, excluded_n, excluded_prov, gps_far = [], [], 0, 0, 0
     for a in assignment["assignments"]:
         c = {**by_id[a["crash_id"]], **{k: a[k] for k in ("kind", "location_id", "location_provenance")}}
         prov = c["location_provenance"] or ""
         if any(prov.startswith(e) for e in exclude):
+            excluded_prov += 1      # counted in T1 so the rows still add up to the pull (#53)
             continue
+        if a.get("gps_check") and a["kind"] in ("intersection", "segment"):
+            gps_far += 1
         if a["kind"] in ("intersection", "segment"):
             placed.append(c)
         elif a["kind"] == "unmatched":
@@ -201,6 +204,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("unplaced", "Crashes not yet placed (no coordinates)", value=len(unmatched)),
         _row("excluded", "Crashes outside the study area", value=excluded_n),
     ]
+    if exclude:
+        summary_rows.append(_row("excluded_provenance", "Crashes left out by placement method", value=excluded_prov))
     tables = [_table("T1", "Study summary", [("value", "Value")], summary_rows, placed)]
 
     # T2 locations, corridor order (intersections and segments interleaved by station)
@@ -319,6 +324,12 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                 f"corridor's own intersections or segments, not statewide averages. "
                                 f"Locations above their critical rate: {len(over)} of "
                                 f"{sum(1 for r in loc_rows if r['values'].get('critical_rate') is not None)}."})
+    if gps_far:
+        caveats.append({"key": "gps_far_from_stated", "count": gps_far,
+                        "text": f"{gps_far} crash{'es have' if gps_far != 1 else ' has'} a GPS point more than "
+                                f"{assign_mod.GPS_CHECK_FT:g} ft (plus the reported distance) "
+                                "from the intersection named in the report. They are counted where the GPS puts them; "
+                                "check them on the map."})
     if exclude:
         caveats.append({"key": "excluded_provenance", "text": f"Crashes placed by {', '.join(sorted(exclude))} are left out of this run."})
 

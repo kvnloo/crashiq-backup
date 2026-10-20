@@ -136,6 +136,10 @@ MIGRATIONS: list[str] = [
     ALTER TABLE corridor ADD COLUMN corridor_highway TEXT;
     ALTER TABLE corridor ADD COLUMN grade_separations_json TEXT;
     """,
+    # 11 — #53 every name/ref the corridor street carries in OSM (Nimitz Freeway = I 880), for road-name checks
+    """
+    ALTER TABLE corridor ADD COLUMN corridor_names_json TEXT;
+    """,
 ]
 
 

@@ -136,6 +136,10 @@ def test_provenance_mix_and_exclude_jev_rerun():
     assert v(q, "T1/crashes/value") == 45 and v(q, "T2/S1/crashes") == 15
     assert v(q, "T3/U/crashes") == 0                            # the U crash was jev-placed
     assert any(c["key"] == "excluded_provenance" for c in q["caveats"])
+    # #53: the left-out crashes have their own T1 row, so the summary still adds up to every assigned crash
+    assert v(q, "T1/excluded_provenance/value") == 5
+    assert (v(q, "T1/crashes/value") + v(q, "T1/unplaced/value") + v(q, "T1/excluded/value")
+            + v(q, "T1/excluded_provenance/value")) == len(golden()[3]["assignments"])
 
 
 def test_every_kpi_address_resolves():

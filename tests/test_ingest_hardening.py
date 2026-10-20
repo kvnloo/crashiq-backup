@@ -226,3 +226,27 @@ def test_blank_extent_is_not_an_unknown_injury_value():
 
 def test_most_severe_live_code_wins():
     assert cc.severity({"killed": 0, "injured": 3}, ["PossibleInjury", "SuspectSerious", "SuspectMinor"])[0] == "A"
+# -- #53 report versions --------------------------------------------------------------------------------------
+def test_newest_version_deleted_removes_the_crash():
+    def kill_v2(r):
+        if str(r["Collision Id"]) == "9100002" and str(r["Report Version"]) == "2":
+            r["IsDeleted"] = "True"
+    out = pull(fixture(kill_v2))
+    assert "9100002" not in {c["crash_id"] for c in out["crashes"]}       # v1 does not come back
+    assert out["cleaning"]["deleted_dropped"] >= 1
+
+
+def test_older_version_deleted_keeps_the_newest():
+    def kill_v1(r):
+        if str(r["Collision Id"]) == "9100002" and str(r["Report Version"]) == "1":
+            r["IsDeleted"] = "True"
+    c = next(c for c in pull(fixture(kill_v1))["crashes"] if c["crash_id"] == "9100002")
+    assert c["report_version"] == 2
+
+
+def test_same_version_twice_keeps_the_first_and_says_so():
+    d = fixture()
+    rid = next(r for r in d["tables"] if r.startswith("cra-"))
+    rows = d["tables"][rid]["rows"]
+    rows.append(dict(rows[0]))
+    assert pull(d)["cleaning"]["version_ties_first_kept"] >= 1

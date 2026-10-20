@@ -55,6 +55,9 @@ def cache_key(study: dict, net: dict) -> str:
     gs = sorted(g["name"] for g in net.get("grade_separations") or [])
     if gs:                      # the pull's no-coordinate rules use them (#67); none = same key as before
         key.append(gs)
+    names = net.get("corridor_names") or []
+    if len(names) > 1:          # extra corridor names/refs widen the no-coordinate search (#53)
+        key.append(sorted(names))
     raw = json.dumps(key)
     return hashlib.sha1(raw.encode()).hexdigest()
 
@@ -80,8 +83,12 @@ def _paged(ckan: Ckan, sql_head: str, order_col: str) -> list[dict]:
 
 
 def _corridor_cores(net: dict) -> list[str]:
-    k = street_key(net.get("corridor_name"))
-    return [k.core] if k else []
+    """Squeezable cores of every corridor name/ref (#53), for the SQL name prefilter."""
+    out = []
+    for k in grade.corridor_keys(net):
+        if k.core not in out:
+            out.append(k.core)
+    return out
 
 
 # Characters left out of street-name matching on both sides: spaces, apostrophes, and the LIKE wildcards % and _
@@ -175,12 +182,12 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     log = {"rows_read": 0, "outside_window_dropped": 0, "deleted_dropped": 0, "duplicate_versions_dropped": 0,
            "no_coords_read": 0, "no_coords_not_corridor_street": 0, "no_coords_off_study_stretch": 0,
            "no_coords_grade_separated": 0,
-           "implausible_coords": 0, "bad_dates_dropped": 0, "duplicate_parties_dropped": 0, "preliminary_kept": 0,
+           "implausible_coords": 0, "bad_dates_dropped": 0, "duplicate_parties_dropped": 0, "version_ties_first_kept": 0, "preliminary_kept": 0,
            "feet_typed_as_miles_fixed": 0, "years_missing": [], "parties_missing_years": [], "iwp_missing_years": [],
            "missing_fields": {}, "unknown_injury_values": [], "cities": []}
     s, w, n, e = bbox(net["line"], margin_ft(study))
     cores = _corridor_cores(net)
-    corridor_keys = [k for k in [street_key(net.get("corridor_name"))] if k]
+    corridor_keys = grade.corridor_keys(net)
     # One corner can carry two cross-street names ("Eastin Drive / Lowry Road"): each one counts (Lowry Rd, Union City).
     cross_keys = [k for k in (street_key(part) for i in net.get("intersections", []) if i.get("is_study")
                               for part in str(i.get("name") or "").split("/")) if k]
@@ -269,16 +276,18 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
             if c["year"] not in years:
                 log["outside_window_dropped"] += 1
                 continue
-            if c["deleted"]:
-                log["deleted_dropped"] += 1
-                continue
             c["location_source"] = loc
             prev = crashes.get(c["crash_id"])
             if prev is not None:
                 dup_seen += 1
+                if c["report_version"] == prev["report_version"]:
+                    log["version_ties_first_kept"] += 1     # same version twice: keep the first row read
                 if c["report_version"] <= prev["report_version"]:
                     continue
-            crashes[c["crash_id"]] = c
+            crashes[c["crash_id"]] = c       # the newest version wins, even when it is the deleted one (#53)
+    for cid in [k for k, c in crashes.items() if c["deleted"]]:
+        log["deleted_dropped"] += 1          # newest version deleted: the crash is gone, older versions don't survive
+        del crashes[cid]
     log["duplicate_versions_dropped"] = dup_seen
     if len(log["years_missing"]) == len(years):
         raise PullError("data.ca.gov has no CCRS crash table for any year in the study window. The dataset may have "

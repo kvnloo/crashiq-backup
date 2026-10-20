@@ -5,6 +5,13 @@
   (SevereInactive, OtherVisibleInactive, ComplaintOfPainInactive). Matching on the dictionary dropped every A/B/C
   injury on live data while all tests passed on a hand-built fixture (#75). Always test against recorded LIVE rows
   (`tests/fixtures/live/`), not only fixtures written from the documentation.
+- 2026-10-19 · A corridor street can change name at a city line, and each police department writes its own name:
+  Union City Blvd is Ardenwood Blvd in Fremont, so Fremont PD's crashes at Rancho Dr and Paseo Padre Pkwy (both on
+  the drawn corridor) were never searched. Match every name and ref OSM gives the corridor's ways, not just the
+  most common one (#53). Union City study: 21 → 30 intersection crashes.
+- 2026-10-19 · Live CCRS publishes one row per Collision Id (2016–2026, every year checked): only the latest report
+  version is in the table (versions go up to 1,326), and `IsDeleted` is never true, so deleted reports are removed,
+  not flagged. IWP rows are unique by `InjuredWitPassId`. The dedupe/version code is a safeguard, not a live fix (#53).
 - 2026-10-18 · Git must never touch the live database. A `git stash` + checkout restored a stale, committed
   `data/crashiq.sqlite-wal`, and SQLite replayed it into the db and corrupted it. Recovered with `sqlite3 .recover`
   (backup in `data/backup/`), corrupt cache rows deleted and re-pulled. `*.sqlite-wal` / `*.sqlite-shm` are now

@@ -43,6 +43,11 @@ def keys_of(names: list[str]) -> list[StreetKey]:
     return out
 
 
+def corridor_keys(net: dict) -> list[StreetKey]:
+    """Every name and ref the corridor street carries (OSM `name` and `ref`: Nimitz Freeway = I 880)."""
+    return keys_of(net.get("corridor_names") or [net.get("corridor_name")])
+
+
 def crossing_keys(net: dict) -> list[StreetKey]:
     return keys_of([g.get("name") for g in net.get("grade_separations") or []])
 
