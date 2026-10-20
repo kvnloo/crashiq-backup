@@ -123,4 +123,49 @@ describe('Crash profile screen', () => {
     renderAt('/s/s1/profile')
     expect(await screen.findByRole('alert', {}, { timeout: 3000 })).toHaveTextContent('data.ca.gov is down')
   })
+
+  it('opens the review list, excludes a group with a reason, and refreshes the profile (#97)', async () => {
+    const REVIEW = {
+      open: 2, can_undo: false, decided: [],
+      intersections: [{ id: 'osm-1', name: 'Marine Avenue', lat: 33.8953, lon: -118.3266 }],
+      groups: [{ key: 'CRENSHAW BLVD / NOT STATED', primary: 'CRENSHAW BLVD', secondary: 'NOT STATED', count: 2,
+        reasons: { no_cross_street: 2 }, with_suggestion: 0,
+        crashes: [{ crash_id: '1', date: '2023-01-02', hour: 8, severity: 'C', collision_type: 'REAR END', primary_road: 'CRENSHAW BL', secondary_road: 'NOT STATED', reason: 'no_cross_street' },
+          { crash_id: '2', date: '2024-03-04', hour: 17, severity: 'O', collision_type: 'BROADSIDE', primary_road: 'CRENSHAW BL', secondary_road: 'NOT STATED', reason: 'no_cross_street' }] }],
+    }
+    const AFTER = { ...REVIEW, open: 0, can_undo: true, groups: [],
+      decided: [{ crash_id: '1', primary_road: 'CRENSHAW BL', secondary_road: 'NOT STATED', decision: { action: 'exclude', reason: 'Parking lot' } }] }
+    const calls = mockApi({ ...routes, 'GET /studies/:id/review': REVIEW,
+      'POST /studies/:id/review/decisions': () => ({ decided: 2, review: AFTER }) })
+    renderAt('/s/s1/profile')
+    fireEvent.click(await screen.findByRole('button', { name: 'Review them →' }))
+    expect(await screen.findByText('CRENSHAW BLVD / NOT STATED')).toBeInTheDocument()
+    expect(screen.getByText(/No cross street in the report/)).toBeInTheDocument()
+    const group = screen.getByText('CRENSHAW BLVD / NOT STATED').closest('li')
+    fireEvent.click(within(group).getAllByRole('button', { name: 'Exclude' })[0])
+    const why = screen.getByLabelText(/Why exclude all 2 crashes/)
+    fireEvent.change(why, { target: { value: 'Parking lot' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Exclude 2' }))
+    expect(await screen.findByText('Nothing left to review.')).toBeInTheDocument()
+    const post = calls.find((c) => c.method === 'POST' && c.path.endsWith('/review/decisions'))
+    expect(post.body).toEqual({ crash_ids: ['1', '2'], action: 'exclude', reason: 'Parking lot' })
+    await waitFor(() => expect(calls.filter((c) => c.path.endsWith('/profile')).length).toBeGreaterThan(1))   // recounted
+    expect(screen.getByRole('button', { name: 'Undo last' })).toBeEnabled()
+  })
+
+  it('places a crash at a study intersection (#97)', async () => {
+    const REVIEW = { open: 1, can_undo: false, decided: [], intersections: [{ id: 'osm-1', name: 'Marine Avenue', lat: 1, lon: 2 }],
+      groups: [{ key: 'CRENSHAW BLVD / MARINE AVE', primary: 'CRENSHAW BLVD', secondary: 'MARINE AVE', count: 1, reasons: { no_coordinates: 1 }, with_suggestion: 0,
+        crashes: [{ crash_id: '9', date: '2023-01-02', severity: 'B', primary_road: 'CRENSHAW BL', secondary_road: 'MARINE AV', reason: 'no_coordinates' }] }] }
+    const calls = mockApi({ ...routes, 'GET /studies/:id/review': REVIEW,
+      'POST /studies/:id/review/decisions': () => ({ decided: 1, review: { ...REVIEW, open: 0, groups: [], can_undo: true } }) })
+    renderAt('/s/s1/profile')
+    fireEvent.click(await screen.findByRole('button', { name: 'Review them →' }))
+    fireEvent.click(await screen.findByRole('button', { name: 'At an intersection' }))
+    fireEvent.change(screen.getByLabelText(/Intersection for crash 9/), { target: { value: 'osm-1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Place' }))
+    await screen.findByText('Nothing left to review.')
+    expect(calls.find((c) => c.path.endsWith('/review/decisions')).body)
+      .toEqual({ crash_ids: ['9'], action: 'place', method: 'intersection', location_id: 'osm-1' })
+  })
 })

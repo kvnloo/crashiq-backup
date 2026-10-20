@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProfileMap from '../components/ProfileMap'
+import ReviewList from '../components/ReviewList'
 import { locationPoints } from '../lib/mapcats'
 import { ApiError, api, errorText } from '../lib/api'
 import { cell, fmt, table, titleCase } from '../lib/tables'
@@ -210,6 +211,8 @@ export default function Profile() {
   const [state, setState] = useState({ phase: 'loading' })
   const [drill, setDrill] = useState(null)       // { row, data }
   const [refreshing, setRefreshing] = useState(false)
+  const [review, setReview] = useState(null)      // review list data while it's open (#97)
+  const [picking, setPicking] = useState(null)    // { ids, done } while a map point is being picked
 
   useEffect(() => {
     let alive = true
@@ -242,6 +245,23 @@ export default function Profile() {
     } finally { setRefreshing(false) }
   }
 
+  async function reload() {
+    const [p, cr, asg] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`),
+      api(`/studies/${studyId}/assignment`)])
+    setState((s) => ({ ...s, profile: p, crashes: placedCrashes(cr.crashes, asg) }))
+  }
+
+  async function openReview() {
+    setDrill(null)
+    setReview(await api(`/studies/${studyId}/review`))
+  }
+
+  async function reviewChanged(next) {           // a decision or an undo: the server recounts, the screen follows
+    setReview(next)
+    setPicking(null)
+    await reload()
+  }
+
   async function openLocation(row) {
     setDrill({ row, data: null })
     const data = await api(`/studies/${studyId}/profile/locations/${encodeURIComponent(row.key)}`)
@@ -255,7 +275,8 @@ export default function Profile() {
   return (
     <section className="profile" aria-label="Crash profile">
       <div className="mapcol">
-        <ProfileMap line={state.line} crashes={state.crashes || []} locations={locs} highlight={highlight} />
+        <ProfileMap line={state.line} crashes={state.crashes || []} locations={locs} highlight={highlight}
+          onPick={picking ? (pt) => picking.done(pt) : undefined} />
       </div>
       <div className="datacol">
         {state.phase === 'nocorridor' && (
@@ -270,11 +291,18 @@ export default function Profile() {
             ) : null}</div>
         )}
         {state.phase === 'error' && <div className="err" role="alert">{state.error}</div>}
-        {state.phase === 'ready' && p && (drill ? (
+        {state.phase === 'ready' && p && (review ? (
+          <ReviewList studyId={studyId} review={review} onChanged={reviewChanged} picking={picking} setPicking={setPicking}
+            onClose={() => { setReview(null); setPicking(null) }} />
+        ) : drill ? (
           <Drill row={drill.row} data={drill.data} onClose={() => setDrill(null)} />
         ) : (
           <>
             <Kpis p={p} />
+            {cell(p, 'T1/unplaced/value') > 0 ? (
+              <div className="note rv-entry">{fmt(cell(p, 'T1/unplaced/value'))} crash{cell(p, 'T1/unplaced/value') === 1 ? ' is' : 'es are'} not placed yet.
+                {' '}<button type="button" className="linkbtn" onClick={openReview}>Review them →</button></div>
+            ) : null}
             {p.caveats.length > 0 && (
               <ul className="caveats" aria-label="Caveats">
                 {p.caveats.map((c) => <li key={c.key} className={c.limitation ? 'warn' : ''}>{c.text}</li>)}

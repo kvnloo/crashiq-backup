@@ -28,6 +28,7 @@ from fastapi import APIRouter, HTTPException, Request
 
 from . import crashes as crashes_mod
 from . import grade
+from . import review as review_mod
 from . import network as network_mod
 from . import study as study_mod
 from .geo import Polyline
@@ -146,6 +147,12 @@ _MEMO: dict[tuple, tuple[dict, dict]] = {}      # (study inputs) -> (pull, assig
 _MEMO_MAX = 16
 
 
+def forget(sid: str) -> None:
+    """Drop a study's memoized assignments: called when a new pull is stored (two pulls can share a timestamp)."""
+    for k in [k for k in _MEMO if k[1] == sid]:
+        _MEMO.pop(k, None)
+
+
 def for_study(db, sid: str) -> tuple[dict, dict, dict, dict]:
     """(study, network, pull, assignment) — assignment recomputed from the cached pull, so radius/buffer edits apply.
     Memoized on everything it depends on (pull key + time, settings, network), so the profile, map, findings and
@@ -162,11 +169,14 @@ def for_study(db, sid: str) -> tuple[dict, dict, dict, dict]:
         raise HTTPException(409, "The study changed since the crashes were pulled. Open Crash profile to pull them again.")
     net_sig = json.dumps({k: net.get(k) for k in ("intersections", "segments", "grade_separations", "corridor_names",
                                                   "corridor_name", "is_freeway", "line")}, sort_keys=True, default=str)
+    decs = review_mod.decisions(db, sid)          # the engineer's place/exclude choices (#97), never cached away
     key = (getattr(db, "path", id(db)), sid, head["cache_key"], head["pulled_at"], study["radius_ft"],
-           study["buffer_ft"], bool(study.get("include_freeway")), hashlib.sha1(net_sig.encode()).hexdigest())
+           study["buffer_ft"], bool(study.get("include_freeway")), hashlib.sha1(net_sig.encode()).hexdigest(),
+           review_mod.signature(decs))
     hit = _MEMO.pop(key, None)
     if hit is None:
         pull = crashes_mod.get_cached(db, sid)
+        pull = {**pull, "crashes": review_mod.overlay(pull["crashes"], decs)}
         hit = (pull, assign(pull["crashes"], net, study["radius_ft"], study["buffer_ft"],
                             bool(study.get("include_freeway"))))
     _MEMO[key] = hit                                  # most recently used last

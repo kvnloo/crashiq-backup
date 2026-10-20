@@ -36,7 +36,26 @@ def gather(db, sid: str) -> dict:
             "assignment": {"counts": a["counts"], "excluded_by_rule": a["excluded_by_rule"],
                            "unmatched_by_rule": a.get("unmatched_by_rule", {})},
             "pulled_at": pull.get("pulled_at"),
+            "decisions": _decisions(db, sid, pull, a),
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
+
+
+def _decisions(db, sid: str, pull: dict, a: dict) -> list[dict]:
+    """The engineer's review-list decisions (#97), listed in the export: what was placed or excluded by hand."""
+    from .review import decisions
+    by_id = {c["crash_id"]: c for c in pull["crashes"]}
+    kind = {x["crash_id"]: (x["kind"], x["location_id"]) for x in a["assignments"]}
+    out = []
+    for cid, d in sorted(decisions(db, sid).items()):
+        c = by_id.get(cid)
+        if c is None:
+            continue
+        k, loc = kind.get(cid, (None, None))
+        out.append({"crash_id": cid, "roads": f"{c.get('primary_road') or ''} / {c.get('secondary_road') or ''}",
+                    "date": c.get("date"), "action": d["action"], "method": d["method"], "reason": d["reason"],
+                    "assigned_to": loc or k, "applied": c.get("stale_decision") is None,
+                    "decided_at": d["decided_at"]})
+    return out
 
 
 def _t(p, tid):
@@ -91,6 +110,20 @@ def to_xlsx(d: dict) -> bytes:
         for row in sh.iter_rows(min_row=3):
             for c in row[2:]:
                 c.alignment = Alignment(horizontal="right")
+    if d.get("decisions"):
+        sh = wb.create_sheet("Review decisions")
+        sh.append(["Placed or excluded by the engineer on the review list (provenance 'user'). Every count is still "
+                   "computed by code from these locations."])
+        sh["A1"].font = Font(bold=True, size=12)
+        sh.append(["Collision Id", "Roads (as reported)", "Date", "Action", "How", "Reason", "Assigned to", "Applied",
+                   "Decided"])
+        for cell in sh[2]:
+            cell.font = Font(bold=True)
+        for r in d["decisions"]:
+            sh.append([r["crash_id"], r["roads"], r["date"], r["action"], r["method"] or "", r["reason"] or "",
+                       r["assigned_to"] or "", "yes" if r["applied"] else "no (report revised; re-review)",
+                       r["decided_at"]])
+        sh.column_dimensions["B"].width = 44
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
@@ -112,7 +145,8 @@ RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_lim
              "not_on_freeway": "not on the freeway (CHP IsFreeway false)", "ramp": "on a freeway ramp",
              "not_on_corridor_street": "on another street (the report names neither the corridor nor the cross street)",
              "no_cross_street": "no cross street in the report (not stated), so its place on the corridor is unknown",
-             "private_property": "on private property"}
+             "private_property": "on private property",
+             "user_excluded": "excluded by the engineer on the review list (reason in the Review decisions sheet)"}
 
 
 def methodology(d: dict) -> str:

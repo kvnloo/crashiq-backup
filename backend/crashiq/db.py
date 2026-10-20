@@ -140,6 +140,30 @@ MIGRATIONS: list[str] = [
     """
     ALTER TABLE corridor ADD COLUMN corridor_names_json TEXT;
     """,
+    # 12 — #97 review list: the engineer's place/exclude decisions per crash (kept across re-pulls) and undo batches
+    """
+    CREATE TABLE crash_decision (
+        study_id       TEXT NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        crash_id       TEXT NOT NULL,
+        action         TEXT NOT NULL,
+        method         TEXT,
+        lat            REAL,
+        lon            REAL,
+        location_id    TEXT,
+        reason         TEXT,
+        report_version INTEGER,
+        batch_id       INTEGER,
+        decided_at     TEXT NOT NULL DEFAULT (datetime('now')),
+        PRIMARY KEY (study_id, crash_id)
+    );
+    CREATE TABLE decision_batch (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        study_id    TEXT NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        before_json TEXT NOT NULL,
+        undone      INTEGER NOT NULL DEFAULT 0,
+        created_at  TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    """,
 ]
 
 
