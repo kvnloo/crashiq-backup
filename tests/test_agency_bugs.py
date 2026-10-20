@@ -72,12 +72,16 @@ def test_hyphen_is_a_space_in_street_keys_but_routes_keep_their_number():
 
 # -- #81 one crash under two Collision Ids --------------------------------------------------------------------
 def test_same_crash_filed_under_two_collision_ids_counts_once():
-    # CHP 9630-2023-00084 = Collision Ids 1975974 and 1975975, same minute, I-10 E/B & BOB HOPE DR, same GPS
+    # CHP 9630-2023-00084 = Collision Ids 1975974 and 1975975, same minute, I-10 E/B & BOB HOPE DR, same GPS.
+    # The hand fixture has no Report Number column, so this also exercises the no-report-number rule.
     d = _fixture()
     rows, r = _row(d, 9200001)
     twin = copy.deepcopy(r)
     twin["Collision Id"], twin["Report Version"] = 9299999, 2      # the re-filed copy, a new id
     rows.append(twin)
+    for rid, t in d["tables"].items():                             # a re-filed report carries its parties too
+        if rid.startswith("par-"):
+            t["rows"] += [{**p, "CollisionId": 9299999} for p in t["rows"] if p["CollisionId"] == 9200001]
     out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
     ids = {c["crash_id"] for c in out["crashes"]}
     assert ids & {"9200001", "9299999"} == {"9299999"}             # the higher version is kept
@@ -96,3 +100,17 @@ def test_same_report_number_on_a_different_crash_is_not_merged():
     out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
     assert {"9200001", "9299998"} <= {c["crash_id"] for c in out["crashes"]}
     assert out["cleaning"]["same_crash_refiled_dropped"] == 0
+
+
+def test_look_alikes_without_a_report_number_that_differ_in_collision_type_are_both_kept():
+    # PM review: same corner, same minute, no report number, but a different collision type = two real crashes
+    d = _fixture()
+    rows, r = _row(d, 9200001)
+    other = copy.deepcopy(r)
+    other["Collision Id"] = 9299997
+    other["Collision Type Description"] = "REAR END" if r.get("Collision Type Description") != "REAR END" else "BROADSIDE"
+    rows.append(other)
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    assert {"9200001", "9299997"} <= {c["crash_id"] for c in out["crashes"]}
+    assert out["cleaning"]["same_crash_refiled_dropped"] == 0
+    assert out["cleaning"]["possible_refile"] == [["9200001", "9299997"]]
