@@ -109,7 +109,9 @@ RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_lim
              "cross_street_not_on_corridor": "at a cross street that is not one of the corridor's intersections",
              "grade_separated_crossing": "on a road passing over or under the corridor",
              "not_on_freeway": "not on the freeway (CHP IsFreeway false)", "ramp": "on a freeway ramp",
-             "not_on_corridor_street": "on another street (the report names neither the corridor nor the cross street)"}
+             "not_on_corridor_street": "on another street (the report names neither the corridor nor the cross street)",
+             "no_cross_street": "no cross street in the report (not stated), so its place on the corridor is unknown",
+             "private_property": "on private property"}
 
 
 def methodology(d: dict) -> str:
