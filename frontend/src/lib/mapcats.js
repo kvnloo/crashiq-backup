@@ -5,7 +5,7 @@
 export const SLOTS = ['#3987e5', '#d95926', '#199e70']
 export const OTHER = '#6B7682'
 const RAMP = ['#184f95', '#1c5cab', '#256abf', '#2a78d6', '#3987e5', '#5598e7', '#6da7ec', '#86b6ef', '#9ec5f4', '#b7d3f6']
-import { SEVERITY, SEVERITY_LABEL } from './severity'
+import { HOLLOW, SEVERITY, SEVERITY_LABEL } from './severity'
 
 const title = (s) => (s || '').toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase())
 const isDark = (c) => (c.lighting || '').toUpperCase().startsWith('DARK')
@@ -61,7 +61,8 @@ export function categories(dim, crashes) {
     list = [['day', 'Daylight', SLOTS[1]], ['dark', 'Dark, street lights', SLOTS[0]], ['unlit', 'Dark, no working lights', SLOTS[2]],
       ['dusk', 'Dusk or dawn', OTHER], ['none', 'Not stated', OTHER]]
   }
-  return list.filter(([k]) => dim === 'severity' || has(k)).map(([key, label, color]) => ({ key, label, color, count: n.get(key) || 0 }))
+  return list.filter(([k]) => dim === 'severity' || has(k))
+    .map(([key, label, color]) => ({ key, label, color, count: n.get(key) || 0, hollow: dim === 'severity' && HOLLOW.has(key) }))
 }
 
 // hidden: { [dim]: Set(keys) }. A crash shows only when no dimension hides it.

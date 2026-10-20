@@ -101,3 +101,11 @@ describe('severity categories (#108)', () => {
   })
 })
 
+
+describe('level not stated is hollow (#108 round 2)', () => {
+  it('flags U as hollow and nothing else', () => {
+    const cats = categories('severity', [{ severity: 'U' }, { severity: 'O' }])
+    expect(cats.filter((c) => c.hollow).map((c) => c.key)).toEqual(['U'])
+    expect(categories('type', [{ collision_type: 'BROADSIDE' }]).some((c) => c.hollow)).toBe(false)
+  })
+})

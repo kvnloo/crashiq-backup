@@ -2,12 +2,12 @@
    Layout: header bar, left step rail, one stage that each step screen fills. One theme (dark). */
 :root {
   /* severity ramp (#108): mirrors backend/crashiq/severity.py and lib/severity.js; validated, see severity.py */
-  --sev-k: #d9003b;          /* fatal */
-  --sev-a: #d37e01;          /* suspected serious injury */
-  --sev-b: #666800;          /* suspected minor injury */
-  --sev-c: #19a0b8;          /* possible injury */
-  --sev-u: #8e9aa6;          /* injured, level not stated: a neutral unknown */
-  --sev-o: #6f57ab;          /* property damage only */
+  --sev-k: #e62b34;          /* fatal: the strongest */
+  --sev-a: #fd811b;          /* suspected serious injury */
+  --sev-b: #f6c330;          /* suspected minor injury */
+  --sev-c: #5dacba;          /* possible injury: muted */
+  --sev-u: #8e9aa6;          /* injured, level not stated: drawn hollow (outline), never filled */
+  --sev-o: #686c71;          /* property damage only: quiet neutral, about half of all crashes */
   --sev-i: var(--sev-a);     /* "any injury" in two-part injury / property-damage bars */
   --sev-p: var(--sev-o);
   --rail: 232px;
