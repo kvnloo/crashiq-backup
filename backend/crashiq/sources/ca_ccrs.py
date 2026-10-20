@@ -132,6 +132,7 @@ TABLE_PREFIX = {"crashes": "crashes_", "parties": "parties_", "iwp": "injuredwit
 CRASH_COLS = {
     "collision_id": ["Collision Id", "CollisionId"],
     "report_version": ["Report Version", "ReportVersion"],
+    "report_number": ["Report Number", "ReportNumber"],
     "is_preliminary": ["Is Preliminary", "IsPreliminary"],
     "is_deleted": ["IsDeleted", "Is Deleted"],
     "datetime": ["Crash Date Time", "CrashDateTime"],
@@ -347,6 +348,9 @@ def crash_record(raw: dict, cols: dict[str, dict]) -> dict:
     return {
         "crash_id": str(g("collision_id")),
         "report_version": int(_num(g("report_version")) or 0),
+        "report_number": s(g("report_number")),
+        "agency": s(g("ncic")),
+        "reported_at": str(g("datetime") or "").strip(),
         "preliminary": _truthy(g("is_preliminary")),
         "deleted": _truthy(g("is_deleted")),
         "date": date or "",

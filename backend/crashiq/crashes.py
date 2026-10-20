@@ -174,6 +174,52 @@ def _names_street(raw: str | None, keys) -> bool:
     return any(len(_squeeze(x.core)) >= 4 and _squeeze(x.core) in sq for x in keys)
 
 
+def _refile_key(c: dict) -> tuple | None:
+    """Same crash filed twice under two Collision Ids (#81): same agency, same report number (when CCRS gives one),
+    same date-time and the same two roads. Report numbers alone are not unique (SFPD reuses them), hence the rest."""
+    if not c.get("reported_at") or not (c.get("primary_road") or c.get("secondary_road")):
+        return None
+    return (c.get("agency") or "", c.get("report_number") or "", c["reported_at"],
+            _squeeze(c.get("primary_road")), _squeeze(c.get("secondary_road")))
+
+
+def _same_details(a: dict, b: dict, parties: dict[str, list]) -> bool:
+    """Without a report number, agency + minute + roads could be two real crashes at one corner: they must also
+    agree on collision type, killed, injured and number of parties (PM review of #87)."""
+    return (a.get("collision_type") == b.get("collision_type") and a.get("killed") == b.get("killed")
+            and a.get("injured") == b.get("injured")
+            and len(parties.get(a["crash_id"], [])) == len(parties.get(b["crash_id"], [])))
+
+
+def _drop_refiled(crashes: dict[str, dict], parties: dict[str, list], log: dict) -> None:
+    """Keep one row per refiled crash: the highest report version, then the lowest Collision Id. Pairs are logged;
+    look-alikes without a report number that differ in details are kept and logged as `possible_refile`."""
+    groups: dict[tuple, list[str]] = {}
+    for cid, c in crashes.items():
+        k = _refile_key(c)
+        if k is not None:
+            groups.setdefault(k, []).append(cid)
+    log["same_crash_refiled_dropped"] = 0
+    log["same_crash_refiled"] = []
+    log["possible_refile"] = []
+    for key, ids in groups.items():
+        if len(ids) < 2:
+            continue
+        keep = max(ids, key=lambda i: (crashes[i]["report_version"], -int(i) if i.isdigit() else 0))
+        drop = [i for i in ids if i != keep]
+        if not key[1]:                       # no report number: details must agree too
+            differ = [i for i in drop if not _same_details(crashes[keep], crashes[i], parties)]
+            if differ:
+                log["possible_refile"].append(sorted([keep, *differ]))
+            drop = [i for i in drop if i not in differ]
+        if not drop:
+            continue
+        log["same_crash_refiled"].append({"kept": keep, "dropped": sorted(drop)})
+        log["same_crash_refiled_dropped"] += len(drop)
+        for i in drop:
+            del crashes[i]
+
+
 def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     if not net.get("line"):
         raise PullError("Draw the corridor first.")
@@ -333,6 +379,7 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
         else:
             log["iwp_missing_years"].append(y)
 
+    _drop_refiled(crashes, parties, log)   # after the party lookup: party count is one of the checks (#81)
     unknown = set()
     out = []
     for c in sorted(crashes.values(), key=lambda c: (c["date"], c["crash_id"])):
