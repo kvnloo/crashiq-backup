@@ -171,3 +171,11 @@ def test_gps_far_from_the_intersection_the_report_names_is_flagged_not_moved():
     r = assign.assign([named("c", 0, 1200, "MAIN ST", "THIRD ST")], n_main(), 250.0, 100.0)
     assert r["gps_far_from_stated"] == 1
 
+
+
+def test_every_placed_crash_has_a_station_along_the_corridor():
+    # #102 strip diagram: intersection crashes sit at the intersection's station, segment crashes at their own
+    a = one(crash("c", 30, 1510))
+    assert a["kind"] == "intersection" and a["station_ft"] == 1500.0
+    b = one(crash("c", 40, 800))
+    assert b["kind"] == "segment" and b["station_ft"] == pytest.approx(800, abs=1)

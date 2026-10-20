@@ -126,3 +126,23 @@
 .review .rv-act .sf-btn { height: 30px; padding: 0 10px; font-size: 12px; }
 .review .rv-act .input { flex: 1 1 180px; min-width: 0; padding: 6px 10px; }
 .rv-entry { display: flex; flex-wrap: wrap; gap: 4px; align-items: baseline; }
+
+/* A. corridor strip diagram (#102): flat marks, recessive line, direct legend */
+.strip { position: relative; display: grid; gap: 8px; }
+.strip svg { display: block; overflow: visible; }
+.strip-line { stroke: var(--line); stroke-width: 2; }
+.strip-end { font: 600 11px var(--font-mono); fill: var(--muted); }
+.strip-tick line { stroke: var(--muted); stroke-width: 1.5; }
+.strip-tick text { font: 11px var(--font-mono); fill: var(--muted); }
+.strip-tick, .strip-dot { cursor: pointer; }
+.strip-tick:hover text { fill: var(--fg); }
+.strip .hit { fill: transparent; }
+.strip-dot circle:not(.hit) { stroke: var(--bg); stroke-width: 1.5; }
+.strip-more { font: 10px var(--font-mono); fill: var(--muted); }
+.strip-tip { position: absolute; width: 180px; pointer-events: none; background: var(--surface); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 12px var(--font-body); }
+.strip-dim { display: inline-flex; justify-self: start; gap: 2px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+.strip-dim button { border: 0; background: none; color: var(--muted); font: 600 12px var(--font-body); padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.strip-dim button.on { background: var(--surface-2); color: var(--fg); }
+.small-note { font-size: 12px; margin: 8px 0 0; }
+.showtable summary { font: 600 12px var(--font-body); color: var(--info); cursor: pointer; margin-top: 8px; }

@@ -186,3 +186,11 @@ def test_fixture_covers_the_hard_cases():
     assert any("Truck" in str(r.get("Vehicle1TypeDesc")) for r in pa)
     assert any(r.get("SecondaryUnitOfMeasure") == "M" for r in cr)
     assert any(str(r.get("Primary Collision Factor Violation") or "").startswith("VC ") for r in cr)
+
+
+def test_every_placed_crash_has_a_station_for_the_strip_diagram(case):
+    # #102: the strip draws one dot per placed crash at its station; T1 crashes = dots
+    _, _, a, p, ids, _, _, _ = case
+    placed = [x for x in a["assignments"] if x["kind"] in ("intersection", "segment")]
+    assert len(placed) == table(p, "T1")["crashes"]["value"] == len(ids)
+    assert all(x.get("station_ft") is not None and x["station_ft"] >= 0 for x in placed)
