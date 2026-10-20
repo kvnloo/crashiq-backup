@@ -46,8 +46,12 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
+PULL_FORMAT = 2     # bump when the cleaning changes what a cached pull holds (2: live injury codes, #75)
+
+
 def cache_key(study: dict, net: dict) -> str:
-    key = [study["from_year"], study["to_year"], net["line"], net.get("corridor_name"), margin_ft(study)]
+    key = [study["from_year"], study["to_year"], net["line"], net.get("corridor_name"), margin_ft(study),
+           PULL_FORMAT]
     gs = sorted(g["name"] for g in net.get("grade_separations") or [])
     if gs:                      # the pull's no-coordinate rules use them (#67); none = same key as before
         key.append(gs)
