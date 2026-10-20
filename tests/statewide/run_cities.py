@@ -46,9 +46,39 @@ RESULTS = DATA / "results"
 YEARS = [2021, 2022, 2023, 2024, 2025]
 
 
+FROZEN = HERE / "corridors_frozen.json"
+
+
 def code_version() -> str:
     return subprocess.run(["git", "-C", str(ROOT), "rev-parse", "HEAD:backend"], capture_output=True,
                           text=True).stdout.strip()[:12]
+
+
+def commit() -> str:
+    return subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], capture_output=True,
+                          text=True).stdout.strip()
+
+
+def mirror_built() -> str:
+    """Date the CCRS mirror was copied from data.ca.gov (oldest table download)."""
+    import datetime as dt
+    files = sorted(CACHE.glob("crashes_*.csv"), key=lambda f: f.stat().st_mtime)
+    return dt.datetime.fromtimestamp(files[0].stat().st_mtime).isoformat(timespec="minutes") if files else ""
+
+
+def freeze() -> None:
+    """Write the corridors actually run (lines + settings) so a rerun after fixes uses exactly the same basis."""
+    out = {"note": "Same-basis corridor list for the #73 statewide test (user decision, PR #86). Reruns reuse it.",
+           "years": YEARS, "mirror_built": mirror_built(), "cities": []}
+    for f in sorted(RESULTS.glob("*/*.json")):
+        r = json.loads(f.read_text())
+        if r.get("code_version") != code_version():
+            continue
+        out.setdefault("settings", r.get("settings"))
+        out["cities"].append({k: r.get(k) for k in ("city", "county", "osm_boundary", "corridor", "reason")})
+    out["cities"].sort(key=lambda c: (c["county"], c["city"]))
+    FROZEN.write_text(json.dumps(out, indent=1))
+    print(f"froze {len(out['cities'])} cities -> {FROZEN}")
 
 
 def cities(mirror: ccrs_mirror.Mirror) -> list[dict]:
@@ -99,8 +129,10 @@ def independent_no_gps(mirror, city: str, corridor_core: str, cross_cores: list[
 
 
 def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
-    sid = client.post("/api/studies", json={"name": f"statewide {c['city']}", "mode": "profile",
-                                            "from_year": YEARS[0], "to_year": YEARS[-1]}).json()["id"]
+    st = client.post("/api/studies", json={"name": f"statewide {c['city']}", "mode": "profile",
+                                           "from_year": YEARS[0], "to_year": YEARS[-1]}).json()
+    sid = st["id"]
+    settings = {k: st.get(k) for k in ("from_year", "to_year", "radius_ft", "buffer_ft", "include_freeway")}
     empty_retries = 0
     while True:
         r = client.put(f"/api/studies/{sid}/corridor", json={"line": corr["line"]})
@@ -139,7 +171,7 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
     got = {str(x["crash_id"]) for x in crashes}
     dropped = sorted(expected - got)
     return {
-        "stage": "done", "study_id": sid, "overpass_empty_retries": empty_retries, "corridor_name": net.get("corridor_name"),
+        "stage": "done", "study_id": sid, "settings": settings, "overpass_empty_retries": empty_retries, "corridor_name": net.get("corridor_name"),
         "ends": [inters[0]["name"], inters[-1]["name"]] if inters else [None, None],
         "intersections": len(inters), "length_ft": net.get("length_ft"),
         "pulled": len(crashes), "with_gps": src.get("gps", 0),
@@ -191,9 +223,11 @@ def prefetch() -> None:
 
 
 def main(limit: int | None = None, only: str | None = None, shard: tuple[int, int] = (0, 1)) -> None:
-    RESULTS.mkdir(parents=True, exist_ok=True)
     mirror = ccrs_mirror.Mirror(DATA / "ccrs_mirror.sqlite", CACHE)
     ver = code_version()
+    out_dir = RESULTS / ver
+    out_dir.mkdir(parents=True, exist_ok=True)
+    frozen = {(c["city"], c["county"]): c for c in json.loads(FROZEN.read_text())["cities"]} if FROZEN.exists() else {}
     city_list = cities(mirror)
     (DATA / "cities.json").write_text(json.dumps(city_list, indent=1))
     bounds = corridors.boundaries(OSM)
@@ -209,16 +243,23 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     t0 = time.time()
     with TestClient(app) as client:
         for n, c in enumerate(todo, 1):
-            out = RESULTS / f"{corridors.norm_city(c['city'])}_{c['county']}.json"
-            try:
-                b = bounds.get(corridors.norm_city(c["city"])) or corridors.find_rel(c["city"], OSM)
-                corr = corridors.pick(b["rel"], OSM) if b else {"reason": "no OSM city boundary with this name"}
-            except Exception as e:  # noqa: BLE001 - recorded per city, never skipped silently
-                corr = {"reason": f"OSM error: {e}"}
+            out = out_dir / f"{corridors.norm_city(c['city'])}_{c['county']}.json"
+            fz = frozen.get((c["city"], c["county"]))
+            b = None
+            if fz:                                    # same basis as the earlier run: the exact same line
+                corr = fz.get("corridor") or {"reason": fz.get("reason") or "not in the frozen corridor list"}
+                b = {"name": fz.get("osm_boundary")}
+            else:
+                try:
+                    b = bounds.get(corridors.norm_city(c["city"])) or corridors.find_rel(c["city"], OSM)
+                    corr = corridors.pick(b["rel"], OSM) if b else {"reason": "no OSM city boundary with this name"}
+                except Exception as e:  # noqa: BLE001 - recorded per city, never skipped silently
+                    corr = {"reason": f"OSM error: {e}"}
             key = hashlib.sha1(json.dumps([ver, corr], sort_keys=True).encode()).hexdigest()[:12]
             if out.exists() and json.loads(out.read_text()).get("key") == key:
                 continue
-            row = {**c, "key": key, "code_version": ver, "osm_boundary": (b or {}).get("name") if "rel" in str(b) else None}
+            row = {**c, "key": key, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
+                   "osm_boundary": (b or {}).get("name"), "corridor_source": "frozen list" if fz else "picked"}
             if "line" not in corr:
                 row.update(stage="corridor", reason=corr["reason"])
             else:
@@ -241,6 +282,7 @@ if __name__ == "__main__":
     ap.add_argument("--city")
     ap.add_argument("--prefetch", action="store_true")
     ap.add_argument("--shard", default="0/1", help="worker i of n, e.g. 1/2")
+    ap.add_argument("--freeze", action="store_true", help="write corridors_frozen.json from this code version's run")
     a = ap.parse_args()
     i, n = (int(x) for x in a.shard.split("/"))
-    prefetch() if a.prefetch else main(a.limit, a.city, (i, n))
+    prefetch() if a.prefetch else freeze() if a.freeze else main(a.limit, a.city, (i, n))

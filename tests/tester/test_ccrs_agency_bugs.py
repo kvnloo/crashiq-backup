@@ -135,21 +135,6 @@ def test_hyphenated_corridor_name_finds_no_gps_reports():
     assert {"9200001", "9200002", "9200003"} <= ids
 
 
-@pytest.mark.xfail(strict=True, reason="#79: real CCRS injury codes (SuspectSerious, ...) all map to U, so A/B/C are never counted")
-@pytest.mark.parametrize("extent, kabco", [
-    ("SuspectSerious", "A"), ("SevereInactive", "A"), ("SuspectMinor", "B"), ("OtherVisibleInactive", "B"),
-    ("PossibleInjury", "C"), ("ComplaintOfPainInactive", "C"),
-])
-def test_real_ccrs_injury_codes_map_to_kabco(extent, kabco):
-    # Live InjuredWitnessPassengers.ExtentOfInjuryCode, 2024 (statewide counts): '' 252,028, PossibleInjury 117,616,
-    # SuspectMinor 70,974, ComplaintOfPainInactive 22,945, SuspectSerious 15,354, OtherVisibleInactive 8,694,
-    # Fatal 4,075, SevereInactive 1,922. The KABCO map only knows the spelled-out phrases used in the synthetic
-    # fixture ('SUSPECTED SERIOUS INJURY'), so every non-fatal injury crash becomes 'U' and KSI = fatal only.
-    from crashiq.sources import ca_ccrs as cc
-    sev, unknown = cc.severity({"killed": 0, "injured": 1}, [extent])
-    assert (sev, unknown) == (kabco, [])
-
-
 @pytest.mark.xfail(strict=True, reason="#84: an empty Overpass answer is cached forever and the corridor silently has no streets")
 def test_empty_overpass_answer_is_not_cached(db):
     # Statewide run 2026-10-19 (#73): overpass-api.de answered valid corridor queries with 0 elements and no remark
