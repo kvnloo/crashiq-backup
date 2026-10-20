@@ -55,7 +55,8 @@ def code_version() -> str:
 
 
 def commit() -> str:
-    return subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], capture_output=True,
+    """The commit that last changed backend/: identifies the app code under test, unchanged by test-only commits."""
+    return subprocess.run(["git", "-C", str(ROOT), "log", "-1", "--format=%h", "--", "backend"], capture_output=True,
                           text=True).stdout.strip()
 
 
