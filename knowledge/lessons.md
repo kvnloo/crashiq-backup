@@ -1,5 +1,16 @@
 # Lessons (newest first)
 
+- 2026-10-19 · Test fixtures must be recorded from live data. The synthetic fixture spelled injury levels as phrases;
+  live CCRS uses codes (`SuspectSerious`…), so every A/B/C crash became U and nobody noticed (#75/#79, fixed in #76). Same for a hyphen in
+  an OSM street name: Union City lost 48 of 51 no-GPS corridor reports (#80). Only a run on real data found either.
+- 2026-10-19 · A collapse in an agency's yearly report count looks exactly like a safe city. 61 local agencies fell
+  under half their 2016–19 level in some year since 2021 (Gardena ~5 a year since 2022). TIMS can't catch it: same
+  records. Compare every agency with its own history before trusting a count.
+- 2026-10-19 · Overpass sometimes answers a valid query with 0 elements and no error (7 of 14 calls in one burst). Never
+  cache an empty answer (#84).
+- 2026-10-19 · A local SQLite mirror of the CCRS datastore runs the app's own SQL unchanged (the SQL is kept to the
+  PostgreSQL/SQLite common subset): 2M crashes, ~1 GB, built in 3 minutes. Use it for any statewide test instead of
+  thousands of live queries (`tests/statewide/ccrs_mirror.py`).
 - 2026-10-19 · An offline stand-in must behave like the real service, or tests pass on nothing. FakeCkan built
   untyped SQLite columns, so `"County Code" IN ('1')` never matched the number 1 (PostgreSQL casts it): every
   no-coordinate row of a live fixture vanished, and Union City replayed 0 crashes while all its golden checks
