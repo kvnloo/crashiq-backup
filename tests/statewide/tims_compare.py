@@ -15,7 +15,8 @@ from pathlib import Path
 
 YEARS = [2021, 2022, 2023, 2024, 2025]
 SEVERITIES = {"fi": "Fatal and injury", "fatal": "Fatal", "serious": "Serious injury (A)"}
-SERIOUS = ("SUSPECTED SERIOUS INJURY", "SEVERE INJURY")
+# Live CCRS writes codes (SuspectSerious; SevereInactive = the older SWITRS "severe" level), see bug #79.
+SERIOUS = ("SUSPECTSERIOUS", "SEVEREINACTIVE", "SUSPECTED SERIOUS INJURY", "SEVERE INJURY")
 
 
 def read_tims(folder: Path) -> dict[str, dict[str, list[int]]]:
@@ -40,8 +41,18 @@ def county_names(tims: dict) -> dict[str, str]:
     return {str(i + 1): n for i, n in enumerate(names)}
 
 
-def ccrs_counts(mirror_db: Path) -> dict[tuple[str, int], Counter]:
-    """(county code, year) -> Counter(total, fi, fatal, serious, pdo, special_district_fi)."""
+def tims_city_names(folder: Path) -> set[str]:
+    f = folder / "tims_city_2023_2024.txt"
+    if not f.exists():
+        return set()
+    return {e.split("|")[0].strip().upper() for e in f.read_text().strip().split(";") if e}
+
+
+def ccrs_counts(mirror_db: Path, tims_cities: set[str] | None = None) -> dict[tuple[str, int], Counter]:
+    """(county code, year) -> Counter(total, fi, fatal, serious, pdo, special_district_fi).
+
+    special_district_fi: F+I crashes filed under a "city" TIMS doesn't list (state park, campus, airport, harbor)."""
+    tims_cities = tims_cities or set()
     con = sqlite3.connect(mirror_db)
     meta = {(t, y): rid for rid, t, y in con.execute("SELECT rid, tbl, year FROM _meta")}
     out: dict[tuple[str, int], Counter] = {}
@@ -62,7 +73,9 @@ def ccrs_counts(mirror_db: Path) -> dict[tuple[str, int], Counter]:
                 c["serious"] += 1
             if k > 0 or i > 0:
                 c["fi"] += 1
-                if inc != "True" and str(city or "").upper() not in ("UNINCORPORATED", ""):
+                cu = str(city or "").strip().upper()
+                if tims_cities and cu not in tims_cities and cu not in ("UNINCORPORATED", "") \
+                        and cu.replace(" ", "") not in {t.replace(" ", "").replace("-", "") for t in tims_cities}:
                     c["special_district_fi"] += 1
             else:
                 c["pdo"] += 1
@@ -75,7 +88,7 @@ def compare(mirror_db: Path, tims_dir: Path) -> list[dict]:
     if not tims:
         return []
     names = county_names(tims)
-    cc = ccrs_counts(mirror_db)
+    cc = ccrs_counts(mirror_db, tims_city_names(tims_dir))
     rows = []
     for code, name in names.items():
         for i, y in enumerate(YEARS):

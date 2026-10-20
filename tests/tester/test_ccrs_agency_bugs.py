@@ -44,7 +44,7 @@ def _row(d: dict, cid: int) -> tuple[list, dict]:
     raise KeyError(cid)
 
 
-@pytest.mark.xfail(strict=True, reason="bug: one crash filed under two Collision Ids is counted twice")
+@pytest.mark.xfail(strict=True, reason="#81: one crash filed under two Collision Ids is counted twice")
 def test_same_crash_filed_under_two_collision_ids_counts_once():
     # Real CCRS 2023: CHP 9630-2023-00084 is in the table twice, Collision Ids 1975974 and 1975975, same minute,
     # I-10 E/B & BOB HOPE DR, same GPS. Statewide 2023-24: 445 report numbers with 2+ Collision Ids and the same two
@@ -61,7 +61,7 @@ def test_same_crash_filed_under_two_collision_ids_counts_once():
     assert len(ids & {"9200001", "9299999"}) == 1
 
 
-@pytest.mark.xfail(strict=True, reason="bug: 'NOT STATED' cross street is treated as a side street named NOT STATED")
+@pytest.mark.xfail(strict=True, reason="#82: 'NOT STATED' cross street is treated as a side street named NOT STATED")
 def test_cross_street_not_stated_is_not_called_a_side_street():
     # Real CCRS 2024: SecondaryRoad is 'NOT STATED' on 4,649 rows and 'PRIVATE PROPERTY' on 644. Santa Monica PD
     # (8% GPS) has no usable cross street on 16% of its street crashes, Signal Hill (1% GPS) 15%. The no-GPS
@@ -92,7 +92,7 @@ def _state_route_osm() -> dict:
     return {"elements": nodes + ways}
 
 
-@pytest.mark.xfail(strict=True, reason="bug: crashes written by route number (SR-1) are not found on a state-highway corridor")
+@pytest.mark.xfail(strict=True, reason="#83: crashes written by route number (SR-1) are not found on a state-highway corridor")
 def test_no_gps_crash_written_by_route_number_is_found():
     # Real CCRS 2023-24: Laguna Beach PD (0% GPS) writes 26% of its road fields as route numbers ('SR-1',
     # 'PCH - SR1', 'SR-133'); Yuba City (1% GPS) 14%, San Carlos/SMCSO (0.4% GPS) 9%. OSM tags the road with
@@ -116,7 +116,7 @@ def test_no_gps_crash_written_by_route_number_is_found():
     assert "9200001" in ids
 
 
-@pytest.mark.xfail(strict=True, reason="bug: a hyphen in the OSM corridor name stops the no-GPS search matching")
+@pytest.mark.xfail(strict=True, reason="#80: a hyphen in the OSM corridor name stops the no-GPS search matching")
 def test_hyphenated_corridor_name_finds_no_gps_reports():
     # Union City, statewide run 2026-10-19 (#73): OSM names the road 'Alvarado-Niles Road'; Union City PD (0% GPS)
     # writes 'ALVARADO NILES RD'. street_key keeps the hyphen in the core, the no-GPS search becomes
@@ -135,7 +135,7 @@ def test_hyphenated_corridor_name_finds_no_gps_reports():
     assert {"9200001", "9200002", "9200003"} <= ids
 
 
-@pytest.mark.xfail(strict=True, reason="bug: real CCRS injury codes (SuspectSerious, ...) all map to U, so A/B/C are never counted")
+@pytest.mark.xfail(strict=True, reason="#79: real CCRS injury codes (SuspectSerious, ...) all map to U, so A/B/C are never counted")
 @pytest.mark.parametrize("extent, kabco", [
     ("SuspectSerious", "A"), ("SevereInactive", "A"), ("SuspectMinor", "B"), ("OtherVisibleInactive", "B"),
     ("PossibleInjury", "C"), ("ComplaintOfPainInactive", "C"),
@@ -150,7 +150,7 @@ def test_real_ccrs_injury_codes_map_to_kabco(extent, kabco):
     assert (sev, unknown) == (kabco, [])
 
 
-@pytest.mark.xfail(strict=True, reason="bug: an empty Overpass answer is cached forever and the corridor silently has no streets")
+@pytest.mark.xfail(strict=True, reason="#84: an empty Overpass answer is cached forever and the corridor silently has no streets")
 def test_empty_overpass_answer_is_not_cached(db):
     # Statewide run 2026-10-19 (#73): overpass-api.de answered valid corridor queries with 0 elements and no remark
     # 7 times in 14 calls (the same query live a minute later: 312 elements). fetch_overpass accepts the empty list,
