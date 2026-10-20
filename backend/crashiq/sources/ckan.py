@@ -40,6 +40,10 @@ def _error_body(e: urllib.error.HTTPError) -> str:
         return "no detail"
 
 
+META_TTL_S = 24 * 3600
+_META_CACHE: dict[tuple, tuple[float, dict]] = {}
+
+
 class Ckan:
     def __init__(self, transport: Transport | None = None, retries: int = 3, backoff_s: float = 3.0,
                  sleep: Callable[[float], None] = time.sleep):
@@ -48,6 +52,20 @@ class Ckan:
         self.calls = 0
 
     def get(self, action: str, **params) -> dict:
+        # Live data.ca.gov only: the resource list and column lists change about once a year, but every pull
+        # asked for all of them again (15 calls). Kept for a day per process (#54). SQL is never cached here.
+        live = self.transport is http_transport and action in ("package_show", "datastore_search")
+        key = (action, tuple(sorted(params.items())))
+        if live:
+            hit = _META_CACHE.get(key)
+            if hit and time.time() - hit[0] < META_TTL_S:
+                return hit[1]
+        res = self._get(action, **params)
+        if live:
+            _META_CACHE[key] = (time.time(), res)
+        return res
+
+    def _get(self, action: str, **params) -> dict:
         last = "no response"
         for attempt in range(self.retries + 1):
             try:

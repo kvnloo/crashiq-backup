@@ -73,19 +73,25 @@ def _cached_overpass(db: Database, query: str) -> dict | None:
     return json.loads(hit["body"]) if hit else None
 
 
+OSM_TTL_DAYS = 180     # streets change slowly; a cached Overpass answer is refreshed after this (#54)
+
+
 def fetch_overpass(db: Database, query: str, transport: Transport | None = None, retries: int = 3,
                    backoff_s: float = 2.0, sleep: Callable[[float], None] = time.sleep) -> dict:
     """Overpass JSON for `query`, from the SQLite cache when present. Raises NetworkError on failure."""
     key = "overpass:" + hashlib.sha1(query.encode()).hexdigest()
-    hit = db.one("SELECT body FROM http_cache WHERE key = ?", (key,))
-    if hit:
-        data = json.loads(hit["body"])
-        if data.get("elements"):             # an empty answer cached before #84 is a miss, never a map
-            return data
+    hit = db.one("SELECT body, (julianday('now') - julianday(created_at)) AS age_days FROM http_cache WHERE key = ?",
+                 (key,))
+    old = json.loads(hit["body"]) if hit else None
+    if old is not None and not old.get("elements"):
+        old = None                           # an empty answer cached before #84 is a miss, never a map
+    if old is not None and (hit["age_days"] or 0) < OSM_TTL_DAYS:
+        return old
     transport = transport or _http_post
     payload = urllib.parse.urlencode({"data": query}).encode()
     last = "no response"
     for attempt in range(retries + 1):
+        wait = backoff_s * 2 ** attempt
         try:
             data = json.loads(transport(OVERPASS_URL, payload, 120))
             if not isinstance(data.get("elements"), list):
@@ -104,10 +110,15 @@ def fetch_overpass(db: Database, query: str, transport: Transport | None = None,
             last = f"HTTP {e.code}"
             if e.code not in (429, 502, 503, 504):
                 break
+            ra = (e.headers or {}).get("Retry-After") if hasattr(e, "headers") else None
+            if ra and str(ra).strip().isdigit():          # Overpass says how long to back off (#54)
+                wait = min(float(ra), 120.0)
         except (urllib.error.URLError, TimeoutError, OSError, ValueError) as e:
             last = str(e) or type(e).__name__
         if attempt < retries:
-            sleep(backoff_s * 2 ** attempt)
+            sleep(wait)
+    if old is not None:         # refresh failed: an old (non-empty) map beats no map
+        return old
     raise NetworkError(f"Couldn't get streets from OpenStreetMap (Overpass): {last}. Try again in a minute.")
 
 

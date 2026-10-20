@@ -39,11 +39,13 @@ def test_live_injury_codes_give_real_severity_levels(crenshaw):
 def test_live_severity_on_the_study_stretch(crenshaw):
     # Crenshaw Blvd, Marine Ave -> W 132nd St, 2021-2025, crashes on the stretch (side-street reports excluded)
     sev = Counter(c["severity"] for c in crenshaw["crashes"] if not c.get("exclude_rule"))
-    assert dict(sev) == {"K": 1, "A": 6, "B": 44, "C": 81, "O": 185}
+    assert dict(sev) == {"K": 1, "A": 6, "B": 44, "C": 78, "O": 184}   # 4 GPS rows > 650 ft from the line dropped (#54)
 
 
 def test_live_replay_returns_every_recorded_crash(crenshaw):
     # #53: with typed columns the replay finds the no-coordinate reports too (was 314 of 1602 untyped)
-    # one LAPD crash is in CCRS twice (Collision Ids 4364159 v1 and 4369588 v4, Crenshaw Bl & 66th St, #81)
-    assert len(crenshaw["crashes"]) + crenshaw["cleaning"]["same_crash_refiled_dropped"] == 1602
-    assert crenshaw["cleaning"]["same_crash_refiled"] == [{"kept": "4369588", "dropped": ["4364159"]}]
+    # one LAPD crash is in CCRS twice (Collision Ids 4364159 v1 and 4369588 v4, Crenshaw Bl & 66th St, #81);
+    # 4 GPS rows more than 650 ft from the line stop before the lookups (#54)
+    cl = crenshaw["cleaning"]
+    assert len(crenshaw["crashes"]) + cl["same_crash_refiled_dropped"] + cl["gps_beyond_margin_dropped"] == 1602
+    assert cl["same_crash_refiled"] == [{"kept": "4369588", "dropped": ["4364159"]}]
