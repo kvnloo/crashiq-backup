@@ -68,6 +68,11 @@ def _http_post(url: str, data: bytes, timeout: float) -> bytes:
 Transport = Callable[[str, bytes, float], bytes]
 
 
+def _cached_overpass(db: Database, query: str) -> dict | None:
+    hit = db.one("SELECT body FROM http_cache WHERE key = ?", ("overpass:" + hashlib.sha1(query.encode()).hexdigest(),))
+    return json.loads(hit["body"]) if hit else None
+
+
 def fetch_overpass(db: Database, query: str, transport: Transport | None = None, retries: int = 3,
                    backoff_s: float = 2.0, sleep: Callable[[float], None] = time.sleep) -> dict:
     """Overpass JSON for `query`, from the SQLite cache when present. Raises NetworkError on failure."""
@@ -131,6 +136,7 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
     # 2. corridor ways: enough of the way runs along the line
     corridor_ids: set[int] = set()
     along_len: Counter = Counter()
+    hw_len: Counter = Counter()
     for w in ways:
         near_len = run_len = 0.0
         for a, b in zip(w.get("nodes", []), w.get("nodes", [])[1:]):
@@ -148,10 +154,13 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
                 run_len += seg
         if run_len >= 50 and run_len >= 0.5 * near_len:
             corridor_ids.add(w["id"])
+            hw_len[w.get("tags", {}).get("highway", "")] += run_len
             for n in _names(w.get("tags", {})):
                 along_len[n] += run_len
     corridor_name = along_len.most_common(1)[0][0] if along_len else None
     corridor_cores = {c for c in (_core(n) for n in along_len) if c}
+    corridor_highway = hw_len.most_common(1)[0][0] if hw_len else None
+    freeway = corridor_highway == "motorway"
 
     # 3. candidate nodes
     corridor_nodes: set[int] = set()
@@ -164,7 +173,12 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
     for w in ways:
         if w["id"] in corridor_ids:
             continue
-        names = [n for n in _names(w.get("tags", {})) if _core(n) not in corridor_cores]
+        if freeway and str(w.get("tags", {}).get("highway", "")).endswith("_link"):
+            continue    # a ramp meeting a freeway corridor is a merge or diverge, not an intersection (N7, #67)
+        all_names = _names(w.get("tags", {}))
+        names = [n for n in all_names if _core(n) not in corridor_cores]
+        if freeway and all_names and not names:
+            continue    # a short piece of the freeway itself (too short to count as corridor), not a crossing road
         wn = w.get("nodes", [])
         for k, nid in enumerate(wn):
             if nid in corridor_nodes and nid in proj:
@@ -223,7 +237,95 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
             "lat": round(lat, 7), "lon": round(lon, 7), "osm_node_ids": sorted(c), "control": control,
             "is_study": True, "provenance": "auto", "name_source": "osm", "legs": legs,
         })
-    return {"corridor_name": corridor_name, "length_ft": round(line.length_ft, 1), "intersections": out}
+    return {"corridor_name": corridor_name, "length_ft": round(line.length_ft, 1), "intersections": out,
+            "corridor_highway": corridor_highway,
+            "grade_separations": grade_separations(line, nodes, ways, corridor_ids, corridor_nodes, corridor_cores)}
+
+
+GS_NEAR_FT = 120   # a crossing way with a corridor node this close (along the line) to where it crosses meets at grade
+
+
+def _level(tags: dict) -> int:
+    """Rough vertical level of a way from OSM tags: bridges up, tunnels down, `layer` when given."""
+    try:
+        return int(str(tags.get("layer", "")).split(";")[0])
+    except ValueError:
+        pass
+    if tags.get("bridge") not in (None, "no"):
+        return 1
+    if tags.get("tunnel") not in (None, "no") or tags.get("covered") == "yes":
+        return -1
+    return 0
+
+
+def grade_separations(line: Polyline, nodes: dict, ways: list[dict], corridor_ids: set[int], corridor_nodes: set[int],
+                      corridor_cores: set[str]) -> list[dict]:
+    """Roads that cross the corridor without meeting it (N7, #67): an overcrossing, undercrossing or freeway.
+
+    A way crosses where consecutive nodes lie on opposite sides of the drawn line within the study limits. It meets
+    the corridor at grade only when it shares a corridor node near that crossing (OSM's rule: roads that meet share
+    a node; a bridge over a road doesn't). Crossings of the same road within CLUSTER_FT along the line (two
+    carriageways of a freeway) are one grade separation. `relation` says whether the crossing road goes over or
+    under the corridor, from bridge/tunnel/layer tags where OSM has them."""
+    corridor_spans: list[tuple[float, float, int]] = []   # (from station, to station, level) of corridor way pieces
+    for w in ways:
+        if w["id"] in corridor_ids:
+            lv = _level(w.get("tags", {}))
+            st = [line.project(nodes[n]["lat"], nodes[n]["lon"]).station_ft for n in w.get("nodes", []) if n in nodes]
+            for a, b in zip(st, st[1:]):
+                corridor_spans.append((min(a, b), max(a, b), lv))
+    # Nodes of any way carrying the corridor's name, even pieces too short to count as corridor ways (at the drawn
+    # ends): a street meeting one of them meets the corridor (Dyer St, Union City, 2026-10-19).
+    meet_nodes = set(corridor_nodes)
+    for w in ways:
+        if any(_core(n) in corridor_cores for n in _names(w.get("tags", {}))):
+            meet_nodes.update(w.get("nodes", []))
+    found: list[dict] = []
+    for w in ways:
+        if w["id"] in corridor_ids:
+            continue
+        tags = w.get("tags", {})
+        names = [n for n in _names(tags) if _core(n) not in corridor_cores]
+        wn = [n for n in w.get("nodes", []) if n in nodes]
+        xy = [line.proj.to_xy(nodes[n]["lat"], nodes[n]["lon"]) for n in wn]
+        sides = [line.side_xy(x, y) for x, y in xy]
+        for k in range(len(wn) - 1):
+            if sides[k] == 0 or sides[k + 1] == 0 or sides[k] == sides[k + 1]:
+                continue
+            pa, pb = line.project_xy(*xy[k]), line.project_xy(*xy[k + 1])
+            t = pa.offset_ft / ((pa.offset_ft + pb.offset_ft) or 1)
+            cx, cy = xy[k][0] + t * (xy[k + 1][0] - xy[k][0]), xy[k][1] + t * (xy[k + 1][1] - xy[k][1])
+            pc = line.project_xy(cx, cy)
+            if pc.offset_ft > ALONG_FT or not (0 <= pc.station_ext <= line.length_ft):
+                continue
+            meets = any(n in meet_nodes and abs(line.project(nodes[n]["lat"], nodes[n]["lon"]).station_ft
+                                                    - pc.station_ft) <= GS_NEAR_FT for n in wn)
+            if meets:
+                continue
+            lv = _level(tags)
+            near_corr = [lvl for a, b, lvl in corridor_spans if a <= pc.station_ft <= b]
+            clv = max(near_corr, key=abs) if near_corr else 0
+            relation = "over" if lv > clv else "under" if lv < clv else "unknown"
+            lat, lon = line.proj.to_ll(cx, cy)
+            found.append({"name": " / ".join(names) or "Unnamed road", "station_ft": round(pc.station_ft, 1),
+                          "lat": round(lat, 7), "lon": round(lon, 7), "highway": tags.get("highway"),
+                          "relation": relation, "osm_way_ids": [w["id"]]})
+    found.sort(key=lambda g: g["station_ft"])
+    merged: list[dict] = []
+    for g in found:
+        prev = next((m for m in reversed(merged) if g["station_ft"] - m["station_ft"] <= CLUSTER_FT
+                     and (m["name"] == g["name"] or "Unnamed road" in (m["name"], g["name"]))), None)
+        if prev:
+            prev["osm_way_ids"] = sorted(set(prev["osm_way_ids"]) | set(g["osm_way_ids"]))
+            if prev["name"] == "Unnamed road":
+                prev["name"] = g["name"]
+            if prev["relation"] == "unknown":
+                prev["relation"] = g["relation"]
+            continue
+        merged.append(g)
+    for i, g in enumerate(merged):
+        g["id"] = f"gs-{i + 1}"
+    return merged
 
 
 LEG_MIN_FT = 40.0   # a cross street must leave the corridor by this much to count as a leg on that side
@@ -281,8 +383,19 @@ def _load(db: Database, sid: str) -> dict | None:
     segs = segments(ints, c["length_ft"])
     for s in segs:
         s["aadt"] = aadt.get(s["id"])
-    return {"line": json.loads(c["line_json"]), "length_ft": c["length_ft"],
+    line = json.loads(c["line_json"])
+    hw, gs = c.get("corridor_highway"), c.get("grade_separations_json")
+    if gs is None:              # corridor drawn before #67: detect from the cached OSM response, never a new download
+        raw = _cached_overpass(db, overpass_query([tuple(p) for p in line]))
+        if raw is not None:
+            found = detect(raw, [tuple(p) for p in line])
+            hw, gs = found["corridor_highway"], json.dumps(found["grade_separations"])
+            db.execute("UPDATE corridor SET corridor_highway = ?, grade_separations_json = ? WHERE study_id = ?",
+                       (hw, gs, sid))
+    return {"line": line, "length_ft": c["length_ft"],
             "length_mi": round(c["length_ft"] / FT_PER_MI, 4), "corridor_name": c["corridor_name"],
+            "corridor_highway": hw, "is_freeway": hw == "motorway",
+            "grade_separations": json.loads(gs) if gs else [],
             "intersections": ints, "segments": segs, "detected_at": c["detected_at"]}
 
 
@@ -291,7 +404,8 @@ def network(db: Database, sid: str) -> dict:
     net = _load(db, sid)
     base = {"radius_ft": s["radius_ft"], "buffer_ft": s["buffer_ft"]}
     if not net:
-        return {**base, "line": None, "intersections": [], "segments": [], "buffer_ring": None}
+        return {**base, "line": None, "intersections": [], "segments": [], "buffer_ring": None,
+                "grade_separations": [], "is_freeway": False, "corridor_highway": None}
     ring = buffer_ring(Polyline([tuple(p) for p in net["line"]]), s["buffer_ft"])
     return {**base, **net, "buffer_ring": ring}
 
@@ -301,9 +415,10 @@ def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: 
     with db.transaction() as conn:
         conn.execute("DELETE FROM intersection WHERE study_id = ?", (sid,))
         conn.execute("DELETE FROM segment_aadt WHERE study_id = ?", (sid,))
-        conn.execute("INSERT OR REPLACE INTO corridor (study_id, line_json, length_ft, corridor_name, detected_at) "
-                     "VALUES (?, ?, ?, ?, datetime('now'))",
-                     (sid, json.dumps([list(p) for p in line]), found["length_ft"], found["corridor_name"]))
+        conn.execute("INSERT OR REPLACE INTO corridor (study_id, line_json, length_ft, corridor_name, detected_at, "
+                     "corridor_highway, grade_separations_json) VALUES (?, ?, ?, ?, datetime('now'), ?, ?)",
+                     (sid, json.dumps([list(p) for p in line]), found["length_ft"], found["corridor_name"],
+                      found["corridor_highway"], json.dumps(found["grade_separations"])))
         for i in found["intersections"]:
             conn.execute("INSERT INTO intersection (study_id, id, name, station_ft, lat, lon, osm_node_ids, control, "
                          "is_study, provenance, name_source, legs) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",

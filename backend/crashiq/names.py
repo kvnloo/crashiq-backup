@@ -22,7 +22,7 @@ SUFFIX = {
     "COURT": "CT", "CT": "CT", "TERRACE": "TER", "TER": "TER", "TERR": "TER",
     "WAY": "WAY", "WY": "WAY", "LANE": "LN", "LN": "LN", "ALLEY": "ALY", "ALY": "ALY",
     "HIGHWAY": "HWY", "HWY": "HWY", "HY": "HWY", "HIWAY": "HWY", "PARKWAY": "PKWY", "PKWY": "PKWY",
-    "CIRCLE": "CIR", "CIR": "CIR", "EXPRESSWAY": "EXPY", "EXPY": "EXPY",
+    "CIRCLE": "CIR", "CIR": "CIR", "EXPRESSWAY": "EXPY", "EXPY": "EXPY", "FREEWAY": "FWY", "FWY": "FWY", "FRWY": "FWY",
     "PLAZA": "PLZ", "PLZ": "PLZ", "SQUARE": "SQ", "SQ": "SQ", "WALK": "WALK", "TUNNEL": "TUNL",
 }
 DIRECTIONAL = {"N": "N", "NORTH": "N", "S": "S", "SOUTH": "S", "E": "E", "EAST": "E", "W": "W", "WEST": "W"}

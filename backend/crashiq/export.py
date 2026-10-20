@@ -105,7 +105,10 @@ def _fmt(v, d=None):
 
 
 RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_limits": "beyond the study limits",
-             "freeway": "on a freeway or ramp (CHP IsFreeway)", "no_segment": "not on a study segment"}
+             "freeway": "on a freeway or ramp (CHP IsFreeway)", "no_segment": "not on a study segment",
+             "cross_street_not_on_corridor": "at a cross street that is not one of the corridor's intersections",
+             "grade_separated_crossing": "on a road passing over or under the corridor",
+             "not_on_freeway": "not on the freeway (CHP IsFreeway false)", "ramp": "on a freeway ramp"}
 
 
 def methodology(d: dict) -> str:
@@ -117,7 +120,10 @@ def methodology(d: dict) -> str:
     return (f"Crash data: CCRS (California Highway Patrol), {s['from_year']}–{s['to_year']}"
             + (f", pulled {d['pulled_at'][:10]}" if d.get("pulled_at") else "") + ". "
             f"A crash is assigned to the nearest study intersection within {s['radius_ft']:g} ft; otherwise to the "
-            f"corridor segment when within {s['buffer_ft']:g} ft of the corridor line. Excluded: {excl}. "
+            f"corridor segment when within {s['buffer_ft']:g} ft of the corridor line. Only intersections the corridor "
+            "meets at grade count; a road passing over or under it (an overcrossing, undercrossing or freeway, found "
+            "from OpenStreetMap where the roads cross without a shared node) is not an intersection, and crashes on "
+            f"that road are excluded. Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed. Severity: each crash counted once at its most severe outcome (KABCO). Rates appear only where "
             "AADT was entered" + (f" (estimated from peak-hour counts with K = {s.get('k_factor', 0.1):.0%})"

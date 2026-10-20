@@ -15,6 +15,7 @@ from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
 
+from . import grade
 from . import network as network_mod
 from . import study as study_mod
 from .db import Database
@@ -46,7 +47,11 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
 
 
 def cache_key(study: dict, net: dict) -> str:
-    raw = json.dumps([study["from_year"], study["to_year"], net["line"], net.get("corridor_name"), margin_ft(study)])
+    key = [study["from_year"], study["to_year"], net["line"], net.get("corridor_name"), margin_ft(study)]
+    gs = sorted(g["name"] for g in net.get("grade_separations") or [])
+    if gs:                      # the pull's no-coordinate rules use them (#67); none = same key as before
+        key.append(gs)
+    raw = json.dumps(key)
     return hashlib.sha1(raw.encode()).hexdigest()
 
 
@@ -165,6 +170,7 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     res = cc.table_resources(ckan.get("package_show", id=cc.PACKAGE))
     log = {"rows_read": 0, "outside_window_dropped": 0, "deleted_dropped": 0, "duplicate_versions_dropped": 0,
            "no_coords_read": 0, "no_coords_not_corridor_street": 0, "no_coords_off_study_stretch": 0,
+           "no_coords_grade_separated": 0,
            "implausible_coords": 0, "bad_dates_dropped": 0, "duplicate_parties_dropped": 0, "preliminary_kept": 0,
            "feet_typed_as_miles_fixed": 0, "years_missing": [], "parties_missing_years": [], "iwp_missing_years": [],
            "missing_fields": {}, "unknown_injury_values": [], "cities": []}
@@ -175,6 +181,7 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     cross_keys = [k for k in (street_key(part) for i in net.get("intersections", []) if i.get("is_study")
                               for part in str(i.get("name") or "").split("/")) if k]
     cross_cores = [k.core for k in cross_keys if k.core not in cores and len(k.core) >= 3]
+    gs_keys = grade.crossing_keys(net)      # roads crossing over/under the corridor (N7, #67)
     name_area: list[str] | None = None     # found once from street names, reused for every year
     log["area_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
@@ -231,8 +238,14 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
             other = [street_key(rd) for i, rd in enumerate(roads) if i not in on_idx and street_key(rd)]
             if not on:
                 log["no_coords_not_corridor_street"] += 1
+            elif grade.on_crossing_road(c, corridor_keys, gs_keys):
+                # On a road passing over or under the corridor: never meets it (N7, #67). Kept and listed.
+                log["no_coords_grade_separated"] += 1
+                c["exclude_rule"] = "grade_separated_crossing"
+                recs.append((c, "unmatched"))
             else:
-                if cross_keys and not any(same_core(k, x) for k in other for x in cross_keys):
+                at_crossing = any(grade.same_road(k, x) for k in other for x in gs_keys)   # corridor, by an overpass
+                if cross_keys and not at_crossing and not any(same_core(k, x) for k in other for x in cross_keys):
                     # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
                     # listed under its rule (#39, docs/03).
                     log["no_coords_off_study_stretch"] += 1

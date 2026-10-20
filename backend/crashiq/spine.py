@@ -103,6 +103,11 @@ def merge(base: dict, crash: dict, today: str | None = None) -> dict:
              "spacing_ft_to_next": (round(b["station_ft"] - i["station_ft"], 1) if b else None),
              "source_id": i["id"], "method": "auto" if i["provenance"] == "auto" else "manual"}
             for i, b in zip(study_ints, study_ints[1:] + [None])], "OSM")
+        gs = net.get("grade_separations") or []
+        if gs:
+            put("corridor.grade_separations", [
+                {"name": g["name"], "relation": g["relation"], "station_ft": g["station_ft"], "source_id": g["id"],
+                 "method": "auto"} for g in gs], "OSM")
         put("corridor.geometry_ref", {"type": "LineString", "coordinates": [[p[1], p[0]] for p in net["line"]]},
             "CrashIQ (user-drawn corridor)", "manual")
 
