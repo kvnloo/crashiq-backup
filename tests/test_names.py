@@ -1,4 +1,4 @@
-from crashiq.names import StreetKey, same_street, similarity, street_key
+from crashiq.names import StreetKey, same_core, same_street, similarity, street_key
 
 
 def test_suffix_variants_collapse():
@@ -44,3 +44,10 @@ def test_directional_kept_but_relaxable():
 
 def test_empty():
     assert street_key(None) is None and street_key("  ") is None
+
+
+def test_a_freeway_is_not_relaxed_to_a_street_of_the_same_name():
+    # PM review of #72: HARBOR FWY (I-110) and HARBOR BLVD are different roads
+    assert not same_core(street_key("HARBOR FWY"), street_key("HARBOR BLVD"))
+    assert same_core(street_key("HARBOR FRWY"), street_key("Harbor Freeway"))
+    assert same_core(street_key("HARBOR"), street_key("HARBOR FWY"))       # no suffix written: still relaxed
