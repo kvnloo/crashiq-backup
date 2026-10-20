@@ -33,7 +33,8 @@ def gather(db, sid: str) -> dict:
     return {"study": study, "network": net, "profile": profile_mod.build(study, net, pull, a),
             "findings": [f for f in accepted if not f["stale"]],
             "stale_findings": sum(f["stale"] for f in accepted),
-            "assignment": {"counts": a["counts"], "excluded_by_rule": a["excluded_by_rule"]},
+            "assignment": {"counts": a["counts"], "excluded_by_rule": a["excluded_by_rule"],
+                           "unmatched_by_rule": a.get("unmatched_by_rule", {})},
             "pulled_at": pull.get("pulled_at"),
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
 
@@ -120,6 +121,7 @@ def methodology(d: dict) -> str:
     ex = asg.get("excluded_by_rule") or {}
     excl = "; ".join(f"{n} {RULE_TEXT.get(k, k)}" for k, n in sorted(ex.items())) or "none"
     unplaced = (asg.get("counts") or {}).get("unmatched", 0)
+    ncs = (asg.get("unmatched_by_rule") or {}).get("no_cross_street", 0)
     return (f"Crash data: CCRS (California Highway Patrol), {s['from_year']}–{s['to_year']}"
             + (f", pulled {d['pulled_at'][:10]}" if d.get("pulled_at") else "") + ". "
             f"A crash is assigned to the nearest study intersection within {s['radius_ft']:g} ft; otherwise to the "
@@ -130,7 +132,9 @@ def methodology(d: dict) -> str:
             "from OpenStreetMap where the roads cross without a shared node) is not an intersection, and crashes on "
             f"that road are excluded. Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
-            "not placed. Severity: each crash counted once at its most severe outcome (KABCO). Rates appear only where "
+            "not placed" + (f" ({ncs} of them name the corridor but give no cross street, so where on the corridor "
+                            "is unknown; they are on the review list for the engineer to place)" if ncs else "")
+            + ". Severity: each crash counted once at its most severe outcome (KABCO). Rates appear only where "
             "AADT was entered" + (f" (estimated from peak-hour counts with K = {s.get('k_factor', 0.1):.0%})"
                                   if s.get("volume_basis") == "peak_hour" else "") + " (intersections per million entering vehicles from two-way AADT, a T counting half the "
             "minor road; segments per 100 million vehicle-miles). Where 3 or more similar locations have AADT, each "
