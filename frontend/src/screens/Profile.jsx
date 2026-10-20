@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProfileMap from '../components/ProfileMap'
 import { locationPoints } from '../lib/mapcats'
-import { api, errorText } from '../lib/api'
+import { ApiError, api, errorText } from '../lib/api'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
 
@@ -188,6 +188,21 @@ function placedCrashes(crashes, asg) {
   return crashes.filter((c) => at.has(c.crash_id)).map((c) => ({ ...c, location_id: at.get(c.crash_id) }))
 }
 
+// Starts the CCRS pull in the background and polls its progress (#54): a 10-year pull is ~40 data.ca.gov calls,
+// about a minute, so the screen says which step it is on instead of waiting on one frozen request.
+async function pullCrashes(studyId, refresh, onStep, poll = 1000) {
+  let r = await api(`/studies/${studyId}/crashes/pull?background=true${refresh ? '&refresh=true' : ''}`, { method: 'POST' })
+  while (r && r.job) {
+    onStep(r.job)
+    await new Promise((res) => setTimeout(res, poll))
+    const st = await api(`/studies/${studyId}/crashes/pull/status`)
+    if (st.state === 'done') return st.summary
+    if (st.state === 'error') throw new ApiError(st.status || 500, st.error)
+    r = { job: st }
+  }
+  return r
+}
+
 // Step 3: crash profile dashboard. Every number shown comes from the C6 API response.
 export default function Profile() {
   const { studyId } = useParams()
@@ -203,7 +218,7 @@ export default function Profile() {
         const net = await api(`/studies/${studyId}/network`)
         if (!net.line) { if (alive) setState({ phase: 'nocorridor' }); return }
         if (alive) setState({ phase: 'pulling', line: net.line })
-        const pull = await api(`/studies/${studyId}/crashes/pull`, { method: 'POST' })
+        const pull = await pullCrashes(studyId, false, (job) => alive && setState((s) => ({ ...s, job })))
         const [p, cr, asg] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`),
           api(`/studies/${studyId}/assignment`)])
         if (alive) setState({ phase: 'ready', line: net.line, net, pull, profile: p, crashes: placedCrashes(cr.crashes, asg) })
@@ -217,7 +232,7 @@ export default function Profile() {
   async function refresh() {
     setRefreshing(true)
     try {
-      const pull = await api(`/studies/${studyId}/crashes/pull?refresh=true`, { method: 'POST' })
+      const pull = await pullCrashes(studyId, true, () => {})
       const [p, cr, asg] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`),
         api(`/studies/${studyId}/assignment`)])
       setState((s) => ({ ...s, pull, profile: p, crashes: placedCrashes(cr.crashes, asg) }))
@@ -249,7 +264,10 @@ export default function Profile() {
         )}
         {(state.phase === 'loading' || state.phase === 'pulling') && (
           <div className="empty" role="status"><span className="sf-sig sf-sig--anim"><i /><i /><i /></span>
-            <p>{state.phase === 'pulling' ? 'Pulling crashes from CCRS (data.ca.gov). The first pull for a corridor can take a minute.' : 'Loading…'}</p></div>
+            <p>{state.phase === 'pulling' ? 'Pulling crashes from CCRS (data.ca.gov). The first pull for a corridor can take a minute.' : 'Loading…'}</p>
+            {state.phase === 'pulling' && state.job?.step && state.job.step !== 'Starting' ? (
+              <p className="muted mono">{state.job.step}{state.job.total ? ` · ${state.job.done + 1} of ${state.job.total}` : ''}</p>
+            ) : null}</div>
         )}
         {state.phase === 'error' && <div className="err" role="alert">{state.error}</div>}
         {state.phase === 'ready' && p && (drill ? (

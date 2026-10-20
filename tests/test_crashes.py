@@ -136,8 +136,10 @@ def test_api_pull_then_cache_then_refresh(client, sid, fake):
     assert client.post(f"/api/studies/{sid}/crashes/pull").json()["from_cache"] is True
     assert len(fake.sql_log) == n_sql                          # cache hit: no queries
     assert client.post(f"/api/studies/{sid}/crashes/pull?refresh=true").json()["from_cache"] is False
-    full = client.get(f"/api/studies/{sid}/crashes").json()
-    assert len(full["crashes"]) == 125 and full["crashes"][0]["parties"]
+    slim = client.get(f"/api/studies/{sid}/crashes").json()
+    assert len(slim["crashes"]) == 125 and "parties" not in slim["crashes"][0]     # #54: screens don't read them
+    full = client.get(f"/api/studies/{sid}/crashes?full=true").json()
+    assert full["crashes"][0]["parties"]
 
 
 def test_api_window_change_repulls(client, sid):

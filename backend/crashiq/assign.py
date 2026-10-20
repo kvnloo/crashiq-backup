@@ -19,6 +19,8 @@ Distances are feet in the corridor's projected CRS.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import math
 from collections import Counter
 
@@ -140,20 +142,37 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
             "radius_ft": radius_ft, "buffer_ft": buffer_ft, "assignments": out}
 
 
+_MEMO: dict[tuple, tuple[dict, dict]] = {}      # (study inputs) -> (pull, assignment); newest last
+_MEMO_MAX = 16
+
+
 def for_study(db, sid: str) -> tuple[dict, dict, dict, dict]:
-    """(study, network, pull, assignment) — assignment recomputed from the cached pull, so radius/buffer edits apply."""
+    """(study, network, pull, assignment) — assignment recomputed from the cached pull, so radius/buffer edits apply.
+    Memoized on everything it depends on (pull key + time, settings, network), so the profile, map, findings and
+    exports don't each reload the pull and re-assign it (#54). Callers must not mutate what they get."""
     study = study_mod.require(db, sid)
     net = network_mod.network(db, sid)
     if not net.get("line"):
         raise HTTPException(409, "Draw the corridor first.")
-    pull = crashes_mod.get_cached(db, sid)
-    if pull is None:
+    head = db.one("SELECT cache_key, pulled_at FROM crash_pull WHERE study_id = ?", (sid,))
+    if head is None:
         raise HTTPException(409, "Pull the crashes first.")
-    if pull.get("cache_key") != crashes_mod.cache_key(study, net):
+    if head["cache_key"] != crashes_mod.cache_key(study, net):
         # the window, corridor or radius changed since this pull: never compute from the old crashes
         raise HTTPException(409, "The study changed since the crashes were pulled. Open Crash profile to pull them again.")
-    return study, net, pull, assign(pull["crashes"], net, study["radius_ft"], study["buffer_ft"],
-                                    bool(study.get("include_freeway")))
+    net_sig = json.dumps({k: net.get(k) for k in ("intersections", "segments", "grade_separations", "corridor_names",
+                                                  "corridor_name", "is_freeway", "line")}, sort_keys=True, default=str)
+    key = (getattr(db, "path", id(db)), sid, head["cache_key"], head["pulled_at"], study["radius_ft"],
+           study["buffer_ft"], bool(study.get("include_freeway")), hashlib.sha1(net_sig.encode()).hexdigest())
+    hit = _MEMO.pop(key, None)
+    if hit is None:
+        pull = crashes_mod.get_cached(db, sid)
+        hit = (pull, assign(pull["crashes"], net, study["radius_ft"], study["buffer_ft"],
+                            bool(study.get("include_freeway"))))
+    _MEMO[key] = hit                                  # most recently used last
+    while len(_MEMO) > _MEMO_MAX:
+        _MEMO.pop(next(iter(_MEMO)))
+    return study, net, hit[0], hit[1]
 
 
 router = APIRouter()

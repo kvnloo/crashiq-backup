@@ -15,7 +15,7 @@ import threading
 import re
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 
 from . import grade
 from . import network as network_mod
@@ -539,23 +539,69 @@ def summary(result: dict, from_cache: bool) -> dict:
             "years": result["years"], "pulled_at": result["pulled_at"], "from_cache": from_cache}
 
 
+_JOBS: dict[str, dict] = {}       # study id -> background pull status (one per study, #54)
+
+
+def _error_status(e: Exception) -> tuple[int, str]:
+    if isinstance(e, (CkanError, network_mod.NetworkError)):
+        return 502, str(e)
+    if isinstance(e, PullError):
+        return 409, str(e)
+    return 500, f"The crash pull failed: {e}"
+
+
+def _run_job(db: Database, sid: str, ckan: Ckan, refresh: bool, job: dict) -> None:
+    def progress(step, done, total):
+        job.update(step=step, done=done, total=total)
+    try:
+        result, hit = ensure(db, sid, ckan, refresh, progress)
+        job.update(state="done", step="Done", summary=summary(result, hit))
+    except Exception as e:  # noqa: BLE001 - reported to the screen through the status endpoint
+        code, msg = _error_status(e)
+        job.update(state="error", status=code, error=msg)
+
+
 @router.post("/studies/{sid}/crashes/pull")
-def post_pull(sid: str, request: Request, refresh: bool = False) -> dict:
+def post_pull(sid: str, request: Request, response: Response, refresh: bool = False, background: bool = False) -> dict:
     db = request.app.state.db
+    if background:
+        # A cache hit answers at once; otherwise the pull runs in a thread and the screen polls its progress, so a
+        # 1-minute pull (10 years, ~40 data.ca.gov calls) is never one frozen request (#54).
+        if not refresh:
+            hit = fresh(db, sid)
+            if hit:
+                return summary(hit, True)
+        with _LOCKS_GUARD:
+            job = _JOBS.get(sid)
+            if not job or job["state"] != "running":
+                job = {"state": "running", "step": "Starting", "done": 0, "total": 0,
+                       "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+                _JOBS[sid] = job
+                threading.Thread(target=_run_job, args=(db, sid, ckan_for(request), refresh, job), daemon=True).start()
+        response.status_code = 202
+        return {"job": dict(job)}
     try:
         result, hit = ensure(db, sid, ckan_for(request), refresh)
-    except CkanError as e:
-        raise HTTPException(502, str(e)) from e
-    except PullError as e:
-        raise HTTPException(409, str(e)) from e
+    except (CkanError, PullError, network_mod.NetworkError) as e:
+        code, msg = _error_status(e)
+        raise HTTPException(code, msg) from e
     return summary(result, hit)
 
 
+@router.get("/studies/{sid}/crashes/pull/status")
+def pull_status(sid: str, request: Request) -> dict:
+    study_mod.require(request.app.state.db, sid)
+    return dict(_JOBS.get(sid) or {"state": "idle"})
+
+
 @router.get("/studies/{sid}/crashes")
-def get_crashes(sid: str, request: Request) -> dict:
+def get_crashes(sid: str, request: Request, full: bool = False) -> dict:
+    """The pulled crashes. Each crash's party list is most of the payload and the screens never read it, so it's
+    left out unless `full=true` (#54); exports and findings read the pull directly."""
     db = request.app.state.db
     study_mod.require(db, sid)
     cached = get_cached(db, sid)
     if not cached:
         raise HTTPException(404, "No crashes pulled yet for this study.")
-    return {**summary(cached, True), "crashes": cached["crashes"]}
+    rows = cached["crashes"] if full else [{k: v for k, v in c.items() if k != "parties"} for c in cached["crashes"]]
+    return {**summary(cached, True), "crashes": rows}
