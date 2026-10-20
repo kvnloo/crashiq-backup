@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 import re
 from datetime import datetime, timezone
 
@@ -244,7 +245,9 @@ def _no_cross_street(roads: list, on_idx: list[int]) -> bool:
     return all(_squeeze(rd) in NO_CROSS or len(_squeeze(rd)) <= 2 for rd in others)
 
 
-def pull(study: dict, net: dict, ckan: Ckan) -> dict:
+def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
+    """`progress(step, done, total)`, when given, is told what the pull is doing (#54, background pulls)."""
+    tell = progress or (lambda step, done, total: None)
     if not net.get("line"):
         raise PullError("Draw the corridor first.")
     years = list(range(study["from_year"], study["to_year"] + 1))
@@ -269,7 +272,8 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     log["area_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
 
-    for y in years:
+    for yi, y in enumerate(years):
+        tell(f"Crash reports {y}", yi, len(years))
         rid = res["crashes"].get(y)
         if not rid:
             log["years_missing"].append(y)
@@ -394,7 +398,8 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
             by_year.setdefault(c["year"], []).append(c["crash_id"])
     parties: dict[str, list[dict]] = {}
     extents: dict[str, list[str]] = {}
-    for y, ids in sorted(by_year.items()):
+    for yi, (y, ids) in enumerate(sorted(by_year.items())):
+        tell(f"Parties and injuries {y}", yi, len(by_year))
         prid, irid = res["parties"].get(y), res["iwp"].get(y)
         if prid:
             pcols, pmiss = cc.resolve_columns(ckan.fields(prid), cc.PARTY_COLS)
@@ -477,20 +482,48 @@ def stale(cached: dict, study: dict, now: datetime | None = None) -> bool:
     return (now - pulled).days >= RECENT_TTL_DAYS
 
 
-def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False) -> tuple[dict, bool]:
-    """(pull result, from_cache). Re-pulls when refreshed or when window/corridor changed."""
+_STUDY_LOCKS: dict[str, threading.Lock] = {}
+_LOCKS_GUARD = threading.Lock()
+
+
+def study_lock(sid: str) -> threading.Lock:
+    """One pull at a time per study, whether it runs in a request or in the background (#54)."""
+    with _LOCKS_GUARD:
+        return _STUDY_LOCKS.setdefault(sid, threading.Lock())
+
+
+def fresh(db: Database, sid: str) -> dict | None:
+    """The cached pull when it still matches the study (same key, not expired), else None."""
     study = study_mod.require(db, sid)
     net = network_mod.network(db, sid)
     key = cache_key(study, net) if net.get("line") else None
     cached = get_cached(db, sid)
-    if cached and not refresh and cached["cache_key"] == key and not stale(cached, study):
-        return cached, True
-    result = pull(study, net, ckan)
-    from .placement import place_unmatched   # C4: place crashes without coordinates (locator validated in PR #16)
-    place_unmatched(db, net, result)
-    db.execute("INSERT OR REPLACE INTO crash_pull (study_id, cache_key, pulled_at, payload) VALUES (?,?,?,?)",
-               (sid, key, result["pulled_at"], json.dumps(result)))
-    return {**result, "cache_key": key}, False
+    return cached if cached and cached["cache_key"] == key and not stale(cached, study) else None
+
+
+def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=None) -> tuple[dict, bool]:
+    """(pull result, from_cache). Re-pulls when refreshed or when window/corridor changed. The result is stored
+    only if the study still has the same key when the pull ends (compare-and-set); if the corridor or window was
+    edited meanwhile, it pulls once more for the new study."""
+    with study_lock(sid):
+        if not refresh:
+            hit = fresh(db, sid)
+            if hit:
+                return hit, True
+        for _ in range(2):
+            study = study_mod.require(db, sid)
+            net = network_mod.network(db, sid)
+            key = cache_key(study, net) if net.get("line") else None
+            result = pull(study, net, ckan, progress)
+            from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
+            place_unmatched(db, net, result)
+            now = study_mod.require(db, sid)
+            now_net = network_mod.network(db, sid)
+            if (cache_key(now, now_net) if now_net.get("line") else None) == key:
+                db.execute("INSERT OR REPLACE INTO crash_pull (study_id, cache_key, pulled_at, payload) "
+                           "VALUES (?,?,?,?)", (sid, key, result["pulled_at"], json.dumps(result)))
+                return {**result, "cache_key": key}, False
+        raise PullError("The study kept changing while its crashes were being pulled. Try again.")
 
 
 def ckan_for(request: Request) -> Ckan:
