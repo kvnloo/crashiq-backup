@@ -182,13 +182,24 @@ IWP_COLS = {
 
 SURFACE_CODES = {"A": "DRY", "B": "WET", "C": "SNOWY-ICY", "D": "SLIPPERY (MUDDY, OILY, ETC.)"}
 
-# Extent of injury -> KABCO. CCRS uses the 2020+ wording; older SWITRS wording mapped for safety (nuance N3).
+# Extent of injury -> KABCO, keyed on the value with spaces and punctuation removed. The live table
+# (`ExtentOfInjuryCode`) holds CODES, not the data dictionary's text (#75, 2026-10-19): Fatal, SuspectSerious,
+# SuspectMinor, PossibleInjury, plus retired SWITRS levels kept on older reports (SevereInactive = severe injury,
+# OtherVisibleInactive = other visible injury, ComplaintOfPainInactive = complaint of pain), which follow the
+# standard SWITRS -> KABCO crosswalk (nuance N3). The dictionary text is mapped too.
 KABCO = {
-    "FATAL INJURY": "K", "FATAL": "K", "KILLED": "K",
-    "SUSPECTED SERIOUS INJURY": "A", "SEVERE INJURY": "A",
-    "SUSPECTED MINOR INJURY": "B", "OTHER VISIBLE INJURY": "B",
-    "POSSIBLE INJURY": "C", "COMPLAINT OF PAIN": "C",
+    "FATAL": "K", "FATALINJURY": "K", "KILLED": "K",
+    "SUSPECTSERIOUS": "A", "SUSPECTEDSERIOUSINJURY": "A", "SEVEREINACTIVE": "A", "SEVEREINJURY": "A",
+    "SUSPECTMINOR": "B", "SUSPECTEDMINORINJURY": "B", "OTHERVISIBLEINACTIVE": "B", "OTHERVISIBLEINJURY": "B",
+    "POSSIBLEINJURY": "C", "COMPLAINTOFPAININACTIVE": "C", "COMPLAINTOFPAIN": "C",
 }
+NO_INJURY = {"", "NONE", "NOINJURY", "NOTINJURED"}   # blank = this person has no injury level (witness, uninjured)
+
+
+def kabco(extent) -> str | None:
+    return KABCO.get("".join(ch for ch in str(extent if extent is not None else "").upper() if ch.isalnum()))
+
+
 SEVERITY_ORDER = "KABCUO"   # U = injured but the injury level wasn't reported (no IWP row); O = property damage only
 
 TRUCK_WORDS = ("TRUCK TRACTOR", "TRACTOR", "SEMI", "HEAVY TRUCK", "TRUCK OR TRUCK TRACTOR")
@@ -370,10 +381,11 @@ def severity(crash: dict, iwp_extents: list[str] | None) -> tuple[str, list[str]
     unknown = []
     best = "O"
     for e in iwp_extents or []:
-        k = KABCO.get(str(e).strip().upper())
+        k = kabco(e)
         if k is None:
-            if str(e).strip():
-                unknown.append(str(e).strip())
+            raw = "" if e is None else str(e).strip()
+            if "".join(ch for ch in raw.upper() if ch.isalnum()) not in NO_INJURY:
+                unknown.append(raw)
             continue
         if SEVERITY_ORDER.index(k) < SEVERITY_ORDER.index(best):
             best = k

@@ -1,5 +1,10 @@
 # Lessons (newest first)
 
+- 2026-10-19 · CHP's data dictionary is not what CCRS publishes. The dictionary lists injury text ("SUSPECTED SERIOUS
+  INJURY"); the live `ExtentOfInjuryCode` holds codes (SuspectSerious, ...) plus retired SWITRS levels
+  (SevereInactive, OtherVisibleInactive, ComplaintOfPainInactive). Matching on the dictionary dropped every A/B/C
+  injury on live data while all tests passed on a hand-built fixture (#75). Always test against recorded LIVE rows
+  (`tests/fixtures/live/`), not only fixtures written from the documentation.
 - 2026-10-18 · Git must never touch the live database. A `git stash` + checkout restored a stale, committed
   `data/crashiq.sqlite-wal`, and SQLite replayed it into the db and corrupted it. Recovered with `sqlite3 .recover`
   (backup in `data/backup/`), corrupt cache rows deleted and re-pulled. `*.sqlite-wal` / `*.sqlite-shm` are now

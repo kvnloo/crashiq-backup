@@ -206,3 +206,23 @@ def test_pdf_states_the_method_and_what_it_does_not_do(client):
     assert "does not compare rates with statewide averages" in flat
     # 9200003 (A) used to be unplaced and was called out here; the locator now places it (#35), so it counts in KSI.
     assert "not in the KSI count" not in flat
+
+
+# -- #75 live injury codes ------------------------------------------------------------------------------------
+@pytest.mark.parametrize("code,k", [("Fatal", "K"), ("SuspectSerious", "A"), ("SevereInactive", "A"),
+                                    ("SuspectMinor", "B"), ("OtherVisibleInactive", "B"), ("PossibleInjury", "C"),
+                                    ("ComplaintOfPainInactive", "C"), ("SUSPECTED SERIOUS INJURY", "A"),
+                                    ("Complaint of Pain", "C")])
+def test_live_ccrs_injury_codes_map_to_kabco(code, k):
+    crash = {"killed": 0, "injured": 1}
+    assert cc.severity(crash, [code, None]) == (k, [])
+
+
+def test_blank_extent_is_not_an_unknown_injury_value():
+    sev, unknown = cc.severity({"killed": 0, "injured": 0}, [None, "", "None"])
+    assert (sev, unknown) == ("O", [])
+    assert cc.severity({"killed": 0, "injured": 1}, ["Bruised"]) == ("U", ["Bruised"])
+
+
+def test_most_severe_live_code_wins():
+    assert cc.severity({"killed": 0, "injured": 3}, ["PossibleInjury", "SuspectSerious", "SuspectMinor"])[0] == "A"
