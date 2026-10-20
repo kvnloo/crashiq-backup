@@ -220,6 +220,17 @@ def _drop_refiled(crashes: dict[str, dict], parties: dict[str, list], log: dict)
             del crashes[i]
 
 
+NO_CROSS = {"", "NOTSTATED", "UNKNOWN", "UNK", "NA", "NONE", "NOSTREET", "PRIVATEPROPERTY"}
+
+
+def _no_cross_street(roads: list, on_idx: list[int]) -> bool:
+    """The road fields other than the corridor give no cross street: blank, a placeholder, or 1-2 letters of junk."""
+    others = [roads[i] for i in range(len(roads)) if i not in on_idx]
+    if not others and len(on_idx) == len(roads):
+        return False                    # both fields name the corridor: nothing missing
+    return all(_squeeze(rd) in NO_CROSS or len(_squeeze(rd)) <= 2 for rd in others)
+
+
 def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     if not net.get("line"):
         raise PullError("Draw the corridor first.")
@@ -299,6 +310,14 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
                 # On a road passing over or under the corridor: never meets it (N7, #67). Kept and listed.
                 log["no_coords_grade_separated"] += 1
                 c["exclude_rule"] = "grade_separated_crossing"
+                recs.append((c, "unmatched"))
+            elif _no_cross_street(roads, on_idx):
+                # The report gives no usable cross street ('NOT STATED', blank, 'PRIVATE PROPERTY', junk): where on
+                # the corridor it happened is unknown. Not a side street (#82): its own rule and count.
+                rule = "private_property" if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd) \
+                    else "no_cross_street"
+                log[f"no_coords_{rule}"] = log.get(f"no_coords_{rule}", 0) + 1
+                c["exclude_rule"] = rule
                 recs.append((c, "unmatched"))
             else:
                 at_crossing = any(grade.same_road(k, x) for k in other for x in gs_keys)   # corridor, by an overpass

@@ -114,3 +114,32 @@ def test_look_alikes_without_a_report_number_that_differ_in_collision_type_are_b
     assert {"9200001", "9299997"} <= {c["crash_id"] for c in out["crashes"]}
     assert out["cleaning"]["same_crash_refiled_dropped"] == 0
     assert out["cleaning"]["possible_refile"] == [["9200001", "9299997"]]
+
+
+# -- #82 'NOT STATED' cross street ----------------------------------------------------------------------------
+def _no_cross(value):
+    d = _fixture(no_gps=True)
+    _, r = _row(d, 9200001)                     # CRENSHAW BL & W 144TH ST, no GPS
+    r["SecondaryRoad"] = value
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    return out, next(c for c in out["crashes"] if c["crash_id"] == "9200001")
+
+
+def test_cross_street_not_stated_is_not_called_a_side_street():
+    # CCRS 2024: SecondaryRoad 'NOT STATED' on 4,649 rows (Santa Monica PD 16% of street crashes)
+    out, c = _no_cross("NOT STATED")
+    assert c.get("exclude_rule") == "no_cross_street"
+    assert out["cleaning"]["no_coords_no_cross_street"] == 1
+
+
+def test_blank_and_junk_cross_streets_are_not_side_streets_either():
+    for v in ("", None, "X", "UNK"):
+        assert _no_cross(v)[1].get("exclude_rule") == "no_cross_street", v
+
+
+def test_private_property_has_its_own_reason():
+    assert _no_cross("PRIVATE PROPERTY")[1].get("exclude_rule") == "private_property"
+
+
+def test_a_real_side_street_is_still_a_side_street():
+    assert _no_cross("W 190TH ST")[1].get("exclude_rule") == "cross_street_not_on_corridor"
