@@ -283,4 +283,12 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Grade separation (user, 2026-10-18, nuance N7):** a road that passes over or under the corridor (an interchange,
   overcrossing or undercrossing) is not an intersection of the corridor. Its crashes must not count for the corridor,
   and for a freeway corridor the crossing road's and interchange crashes must not count as freeway crashes. Detection
-  rules: issue for N7.
+  rules: #67.
+- **PM session merges DECIDED (user, 2026-10-19):** once a PR's review is clean and tests pass, the PM session merges it;
+  the user isn't the merge step. Anything waiting on a user decision still waits. Rule: `CLAUDE.md`.
+- **Tester session DECIDED (user, 2026-10-19):** a third standing session tests data and screens independently and never
+  changes app code. Bugs are `bug` issues with a failing test → Engineering fixes → PM reviews and merges → Tester
+  re-verifies. Own worktree, own database copy (`data/tester.sqlite`), ports 8001/3101. First tasks: (1) statewide CCRS
+  profile of how each reporting agency records crashes (GPS rate, name style, offsets, blanks, PDO share, report
+  versions, crashes piled on one point) to flag Union City–type cities; (2) TIMS comparison by county (the user signs
+  in; no login bot, no passwords); (3) scripted screen tests (no AI steps, telemetry off).
