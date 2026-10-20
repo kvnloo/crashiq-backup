@@ -32,6 +32,7 @@ os.environ.setdefault("DO_NOT_TRACK", "1")
 
 import ccrs_mirror  # noqa: E402
 import corridors  # noqa: E402
+import osm_local  # noqa: E402
 from crashiq import network as network_mod  # noqa: E402
 from crashiq.db import Database  # noqa: E402
 from crashiq.names import street_key  # noqa: E402
@@ -43,6 +44,8 @@ DATA = ROOT / "data" / "statewide"
 CACHE = ROOT / "data" / "cache" / "statewide"
 OSM = CACHE / "osm"
 RESULTS = DATA / "results"
+OSM_DB = ROOT / "data" / "osm" / "ca_osm.sqlite"
+LOCAL = osm_local.LocalOSM(OSM_DB) if OSM_DB.exists() else None   # extract replaces live Overpass when present
 YEARS = [2021, 2022, 2023, 2024, 2025]
 
 
@@ -145,7 +148,7 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
         q = network_mod.overpass_query([tuple(p) for p in corr["line"]])
         key = "overpass:" + hashlib.sha1(q.encode()).hexdigest()
         hit = client.app.state.db.one("SELECT body FROM http_cache WHERE key = ?", (key,))
-        if not hit or json.loads(hit["body"]).get("elements") or empty_retries >= 4:
+        if LOCAL or not hit or json.loads(hit["body"]).get("elements") or empty_retries >= 4:
             break
         client.app.state.db.execute("DELETE FROM http_cache WHERE key = ?", (key,))
         empty_retries += 1
@@ -231,22 +234,36 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     frozen = {(c["city"], c["county"]): c for c in json.loads(FROZEN.read_text())["cities"]} if FROZEN.exists() else {}
     city_list = cities(mirror)
     (DATA / "cities.json").write_text(json.dumps(city_list, indent=1))
-    bounds = corridors.boundaries(OSM)
+    bounds = corridors.local_boundaries(LOCAL) if LOCAL else corridors.boundaries(OSM)
+    osm_source = (f"{LOCAL.meta.get('source')} {LOCAL.meta.get('timestamp')}" if LOCAL else "Overpass (live)")
+    earlier = {}                                   # corridors already run on live Overpass: same lines, rerun
+    for f in [*RESULTS.glob("*/*.json"), *(DATA / "results_live_overpass").glob("*.json")]:
+        r = json.loads(f.read_text())
+        if (r.get("corridor") or {}).get("line"):
+            earlier.setdefault((r["city"], r["county"]), r)
     # Worker 0 uses the Tester database; extra parallel workers get their own Tester-only copies (one SQLite writer
     # each), never the shared data/crashiq.sqlite.
     db_path = ROOT / "data" / "tester.sqlite" if shard[0] == 0 else DATA / f"tester_worker{shard[0]}.sqlite"
+    if LOCAL:   # one OSM source per run: drop live-Overpass cache rows (archived first by archive_live_cache)
+        import sqlite3
+        if db_path.exists():
+            con = sqlite3.connect(db_path)
+            con.execute("DELETE FROM http_cache WHERE source = 'overpass'")
+            con.commit()
+            con.close()
     settings = Settings(db_path=db_path, app_password=None, anthropic_api_key=None,
                         typesafe_api_key=None, study_ai_cap_usd=0.0, dist_dir=ROOT / "no-dist", fixtures_dir=None)
     db = Database(settings.db_path)
     app = create_app(settings, db)
     app.state.ckan = mirror
-    app.state.overpass = corridors.app_transport      # harness: Overpass server list (Method sheet)
+    # harness: street data source (Method sheet): the local extract when built, else the Overpass server list
+    app.state.overpass = LOCAL.transport if LOCAL else corridors.app_transport
     todo = [c for i, c in enumerate(city_list) if (not only or c["city"] == only) and i % shard[1] == shard[0]][:limit]
     t0 = time.time()
     with TestClient(app) as client:
         for n, c in enumerate(todo, 1):
             out = out_dir / f"{corridors.norm_city(c['city'])}_{c['county']}.json"
-            fz = frozen.get((c["city"], c["county"]))
+            fz = frozen.get((c["city"], c["county"])) or earlier.get((c["city"], c["county"]))
             b = None
             if fz:                                    # same basis as the earlier run: the exact same line
                 corr = fz.get("corridor") or {"reason": fz.get("reason") or "not in the frozen corridor list"}
@@ -254,17 +271,20 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
             else:
                 try:
                     b = bounds.get(corridors.norm_city(c["city"])) or corridors.find_rel(c["city"], OSM)
-                    corr = corridors.pick(b["rel"], OSM) if b else {"reason": "no OSM city boundary with this name"}
+                    corr = (corridors.pick(b["rel"], OSM, LOCAL) if b
+                            else {"reason": "no OSM city boundary with this name"})
                 except corridors.OverpassUnavailable as e:
                     print(f"[{n}/{len(todo)}] {c['city']}: not tested (Overpass) - {e}", flush=True)
                     continue                          # not saved: the next pass tries again
                 except Exception as e:  # noqa: BLE001 - recorded per city, never skipped silently
                     corr = {"reason": f"OSM error: {e}"}
-            key = hashlib.sha1(json.dumps([ver, corr], sort_keys=True).encode()).hexdigest()[:12]
+            key = hashlib.sha1(json.dumps([ver, corr, osm_source], sort_keys=True).encode()).hexdigest()[:12]
             if out.exists() and json.loads(out.read_text()).get("key") == key:
                 continue
             row = {**c, "key": key, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
-                   "osm_boundary": (b or {}).get("name"), "corridor_source": "frozen list" if fz else "picked"}
+                   "osm_boundary": (b or {}).get("name"), "osm_source": osm_source,
+                   "corridor_source": ("frozen list" if (c["city"], c["county"]) in frozen else
+                                       "earlier run (live Overpass)" if fz else "picked")}
             if "line" not in corr:
                 row.update(stage="corridor", reason=corr["reason"])
             else:

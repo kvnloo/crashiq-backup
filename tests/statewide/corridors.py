@@ -106,6 +106,14 @@ def boundaries(cache_dir: Path) -> dict[str, dict]:
     return out
 
 
+def local_boundaries(local) -> dict[str, dict]:
+    """Normalized city name -> {rel, name} from the extract: admin_level 8 first, level 6 when no level 8 exists."""
+    out: dict[str, dict] = {}
+    for b in sorted(local.boundaries(), key=lambda b: -int(b["admin_level"])):
+        out.setdefault(norm_city(b["name"]), {"rel": b["rel"], "name": b["name"]})
+    return out
+
+
 def find_rel(name: str, cache_dir: Path) -> dict | None:
     """Fallback for a city not tagged admin_level 8 (San Francisco is a consolidated city-county, level 6)."""
     safe = name.replace('"', "")
@@ -203,11 +211,15 @@ def _candidate_lines(ways: list[dict]):
         yield [tuple(round(v, 6) for v in to_ll(*p)) for p in line], round(length)
 
 
-def pick(rel: int, cache_dir: Path) -> dict:
-    """The test corridor for one city boundary relation, or {'reason': ...}."""
-    q = (f'[out:json][timeout:180];area(id:{3600000000 + rel})->.a;'
-         f'way(area.a)["highway"~"^(primary|secondary|tertiary)$"]["name"];out geom;')
-    d = overpass(q, cache_dir / f"roads_{rel}.json")
+def pick(rel: int, cache_dir: Path, local=None) -> dict:
+    """The test corridor for one city boundary, or {'reason': ...}. `local`: an osm_local.LocalOSM to read the
+    city's roads from the extract instead of Overpass."""
+    if local is not None:
+        d = local.roads_in_area(rel)
+    else:
+        q = (f'[out:json][timeout:180];area(id:{3600000000 + rel})->.a;'
+             f'way(area.a)["highway"~"^(primary|secondary|tertiary)$"]["name"];out geom;')
+        d = overpass(q, cache_dir / f"roads_{rel}.json")
     by_name: dict[tuple[str, str], list[dict]] = defaultdict(list)
     for w in d.get("elements", []):
         t = w.get("tags", {})

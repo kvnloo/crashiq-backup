@@ -325,7 +325,21 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
     # ---------------- 2 Method ----------------
     wm = wb.create_sheet("Method", 1)
     st = basis.get("settings") or {}
+    vfile = DATA / "osm_validation.json"
+    val = json.loads(vfile.read_text()) if vfile.exists() else {}
+    osm_line = (f"Street data: {basis.get('osm_source') or 'Overpass (live)'}. " + (
+        f"Checked against {val['corridors']} real Overpass answers for the same corridor queries: "
+        f"{val['way_match_pct']}% of road ways match, the app detects the same corridor street on "
+        f"{val['same_corridor_name']} of {val['corridors']} and the identical intersection list on "
+        f"{val['same_intersection_list']} of {val['corridors']} (osm_local.validate)." if val else ""))
     method = [
+        ("Street data (OSM)", "Overpass (overpass-api.de and its mirrors) rate-limited this machine during the run "
+                              "(2026-10-20), so the whole run uses one dated Geofabrik extract "
+                              "(california-latest.osm.pbf, MD5-checked, user OK for the download), loaded into SQLite "
+                              "(osm_extract.py) and handed to the app through its own Overpass hook "
+                              "(app.state.overpass, osm_local.py). The app's corridor query is answered the Overpass "
+                              "way: road ways of the app's classes with any segment within 40 m of the drawn line, "
+                              "in id order, with their nodes and node tags. " + osm_line),
         ("Basis of this run (PR #86)",
          f"App code: commit {basis.get('commit')} (backend tree {ver}). CCRS snapshot: local mirror copied from "
          f"data.ca.gov on {basis.get('mirror_built')}. Years: {st.get('from_year')}-{st.get('to_year')} by crash date "
@@ -374,8 +388,8 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                          "crashes filed for state parks, campuses, airports and harbors; 2025 is provisional in both."),
         ("Excluded and why", "Unincorporated areas (no city corridor; CHP/sheriff crashes still enter through the "
                              "corridor box). PDO crashes are in CCRS but not TIMS, so they're shown, not compared."),
-        ("Known limitations", "One corridor per city, so a pass means that road works, not every road. Overpass "
-                              "sometimes answers with 0 elements (#84); the harness retries and counts it. The "
+        ("Known limitations", "One corridor per city, so a pass means that road works, not every road. Streets "
+                              "come from a local extract, not live Overpass; the match rate is above. The "
                               "mirror doesn't reproduce data.ca.gov's row caps or outages. Name-based checks can't "
                               "see crashes written with route numbers (#83) or wrong GPS (Agencies sheet)."),
         ("Reproduce", "python tests/statewide/ccrs_mirror.py is called by the runner; full run: "

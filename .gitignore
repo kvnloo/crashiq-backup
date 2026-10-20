@@ -12,3 +12,5 @@ data/results/
 *.sqlite-wal
 *.sqlite-shm
 data/statewide/
+.venv-osm/
+data/osm/
