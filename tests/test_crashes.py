@@ -214,3 +214,20 @@ def test_a_corner_with_two_cross_street_names_matches_either():
     out = crashes.pull(STUDY, net, Ckan(FakeCkan(_no_gps_fixture())))
     marine = next(c for c in out["crashes"] if c["crash_id"] == "9200003")      # Crenshaw & Marine, no GPS
     assert not marine.get("exclude_rule")
+
+
+def test_no_gps_reports_on_a_grade_separated_crossing_are_excluded_but_listed():
+    # #67 / N7: pretend Rosecrans passes over Crenshaw and 144th under it; Marine stays an at-grade intersection
+    net = {**NET, "intersections": [{"name": "Marine Avenue", "is_study": True}],
+           "grade_separations": [{"name": "Rosecrans Avenue"}, {"name": "West 144th Street"}]}
+    out = crashes.pull(STUDY, net, Ckan(FakeCkan(_no_gps_fixture())))
+    cs = {c["crash_id"]: c for c in out["crashes"]}
+    assert cs["9200002"]["exclude_rule"] == "grade_separated_crossing"   # ROSECRANS AV is the road it happened on
+    assert not cs["9200001"].get("exclude_rule")                         # CRENSHAW BL by the 144th crossing: counts
+    assert not cs["9200003"].get("exclude_rule")                         # Marine, at grade
+    assert out["cleaning"]["no_coords_grade_separated"] == 1
+
+
+def test_pull_cache_key_unchanged_without_grade_separations():
+    assert crashes.cache_key(STUDY, NET) == crashes.cache_key(STUDY, {**NET, "grade_separations": []})
+    assert crashes.cache_key(STUDY, NET) != crashes.cache_key(STUDY, {**NET, "grade_separations": [{"name": "X"}]})

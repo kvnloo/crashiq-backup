@@ -131,6 +131,11 @@ MIGRATIONS: list[str] = [
     ALTER TABLE study ADD COLUMN volume_basis TEXT NOT NULL DEFAULT 'aadt';
     ALTER TABLE study ADD COLUMN k_factor REAL NOT NULL DEFAULT 0.10;
     """,
+    # 10 — #67 grade separations (N7): roads crossing over/under the corridor; corridor road class (freeway or not)
+    """
+    ALTER TABLE corridor ADD COLUMN corridor_highway TEXT;
+    ALTER TABLE corridor ADD COLUMN grade_separations_json TEXT;
+    """,
 ]
 
 

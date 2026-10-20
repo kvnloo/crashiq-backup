@@ -6,7 +6,8 @@ Rules (docs/03-requirements.md R2.3-4):
    Inside more than one radius → the nearest one, which splits at mid-block when intersections are
    closer than twice the radius. (The formal HSIP < 500 ft rule is #3 Q6; it would replace `_pick_intersection` only.)
 3. Otherwise within the corridor buffer of the drawn line and between A and B → the segment it projects onto.
-4. Otherwise → `excluded`, with the reason. Crashes the pull already ruled out (`exclude_rule`, e.g. a side street
+4. Otherwise → `excluded`, with the reason. Grade separations (N7, #67, `grade.py`): a crash on a road passing
+   over or under the corridor → `grade_separated_crossing`; on a freeway corridor only CHP IsFreeway crashes count. Crashes the pull already ruled out (`exclude_rule`, e.g. a side street
    that isn't one of the corridor's intersections, #39) are `excluded` under that rule: listed, not dropped.
 Distances are feet in the corridor's projected CRS.
 """
@@ -19,6 +20,7 @@ from collections import Counter
 from fastapi import APIRouter, HTTPException, Request
 
 from . import crashes as crashes_mod
+from . import grade
 from . import network as network_mod
 from . import study as study_mod
 from .geo import Polyline
@@ -36,14 +38,24 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
     studies = [i for i in net["intersections"] if i["is_study"]]
     pts = {i["id"]: line.proj.to_xy(i["lat"], i["lon"]) for i in studies}
     segs = net["segments"]
+    freeway = bool(net.get("is_freeway"))
+    corridor_keys = grade.keys_of([net.get("corridor_name")])
+    crossings = grade.crossing_keys(net)
     out = []
     for c in crashes:
         base = {"crash_id": c["crash_id"], "location_provenance": c.get("location_source", "gps")}
         if c.get("exclude_rule"):      # decided at pull time, e.g. a side street off the corridor (#39)
             out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None, "rule": c["exclude_rule"]})
             continue
-        if c.get("is_freeway") and not include_freeway:     # CHP's IsFreeway: mainline/ramp crashes under or beside an arterial study
-            out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None, "rule": "freeway"})
+        rule = None
+        if not freeway and c.get("is_freeway") and not include_freeway:  # CHP's IsFreeway: mainline/ramp crashes under or beside an arterial study
+            rule = "freeway"
+        elif grade.on_crossing_road(c, corridor_keys, crossings):        # on a road over/under the corridor (N7, #67)
+            rule = "grade_separated_crossing"
+        elif freeway:                               # freeway corridor: only IsFreeway crashes, ramps on the switch
+            rule = grade.freeway_rule(c, include_freeway)
+        if rule:
+            out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None, "rule": rule})
             continue
         if c.get("lat") is None or c.get("lon") is None:
             out.append({**base, "kind": "unmatched", "location_id": None, "distance_ft": None, "rule": "no_coordinates"})
