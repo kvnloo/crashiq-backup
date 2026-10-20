@@ -107,7 +107,8 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
                 out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": round(d, 1),
                             "rule": "not_on_corridor_street"})
                 continue
-            out.append({**base, "kind": "intersection", "location_id": it["id"], "distance_ft": round(d, 1), "rule": rule})
+            out.append({**base, "kind": "intersection", "location_id": it["id"], "distance_ft": round(d, 1), "rule": rule,
+                        "station_ft": it["station_ft"]})       # where along A->B (the strip diagram, #102)
             continue
         p = line.project_xy(x, y)
         if p.station_ext < 0 or p.station_ext > line.length_ft:

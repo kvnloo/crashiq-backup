@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProfileMap from '../components/ProfileMap'
 import ReviewList from '../components/ReviewList'
+import StripDiagram from '../components/StripDiagram'
 import { locationPoints } from '../lib/mapcats'
 import { ApiError, api, errorText } from '../lib/api'
 import { cell, fmt, table, titleCase } from '../lib/tables'
@@ -185,8 +186,30 @@ function Drill({ row, data, onClose }) {
 // Crashes the profile counts (placed at a study location), with their location id.
 function placedCrashes(crashes, asg) {
   const at = new Map((asg?.assignments || []).filter((a) => a.kind === 'intersection' || a.kind === 'segment')
-    .map((a) => [a.crash_id, a.location_id]))
-  return crashes.filter((c) => at.has(c.crash_id)).map((c) => ({ ...c, location_id: at.get(c.crash_id) }))
+    .map((a) => [a.crash_id, a]))
+  return crashes.filter((c) => at.has(c.crash_id))
+    .map((c) => ({ ...c, location_id: at.get(c.crash_id).location_id, station_ft: at.get(c.crash_id).station_ft }))
+}
+
+// A. Where along the corridor crashes bunch up (#102); exact numbers per location behind "Show table" (T2)
+function Strip({ p, net, crashes, onOpen }) {
+  const t2 = table(p, 'T2')
+  const station = new Map([...(net.intersections || []).map((i) => [i.id, i.station_ft]),
+    ...(net.segments || []).map((s) => [s.id, (s.from_station_ft + s.to_station_ft) / 2])])
+  const off = cell(p, 'T1/unplaced/value'), ex = cell(p, 'T1/excluded/value')
+  return (
+    <section aria-label="Crashes along the corridor">
+      <div className="sect-h"><h2 className="h3">Where along the corridor crashes bunch up</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} /></div>
+      <StripDiagram crashes={crashes} intersections={(net.intersections || []).filter((i) => i.is_study !== false)}
+        lengthFt={net.length_ft} onOpen={(id) => { const row = t2.rows.find((r) => r.key === id); if (row) onOpen(row) }} />
+      {off || ex ? <p className="muted small-note">Not drawn: {fmt(off)} not placed yet (review list), {fmt(ex)} outside the study area.</p> : null}
+      <details className="showtable"><summary>Show table</summary>
+        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Location</th><th className="sf-num">From A (ft)</th><th className="sf-num">Crashes</th></tr></thead>
+          <tbody>{t2.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{station.has(r.key) ? fmt(Math.round(station.get(r.key))) : '—'}</td>
+            <td className="sf-num mono">{fmt(r.values.crashes)}</td></tr>)}</tbody></table></div>
+      </details>
+    </section>
+  )
 }
 
 // Starts the CCRS pull in the background and polls its progress (#54): a 10-year pull is ~40 data.ca.gov calls,
@@ -303,6 +326,7 @@ export default function Profile() {
               <div className="note rv-entry">{fmt(cell(p, 'T1/unplaced/value'))} crash{cell(p, 'T1/unplaced/value') === 1 ? ' is' : 'es are'} not placed yet.
                 {' '}<button type="button" className="linkbtn" onClick={openReview}>Review them →</button></div>
             ) : null}
+            <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
             {p.caveats.length > 0 && (
               <ul className="caveats" aria-label="Caveats">
                 {p.caveats.map((c) => <li key={c.key} className={c.limitation ? 'warn' : ''}>{c.text}</li>)}

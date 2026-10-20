@@ -168,4 +168,25 @@ describe('Crash profile screen', () => {
     expect(calls.find((c) => c.path.endsWith('/review/decisions')).body)
       .toEqual({ crash_ids: ['9'], action: 'place', method: 'intersection', location_id: 'osm-1' })
   })
+
+  it('strip diagram: one dot per placed crash (= T1 crashes), hover, click to drill, color toggle (#102)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const strip = screen.getByLabelText('Crashes along the corridor')
+    expect(within(strip).getByText('Where along the corridor crashes bunch up')).toBeInTheDocument()
+    const dots = within(strip).getAllByTestId('strip-dot')
+    expect(dots.length).toBe(cell(profile, 'T1/crashes/value'))
+    fireEvent.mouseEnter(dots[0])
+    expect(within(strip).getByRole('tooltip')).toBeInTheDocument()
+    fireEvent.click(within(strip).getByRole('radio', { name: 'Collision type' }))
+    expect(within(strip).getByRole('radio', { name: 'Collision type' })).toHaveAttribute('aria-checked', 'true')
+    expect(within(strip).queryByText('Serious injury')).toBeNull()
+    const rows = within(strip).getAllByRole('row').slice(1)            // Show table: one row per T2 location
+    expect(rows).toHaveLength(table(profile, 'T2').rows.length)
+    table(profile, 'T2').rows.forEach((r, i) => expect(rows[i].lastChild.textContent).toBe(nf.format(r.values.crashes)))
+    const first = table(profile, 'T2').rows[0].key                   // the location the fixture's drill-down covers
+    fireEvent.click(dots.find((d) => d.getAttribute('data-location') === first))
+    expect(await screen.findByText('← All locations')).toBeInTheDocument()
+  })
 })
