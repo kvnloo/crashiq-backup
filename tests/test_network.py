@@ -162,3 +162,26 @@ def test_api_rejects_bad_edits(client, sid):
     assert client.patch(f"/api/studies/{sid}/intersections/nope", json={"name": "x"}).status_code == 404
     assert client.patch(f"/api/studies/{sid}", json={"radius_ft": 5}).status_code == 422
     assert client.patch(f"/api/studies/{sid}", json={"radius_ft": 300, "buffer_ft": 75}).json()["radius_ft"] == 300
+
+
+def test_empty_overpass_answer_is_retried_and_never_cached(db):
+    # #84 (Tester #73): overpass-api.de answered 0 elements, no remark, 7 times in 14 calls; it was cached forever
+    empty = b'{"version": 0.6, "osm3s": {}, "elements": []}'
+    q = network.overpass_query([(37.5976, -122.0583), (37.5926, -122.0410)])
+    with pytest.raises(network.NetworkError, match="no streets"):
+        network.fetch_overpass(db, q, transport=lambda url, data, timeout: empty, retries=0, sleep=lambda s: None)
+    assert db.one("SELECT 1 FROM http_cache WHERE source = 'overpass'") is None
+    answers = iter([empty, json.dumps(OSM).encode()])                       # empty once, then the real map
+    got = network.fetch_overpass(db, q, transport=lambda url, data, timeout: next(answers), retries=1,
+                                 sleep=lambda s: None)
+    assert got["elements"] and db.one("SELECT 1 FROM http_cache WHERE source = 'overpass'")
+
+
+def test_an_empty_map_cached_before_the_fix_is_downloaded_again(db):
+    import hashlib
+    q = network.overpass_query([(37.5976, -122.0583), (37.5926, -122.0410)])
+    db.execute("INSERT INTO http_cache (key, source, body) VALUES (?, 'overpass', ?)",
+               ("overpass:" + hashlib.sha1(q.encode()).hexdigest(), '{"elements": []}'))
+    got = network.fetch_overpass(db, q, transport=lambda url, data, timeout: json.dumps(OSM).encode(),
+                                 sleep=lambda s: None)
+    assert got["elements"]

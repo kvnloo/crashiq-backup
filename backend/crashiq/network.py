@@ -79,7 +79,9 @@ def fetch_overpass(db: Database, query: str, transport: Transport | None = None,
     key = "overpass:" + hashlib.sha1(query.encode()).hexdigest()
     hit = db.one("SELECT body FROM http_cache WHERE key = ?", (key,))
     if hit:
-        return json.loads(hit["body"])
+        data = json.loads(hit["body"])
+        if data.get("elements"):             # an empty answer cached before #84 is a miss, never a map
+            return data
     transport = transport or _http_post
     payload = urllib.parse.urlencode({"data": query}).encode()
     last = "no response"
@@ -88,6 +90,10 @@ def fetch_overpass(db: Database, query: str, transport: Transport | None = None,
             data = json.loads(transport(OVERPASS_URL, payload, 120))
             if not isinstance(data.get("elements"), list):
                 raise ValueError("response has no elements")
+            if not data["elements"]:
+                # A drawn corridor always has streets around it; overpass-api.de sometimes answers 0 elements with no
+                # remark under load (7 of 14 calls in the statewide run, #84). Retry, and never cache it.
+                raise ValueError("Overpass returned no streets (empty answer)")
             remark = str(data.get("remark", ""))
             if "error" in remark.lower():          # Overpass reports timeouts as 200 + remark
                 raise ValueError(remark)
