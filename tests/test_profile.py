@@ -164,3 +164,15 @@ def test_api_profile_on_crenshaw(client):
     loc = client.get(f"/api/studies/{sid}/profile/locations/{first}").json()
     assert loc["tables"][0]["id"] == f"T3@{first}"
     assert len(loc["crashes"]) == profile.cell(p["tables"], f"T2/{first}/crashes")
+
+
+def test_t2_carries_each_locations_severity_split_and_rate_ratio():
+    # #103 location ranking: the severity bar and the "rate vs critical" sort come from T2, not the frontend
+    p = P()
+    for r in next(t for t in p["tables"] if t["id"] == "T2")["rows"]:
+        v = r["values"]
+        assert sum(v[f"sev_{k}"] for k in "kabcuo") == v["crashes"]
+        assert v["sev_k"] + v["sev_a"] == v["ksi_crashes"]
+        if v["critical_rate"]:
+            assert v["rate_to_critical"] == round(v["rate"] / v["critical_rate"], 2) or abs(
+                v["rate_to_critical"] - v["rate"] / v["critical_rate"]) < 0.02

@@ -71,7 +71,7 @@ describe('Crash profile screen', () => {
     renderAt('/s/s1/profile')
     await screen.findByLabelText('Key numbers')
     const first = table(profile, 'T2').rows[0]
-    fireEvent.click(screen.getByRole('button', { name: first.label }))
+    fireEvent.click(within(screen.getByLabelText('Location ranking')).getAllByRole('button', { name: first.label })[0])
     await screen.findByText('← All locations')
     expect(screen.getAllByRole('row').length).toBeGreaterThanOrEqual(location.crashes.length)
     fireEvent.click(screen.getByText('← All locations'))
@@ -188,5 +188,48 @@ describe('Crash profile screen', () => {
     const first = table(profile, 'T2').rows[0].key                   // the location the fixture's drill-down covers
     fireEvent.click(dots.find((d) => d.getAttribute('data-location') === first))
     expect(await screen.findByText('← All locations')).toBeInTheDocument()
+  })
+
+  it('ranks locations from T2: order, numbers, sort toggle, show all, show table (#103)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const rank = screen.getByLabelText('Location ranking')
+    expect(within(rank).getByText('Which locations need attention first?')).toBeInTheDocument()
+    const t2 = table(profile, 'T2').rows.filter((r) => r.values.crashes > 0)
+    const byCrashes = [...t2].sort((a, b) => b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+    const items = () => within(rank).getAllByRole('listitem')
+    expect(items()).toHaveLength(Math.min(5, t2.length))
+    items().forEach((li, i) => {
+      expect(li.querySelector('.rowlink').textContent).toBe(byCrashes[i].label)
+      expect(li.querySelector('.n').textContent).toBe(nf.format(byCrashes[i].values.crashes))
+      expect(li.querySelector('.ksi').textContent).toBe(`${nf.format(byCrashes[i].values.ksi_crashes)} KSI`)
+    })
+    fireEvent.click(within(rank).getByRole('radio', { name: 'KSI' }))
+    const byKsi = [...t2].sort((a, b) => b.values.ksi_crashes - a.values.ksi_crashes || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+    expect(items()[0].querySelector('.rowlink').textContent).toBe(byKsi[0].label)
+    if (t2.length > 5) {
+      fireEvent.click(within(rank).getByRole('button', { name: `Show all ${t2.length}` }))
+      expect(items()).toHaveLength(t2.length)
+    }
+    expect(within(rank).queryByRole('radio', { name: 'Rate vs critical' })).toBeNull()   // no AADT in the fixture
+    const full = within(rank.querySelector('details')).getAllByRole('row').slice(1)
+    expect(full).toHaveLength(table(profile, 'T2').rows.length)
+  })
+
+  it('severity bars equal T3 and KSI equals T1 (#103)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const sev = screen.getByLabelText('Severity')
+    expect(within(sev).getByText('How bad, not just how many?')).toBeInTheDocument()
+    expect(sev.querySelector('.ksi-call b').textContent).toBe(nf.format(cell(profile, 'T1/ksi_crashes/value')))
+    const t3 = table(profile, 'T3').rows.filter((r) => r.key !== 'U' || r.values.crashes)
+    const bars = sev.querySelectorAll('.bars .bar')
+    expect(bars).toHaveLength(t3.length)
+    t3.forEach((r, i) => {
+      expect(bars[i].querySelector('.lab').textContent).toBe(r.label)
+      expect(bars[i].querySelector('.v').textContent).toBe(`${nf.format(r.values.crashes)} · ${nf.format(r.values.share_pct)}%`)
+    })
   })
 })
