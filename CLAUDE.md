@@ -41,6 +41,23 @@ Standing sessions (user decisions, 2026-10-18/19):
 - Review loops are capped: at most 3 review rounds per PR, then it goes back to the user.
 - **Bugs:** Tester files each one as an issue labelled `bug`, with a failing test that shows it. Engineering fixes it,
   PM reviews and merges, Tester re-verifies and closes it (or reopens it with what still fails).
+- **Obvious mistakes get fixed without asking (user, 2026-10-19).** A bug where the code clearly does something other
+  than what the docs already say (wrong parsing, double counting, lost rows, a crash in the wrong place by our own rule)
+  is fixed and merged without waiting for the user. Only *choices* go to the user: a new threshold, a new rule, a
+  method that changes what a number means. When unsure which it is, ask.
+
+## Same basis everywhere (user, 2026-10-19: "apples to apples")
+Engineering's checks, Tester's runs and any comparison (before/after, CrashIQ vs TIMS) must use the same basis, or the
+difference is meaningless. Every run and every comparison states, and keeps identical across the things compared:
+- **Data:** the same CCRS snapshot (pull date / mirror date), the same tables, report versions resolved the same way.
+- **Time:** the same years, by crash date, the same handling of preliminary records.
+- **Place:** the same corridor lines, buffer, influence radius and study limits; a before/after rerun reuses the exact
+  corridor list of the first run.
+- **Rules:** the app's own pull, placement and assignment code (never a re-implementation), at a stated git commit,
+  with the same study settings.
+- **Measures:** the same crash definition (one per Collision Id), the same severity levels (KABCO per docs/03 N3),
+  the same inclusion (e.g. TIMS has no property-damage-only crashes, so compare fatal + injury only).
+A comparison that can't match one of these says which, and why, next to the result.
 
 ## Isolation (after the 2026-10-18 SQLite -wal corruption)
 - Every session works in its own git worktree. Never switch branches or stash in a checkout whose `data/` another
