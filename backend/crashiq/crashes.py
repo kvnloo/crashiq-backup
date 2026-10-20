@@ -20,13 +20,13 @@ from . import grade
 from . import network as network_mod
 from . import study as study_mod
 from .db import Database
-from .geo import LocalProjection
+from .geo import LocalProjection, Polyline
 from .names import ROUTE_SPELLINGS, route_number, route_numbers, same_core, street_key
 from .sources import ca_ccrs as cc
 from .sources.ckan import Ckan, CkanError
 
 PAGE = 5000
-ID_CHUNK = 150          # Collision Ids per Parties/IWP query (URL length)
+ID_CHUNK = 500          # Collision Ids per Parties/IWP query (URL length; 600 checked live, 2026-10-19)
 SOURCE = "CCRS (California Highway Patrol), data.ca.gov package 'ccrs', public domain"
 
 
@@ -251,11 +251,13 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     res = cc.table_resources(ckan.get("package_show", id=cc.PACKAGE))
     log = {"rows_read": 0, "outside_window_dropped": 0, "deleted_dropped": 0, "duplicate_versions_dropped": 0,
            "no_coords_read": 0, "no_coords_not_corridor_street": 0, "no_coords_off_study_stretch": 0,
-           "no_coords_grade_separated": 0,
+           "no_coords_grade_separated": 0, "gps_beyond_margin_dropped": 0,
            "implausible_coords": 0, "bad_dates_dropped": 0, "duplicate_parties_dropped": 0, "version_ties_first_kept": 0, "preliminary_kept": 0,
            "feet_typed_as_miles_fixed": 0, "years_missing": [], "parties_missing_years": [], "iwp_missing_years": [],
            "missing_fields": {}, "unknown_injury_values": [], "cities": []}
-    s, w, n, e = bbox(net["line"], margin_ft(study))
+    margin = margin_ft(study)
+    line = Polyline([tuple(p) for p in net["line"]])
+    s, w, n, e = bbox(net["line"], margin)
     cores = _corridor_cores(net)
     corridor_keys = grade.corridor_keys(net)
     # One corner can carry two cross-street names ("Eastin Drive / Lowry Road"): each one counts (Lowry Rd, Union City).
@@ -284,7 +286,15 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
             cid += ", " + cc.q(cols["report_version"]["id"])
         head = f"SELECT {_select(cols)} FROM {cc.q(rid)}"
         with_xy = _paged(ckan, f"{head} WHERE {lat} BETWEEN {s:.6f} AND {n:.6f} AND {lon} BETWEEN {w:.6f} AND {e:.6f}", cid)
-        recs = [(cc.crash_record(r, cols), "gps") for r in with_xy]
+        recs = []
+        for r in with_xy:
+            c = cc.crash_record(r, cols)
+            # The box is a rectangle; on a diagonal corridor most of it is far from the line. Rows beyond the
+            # margin can't be in the study at any radius/buffer the margin allows, so they stop here (#54).
+            if c["lat"] is not None and c["lon"] is not None and line.project(c["lat"], c["lon"]).offset_ft > margin:
+                log["gps_beyond_margin_dropped"] += 1
+                continue
+            recs.append((c, "gps"))
         log["cities"] = sorted(set(log["cities"]) | {r["city"] for r, _ in recs if r["city"]})
         # Crashes with no usable coordinates: same county (or city) as the GPS crashes, on the corridor street by
         # name; then, in code, only those whose cross street is one of the study intersections (the study stretch).
@@ -377,7 +387,8 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     # Parties + IWP, per year
     by_year: dict[int, list[str]] = {}
     for c in crashes.values():
-        by_year.setdefault(c["year"], []).append(c["crash_id"])
+        if not c.get("exclude_rule"):   # excluded reports are listed, but never counted: no party/injury lookups (#54)
+            by_year.setdefault(c["year"], []).append(c["crash_id"])
     parties: dict[str, list[dict]] = {}
     extents: dict[str, list[str]] = {}
     for y, ids in sorted(by_year.items()):
@@ -415,10 +426,14 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     unknown = set()
     out = []
     for c in sorted(crashes.values(), key=lambda c: (c["date"], c["crash_id"])):
-        ps = parties.get(c["crash_id"], [])
-        sev, unk = cc.severity(c, extents.get(c["crash_id"]))
-        unknown.update(unk)
-        c.update(severity=sev, parties=ps, **cc.mode_flags(c, ps))
+        if c.get("exclude_rule"):
+            c.update(severity=None, parties=[], ped=False, bike=False, motorcycle=False, heavy_truck=False,
+                     details="not_looked_up")
+        else:
+            ps = parties.get(c["crash_id"], [])
+            sev, unk = cc.severity(c, extents.get(c["crash_id"]))
+            unknown.update(unk)
+            c.update(severity=sev, parties=ps, **cc.mode_flags(c, ps))
         log["preliminary_kept"] += c["preliminary"]
         log["feet_typed_as_miles_fixed"] += c.pop("offset_fixed")
         out.append(c)
@@ -442,13 +457,30 @@ def get_cached(db: Database, sid: str) -> dict | None:
     return {**json.loads(r["payload"]), "cache_key": r["cache_key"]} if r else None
 
 
+RECENT_TTL_DAYS = 30   # a pull whose window reaches last year or this year is redone after this (CHP keeps revising
+                       # preliminary reports, #54); older windows are final and never expire
+
+
+def stale(cached: dict, study: dict, now: datetime | None = None) -> bool:
+    now = now or datetime.now(timezone.utc)
+    if study["to_year"] < now.year - 1:
+        return False
+    try:
+        pulled = datetime.fromisoformat(cached["pulled_at"])
+    except (KeyError, TypeError, ValueError):
+        return True
+    if pulled.tzinfo is None:
+        pulled = pulled.replace(tzinfo=timezone.utc)
+    return (now - pulled).days >= RECENT_TTL_DAYS
+
+
 def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False) -> tuple[dict, bool]:
     """(pull result, from_cache). Re-pulls when refreshed or when window/corridor changed."""
     study = study_mod.require(db, sid)
     net = network_mod.network(db, sid)
     key = cache_key(study, net) if net.get("line") else None
     cached = get_cached(db, sid)
-    if cached and not refresh and cached["cache_key"] == key:
+    if cached and not refresh and cached["cache_key"] == key and not stale(cached, study):
         return cached, True
     result = pull(study, net, ckan)
     from .placement import place_unmatched   # C4: place crashes without coordinates (locator validated in PR #16)
