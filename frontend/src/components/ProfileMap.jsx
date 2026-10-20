@@ -1,7 +1,7 @@
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { DIMENSIONS, categories, catOf, columns, corridorAzimuth, visible } from '../lib/mapcats'
+import { DIMENSIONS, categories, catOf, columns, corridorAzimuth, topLocations, visible } from '../lib/mapcats'
 import { TILE_MAX_NATIVE_ZOOM, TILE_URL } from '../lib/tiles'
 
 const TILE_ATTR_HTML = 'Tiles © Esri — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -18,12 +18,17 @@ function style() {
       corridor: { type: 'geojson', data: EMPTY },
       crashes: { type: 'geojson', data: EMPTY },
       columns: { type: 'geojson', data: EMPTY },
+      locs: { type: 'geojson', data: EMPTY },
     },
     layers: [
       { id: 'bg', type: 'background', paint: { 'background-color': '#14181C' } },
-      { id: 'base', type: 'raster', source: 'base' },
+      // dimmed so the data reads first (#100); street names come from our own labels and hovers
+      { id: 'base', type: 'raster', source: 'base', paint: { 'raster-opacity': 0.55, 'raster-saturation': -0.6 } },
       { id: 'corridor', type: 'line', source: 'corridor', paint: { 'line-color': '#1EE39A', 'line-width': 5, 'line-opacity': 0.35 },
         layout: { 'line-cap': 'round' } },
+      // invisible hover targets: every location's name and crash count on hover (#100)
+      { id: 'locs', type: 'circle', source: 'locs', paint: { 'circle-radius': 14, 'circle-opacity': 0.01,
+        'circle-pitch-alignment': 'map' } },
       { id: 'crashes', type: 'circle', source: 'crashes', paint: {
         'circle-color': ['get', 'color'], 'circle-radius': ['case', ['get', 'big'], 6, 4.5],
         'circle-opacity': ['case', ['get', 'dim'], 0.15, 0.9], 'circle-stroke-color': '#0D1013',
@@ -37,7 +42,7 @@ function style() {
 
 // Crash map for step 3. 3D view: one stacked column per location (height = crashes, slabs = the "color by"
 // categories); 2D view: dots only. Rotate/tilt with the buttons, right-drag, or two fingers.
-export default function ProfileMap({ line, crashes = [], locations = [], highlight, onPick }) {
+export default function ProfileMap({ line, crashes = [], locations = [], highlight, onPick, selected }) {
   const box = useRef(null)
   const mapRef = useRef(null)
   const pickRef = useRef(onPick)
@@ -97,7 +102,12 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
       if (!p) return
       popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.location)}</b><br>${esc(p.count)} ${esc(String(p.cat).toLowerCase())} · ${esc(p.total)} crashes here`).addTo(map)
     })
-    for (const l of ['crashes', 'columns']) map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; popup.remove() })
+    map.on('mousemove', 'locs', (e) => {
+      const p = e.features?.[0]?.properties
+      if (!p || map.queryRenderedFeatures(e.point, { layers: ['columns', 'crashes'] }).length) return
+      popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.location)}</b><br>${esc(p.total)} crash${p.total === 1 ? '' : 'es'}`).addTo(map)
+    })
+    for (const l of ['crashes', 'columns', 'locs']) map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; popup.remove() })
     return () => { popup.remove(); map.remove(); mapRef.current = null }
   }, [])
 
@@ -133,18 +143,31 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
     map.getSource('columns').setData(is3d ? columns(locations, shown, dim, cats, scale.h, scale.r) : EMPTY)
   }, [ready, shown, dim, cats, colorOf, locations, is3d, highlight, scale])
 
-  // intersection names as HTML markers (works without a glyph server)
+  // Names as HTML markers (no glyph server needed), but only for the 3 locations with the most crashes and the one
+  // opened in the drill-down; every other name and every count is on hover (#100: the user found it cluttered).
+  const labelled = useMemo(() => new Set([...topLocations(locations, shown), ...(selected ? [selected] : [])]),
+    [locations, shown, selected])
+  useEffect(() => {
+    const map = mapRef.current
+    if (!ready || !map) return
+    const n = new Map()
+    for (const c of shown) if (c.location_id) n.set(c.location_id, (n.get(c.location_id) || 0) + 1)
+    map.getSource('locs').setData({ type: 'FeatureCollection', features: locations.map((l) => ({
+      type: 'Feature', geometry: { type: 'Point', coordinates: [l.lon, l.lat] },
+      properties: { location: l.name, total: n.get(l.id) || 0 },
+    })) })
+  }, [ready, locations, shown])
   useEffect(() => {
     const map = mapRef.current
     if (!ready || !map) return undefined
-    const ms = locations.filter((l) => l.kind === 'intersection').map((l) => {
+    const ms = locations.filter((l) => labelled.has(l.id)).map((l) => {
       const el = document.createElement('div')
       el.className = 'ciq-label'
       el.textContent = l.name
       return new maplibregl.Marker({ element: el, anchor: 'top', offset: [0, 10] }).setLngLat([l.lon, l.lat]).addTo(map)
     })
     return () => ms.forEach((m) => m.remove())
-  }, [ready, locations])
+  }, [ready, locations, labelled])
 
   function fit(animate) {
     const map = mapRef.current

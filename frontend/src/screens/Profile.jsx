@@ -275,7 +275,7 @@ export default function Profile() {
   return (
     <section className="profile" aria-label="Crash profile">
       <div className="mapcol">
-        <ProfileMap line={state.line} crashes={state.crashes || []} locations={locs} highlight={highlight}
+        <ProfileMap line={state.line} crashes={state.crashes || []} locations={locs} highlight={highlight} selected={drill?.row.key}
           onPick={picking ? (pt) => picking.done(pt) : undefined} />
       </div>
       <div className="datacol">

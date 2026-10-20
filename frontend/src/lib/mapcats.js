@@ -107,6 +107,15 @@ export function columns(locations, crashes, dim, cats, maxHeight = 220, radius =
   return { type: 'FeatureCollection', features }
 }
 
+// The n locations with the most crashes (ties by name): the only ones labelled all the time (#100, label clutter).
+export function topLocations(locations, crashes, n = 3) {
+  const count = new Map()
+  for (const c of crashes) if (c.location_id) count.set(c.location_id, (count.get(c.location_id) || 0) + 1)
+  return locations.filter((l) => count.get(l.id))
+    .sort((a, b) => count.get(b.id) - count.get(a.id) || String(a.name).localeCompare(String(b.name)))
+    .slice(0, n).map((l) => l.id)
+}
+
 // Locations with coordinates: intersections at their node, segments at the midpoint of their end intersections.
 export function locationPoints(net) {
   const ints = new Map((net?.intersections || []).map((i) => [i.id, i]))
