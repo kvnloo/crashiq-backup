@@ -4,8 +4,15 @@
 .startbar { display: grid; grid-template-columns: 280px minmax(0, 1fr) 280px auto; gap: 14px; align-items: end; }
 .startbar .sf-btn { height: 44px; white-space: nowrap; }
 .startbar .custom { grid-column: 3 / 4; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* #37: below ~1100 px the two fixed 280 px columns squeezed Project to nothing; wrap to 2 columns, then 1 */
+@media (max-width: 1100px) {
+  .startbar { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+  .startbar .custom { grid-column: 1 / 2; }
+}
 @media (max-width: 920px) {
   .setup { padding: 28px 16px; }
-  .startbar { grid-template-columns: 1fr; }
+}
+@media (max-width: 640px) {
+  .startbar { grid-template-columns: minmax(0, 1fr); }
   .startbar .custom { grid-column: auto; }
 }
