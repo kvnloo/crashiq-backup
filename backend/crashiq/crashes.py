@@ -94,7 +94,7 @@ def _corridor_cores(net: dict) -> list[str]:
 # Characters left out of street-name matching on both sides: spaces, apostrophes, and the LIKE wildcards % and _
 # (an OSM name must never act as a pattern). data.ca.gov refuses LIKE ... ESCAPE (no rights on like_escape, 2026-10-19),
 # so the wildcards are removed rather than escaped.
-_SQ_DROP = (" ", "'", "%", "_")
+_SQ_DROP = (" ", "'", "%", "_", "-", ".")     # hyphen and dot too: ALVARADO-NILES / ALVARADO NILES (#80)
 
 
 def _sq_sql(col: str) -> str:
