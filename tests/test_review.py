@@ -49,7 +49,7 @@ def t1(client, sid, key):
 def test_unplaced_crashes_are_grouped_by_street_pair(client, sid):
     r = review(client, sid)
     g = next(g for g in r["groups"] if g["secondary"] == "NOT STATED")
-    assert g["primary"] == "CRENSHAW BLVD" and g["count"] == 2 and g["reasons"] == {"no_cross_street": 2}
+    assert g["primary"] == "CRENSHAW BOULEVARD" and g["count"] == 2 and g["reasons"] == {"no_cross_street": 2}
     assert {c["crash_id"] for c in g["crashes"]} == {"9200001", "9200005"}
     assert r["open"] == t1(client, sid, "unplaced") and r["intersections"]
 
@@ -63,6 +63,14 @@ def test_place_at_an_intersection_counts_it_there_with_user_provenance(client, s
     row = next(x for x in a["assignments"] if x["crash_id"] == "9200001")
     assert (row["kind"], row["location_id"], row["location_provenance"]) == ("intersection", it["id"], "user")
     assert t1(client, sid, "crashes") == before + 1 and t1(client, sid, "user_placed") == 1
+    out = review(client, sid)["decided"][0]["outcome"]
+    assert (out["kind"], out["location"]) == ("intersection", it["name"])
+
+
+def test_a_placement_off_the_corridor_shows_it_is_not_counted(client, sid):
+    decide(client, sid, crash_ids=["9200005"], action="place", method="map", lat=33.9060, lon=-118.3200)   # ~600 ft off
+    out = review(client, sid)["decided"][0]["outcome"]
+    assert (out["kind"], out["rule"]) == ("excluded", "outside_buffer")
 
 
 def test_place_on_the_map_is_assigned_by_the_normal_rules(client, sid):

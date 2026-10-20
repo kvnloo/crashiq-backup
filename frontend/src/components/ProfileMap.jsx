@@ -37,9 +37,10 @@ function style() {
 
 // Crash map for step 3. 3D view: one stacked column per location (height = crashes, slabs = the "color by"
 // categories); 2D view: dots only. Rotate/tilt with the buttons, right-drag, or two fingers.
-export default function ProfileMap({ line, crashes = [], locations = [], highlight }) {
+export default function ProfileMap({ line, crashes = [], locations = [], highlight, onPick }) {
   const box = useRef(null)
   const mapRef = useRef(null)
+  const pickRef = useRef(onPick)
   const [ready, setReady] = useState(false)
   const [dim, setDim] = useState('severity')
   const [hidden, setHidden] = useState({})
@@ -99,6 +100,17 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
     for (const l of ['crashes', 'columns']) map.on('mouseleave', l, () => { map.getCanvas().style.cursor = ''; popup.remove() })
     return () => { popup.remove(); map.remove(); mapRef.current = null }
   }, [])
+
+  // review list (#97): while a point is being picked, the next map click returns it
+  useEffect(() => {
+    pickRef.current = onPick
+    const map = mapRef.current
+    if (!ready || !map || !onPick) return undefined
+    map.getCanvas().style.cursor = 'crosshair'
+    const click = (e) => pickRef.current?.({ lat: e.lngLat.lat, lon: e.lngLat.lng })
+    map.on('click', click)
+    return () => { map.off('click', click); map.getCanvas().style.cursor = '' }
+  }, [ready, onPick])
 
   // fit the corridor, laid across the screen, once the map and line are ready
   useEffect(() => {

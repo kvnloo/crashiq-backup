@@ -48,7 +48,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 2     # bump when the cleaning changes what a cached pull holds (2: live injury codes, #75)
+PULL_FORMAT = 3     # bump when the cleaning changes what a cached pull holds (2: injury codes #75; 3: #80-#83, #94)
 
 
 def cache_key(study: dict, net: dict) -> str:

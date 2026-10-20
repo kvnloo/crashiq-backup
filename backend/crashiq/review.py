@@ -57,8 +57,14 @@ def overlay(crashes: list[dict], decs: dict[str, dict]) -> list[dict]:
     return out
 
 
-def _pair(c: dict) -> tuple[str, str]:
+def _pair(c: dict, corridor: str, corridor_keys) -> tuple[str, str]:
+    """Street pair a crash is listed under. Any spelling of the corridor (SOUTH CRENSHAW BLVD, 'CRENSHAW BLVD;
+    MCDONALDS', an address on it) is listed under the corridor's name; each crash still shows the report's text."""
+    from .crashes import _names_street
+
     def norm(raw):
+        if raw and corridor_keys and _names_street(raw, corridor_keys):
+            return corridor
         k = street_key(raw)
         return f"{k.core} {k.suffix or ''}".strip() if k else (str(raw or "").strip().upper() or "NOT STATED")
     return norm(c.get("primary_road")), norm(c.get("secondary_road"))
@@ -82,19 +88,26 @@ def review_list(db: Database, sid: str) -> dict:
     decs = decisions(db, sid)
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
     rows = {x["crash_id"]: x for x in a["assignments"]}
+    from . import grade
+    corridor = str(net.get("corridor_name") or "").upper()
+    ck = grade.corridor_keys(net)
     groups: dict[tuple, list] = {}
     for x in a["assignments"]:
         if x["kind"] == "unmatched":
             c = by_id[x["crash_id"]]
-            groups.setdefault(_pair(c), []).append(_item(c, x, decs.get(c["crash_id"])))
+            groups.setdefault(_pair(c, corridor, ck), []).append(_item(c, x, decs.get(c["crash_id"])))
     out = []
     for (p, s), items in sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0])):
         items.sort(key=lambda i: (i["date"] or "", i["crash_id"]))
         out.append({"key": f"{p} / {s}", "primary": p, "secondary": s, "count": len(items),
                     "reasons": dict(Counter(i["reason"] for i in items)),
                     "with_suggestion": sum(1 for i in items if i["suggestion"]), "crashes": items})
-    decided = [_item(by_id[k], rows.get(k), d) | {"kind": (rows.get(k) or {}).get("kind")}
-               for k, d in decs.items() if k in by_id]
+    names = {i["id"]: i["name"] for i in net["intersections"]} | {g["id"]: g.get("name", g["id"]) for g in net["segments"]}
+
+    def outcome(k):                    # where the code put the crash after the decision (the engineer sees it)
+        x = rows.get(k) or {}
+        return {"kind": x.get("kind"), "rule": x.get("rule"), "location": names.get(x.get("location_id"))}
+    decided = [_item(by_id[k], rows.get(k), d) | {"outcome": outcome(k)} for k, d in decs.items() if k in by_id]
     decided.sort(key=lambda i: i["decision"]["decided_at"] or "", reverse=True)
     return {"open": sum(g["count"] for g in out), "groups": out, "decided": decided,
             "can_undo": bool(db.one("SELECT 1 FROM decision_batch WHERE study_id = ? AND undone = 0", (sid,))),
