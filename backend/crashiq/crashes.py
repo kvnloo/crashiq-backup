@@ -174,6 +174,35 @@ def _names_street(raw: str | None, keys) -> bool:
     return any(len(_squeeze(x.core)) >= 4 and _squeeze(x.core) in sq for x in keys)
 
 
+def _refile_key(c: dict) -> tuple | None:
+    """Same crash filed twice under two Collision Ids (#81): same agency, same report number (when CCRS gives one),
+    same date-time and the same two roads. Report numbers alone are not unique (SFPD reuses them), hence the rest."""
+    if not c.get("reported_at") or not (c.get("primary_road") or c.get("secondary_road")):
+        return None
+    return (c.get("agency") or "", c.get("report_number") or "", c["reported_at"],
+            _squeeze(c.get("primary_road")), _squeeze(c.get("secondary_road")))
+
+
+def _drop_refiled(crashes: dict[str, dict], log: dict) -> None:
+    """Keep one row per refile key: the highest report version, then the lowest Collision Id. Pairs are logged."""
+    groups: dict[tuple, list[str]] = {}
+    for cid, c in crashes.items():
+        k = _refile_key(c)
+        if k is not None:
+            groups.setdefault(k, []).append(cid)
+    log["same_crash_refiled_dropped"] = 0
+    log["same_crash_refiled"] = []
+    for ids in groups.values():
+        if len(ids) < 2:
+            continue
+        keep = max(ids, key=lambda i: (crashes[i]["report_version"], -int(i) if i.isdigit() else 0))
+        drop = [i for i in ids if i != keep]
+        log["same_crash_refiled"].append({"kept": keep, "dropped": sorted(drop)})
+        log["same_crash_refiled_dropped"] += len(drop)
+        for i in drop:
+            del crashes[i]
+
+
 def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     if not net.get("line"):
         raise PullError("Draw the corridor first.")
@@ -288,6 +317,7 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     for cid in [k for k, c in crashes.items() if c["deleted"]]:
         log["deleted_dropped"] += 1          # newest version deleted: the crash is gone, older versions don't survive
         del crashes[cid]
+    _drop_refiled(crashes, log)
     log["duplicate_versions_dropped"] = dup_seen
     if len(log["years_missing"]) == len(years):
         raise PullError("data.ca.gov has no CCRS crash table for any year in the study window. The dataset may have "

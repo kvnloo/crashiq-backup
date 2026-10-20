@@ -44,4 +44,6 @@ def test_live_severity_on_the_study_stretch(crenshaw):
 
 def test_live_replay_returns_every_recorded_crash(crenshaw):
     # #53: with typed columns the replay finds the no-coordinate reports too (was 314 of 1602 untyped)
-    assert len(crenshaw["crashes"]) == 1602
+    # one LAPD crash is in CCRS twice (Collision Ids 4364159 v1 and 4369588 v4, Crenshaw Bl & 66th St, #81)
+    assert len(crenshaw["crashes"]) + crenshaw["cleaning"]["same_crash_refiled_dropped"] == 1602
+    assert crenshaw["cleaning"]["same_crash_refiled"] == [{"kept": "4369588", "dropped": ["4364159"]}]
