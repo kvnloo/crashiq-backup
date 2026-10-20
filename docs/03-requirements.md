@@ -292,3 +292,10 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   profile of how each reporting agency records crashes (GPS rate, name style, offsets, blanks, PDO share, report
   versions, crashes piled on one point) to flag Union City–type cities; (2) TIMS comparison by county (the user signs
   in; no login bot, no passwords); (3) scripted screen tests (no AI steps, telemetry off).
+- **GPS check distance DECIDED (user, 2026-10-19, PM session):** a GPS crash more than 400 ft (plus the reported
+  offset) from the intersection its report names is flagged and counted where the GPS puts it, never moved (#53, PR #74;
+  `assign.GPS_CHECK_FT`).
+- **Injury levels (N3) DECIDED (user, 2026-10-19, PM session):** older SWITRS wording and the 2020+ KABCO wording are
+  the same levels: Fatal = K; Severe injury = Suspected serious injury = A; Other visible injury = Suspected minor
+  injury = B; Complaint of pain = Possible injury = C; no injury = O. Live CCRS codes (`SuspectSerious`, `*Inactive`,
+  ...) map the same way (#75, PR #76). No report note about the 2020 wording change. Unknown level stays U (#34 item 12).
