@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import crashes from '../__fixtures__/crashes.json'
 import network from '../__fixtures__/network.json'
+import { SEVERITY } from './severity'
 import { SLOTS, OTHER, catOf, categories, columns, corridorAzimuth, locationPoints, topLocations, visible } from './mapcats'
 
 const C = crashes.crashes.filter((c) => c.lat != null)
@@ -32,7 +33,9 @@ describe('map categories', () => {
     expect(catOf('light', { lighting: 'DARK - NO STREET LIGHTS' })).toBe('unlit')
     expect(catOf('light', { lighting: 'DUSK - DAWN' })).toBe('dusk')
     expect(catOf('light', { lighting: 'DAYLIGHT' })).toBe('day')
-    expect(catOf('severity', { severity: 'B' })).toBe('I')
+    expect(catOf('severity', { severity: 'B' })).toBe('B')        // #108: each KABCO level is its own category
+    expect(catOf('severity', { severity: 'C' })).toBe('C')
+    expect(catOf('severity', { severity: undefined })).toBe('U')
   })
 
   it('filters combine across dimensions', () => {
@@ -88,3 +91,13 @@ describe('topLocations (#100)', () => {
     expect(topLocations(locs, [])).toEqual([])
   })
 })
+
+describe('severity categories (#108)', () => {
+  it('list K/A/B/C/O in order with the one ramp, and U only when present', () => {
+    const cats = categories('severity', [{ severity: 'K' }, { severity: 'C' }])
+    expect(cats.map((c) => c.key)).toEqual(['K', 'A', 'B', 'C', 'O'])
+    expect(cats.map((c) => c.color)).toEqual(['K', 'A', 'B', 'C', 'O'].map((k) => SEVERITY[k]))
+    expect(categories('severity', [{ severity: 'U' }]).map((c) => c.key)).toContain('U')
+  })
+})
+

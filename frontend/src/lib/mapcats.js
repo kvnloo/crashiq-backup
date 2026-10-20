@@ -1,11 +1,11 @@
 // Map "color by" dimensions and the stacked 3D columns. Pure functions, no map library.
 // Colors: categorical slots 1–3 validated for the dark surface (dataviz validator: all-pairs pass); a 4th+ category
-// folds to muted gray but keeps its own legend chip so it can still be filtered. Severity keeps the KABCO tokens;
+// folds to muted gray but keeps its own legend chip so it can still be filtered. Severity uses the one K/A/B/C/O ramp (lib/severity.js, #108);
 // years use one sequential blue ramp (dark-mode steps, older = deeper).
 export const SLOTS = ['#3987e5', '#d95926', '#199e70']
 export const OTHER = '#6B7682'
 const RAMP = ['#184f95', '#1c5cab', '#256abf', '#2a78d6', '#3987e5', '#5598e7', '#6da7ec', '#86b6ef', '#9ec5f4', '#b7d3f6']
-const SEV = { K: '#FF5A4E', A: '#FF8A3D', I: '#FFB020', O: '#8E9AA6' }
+import { SEVERITY, SEVERITY_LABEL } from './severity'
 
 const title = (s) => (s || '').toLowerCase().replace(/\b\w/g, (m) => m.toUpperCase())
 const isDark = (c) => (c.lighting || '').toUpperCase().startsWith('DARK')
@@ -20,7 +20,7 @@ export const DIMENSIONS = [
 
 // Category key of one crash on one dimension.
 export function catOf(dim, c) {
-  if (dim === 'severity') return c.severity === 'K' || c.severity === 'A' || c.severity === 'O' ? c.severity : 'I'
+  if (dim === 'severity') return SEVERITY[c.severity] ? c.severity : 'U'
   if (dim === 'type') return (c.collision_type || 'NOT STATED').toUpperCase()
   if (dim === 'year') return String(c.year ?? (c.date || '').slice(0, 4) ?? '')
   if (dim === 'tod') {
@@ -47,7 +47,7 @@ export function categories(dim, crashes) {
   const has = (k) => n.has(k)
   let list
   if (dim === 'severity') {
-    list = [['K', 'Fatal', SEV.K], ['A', 'Serious injury', SEV.A], ['I', 'Other injury', SEV.I], ['O', 'Property damage', SEV.O]]
+    list = ['K', 'A', 'B', 'C', 'U', 'O'].filter((k) => k !== 'U' || has(k)).map((k) => [k, SEVERITY_LABEL[k], SEVERITY[k]])
   } else if (dim === 'type') {
     const keys = [...n.keys()].sort((a, b) => n.get(b) - n.get(a) || a.localeCompare(b))
     const named = keys.filter((k) => k !== 'NOT STATED' && k !== 'OTHER')
