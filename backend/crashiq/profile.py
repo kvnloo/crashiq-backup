@@ -202,6 +202,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("crashes_per_mi_yr", "Crashes per mile per year (all study crashes)",
              value=r2(tot["crashes"] / length_mi / years) if years and length_mi else None),
         _row("unplaced", "Crashes not yet placed (no coordinates)", value=len(unmatched)),
+        _row("user_placed", "Crashes placed by you (review list; included in Crashes)",
+             value=sum(1 for c in placed if c.get("location_provenance") == "user")),
         _row("excluded", "Crashes outside the study area", value=excluded_n),
     ]
     if exclude:

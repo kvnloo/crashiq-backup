@@ -522,6 +522,8 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
             if (cache_key(now, now_net) if now_net.get("line") else None) == key:
                 db.execute("INSERT OR REPLACE INTO crash_pull (study_id, cache_key, pulled_at, payload) "
                            "VALUES (?,?,?,?)", (sid, key, result["pulled_at"], json.dumps(result)))
+                from .assign import forget       # a re-pull in the same second keeps the same pulled_at (#97)
+                forget(sid)
                 return {**result, "cache_key": key}, False
         raise PullError("The study kept changing while its crashes were being pulled. Try again.")
 
