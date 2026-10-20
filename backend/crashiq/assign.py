@@ -80,7 +80,8 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
             out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": None, "rule": rule})
             continue
         if c.get("lat") is None or c.get("lon") is None:
-            out.append({**base, "kind": "unmatched", "location_id": None, "distance_ft": None, "rule": "no_coordinates"})
+            out.append({**base, "kind": "unmatched", "location_id": None, "distance_ft": None,
+                        "rule": c.get("review_reason") or "no_coordinates"})
             continue
         x, y = line.proj.to_xy(c["lat"], c["lon"])
         cands = [(math.hypot(x - px, y - py), it) for it in studies for px, py in [pts[it["id"]]]
@@ -134,6 +135,7 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
     assert sum(totals[k] for k in KINDS) == totals["total"], "assignment lost a crash"
     return {"counts": totals, "by_location": dict(Counter(a["location_id"] for a in out if a["location_id"])),
             "excluded_by_rule": dict(Counter(a["rule"] for a in out if a["kind"] == "excluded")),
+            "unmatched_by_rule": dict(Counter(a["rule"] for a in out if a["kind"] == "unmatched")),
             "gps_far_from_stated": sum(1 for a in out if a.get("gps_check") and a["kind"] in ("intersection", "segment")),
             "radius_ft": radius_ft, "buffer_ft": buffer_ft, "assignments": out}
 

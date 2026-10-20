@@ -126,15 +126,36 @@ def _no_cross(value):
 
 
 def test_cross_street_not_stated_is_not_called_a_side_street():
-    # CCRS 2024: SecondaryRoad 'NOT STATED' on 4,649 rows (Santa Monica PD 16% of street crashes)
+    # CCRS 2024: SecondaryRoad 'NOT STATED' on 4,649 rows (Santa Monica PD 16% of street crashes). User 2026-10-19
+    # (#94): on the corridor, place unknown -> the review list, not excluded
     out, c = _no_cross("NOT STATED")
-    assert c.get("exclude_rule") == "no_cross_street"
+    assert c.get("exclude_rule") is None and c["review_reason"] == "no_cross_street"
+    assert c["location_source"] == "unmatched" and c["lat"] is None
     assert out["cleaning"]["no_coords_no_cross_street"] == 1
 
 
-def test_blank_and_junk_cross_streets_are_not_side_streets_either():
+def test_blank_and_junk_cross_streets_go_to_review_too():
     for v in ("", None, "X", "UNK"):
-        assert _no_cross(v)[1].get("exclude_rule") == "no_cross_street", v
+        c = _no_cross(v)[1]
+        assert c.get("exclude_rule") is None and c["review_reason"] == "no_cross_street", v
+
+
+def test_no_cross_street_is_unplaced_under_its_reason_and_in_no_location():
+    from crashiq import assign
+    out, c = _no_cross("NOT STATED")
+    net = {**NET_X, "segments": [], "intersections": []}
+    a = assign.assign([c], net, 250.0, 100.0)
+    assert (a["counts"]["unmatched"], a["unmatched_by_rule"]) == (1, {"no_cross_street": 1})
+    assert a["by_location"] == {}
+
+
+def test_gps_crash_with_not_stated_is_assigned_by_its_gps():
+    d = _fixture()                                  # GPS kept
+    _, r = _row(d, 9000045)
+    r["SecondaryRoad"] = "NOT STATED"
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    c = next(c for c in out["crashes"] if c["crash_id"] == "9000045")
+    assert c["location_source"] == "gps" and not c.get("review_reason") and not c.get("exclude_rule")
 
 
 def test_private_property_has_its_own_reason():

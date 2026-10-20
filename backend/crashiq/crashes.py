@@ -340,7 +340,10 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
                 rule = "private_property" if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd) \
                     else "no_cross_street"
                 log[f"no_coords_{rule}"] = log.get(f"no_coords_{rule}", 0) + 1
-                c["exclude_rule"] = rule
+                if rule == "private_property":
+                    c["exclude_rule"] = rule        # not on the corridor
+                else:
+                    c["review_reason"] = rule       # user, 2026-10-19 (#94): on the corridor, place unknown -> review
                 recs.append((c, "unmatched"))
             else:
                 at_crossing = any(grade.same_road(k, x) for k in other for x in gs_keys)   # corridor, by an overpass
