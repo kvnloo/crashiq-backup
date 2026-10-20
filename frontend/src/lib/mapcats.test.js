@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import crashes from '../__fixtures__/crashes.json'
 import network from '../__fixtures__/network.json'
-import { SLOTS, OTHER, catOf, categories, columns, corridorAzimuth, locationPoints, visible } from './mapcats'
+import { SLOTS, OTHER, catOf, categories, columns, corridorAzimuth, locationPoints, topLocations, visible } from './mapcats'
 
 const C = crashes.crashes.filter((c) => c.lat != null)
 
@@ -76,5 +76,15 @@ describe('3D columns', () => {
   it('lays a north–south corridor across the screen', () => {
     expect(corridorAzimuth([[33.89, -118.3], [33.91, -118.3]])).toBeCloseTo(0, 6)
     expect(corridorAzimuth([[33.9, -118.31], [33.9, -118.29]])).toBeCloseTo(90, 6)
+  })
+})
+
+describe('topLocations (#100)', () => {
+  const locs = [{ id: 'a', name: 'A St' }, { id: 'b', name: 'B St' }, { id: 'c', name: 'C St' }, { id: 'd', name: 'D St' }, { id: 'e', name: 'E St' }]
+  const cr = (id, n) => Array.from({ length: n }, () => ({ location_id: id }))
+  it('keeps the three with the most crashes, ties by name, none without crashes', () => {
+    expect(topLocations(locs, [...cr('c', 5), ...cr('a', 2), ...cr('b', 2), ...cr('d', 1)])).toEqual(['c', 'a', 'b'])
+    expect(topLocations(locs, cr('e', 1))).toEqual(['e'])
+    expect(topLocations(locs, [])).toEqual([])
   })
 })
