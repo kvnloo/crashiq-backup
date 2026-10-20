@@ -2,6 +2,7 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DIMENSIONS, categories, catOf, columns, corridorAzimuth, topLocations, visible } from '../lib/mapcats'
+import { HOLLOW } from '../lib/severity'
 import { TILE_MAX_NATIVE_ZOOM, TILE_URL } from '../lib/tiles'
 
 const TILE_ATTR_HTML = 'Tiles © Esri — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -31,7 +32,9 @@ function style() {
         'circle-pitch-alignment': 'map' } },
       { id: 'crashes', type: 'circle', source: 'crashes', paint: {
         'circle-color': ['get', 'color'], 'circle-radius': ['case', ['get', 'big'], 6, 4.5],
-        'circle-opacity': ['case', ['get', 'dim'], 0.15, 0.9], 'circle-stroke-color': '#0D1013',
+        // level not stated (U) is hollow: no fill, an outline in its grey (#108)
+        'circle-opacity': ['case', ['get', 'hollow'], 0, ['get', 'dim'], 0.15, 0.9],
+        'circle-stroke-color': ['case', ['get', 'hollow'], ['get', 'color'], '#0D1013'],
         'circle-stroke-width': 1.5, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.2, 1], 'circle-pitch-alignment': 'map' } },
       { id: 'columns', type: 'fill-extrusion', source: 'columns', paint: {
         'fill-extrusion-color': ['get', 'color'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-height': ['get', 'top'],
@@ -137,7 +140,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
     map.getSource('crashes').setData({ type: 'FeatureCollection', features: shown.filter((c) => c.lat != null && c.lon != null).map((c) => ({
       type: 'Feature', geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
       properties: { color: colorOf.get(catOf(dim, c)) || '#6B7682', dim: Boolean(highlight && !highlight.has(c.crash_id)),
-        big: c.severity === 'K' || c.severity === 'A', type: (c.collision_type || 'Crash').toLowerCase(), date: c.date || '',
+        hollow: dim === 'severity' && HOLLOW.has(catOf(dim, c)), big: c.severity === 'K' || c.severity === 'A', type: (c.collision_type || 'Crash').toLowerCase(), date: c.date || '',
         hour: c.hour != null ? `${String(c.hour).padStart(2, '0')}:00` : '', sev: c.severity },
     })) })
     map.getSource('columns').setData(is3d ? columns(locations, shown, dim, cats, scale.h, scale.r) : EMPTY)
@@ -215,7 +218,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
             return (
               <button key={c.key} type="button" className={`chip${off ? ' off' : ''}`} aria-pressed={!off} onClick={() => toggle(c.key)}
                 title={off ? 'Show' : 'Hide'}>
-                <i style={{ background: c.color }} />{c.label}<b className="mono">{counts.get(c.key) || 0}</b>
+                <i style={c.hollow ? { background: 'transparent', boxShadow: `inset 0 0 0 1.5px ${c.color}` } : { background: c.color }} />{c.label}<b className="mono">{counts.get(c.key) || 0}</b>
               </button>
             )
           })}

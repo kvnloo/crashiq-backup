@@ -19,6 +19,7 @@ from reportlab.lib.units import inch
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from . import profile as profile_mod
+from .severity import COLORS as SEV_COLORS
 from .assign import for_study
 
 CREDITS = ("Crash data: CCRS, California Highway Patrol (data.ca.gov, public domain). "
@@ -100,6 +101,8 @@ def to_xlsx(d: dict) -> bytes:
             cell.fill = head
         for r in t["rows"]:
             sh.append([r["key"], r["label"]] + [r["values"].get(c["key"]) for c in t["columns"]])
+            if t["id"].startswith("T3") and r["key"] in SEV_COLORS:     # the app's severity ramp (#108)
+                sh.cell(row=sh.max_row, column=1).fill = PatternFill("solid", fgColor=SEV_COLORS[r["key"]].lstrip("#"))
         sh.append([])
         sh.append(["Location sources"] + [f"{k}: {v}" for k, v in t["provenance"].items()])
         sh.column_dimensions["A"].width = 22
@@ -239,10 +242,11 @@ def to_pdf(d: dict) -> bytes:
     w = cols(2.6 * inch if has_crit else 3.1 * inch, len(head) - 1)
     story += [Paragraph("Locations (corridor order)", h2), table(data, w, range(1, len(head))), src("T2")]
     t3 = _t(p, "T3")
-    story += [KeepTogether([Paragraph("Severity (each crash counted once)", h2),
-                            table([["Severity", "Crashes", "Share %"]] + [[r["label"], _fmt(r["values"]["crashes"]),
-                                   _fmt(r["values"]["share_pct"], 1)] for r in t3["rows"]], cols(W - 2.4 * inch, 2), (1, 2)),
-                            src("T3")])]
+    sev_t = table([["", "Severity", "Crashes", "Share %"]] + [["", r["label"], _fmt(r["values"]["crashes"]),
+                   _fmt(r["values"]["share_pct"], 1)] for r in t3["rows"]], [0.18 * inch, W - 2.58 * inch, 1.2 * inch, 1.2 * inch], (2, 3))
+    sev_t.setStyle(TableStyle([("BACKGROUND", (0, i + 1), (0, i + 1), colors.HexColor(SEV_COLORS[r["key"]]))
+                               for i, r in enumerate(t3["rows"]) if r["key"] in SEV_COLORS]))   # same ramp as the app
+    story += [KeepTogether([Paragraph("Severity (each crash counted once)", h2), sev_t, src("T3")])]
     for tid, title, limit, label in (("T4", "Collision type", None, "Type"),
                                      ("T5", "Primary collision factor (top 10)", 10, "Factor"),
                                      ("T6", "Lighting", None, "Lighting")):

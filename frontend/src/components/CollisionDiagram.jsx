@@ -1,6 +1,6 @@
 // Schematic collision diagram: one glyph per record, shaped by collision type, colored by severity.
 // Glyphs are arranged in a grid around the conflict area; positions are schematic, not surveyed.
-const SEV = { K: 'var(--sev-k)', A: 'var(--sev-a)', B: 'var(--sev-i)', C: 'var(--sev-i)', U: 'var(--sev-i)', O: 'var(--sev-p)' }
+const SEV = { K: 'var(--sev-k)', A: 'var(--sev-a)', B: 'var(--sev-b)', C: 'var(--sev-c)', U: 'var(--sev-u)', O: 'var(--sev-o)' }
 
 function Glyph({ type, x, y, color }) {
   const t = (type || '').toUpperCase()
@@ -35,13 +35,14 @@ export default function CollisionDiagram({ records = [], corridor = 'Corridor', 
         {!segment && <path d={`M0 ${c}h${c - half}M${c + half} ${c}h${W}`} stroke="var(--line)" strokeDasharray="6 6" />}
         <text x={c + half + 6} y="14" fill="var(--muted)" fontFamily="var(--font-mono)" fontSize="10">{corridor.toUpperCase()}</text>
         <text x="6" y={c - ch - 6} fill="var(--muted)" fontFamily="var(--font-mono)" fontSize="10">{(segment ? 'driveways / midblock' : cross).toUpperCase()}</text>
-        {placed.map(({ r, x, y }) => <Glyph key={r.crash_id} type={r.collision_type} x={x} y={y} color={SEV[r.severity] || 'var(--sev-p)'} />)}
+        {placed.map(({ r, x, y }) => <Glyph key={r.crash_id} type={r.collision_type} x={x} y={y} color={SEV[r.severity] || 'var(--sev-u)'} />)}
       </svg>
       <div className="legend">
         <span><i style={{ background: 'var(--sev-k)' }} />fatal</span>
         <span><i style={{ background: 'var(--sev-a)' }} />serious injury</span>
-        <span><i style={{ background: 'var(--sev-i)' }} />other injury</span>
-        <span><i style={{ background: 'var(--sev-p)' }} />property damage</span>
+        <span><i style={{ background: 'var(--sev-b)' }} />minor injury</span>
+        <span><i style={{ background: 'var(--sev-c)' }} />possible injury</span>
+        <span><i style={{ background: 'var(--sev-o)' }} />property damage</span>
         <span className="muted">schematic · one glyph per record</span>
       </div>
     </div>

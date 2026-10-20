@@ -1,14 +1,15 @@
 /* CrashIQ on top of Signal Flow tokens (design/mockups/index.html shell, cut per docs/05-ui-review.md).
    Layout: header bar, left step rail, one stage that each step screen fills. One theme (dark). */
 :root {
-  --sev-k: var(--stop);      /* fatal */
-  --sev-a: #FF8A3D;          /* severe injury: between stop and amber, readable on dark */
-  --sev-i: var(--amber);     /* other injury */
-  --sev-p: var(--muted);     /* property damage only */
-  --sev-b: var(--sev-i);     /* K/A/B/C/U/O names for the ranking and severity views (#103); re-stepped in #108 */
-  --sev-c: var(--sev-i);
-  --sev-u: var(--sev-i);
-  --sev-o: var(--sev-p);
+  /* severity ramp (#108): mirrors backend/crashiq/severity.py and lib/severity.js; validated, see severity.py */
+  --sev-k: #e62b34;          /* fatal: the strongest */
+  --sev-a: #fd811b;          /* suspected serious injury */
+  --sev-b: #f6c330;          /* suspected minor injury */
+  --sev-c: #5dacba;          /* possible injury: muted */
+  --sev-u: #8e9aa6;          /* injured, level not stated: drawn hollow (outline), never filled */
+  --sev-o: #686c71;          /* property damage only: quiet neutral, about half of all crashes */
+  --sev-i: var(--sev-a);     /* "any injury" in two-part injury / property-damage bars */
+  --sev-p: var(--sev-o);
   --rail: 232px;
   --top: 56px;
 }
