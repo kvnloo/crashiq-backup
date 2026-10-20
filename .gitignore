@@ -11,3 +11,4 @@ data/cache/
 data/results/
 *.sqlite-wal
 *.sqlite-shm
+data/statewide/
