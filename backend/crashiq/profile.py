@@ -233,8 +233,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     for kind, lid, _ in order:
         cs = groups.get(lid, [])
         k = _counts(cs)
+        sev = Counter(c["severity"] for c in cs)
         vals = {"kind": kind, **{x: k[x] for x in ("crashes", "ksi_crashes", "fatal_crashes", "injury_crashes",
                                                    "dark_crashes", "ped_crashes", "bike_crashes")},
+                **{f"sev_{lvl.lower()}": sev[lvl] for lvl in "KABCUO"},   # the ranking's severity bar (#103)
                 "crashes_per_year": r2(k["crashes"] / years) if years else None}
         if kind == "segment":
             s = seg_by[lid]
@@ -266,17 +268,21 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             if r["key"] in rc:
                 rate = expo[r["key"]][3]
                 r["values"].update(critical_rate=r2(rc[r["key"]]), reference_rate=r2(ra),
-                                   over_critical="Yes" if rate > rc[r["key"]] else "No")
+                                   over_critical="Yes" if rate > rc[r["key"]] else "No",
+                                   rate_to_critical=r2(rate / rc[r["key"]]) if rc[r["key"]] else None)
     for r in loc_rows:
         r["values"].setdefault("critical_rate", None)
         r["values"].setdefault("reference_rate", None)
         r["values"].setdefault("over_critical", None)
+        r["values"].setdefault("rate_to_critical", None)
     tables.append(_table("T2", "Locations (corridor order)", [
         ("crashes", "Crashes"), ("crashes_per_year", "Per year"), ("ksi_crashes", "KSI"), ("fatal_crashes", "Fatal"),
         ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"),
         ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate"),
         ("reference_rate", "Average rate, similar sites"), ("critical_rate", "Critical rate (95%)"),
-        ("over_critical", "Over critical rate?")], loc_rows, placed))
+        ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),
+        ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"), ("sev_c", "Possible (C)"),
+        ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")], loc_rows, placed))
     tables += tables_for(placed, years)
     from . import signals as signals_mod          # C7; imported here because signals imports this module
     scr = signals_mod.screen(placed, [(r["key"], r["label"]) for r in loc_rows])

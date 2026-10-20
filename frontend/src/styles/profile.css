@@ -146,3 +146,24 @@
 .strip-dim button.on { background: var(--surface-2); color: var(--fg); }
 .small-note { font-size: 12px; margin: 8px 0 0; }
 .showtable summary { font: 600 12px var(--font-body); color: var(--info); cursor: pointer; margin-top: 8px; }
+
+/* B. location ranking + C. severity (#103) */
+.rank { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
+.rank li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "name n ksi" "bar bar bar" "rate rate rate";
+  gap: 4px 12px; align-items: baseline; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.rank li .rowlink { grid-area: name; text-align: left; }
+.rank .n { grid-area: n; font-size: 13px; }
+.rank .ksi { grid-area: ksi; color: var(--muted); }
+.rank .sevbar { grid-area: bar; }
+.rank .ratecell { grid-area: rate; }
+.sevbar { display: flex; gap: 2px; height: 8px; }
+.sevbar i { display: block; height: 100%; border-radius: 2px; }
+.rank-foot { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 8px; margin-top: 8px; align-items: center; }
+.ksi-call { margin: 0 0 10px; font-size: 14px; }
+.ksi-call b { font-size: 18px; }
+.bar .tr i[class^="sev-"] { display: block; height: 100%; border-radius: 0 4px 4px 0; }
+/* severity colours: one place for every view (re-stepped in #108) */
+.sev-k { background: var(--sev-k); } .sev-a { background: var(--sev-a); } .sev-b { background: var(--sev-b); }
+.sev-c { background: var(--sev-c); } .sev-u { background: var(--sev-u); } .sev-o { background: var(--sev-o); }
+.sevsum .bar { grid-template-columns: minmax(0, 190px) minmax(0, 1fr) auto; }
+.sevsum .bar .v { white-space: nowrap; min-width: 84px; text-align: right; }

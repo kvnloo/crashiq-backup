@@ -5,6 +5,10 @@
   --sev-a: #FF8A3D;          /* severe injury: between stop and amber, readable on dark */
   --sev-i: var(--amber);     /* other injury */
   --sev-p: var(--muted);     /* property damage only */
+  --sev-b: var(--sev-i);     /* K/A/B/C/U/O names for the ranking and severity views (#103); re-stepped in #108 */
+  --sev-c: var(--sev-i);
+  --sev-u: var(--sev-i);
+  --sev-o: var(--sev-p);
   --rail: 232px;
   --top: 56px;
 }

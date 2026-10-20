@@ -78,14 +78,12 @@ function Heat({ t }) {
 }
 
 // Rate against its critical rate: bar = rate, tick = critical rate, red when over. Scaled per kind (units differ).
-function RateCell({ v, max }) {
-  if (v.rate == null) return <td className="sf-num">—</td>
+function RateBar({ v, max }) {
   const crit = v.critical_rate
   const over = v.over_critical === 'Yes'
   const pct = (x) => `${Math.min(100, (100 * x) / max)}%`
   return (
-    <td title={`${fmt(v.rate)} ${v.rate_unit || ''}${crit != null ? ` · critical ${fmt(crit)} (95%)` : ''}`}>
-      <div className="ratecell">
+      <div className="ratecell" title={`${fmt(v.rate)} ${v.rate_unit || ''}${crit != null ? ` · critical ${fmt(crit)} (95%)` : ''}`}>
         <span className={`mono${over ? ' over' : ''}`}>{fmt(v.rate)}</span>
         {crit != null ? (
           <span className="rbar" aria-label={over ? 'over its critical rate' : 'under its critical rate'}>
@@ -94,8 +92,12 @@ function RateCell({ v, max }) {
           </span>
         ) : null}
       </div>
-    </td>
   )
+}
+
+function RateCell({ v, max }) {
+  if (v.rate == null) return <td className="sf-num">—</td>
+  return <td><RateBar v={v} max={max} /></td>
 }
 
 function Locations({ t, onOpen }) {
@@ -131,6 +133,86 @@ function Locations({ t, onOpen }) {
         </tbody>
       </table>
     </div>
+  )
+}
+
+// B. Which locations need attention first? (#103) Rows, order and numbers straight from T2; the frontend only sorts.
+const SEV_PARTS = [['k', 'Fatal'], ['a', 'Serious injury'], ['b', 'Minor injury'], ['c', 'Possible injury'],
+  ['u', 'Injury, level not stated'], ['o', 'Property damage']]
+const SORTS = [['crashes', 'Crashes', (v) => v.crashes], ['ksi', 'KSI', (v) => v.ksi_crashes],
+  ['rate', 'Rate vs critical', (v) => v.rate_to_critical ?? -1]]
+
+function SevBar({ v, max }) {
+  return (
+    <span className="sevbar" aria-hidden="true">
+      {SEV_PARTS.map(([k]) => (v[`sev_${k}`] ? <i key={k} className={`sev-${k}`} style={{ width: `${(100 * v[`sev_${k}`]) / max}%` }} /> : null))}
+    </span>
+  )
+}
+
+function Ranking({ p, onOpen }) {
+  const t = table(p, 'T2')
+  const hasCrit = t.rows.some((r) => r.values.rate_to_critical != null)
+  const [sort, setSort] = useState('crashes')
+  const [all, setAll] = useState(false)
+  const key = SORTS.find(([k]) => k === sort)[2]
+  const rows = [...t.rows].filter((r) => r.values.crashes > 0)
+    .sort((a, b) => key(b.values) - key(a.values) || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+  const shown = all ? rows : rows.slice(0, 5)
+  const max = Math.max(1, ...t.rows.map((r) => r.values.crashes))
+  const maxBy = {}
+  for (const r of t.rows) maxBy[r.values.kind] = Math.max(maxBy[r.values.kind] || 0, r.values.rate || 0, r.values.critical_rate || 0)
+  return (
+    <section aria-label="Location ranking">
+      <div className="sect-h"><h2 className="h3">Which locations need attention first?</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="seg strip-dim" role="radiogroup" aria-label="Rank by">
+        {SORTS.filter(([k]) => k !== 'rate' || hasCrit).map(([k, label]) => (
+          <button key={k} type="button" role="radio" aria-checked={sort === k} className={sort === k ? 'on' : ''} onClick={() => setSort(k)}>{label}</button>
+        ))}
+      </div>
+      <ol className="rank">
+        {shown.map((r) => (
+          <li key={r.key}>
+            <button type="button" className="rowlink" onClick={() => onOpen(r)}>{r.label}</button>
+            <span className="mono n" title="Crashes">{fmt(r.values.crashes)}</span>
+            <span className="mono n ksi" title="KSI crashes (fatal + serious)">{fmt(r.values.ksi_crashes)} KSI</span>
+            <SevBar v={r.values} max={max} />
+            {hasCrit && r.values.critical_rate != null ? <RateBar v={r.values} max={maxBy[r.values.kind] || 1} /> : null}
+          </li>
+        ))}
+      </ol>
+      <div className="rank-foot">
+        {rows.length > 5 ? <button type="button" className="linkbtn" onClick={() => setAll(!all)}>{all ? 'Show top 5' : `Show all ${rows.length}`}</button> : null}
+        <div className="legend">{SEV_PARTS.filter(([k]) => t.rows.some((r) => r.values[`sev_${k}`])).map(([k, l]) => <span key={k}><i className={`sev-${k}`} />{l}</span>)}</div>
+      </div>
+      <details className="showtable"><summary>Show table</summary><Locations t={t} onOpen={onOpen} /></details>
+    </section>
+  )
+}
+
+// C. How bad, not just how many? (#103) K/A/B/C/(U)/O bars from T3, direct-labelled; KSI called out from T1.
+function Severity({ p }) {
+  const t = table(p, 'T3')
+  const rows = t.rows.filter((r) => r.key !== 'U' || r.values.crashes)
+  const max = Math.max(1, ...rows.map((r) => r.values.crashes))
+  return (
+    <section aria-label="Severity">
+      <div className="sect-h"><h2 className="h3">How bad, not just how many?</h2><Src tid="T3" n={cell(p, 'T1/crashes/value')} /></div>
+      <p className="ksi-call"><b className="mono">{fmt(cell(p, 'T1/ksi_crashes/value'))}</b> crashes killed or seriously injured someone (KSI).</p>
+      <div className="bars sevsum">
+        {rows.map((r) => (
+          <div className="bar" key={r.key}>
+            <span className="lab" title={r.label}>{r.label}</span>
+            <span className="tr" aria-hidden="true"><i className={`sev-${r.key.toLowerCase()}`} style={{ width: `${(100 * r.values.crashes) / max}%` }} /></span>
+            <span className="v mono">{fmt(r.values.crashes)} · {fmt(r.values.share_pct)}%</span>
+          </div>
+        ))}
+      </div>
+      <details className="showtable"><summary>Show table</summary>
+        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Severity</th><th className="sf-num">Crashes</th><th className="sf-num">Share %</th></tr></thead>
+          <tbody>{t.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.share_pct)}</td></tr>)}</tbody></table></div>
+      </details>
+    </section>
   )
 }
 
@@ -327,6 +409,8 @@ export default function Profile() {
                 {' '}<button type="button" className="linkbtn" onClick={openReview}>Review them →</button></div>
             ) : null}
             <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
+            <Ranking p={p} onOpen={openLocation} />
+            <Severity p={p} />
             {p.caveats.length > 0 && (
               <ul className="caveats" aria-label="Caveats">
                 {p.caveats.map((c) => <li key={c.key} className={c.limitation ? 'warn' : ''}>{c.text}</li>)}
@@ -340,10 +424,6 @@ export default function Profile() {
             <section>
               <div className="sect-h"><h2 className="h3">When crashes happen</h2><Src tid="T9" n={cell(p, 'T1/crashes/value')} /></div>
               <Heat t={table(p, 'T9')} />
-            </section>
-            <section>
-              <div className="sect-h"><h2 className="h3">Locations</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} /></div>
-              <Locations t={table(p, 'T2')} onOpen={openLocation} />
             </section>
             <DataSources p={p} pull={state.pull} onRefresh={refresh} busy={refreshing} />
             {state.refreshError ? <div className="err" role="alert">{state.refreshError}</div> : null}
