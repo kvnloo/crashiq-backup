@@ -127,3 +127,47 @@ def test_api_assignment_follows_radius(client):
     assert a250["counts"]["unmatched"] == 0  # the 4 no-GPS Crenshaw reports are now placed by the locator (#35, PR #36)
     assert a150["counts"]["intersection"] < a250["counts"]["intersection"]
     json.dumps(a150)
+
+
+# -- #53 road-name check and GPS-vs-report flag --------------------------------------------------------------
+def named(cid, x, y, pr, sr, **kw):
+    return {**crash(cid, x, y), "primary_road": pr, "secondary_road": sr, **kw}
+
+
+def n_main():
+    return {**net(), "corridor_name": "Main Street"}
+
+
+def test_gps_crash_on_another_street_in_the_buffer_is_excluded():
+    a = one(named("c", 60, 800, "ALLEY", "PARKING LOT"), n=n_main())
+    assert (a["kind"], a["rule"]) == ("excluded", "not_on_corridor_street")
+    assert one(named("c", 60, 800, "MAIN ST", "SECOND ST"), n=n_main())["kind"] == "segment"
+
+
+def test_blank_road_fields_are_kept():
+    assert one(named("c", 60, 800, "", None), n=n_main())["kind"] == "segment"
+
+
+def test_intersection_crash_on_the_cross_street_is_kept_but_not_on_an_unrelated_street():
+    assert one(named("c", 150, 1500, "SECOND ST", "ELM ST"), n=n_main())["location_id"] == "i2"   # cross-street approach
+    a = one(named("c", 150, 1500, "ELM ST", "OAK ST"), n=n_main())
+    assert (a["kind"], a["rule"]) == ("excluded", "not_on_corridor_street")
+
+
+def test_placed_crashes_are_not_road_checked():
+    c = {**named("c", 60, 800, "ELM ST", "OAK ST"), "location_source": "exact"}   # placed from its own names
+    assert one(c, n=n_main())["kind"] == "segment"
+
+
+def test_gps_far_from_the_intersection_the_report_names_is_flagged_not_moved():
+    # Report says Main & Third (station 1900), GPS 390 ft away near Second: within 400 ft, not flagged
+    a = one(named("c", 0, 1510, "MAIN ST", "THIRD ST"), n=n_main())
+    assert a["location_id"] == "i2" and "gps_check" not in a
+    b = one(named("c", 0, 1200, "MAIN ST", "THIRD ST"), n=n_main())                # 700 ft from Third
+    assert b["gps_check"] == "far_from_stated_intersection" and b["stated_location_id"] == "i3"
+    assert b["kind"] == "segment"                                                    # counted where the GPS is
+    c = one(named("c", 0, 1200, "MAIN ST", "THIRD ST", offset_ft=700.0), n=n_main())  # the offset explains it
+    assert "gps_check" not in c
+    r = assign.assign([named("c", 0, 1200, "MAIN ST", "THIRD ST")], n_main(), 250.0, 100.0)
+    assert r["gps_far_from_stated"] == 1
+

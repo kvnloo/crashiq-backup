@@ -238,7 +238,7 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
             "is_study": True, "provenance": "auto", "name_source": "osm", "legs": legs,
         })
     return {"corridor_name": corridor_name, "length_ft": round(line.length_ft, 1), "intersections": out,
-            "corridor_highway": corridor_highway,
+            "corridor_highway": corridor_highway, "corridor_names": [n for n, _ in along_len.most_common()],
             "grade_separations": grade_separations(line, nodes, ways, corridor_ids, corridor_nodes, corridor_cores)}
 
 
@@ -384,18 +384,19 @@ def _load(db: Database, sid: str) -> dict | None:
     for s in segs:
         s["aadt"] = aadt.get(s["id"])
     line = json.loads(c["line_json"])
-    hw, gs = c.get("corridor_highway"), c.get("grade_separations_json")
-    if gs is None:              # corridor drawn before #67: detect from the cached OSM response, never a new download
+    hw, gs, cn = c.get("corridor_highway"), c.get("grade_separations_json"), c.get("corridor_names_json")
+    if gs is None or cn is None:   # drawn before #67/#53: detect from the cached OSM response, never a new download
         raw = _cached_overpass(db, overpass_query([tuple(p) for p in line]))
         if raw is not None:
             found = detect(raw, [tuple(p) for p in line])
-            hw, gs = found["corridor_highway"], json.dumps(found["grade_separations"])
-            db.execute("UPDATE corridor SET corridor_highway = ?, grade_separations_json = ? WHERE study_id = ?",
-                       (hw, gs, sid))
+            hw, gs, cn = found["corridor_highway"], json.dumps(found["grade_separations"]), json.dumps(found["corridor_names"])
+            db.execute("UPDATE corridor SET corridor_highway = ?, grade_separations_json = ?, corridor_names_json = ? "
+                       "WHERE study_id = ?", (hw, gs, cn, sid))
     return {"line": line, "length_ft": c["length_ft"],
             "length_mi": round(c["length_ft"] / FT_PER_MI, 4), "corridor_name": c["corridor_name"],
             "corridor_highway": hw, "is_freeway": hw == "motorway",
             "grade_separations": json.loads(gs) if gs else [],
+            "corridor_names": json.loads(cn) if cn else ([c["corridor_name"]] if c["corridor_name"] else []),
             "intersections": ints, "segments": segs, "detected_at": c["detected_at"]}
 
 
@@ -416,9 +417,9 @@ def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: 
         conn.execute("DELETE FROM intersection WHERE study_id = ?", (sid,))
         conn.execute("DELETE FROM segment_aadt WHERE study_id = ?", (sid,))
         conn.execute("INSERT OR REPLACE INTO corridor (study_id, line_json, length_ft, corridor_name, detected_at, "
-                     "corridor_highway, grade_separations_json) VALUES (?, ?, ?, ?, datetime('now'), ?, ?)",
+                     "corridor_highway, grade_separations_json, corridor_names_json) VALUES (?, ?, ?, ?, datetime('now'), ?, ?, ?)",
                      (sid, json.dumps([list(p) for p in line]), found["length_ft"], found["corridor_name"],
-                      found["corridor_highway"], json.dumps(found["grade_separations"])))
+                      found["corridor_highway"], json.dumps(found["grade_separations"]), json.dumps(found["corridor_names"])))
         for i in found["intersections"]:
             conn.execute("INSERT INTO intersection (study_id, id, name, station_ft, lat, lon, osm_node_ids, control, "
                          "is_study, provenance, name_source, legs) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",

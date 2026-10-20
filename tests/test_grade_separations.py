@@ -93,7 +93,7 @@ def test_diamond_interchange_on_a_freeway_corridor():
 # -- crash rules --------------------------------------------------------------------------------------------------
 def _net(found, is_freeway=False):
     ints = [{**i, "is_study": True} for i in found["intersections"]]
-    return {"line": LINE, "corridor_name": found["corridor_name"], "intersections": ints,
+    return {"line": LINE, "corridor_name": found["corridor_name"], "corridor_names": found["corridor_names"], "intersections": ints,
             "segments": network.segments(ints, found["length_ft"]), "grade_separations": found["grade_separations"],
             "is_freeway": is_freeway}
 
