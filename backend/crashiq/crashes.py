@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request
@@ -20,7 +21,7 @@ from . import network as network_mod
 from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection
-from .names import same_core, street_key
+from .names import ROUTE_SPELLINGS, route_number, route_numbers, same_core, street_key
 from .sources import ca_ccrs as cc
 from .sources.ckan import Ckan, CkanError
 
@@ -125,7 +126,7 @@ def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_x
     pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
 
     def like(col: str, words: list[str]) -> str:
-        return " OR ".join(_like(_sq_sql(col), w) for w in words)
+        return " OR ".join(_like(_sq_sql(col), x) for w in words for x in _like_words(w))
 
     pair = f"(({like(pr, cores)}) AND ({like(sr, cross)})) OR (({like(sr, cores)}) AND ({like(pr, cross)}))"
     a = cc.q(cols[area_col]["id"])
@@ -170,8 +171,20 @@ def _names_street(raw: str | None, keys) -> bool:
     k = street_key(raw)
     if k and any(same_core(k, x) for x in keys):
         return True
+    routes = {route_number(x) for x in keys} - {None}
+    if routes & route_numbers(raw):        # SR-1, RT 1, HWY 1, "PCH - SR1" for a corridor tagged CA 1 (#83)
+        return True
     sq = _squeeze(raw)
-    return any(len(_squeeze(x.core)) >= 4 and _squeeze(x.core) in sq for x in keys)
+    return any(route_number(x) is None and len(_squeeze(x.core)) >= 4 and _squeeze(x.core) in sq for x in keys)
+
+
+def _like_words(core: str) -> list[str]:
+    """Search words for one corridor core: the core itself, or every way CHP spells a route (SR 1 -> SR1, RT1,
+    HWY1, ROUTE1, STATEROUTE1, CA1). Over-matches (RT10) are dropped in code by `_names_street`."""
+    m = re.match(r"^(I|US|SR) (\d+)$", core)
+    if not m:
+        return [core]
+    return [p + m.group(2) for p in ROUTE_SPELLINGS[m.group(1)]]
 
 
 def _refile_key(c: dict) -> tuple | None:
@@ -292,7 +305,7 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
         no_xy = []
         if cores and area:
             pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
-            names = " OR ".join(_like(_sq_sql(c), core) for core in cores for c in (pr, sr))
+            names = " OR ".join(_like(_sq_sql(c), w) for core in cores for w in _like_words(core) for c in (pr, sr))
             area_in = ", ".join("'" + c.replace("'", "''") + "'" for c in area)
             no_xy = _paged(ckan, f"{head} WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in}) "
                                  f"AND ({names})", cid)

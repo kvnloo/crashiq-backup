@@ -143,3 +143,51 @@ def test_private_property_has_its_own_reason():
 
 def test_a_real_side_street_is_still_a_side_street():
     assert _no_cross("W 190TH ST")[1].get("exclude_rule") == "cross_street_not_on_corridor"
+
+
+# -- #83 route numbers on a state-highway corridor -------------------------------------------------------------
+def _state_route_osm() -> dict:
+    """A corridor that is a state highway in OSM: name 'Pacific Coast Highway', ref 'CA 1', three cross streets."""
+    lats = [LINE[0][0] + i * (LINE[-1][0] - LINE[0][0]) / 20 for i in range(21)]
+    lon = LINE[0][1]
+    nodes = [{"type": "node", "id": i + 1, "lat": la, "lon": lon} for i, la in enumerate(lats)]
+    ways = [{"type": "way", "id": 100, "nodes": [n["id"] for n in nodes],
+             "tags": {"highway": "primary", "name": "Pacific Coast Highway", "ref": "CA 1"}}]
+    for k, (name, i) in enumerate(zip(CROSS, (3, 10, 17))):
+        a, b = 1000 + 2 * k, 1001 + 2 * k
+        nodes += [{"type": "node", "id": a, "lat": lats[i], "lon": lon - 0.003},
+                  {"type": "node", "id": b, "lat": lats[i], "lon": lon + 0.003}]
+        ways.append({"type": "way", "id": 200 + k, "nodes": [a, i + 1, b],
+                     "tags": {"highway": "secondary", "name": name}})
+    return {"elements": nodes + ways}
+
+
+def _route_pull(spelling: str):
+    from crashiq import network
+    net = network.detect(_state_route_osm(), LINE)
+    for i in net["intersections"]:
+        i["is_study"] = True
+    d = _fixture(no_gps=True)
+    _rename(d, "PACIFIC COAST HWY")
+    _, r = _row(d, 9200001)
+    r["PrimaryRoad"] = spelling                  # same corner, written by route number
+    return crashes.pull(STUDY, {**net, "line": LINE}, Ckan(FakeCkan(d)))
+
+
+def test_no_gps_crash_written_by_route_number_is_found():
+    # Laguna Beach PD (0% GPS) writes 26% of road fields as route numbers ('SR-1', 'PCH - SR1')
+    for spelling in ("SR-1", "RT 1", "HWY 1", "STATE ROUTE 1", "PCH - SR1", "CA-1"):
+        ids = {c["crash_id"] for c in _route_pull(spelling)["crashes"]}
+        assert {"9200002", "9200003"} <= ids, spelling           # control: name-written crashes
+        assert "9200001" in ids, spelling
+
+
+def test_another_route_number_is_not_the_corridor():
+    for spelling in ("SR-10", "RT 101", "I-110"):
+        assert "9200001" not in {c["crash_id"] for c in _route_pull(spelling)["crashes"]}, spelling
+
+
+def test_route_numbers_are_read_anywhere_but_zip_codes_are_not_routes():
+    from crashiq.names import route_numbers
+    assert route_numbers("PCH - SR1") == {"1"} and route_numbers("RT 046") == {"46"}
+    assert route_numbers("14605 CRENSHAW BLVD.- GARDENA- CA 90249") == set()

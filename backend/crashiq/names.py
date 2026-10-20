@@ -59,6 +59,24 @@ def use(name: str) -> None:
     _IMPL = IMPLS[name]
 
 
+# A route number anywhere in a road field: SR-1, RT 46, HWY 111, STATE ROUTE 1, "PCH - SR1", I-880 (#83). Three digits
+# at most, so a ZIP code ("CA 90249") is never a route.
+ROUTE_ANY = re.compile(r"\b(?:STATE ROUTE|INTERSTATE|HIGHWAY|ROUTE|HWY|RTE|RT|SR|CA|US|I)[\s-]*(\d{1,3})\b")
+_ROUTE_KEY = re.compile(r"^(I|US|SR) (\d+)$")
+ROUTE_SPELLINGS = {"SR": ("SR", "RT", "RTE", "HWY", "HIGHWAY", "ROUTE", "STATEROUTE", "CA"),
+                   "I": ("I", "INTERSTATE"), "US": ("US", "HWY", "HIGHWAY")}
+
+
+def route_number(k: StreetKey | None) -> str | None:
+    """'1' for the key of SR 1 / CA 1 / RT 1; None for a named street."""
+    m = _ROUTE_KEY.match(k.core) if k else None
+    return str(int(m.group(2))) if m else None
+
+
+def route_numbers(raw: str | None) -> set[str]:
+    return {str(int(m.group(1))) for m in ROUTE_ANY.finditer(str(raw or "").upper())}
+
+
 def street_key(raw: str | None, aliases: dict[str, str] | None = None) -> StreetKey | None:
     if aliases and raw:
         k = re.sub(r"\s+", " ", re.sub(r"[.,#'\"]", " ", raw.upper())).strip()
