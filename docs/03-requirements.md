@@ -303,3 +303,6 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   than what the docs say) are fixed and merged without waiting for the user; only choices go to the user. (2) Every
   check and comparison uses the same basis (data snapshot, years, corridor geometry and settings, the app's own code at
   a stated commit, the same crash and severity definitions). Rules: `CLAUDE.md`.
+- **No cross street DECIDED (user, 2026-10-19, PM session):** a crash with no GPS whose report names the corridor but
+  no cross street (`NOT STATED`, blank) goes to the review list for the engineer to place or exclude; it is not
+  auto-excluded. `private_property` stays excluded. Build: #94.
