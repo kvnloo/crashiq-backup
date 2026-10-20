@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import datetime as dt
 import json
+import re
 import subprocess
 import sys
 from collections import Counter, defaultdict
@@ -26,7 +27,10 @@ from openpyxl.worksheet.table import Table, TableStyleInfo
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
+import fields_check  # noqa: E402
+import run_history  # noqa: E402
 import tims_compare  # noqa: E402
+from openpyxl.chart import LineChart  # noqa: E402
 
 DATA = ROOT / "data" / "statewide"
 TIMS_DIR = ROOT / "data" / "cache" / "statewide" / "tims"
@@ -67,8 +71,14 @@ def table(ws, name: str, header: list[str], rows: list[list], widths: dict[int, 
     return end
 
 
-def load_results() -> list[dict]:
-    return [json.loads(p.read_text()) for p in sorted((DATA / "results").glob("*.json"))]
+def versions() -> list[str]:
+    """Result folders (one per backend code version), oldest first."""
+    ds = [d for d in (DATA / "results").iterdir() if d.is_dir() and any(d.glob("*.json"))]
+    return [d.name for d in sorted(ds, key=lambda d: min(f.stat().st_mtime for f in d.glob("*.json")))]
+
+
+def load_results(ver: str) -> list[dict]:
+    return [json.loads(p.read_text()) for p in sorted((DATA / "results" / ver).glob("*.json"))]
 
 
 def cause(r: dict, agencies: dict) -> str:
@@ -94,8 +104,12 @@ def cause(r: dict, agencies: dict) -> str:
     return "Low share located or placed"
 
 
-def build(out_dir: Path) -> Path:
-    results = load_results()
+def build(out_dir: Path, ver: str | None = None, before: str | None = None, record: bool = False) -> Path:
+    vs = versions()
+    ver = ver or vs[-1]
+    before = before or (vs[-2] if len(vs) > 1 else None)
+    results = load_results(ver)
+    basis = next((r for r in results if r.get("settings")), {})
     agencies = json.loads((DATA / "agencies.json").read_text())
     ag_by = {a["ncic"]: a for a in agencies}
     tims = tims_compare.compare(DATA / "ccrs_mirror.sqlite", TIMS_DIR)
@@ -206,8 +220,9 @@ def build(out_dir: Path) -> Path:
     ws = wb.create_sheet("Summary", 0)
     ws["A1"], ws["A1"].font = "CrashIQ statewide data test: every California city through tabs 1-2", H1
     meta = [("Test date", today), ("Code version (git commit)", git("rev-parse", "--short", "HEAD")),
-            ("Backend tree tested", (results[0].get("code_version") if results else "")),
-            ("Crash data", "CCRS (CHP) on data.ca.gov, 2021-2025, local mirror built " + today),
+            ("App code tested (commit / backend tree)", f"{basis.get('commit')} / {ver}"),
+            ("Crash data", f"CCRS (CHP) on data.ca.gov, crash dates 2021-2025, mirror copied {basis.get('mirror_built')}"),
+            ("Study settings", ", ".join(f"{k} {v}" for k, v in (basis.get("settings") or {}).items())),
             ("Comparison data", "TIMS SWITRS Summary (UC Berkeley SafeTREC), crashes as of Sep 15, 2026"),
             ("Street data", "OpenStreetMap via Overpass (ODbL)")]
     for i, (k, v) in enumerate(meta, 3):
@@ -309,7 +324,17 @@ def build(out_dir: Path) -> Path:
 
     # ---------------- 2 Method ----------------
     wm = wb.create_sheet("Method", 1)
+    st = basis.get("settings") or {}
     method = [
+        ("Basis of this run (PR #86)",
+         f"App code: commit {basis.get('commit')} (backend tree {ver}). CCRS snapshot: local mirror copied from "
+         f"data.ca.gov on {basis.get('mirror_built')}. Years: {st.get('from_year')}-{st.get('to_year')} by crash date "
+         "(each CCRS year table holds only crashes dated in that year; checked). Preliminary records: kept and "
+         "flagged, as the app does (69-135 per year statewide). Settings: influence radius "
+         f"{st.get('radius_ft')} ft, buffer {st.get('buffer_ft')} ft, freeway crashes "
+         f"{'included' if st.get('include_freeway') else 'excluded'}. Corridors: tests/statewide/"
+         "corridors_frozen.json (exact lines); a rerun after fixes uses the same file, so before/after differ "
+         "only in the code commit. Severity: the app's own (KABCO from InjuredWitnessPassengers)."),
         ("Purpose", "Run every incorporated California city through CrashIQ's data steps (tab 1: corridor and crash "
                     "pull; tab 2: placement and assignment) and measure where it works. Tabs 3-4 are out of scope."),
         ("What runs", "The app's own code, through its own API (FastAPI TestClient, in-process): create study → "
@@ -339,9 +364,14 @@ def build(out_dir: Path) -> Path:
                                "be drawn, or no CCRS report names it (reason listed)."),
         ("Agency scan", "All CCRS crash rows 2021-2025, latest report version per Collision Id, deleted reports out. "
                         "Measures per agency (NCIC): see Glossary. Yearly report counts 2016-2025 from data.ca.gov."),
-        ("TIMS vs CCRS", "TIMS SWITRS Summary tables (fatal+injury crashes by county and year, data as of Sep 15, "
-                         "2026), copied from the page in the signed-in browser panel; no file downloaded. CCRS "
-                         "counted the same way: one row per crash, F+I = anyone killed or injured."),
+        ("TIMS vs CCRS", "Fatal + injury only (TIMS has no PDO): F+I, fatal and serious-injury crashes by county and "
+                         "year 2021-2025, by crash date. TIMS: SWITRS Summary tables, crashes as of Sep 15, 2026, "
+                         "copied from the page in the signed-in browser panel (no file downloaded). CCRS: the same "
+                         "mirror; one row per crash, deleted reports out, F+I = anyone killed or injured, fatal = "
+                         "NumberKilled > 0, serious = any SuspectSerious/SevereInactive victim and not fatal. Where "
+                         "the basis can't match: TIMS's snapshot (Sep 15) is older than the mirror; TIMS assigns "
+                         "county from its own geocode while CCRS uses the report's County Code; TIMS doesn't list "
+                         "crashes filed for state parks, campuses, airports and harbors; 2025 is provisional in both."),
         ("Excluded and why", "Unincorporated areas (no city corridor; CHP/sheriff crashes still enter through the "
                              "corridor box). PDO crashes are in CCRS but not TIMS, so they're shown, not compared."),
         ("Known limitations", "One corridor per city, so a pass means that road works, not every road. Overpass "
@@ -392,8 +422,82 @@ def build(out_dir: Path) -> Path:
     wg.column_dimensions["A"].width = 34
     wg.column_dimensions["B"].width = 110
 
-    wb.move_sheet("Problems", offset=0)
-    order = ["Summary", "Method", "Cities", "Agencies", "TIMS vs CCRS", "Problems", "Glossary"]
+    # ---------------- Fields ----------------
+    wf = wb.create_sheet("Fields")
+    fr_ = fields_check.check(DATA / "ccrs_mirror.sqlite", ROOT / "data" / "reference" / "ccrs_dictionary.json")
+    table(wf, "Fields", ["Table", "Column", "App field", "Live value", "Rows 2021-25", "Share %", "In CHP dictionary",
+                         "App mapping", "App maps this value", "Flag"],
+          [[x["table"], x["field"], x["logical"], x["value"], x["rows"], x.get("share_pct"), x["in_dictionary"],
+            x["app_map"], x["app_maps_value"], x["flag"]] for x in fr_], {2: 30, 4: 36, 8: 34, 10: 30})
+
+    # ---------------- Run history ----------------
+    city_list = json.loads((DATA / "cities.json").read_text())
+    complete = len(results) >= len(city_list)
+    if record and complete:
+        run_history.record(results, tims, [ROOT / "data" / "tester.sqlite", DATA / "tester_worker1.sqlite"],
+                           DATA / "ccrs_mirror.sqlite", "tests/statewide/corridors_frozen.json")
+    wr = wb.create_sheet("Run history")
+    hcols, hrows = run_history._read(run_history.HISTORY)
+    if not hrows:
+        wr["A1"] = ("No complete run recorded yet. A run is appended to tests/statewide/run_history.csv once every "
+                    "city has a result (build_workbook.py --record); history is never overwritten.")
+    else:
+        conv = lambda v: (float(v) if re.fullmatch(r"-?\d+(\.\d+)?", v or "") else (v or None))  # noqa: E731
+        end = table(wr, "RunHistory", hcols, [[conv(r.get(c)) for c in hcols] for r in hrows], {8: 30})
+        defs_at = end + 3
+        wr.cell(defs_at, 1, "Measure definitions (a changed definition gets a new column, never a silent change)").font = B
+        for i, (k, v) in enumerate(run_history.MEASURES.items(), defs_at + 1):
+            wr.cell(i, 1, k)
+            wr.cell(i, 2, v).alignment = WRAP
+        groups_ = [("Coverage %", ["located_pct_v1", "review_pct_v1", "unplaced_pct_v1"]),
+                   ("City results", ["pass_v1", "warn_v1", "fail_v1"]),
+                   ("Mistakes found", ["silent_drops_v1", "double_counts_v1", "excluded_wrongly_v1"]),
+                   ("TIMS counties within 2%", ["tims_counties_within_2pct_v1"])]
+        for gi, (title, cols_) in enumerate(groups_):
+            lc = LineChart()
+            lc.title, lc.y_axis.title, lc.x_axis.title = title, title, "Run"
+            for c_ in cols_:
+                j = hcols.index(c_) + 1
+                lc.add_data(Reference(wr, min_col=j, min_row=1, max_row=end), titles_from_data=True)
+            lc.set_categories(Reference(wr, min_col=1, min_row=2, max_row=end))
+            lc.height, lc.width = 7, 14
+            wr.add_chart(lc, f"{get_column_letter(len(hcols) + 2 + (gi % 2) * 9)}{2 + (gi // 2) * 15}")
+        # per-city result by run
+        _, crows = run_history._read(run_history.CITY_HISTORY)
+        runs_ = sorted({int(r["run"]) for r in crows})
+        by = defaultdict(dict)
+        for r in crows:
+            by[(r["city"], r["county"])][int(r["run"])] = r["result"]
+        wcr = wb.create_sheet("City by run")
+        table(wcr, "CityByRun", ["City", "County code"] + [f"Run {n}" for n in runs_] + ["First run passed"],
+              [[c, int(k) if str(k).isdigit() else k] + [v.get(n) for n in runs_] +
+               [next((n for n in runs_ if v.get(n) == "pass"), None)] for (c, k), v in sorted(by.items())],
+              {1: 22})
+
+    # ---------------- Before / after ----------------
+    wba = wb.create_sheet("Before-after")
+    if before:
+        old = {(r["city"], r["county"]): r for r in load_results(before)}
+        bah = ["City", "County code", "Same corridor line", f"Result before ({before})", f"Result after ({ver})",
+               "Pulled before", "Pulled after", "Located/placed before", "Located/placed after", "Silent drops before",
+               "Silent drops after", "Changed"]
+        barows = []
+        for r in sorted(results, key=lambda r: -r.get("crashes_5y", 0)):
+            o = old.get((r["city"], r["county"]), {})
+            same = (o.get("corridor") or {}).get("line") == (r.get("corridor") or {}).get("line")
+            barows.append([r["city"], int(r["county"]), "yes" if same else "NO", o.get("result"), r["result"],
+                           o.get("pulled"), r.get("pulled"), o.get("located"), r.get("located"),
+                           o.get("silent_drops"), r.get("silent_drops"),
+                           "yes" if (o.get("result"), o.get("pulled"), o.get("silent_drops")) !=
+                           (r["result"], r.get("pulled"), r.get("silent_drops")) else ""])
+        table(wba, "BeforeAfter", bah, barows)
+    else:
+        wba["A1"] = ("Before/after: filled in when the run is repeated after Engineering's fixes (#80-#84), on the "
+                     "same frozen corridors, mirror and settings; only the app code commit differs.")
+
+    order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "Problems", "Run history",
+             "City by run", "Before-after", "Glossary"]
+    order = [n for n in order if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order]
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"CrashIQ-statewide-test-{today}.xlsx"
@@ -402,4 +506,10 @@ def build(out_dir: Path) -> Path:
 
 
 if __name__ == "__main__":
-    print(build(ROOT / "reports" / "testing"))
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--version", help="backend tree (results folder) to report; default: newest")
+    ap.add_argument("--before", help="earlier version for the Before-after sheet; default: the one before")
+    ap.add_argument("--record", action="store_true", help="append this (complete) run to run_history.csv")
+    a = ap.parse_args()
+    print(build(ROOT / "reports" / "testing", a.version, a.before, a.record))

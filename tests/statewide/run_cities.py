@@ -239,6 +239,7 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     db = Database(settings.db_path)
     app = create_app(settings, db)
     app.state.ckan = mirror
+    app.state.overpass = corridors.app_transport      # harness: Overpass server list (Method sheet)
     todo = [c for i, c in enumerate(city_list) if (not only or c["city"] == only) and i % shard[1] == shard[0]][:limit]
     t0 = time.time()
     with TestClient(app) as client:
@@ -253,6 +254,9 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
                 try:
                     b = bounds.get(corridors.norm_city(c["city"])) or corridors.find_rel(c["city"], OSM)
                     corr = corridors.pick(b["rel"], OSM) if b else {"reason": "no OSM city boundary with this name"}
+                except corridors.OverpassUnavailable as e:
+                    print(f"[{n}/{len(todo)}] {c['city']}: not tested (Overpass) - {e}", flush=True)
+                    continue                          # not saved: the next pass tries again
                 except Exception as e:  # noqa: BLE001 - recorded per city, never skipped silently
                     corr = {"reason": f"OSM error: {e}"}
             key = hashlib.sha1(json.dumps([ver, corr], sort_keys=True).encode()).hexdigest()[:12]
@@ -268,6 +272,9 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
                     row.update(run_city(client, mirror, c, corr))
                 except Exception as e:  # noqa: BLE001
                     row.update(stage="crash", error=f"{type(e).__name__}: {e}", trace=traceback.format_exc()[-800:])
+            if "Overpass" in json.dumps(row.get("error", "")) or "OverpassUnavailable" in str(row.get("error", "")):
+                print(f"[{n}/{len(todo)}] {c['city']}: not tested (Overpass) - {row.get('error', '')[:120]}", flush=True)
+                continue                              # the app's corridor fetch got no streets: retry next pass
             row["result"], row["result_reason"] = classify(row)
             out.write_text(json.dumps(row, indent=1, default=str))
             print(f"[{n}/{len(todo)} {time.time() - t0:.0f}s] {c['city']}: {row['result']} - {row['result_reason']}",

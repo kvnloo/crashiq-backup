@@ -24,7 +24,53 @@ import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
-OVERPASS = "https://overpass-api.de/api/interpreter"
+# Public Overpass servers, tried in order (overpass-api.de rate-limited this machine during the #73 run; the
+# mirrors serve the same OpenStreetMap data, a few minutes apart).
+SERVERS = ["https://overpass.kumi.systems/api/interpreter",
+           "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+           "https://overpass-api.de/api/interpreter"]
+STATS = {"calls": 0, "empty_or_failed_tries": 0, "by_server": {}}
+
+
+class OverpassUnavailable(RuntimeError):
+    """Every server refused or answered empty: the city is 'not tested (Overpass)', never a failure."""
+
+
+GAP_S = 8.0          # pause between Overpass calls (one worker): be a polite client
+_last = [0.0]
+
+
+def post(body: bytes, timeout: float = 200) -> dict:
+    """One Overpass call, gently: each server once, with a pause between calls; a refusal or empty answer moves
+    to the next server; if all fail, back off 2 and 5 minutes before giving up with OverpassUnavailable."""
+    last = None
+    for backoff in (0, 120, 300):
+        time.sleep(backoff)
+        for url in SERVERS:
+            wait = GAP_S - (time.time() - _last[0])
+            if wait > 0:
+                time.sleep(wait)
+            _last[0] = time.time()
+            STATS["calls"] += 1
+            try:
+                with urllib.request.urlopen(urllib.request.Request(url, body, UA), timeout=timeout) as r:
+                    data = json.load(r)
+                if "error" in str(data.get("remark", "")).lower():
+                    raise ValueError(data["remark"])
+                if not data.get("elements"):
+                    raise ValueError("0 elements")
+                STATS["by_server"][url] = STATS["by_server"].get(url, 0) + 1
+                return data
+            except (urllib.error.URLError, TimeoutError, ValueError, OSError) as e:
+                STATS["empty_or_failed_tries"] += 1
+                last = f"{url.split('/')[2]}: {e}"
+    raise OverpassUnavailable(f"Overpass unavailable on every server: {last}")
+
+
+def app_transport(url: str, data: bytes, timeout: float) -> bytes:
+    """For the app's `app.state.overpass`: same query, answered by the first server that returns streets."""
+    q = urllib.parse.parse_qs(data.decode()).get("data", [""])[0]
+    return json.dumps(post(urllib.parse.urlencode({"data": q}).encode(), timeout)).encode()
 UA = {"User-Agent": "CrashIQ-tester/0.1 (statewide data test, #73)"}
 TARGET_M = 1609.0
 
@@ -40,22 +86,11 @@ def norm_city(s: str) -> str:
 def overpass(query: str, cache: Path, pause: float = 1.0) -> dict:
     if cache.exists():
         return json.loads(cache.read_text())
-    body = urllib.parse.urlencode({"data": query}).encode()
-    last = None
-    for attempt in range(5):
-        try:
-            with urllib.request.urlopen(urllib.request.Request(OVERPASS, body, UA), timeout=200) as r:
-                data = json.load(r)
-            if "error" in str(data.get("remark", "")).lower():
-                raise ValueError(data["remark"])
-            cache.parent.mkdir(parents=True, exist_ok=True)
-            cache.write_text(json.dumps(data))
-            time.sleep(pause)
-            return data
-        except (urllib.error.URLError, TimeoutError, ValueError, OSError) as e:
-            last = e
-            time.sleep(10 * (attempt + 1))
-    raise RuntimeError(f"Overpass failed: {last}")
+    data = post(urllib.parse.urlencode({"data": query}).encode())
+    cache.parent.mkdir(parents=True, exist_ok=True)
+    cache.write_text(json.dumps(data))
+    time.sleep(pause)
+    return data
 
 
 def boundaries(cache_dir: Path) -> dict[str, dict]:
