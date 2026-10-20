@@ -11,10 +11,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import threading
 import re
 from datetime import datetime, timezone
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 
 from . import grade
 from . import network as network_mod
@@ -244,7 +245,9 @@ def _no_cross_street(roads: list, on_idx: list[int]) -> bool:
     return all(_squeeze(rd) in NO_CROSS or len(_squeeze(rd)) <= 2 for rd in others)
 
 
-def pull(study: dict, net: dict, ckan: Ckan) -> dict:
+def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
+    """`progress(step, done, total)`, when given, is told what the pull is doing (#54, background pulls)."""
+    tell = progress or (lambda step, done, total: None)
     if not net.get("line"):
         raise PullError("Draw the corridor first.")
     years = list(range(study["from_year"], study["to_year"] + 1))
@@ -269,7 +272,8 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
     log["area_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
 
-    for y in years:
+    for yi, y in enumerate(years):
+        tell(f"Crash reports {y}", yi, len(years))
         rid = res["crashes"].get(y)
         if not rid:
             log["years_missing"].append(y)
@@ -394,7 +398,8 @@ def pull(study: dict, net: dict, ckan: Ckan) -> dict:
             by_year.setdefault(c["year"], []).append(c["crash_id"])
     parties: dict[str, list[dict]] = {}
     extents: dict[str, list[str]] = {}
-    for y, ids in sorted(by_year.items()):
+    for yi, (y, ids) in enumerate(sorted(by_year.items())):
+        tell(f"Parties and injuries {y}", yi, len(by_year))
         prid, irid = res["parties"].get(y), res["iwp"].get(y)
         if prid:
             pcols, pmiss = cc.resolve_columns(ckan.fields(prid), cc.PARTY_COLS)
@@ -477,20 +482,48 @@ def stale(cached: dict, study: dict, now: datetime | None = None) -> bool:
     return (now - pulled).days >= RECENT_TTL_DAYS
 
 
-def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False) -> tuple[dict, bool]:
-    """(pull result, from_cache). Re-pulls when refreshed or when window/corridor changed."""
+_STUDY_LOCKS: dict[str, threading.Lock] = {}
+_LOCKS_GUARD = threading.Lock()
+
+
+def study_lock(sid: str) -> threading.Lock:
+    """One pull at a time per study, whether it runs in a request or in the background (#54)."""
+    with _LOCKS_GUARD:
+        return _STUDY_LOCKS.setdefault(sid, threading.Lock())
+
+
+def fresh(db: Database, sid: str) -> dict | None:
+    """The cached pull when it still matches the study (same key, not expired), else None."""
     study = study_mod.require(db, sid)
     net = network_mod.network(db, sid)
     key = cache_key(study, net) if net.get("line") else None
     cached = get_cached(db, sid)
-    if cached and not refresh and cached["cache_key"] == key and not stale(cached, study):
-        return cached, True
-    result = pull(study, net, ckan)
-    from .placement import place_unmatched   # C4: place crashes without coordinates (locator validated in PR #16)
-    place_unmatched(db, net, result)
-    db.execute("INSERT OR REPLACE INTO crash_pull (study_id, cache_key, pulled_at, payload) VALUES (?,?,?,?)",
-               (sid, key, result["pulled_at"], json.dumps(result)))
-    return {**result, "cache_key": key}, False
+    return cached if cached and cached["cache_key"] == key and not stale(cached, study) else None
+
+
+def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=None) -> tuple[dict, bool]:
+    """(pull result, from_cache). Re-pulls when refreshed or when window/corridor changed. The result is stored
+    only if the study still has the same key when the pull ends (compare-and-set); if the corridor or window was
+    edited meanwhile, it pulls once more for the new study."""
+    with study_lock(sid):
+        if not refresh:
+            hit = fresh(db, sid)
+            if hit:
+                return hit, True
+        for _ in range(2):
+            study = study_mod.require(db, sid)
+            net = network_mod.network(db, sid)
+            key = cache_key(study, net) if net.get("line") else None
+            result = pull(study, net, ckan, progress)
+            from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
+            place_unmatched(db, net, result)
+            now = study_mod.require(db, sid)
+            now_net = network_mod.network(db, sid)
+            if (cache_key(now, now_net) if now_net.get("line") else None) == key:
+                db.execute("INSERT OR REPLACE INTO crash_pull (study_id, cache_key, pulled_at, payload) "
+                           "VALUES (?,?,?,?)", (sid, key, result["pulled_at"], json.dumps(result)))
+                return {**result, "cache_key": key}, False
+        raise PullError("The study kept changing while its crashes were being pulled. Try again.")
 
 
 def ckan_for(request: Request) -> Ckan:
@@ -506,23 +539,69 @@ def summary(result: dict, from_cache: bool) -> dict:
             "years": result["years"], "pulled_at": result["pulled_at"], "from_cache": from_cache}
 
 
+_JOBS: dict[str, dict] = {}       # study id -> background pull status (one per study, #54)
+
+
+def _error_status(e: Exception) -> tuple[int, str]:
+    if isinstance(e, (CkanError, network_mod.NetworkError)):
+        return 502, str(e)
+    if isinstance(e, PullError):
+        return 409, str(e)
+    return 500, f"The crash pull failed: {e}"
+
+
+def _run_job(db: Database, sid: str, ckan: Ckan, refresh: bool, job: dict) -> None:
+    def progress(step, done, total):
+        job.update(step=step, done=done, total=total)
+    try:
+        result, hit = ensure(db, sid, ckan, refresh, progress)
+        job.update(state="done", step="Done", summary=summary(result, hit))
+    except Exception as e:  # noqa: BLE001 - reported to the screen through the status endpoint
+        code, msg = _error_status(e)
+        job.update(state="error", status=code, error=msg)
+
+
 @router.post("/studies/{sid}/crashes/pull")
-def post_pull(sid: str, request: Request, refresh: bool = False) -> dict:
+def post_pull(sid: str, request: Request, response: Response, refresh: bool = False, background: bool = False) -> dict:
     db = request.app.state.db
+    if background:
+        # A cache hit answers at once; otherwise the pull runs in a thread and the screen polls its progress, so a
+        # 1-minute pull (10 years, ~40 data.ca.gov calls) is never one frozen request (#54).
+        if not refresh:
+            hit = fresh(db, sid)
+            if hit:
+                return summary(hit, True)
+        with _LOCKS_GUARD:
+            job = _JOBS.get(sid)
+            if not job or job["state"] != "running":
+                job = {"state": "running", "step": "Starting", "done": 0, "total": 0,
+                       "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+                _JOBS[sid] = job
+                threading.Thread(target=_run_job, args=(db, sid, ckan_for(request), refresh, job), daemon=True).start()
+        response.status_code = 202
+        return {"job": dict(job)}
     try:
         result, hit = ensure(db, sid, ckan_for(request), refresh)
-    except CkanError as e:
-        raise HTTPException(502, str(e)) from e
-    except PullError as e:
-        raise HTTPException(409, str(e)) from e
+    except (CkanError, PullError, network_mod.NetworkError) as e:
+        code, msg = _error_status(e)
+        raise HTTPException(code, msg) from e
     return summary(result, hit)
 
 
+@router.get("/studies/{sid}/crashes/pull/status")
+def pull_status(sid: str, request: Request) -> dict:
+    study_mod.require(request.app.state.db, sid)
+    return dict(_JOBS.get(sid) or {"state": "idle"})
+
+
 @router.get("/studies/{sid}/crashes")
-def get_crashes(sid: str, request: Request) -> dict:
+def get_crashes(sid: str, request: Request, full: bool = False) -> dict:
+    """The pulled crashes. Each crash's party list is most of the payload and the screens never read it, so it's
+    left out unless `full=true` (#54); exports and findings read the pull directly."""
     db = request.app.state.db
     study_mod.require(db, sid)
     cached = get_cached(db, sid)
     if not cached:
         raise HTTPException(404, "No crashes pulled yet for this study.")
-    return {**summary(cached, True), "crashes": cached["crashes"]}
+    rows = cached["crashes"] if full else [{k: v for k, v in c.items() if k != "parties"} for c in cached["crashes"]]
+    return {**summary(cached, True), "crashes": rows}

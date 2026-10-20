@@ -99,4 +99,28 @@ describe('Crash profile screen', () => {
     expect(document.querySelectorAll('.rbar i.over')).toHaveLength(over)
     expect(document.querySelectorAll('.rbar b')).toHaveLength(ints.length)
   })
+
+  it('shows the background pull step, then the profile when it is done (#54)', async () => {
+    let polls = 0
+    mockApi({
+      ...routes,
+      'POST /studies/:id/crashes/pull': { job: { state: 'running', step: 'Starting', done: 0, total: 0 } },
+      'GET /studies/:id/crashes/pull/status': () => (++polls < 2
+        ? { state: 'running', step: 'Crash reports 2023', done: 2, total: 5 }
+        : { state: 'done', step: 'Done', summary: pull }),
+    })
+    renderAt('/s/s1/profile')
+    expect(await screen.findByText('Crash reports 2023 · 3 of 5', {}, { timeout: 3000 })).toBeInTheDocument()
+    expect(await screen.findByLabelText('Key numbers', {}, { timeout: 4000 })).toBeInTheDocument()
+  })
+
+  it('says why when the background pull fails', async () => {
+    mockApi({
+      ...routes,
+      'POST /studies/:id/crashes/pull': { job: { state: 'running', step: 'Starting', done: 0, total: 0 } },
+      'GET /studies/:id/crashes/pull/status': { state: 'error', status: 502, error: 'data.ca.gov is down' },
+    })
+    renderAt('/s/s1/profile')
+    expect(await screen.findByRole('alert', {}, { timeout: 3000 })).toHaveTextContent('data.ca.gov is down')
+  })
 })
