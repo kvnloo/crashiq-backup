@@ -39,4 +39,9 @@ def test_live_injury_codes_give_real_severity_levels(crenshaw):
 def test_live_severity_on_the_study_stretch(crenshaw):
     # Crenshaw Blvd, Marine Ave -> W 132nd St, 2021-2025, crashes on the stretch (side-street reports excluded)
     sev = Counter(c["severity"] for c in crenshaw["crashes"] if not c.get("exclude_rule"))
-    assert dict(sev) == {"K": 1, "A": 6, "B": 44, "C": 80, "O": 183}
+    assert dict(sev) == {"K": 1, "A": 6, "B": 44, "C": 81, "O": 185}
+
+
+def test_live_replay_returns_every_recorded_crash(crenshaw):
+    # #53: with typed columns the replay finds the no-coordinate reports too (was 314 of 1602 untyped)
+    assert len(crenshaw["crashes"]) == 1602

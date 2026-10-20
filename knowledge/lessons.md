@@ -1,5 +1,11 @@
 # Lessons (newest first)
 
+- 2026-10-19 · An offline stand-in must behave like the real service, or tests pass on nothing. FakeCkan built
+  untyped SQLite columns, so `"County Code" IN ('1')` never matched the number 1 (PostgreSQL casts it): every
+  no-coordinate row of a live fixture vanished, and Union City replayed 0 crashes while all its golden checks
+  "passed" (empty sets). Guard: the golden suite asserts the replay returns every recorded crash (#53).
+- 2026-10-19 · CCRS writes one Vehicle Code violation several ways (22350 / VC 22350; 21658A / VC 21658(A) /
+  21658(a)), which splits one cause across rows of a PCF table. Normalized to one spelling per section (#53).
 - 2026-10-19 · CHP's data dictionary is not what CCRS publishes. The dictionary lists injury text ("SUSPECTED SERIOUS
   INJURY"); the live `ExtentOfInjuryCode` holds codes (SuspectSerious, ...) plus retired SWITRS levels
   (SevereInactive, OtherVisibleInactive, ComplaintOfPainInactive). Matching on the dictionary dropped every A/B/C
