@@ -81,7 +81,7 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
         return StreetKey(f"{kind} {int(route.group(2))}", None)
     s = re.sub(r"^\d+\s+(?=[A-Z])", "", s)       # house number "3144 W 147TH ST"
     s = NOISE.sub(" ", s)
-    s = s.replace("/", " ")
+    s = s.replace("/", " ").replace("-", " ")    # Alvarado-Niles Road = ALVARADO NILES RD (#80); routes matched above
     toks = [t for t in s.split() if t]
     if not toks:
         return None
