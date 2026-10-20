@@ -299,3 +299,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   the same levels: Fatal = K; Severe injury = Suspected serious injury = A; Other visible injury = Suspected minor
   injury = B; Complaint of pain = Possible injury = C; no injury = O. Live CCRS codes (`SuspectSerious`, `*Inactive`,
   ...) map the same way (#75, PR #76). No report note about the 2020 wording change. Unknown level stays U (#34 item 12).
+- **Obvious bugs and same basis DECIDED (user, 2026-10-19, PM session):** (1) obvious mistakes (the code doing other
+  than what the docs say) are fixed and merged without waiting for the user; only choices go to the user. (2) Every
+  check and comparison uses the same basis (data snapshot, years, corridor geometry and settings, the app's own code at
+  a stated commit, the same crash and severity definitions). Rules: `CLAUDE.md`.
