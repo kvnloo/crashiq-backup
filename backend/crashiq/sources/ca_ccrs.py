@@ -245,6 +245,18 @@ _SPELLING = {"VEHICLE/PEDESTRAIN": "VEHICLE/PEDESTRIAN", "PEDESTRAIN": "PEDESTRI
 CODED_FIELDS = ("collision_type", "lighting", "weather", "surface", "involved_with", "ped_action", "hit_run")
 
 
+_VC = re.compile(r"^\s*C?VC\s*", re.I)
+
+
+def clean_violation(v):
+    """One spelling per Vehicle Code section: live CCRS writes 22350, VC 22350, VC 21658(A), 21658(a), 21658A
+    for the same violation (#53, 2026-10-19). -> 22350, 21658A. Other codes (PC, HN, ...) keep their prefix."""
+    if v is None or not str(v).strip():
+        return None
+    t = _VC.sub("", str(v).strip().upper())
+    return re.sub(r"[\s()]", "", t) or None
+
+
 def clean_coded(v):
     if v is None:
         return None
@@ -358,7 +370,7 @@ def crash_record(raw: dict, cols: dict[str, dict]) -> dict:
         "lighting": clean_coded(s(g("lighting"))),
         "weather": clean_coded(s(g("weather"))),
         "surface": clean_coded(s(surface)),
-        "pcf": s(g("pcf")),
+        "pcf": clean_violation(g("pcf")),
         "pcf_category": s(g("pcf_category")),
         "involved_with": clean_coded(s(g("involved_with"))),
         "ped_action": clean_coded(s(g("ped_action"))),

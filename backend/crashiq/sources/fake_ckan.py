@@ -8,6 +8,11 @@ import sqlite3
 from pathlib import Path
 
 
+def _affinity(ckan_type: str | None) -> str:
+    t = str(ckan_type or "").lower()
+    return "NUMERIC" if t.startswith(("int", "numeric", "float", "double")) else "TEXT" if t == "text" else ""
+
+
 class FakeCkan:
     def __init__(self, fixture: dict | Path, rows_max: int | None = None):
         data = json.loads(Path(fixture).read_text()) if isinstance(fixture, (str, Path)) else fixture
@@ -22,7 +27,10 @@ class FakeCkan:
             self.db.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DML, False)
             self.db.setconfig(sqlite3.SQLITE_DBCONFIG_DQS_DDL, False)
         for rid, t in self.tables.items():
-            cols = ", ".join(f'"{f["id"]}"' for f in t["fields"])
+            # Column types from the CKAN field list, so SQLite compares like PostgreSQL does: a numeric column
+            # matches the text literal '1' ("County Code" IN ('1'), #53). Untyped columns silently dropped every
+            # no-coordinate row of the live fixtures.
+            cols = ", ".join(f'"{f["id"]}" {_affinity(f.get("type"))}' for f in t["fields"])
             self.db.execute(f'CREATE TABLE "{rid}" ({cols})')
             names = [f["id"] for f in t["fields"]]
             self.db.executemany(f'INSERT INTO "{rid}" VALUES ({", ".join("?" * len(names))})',

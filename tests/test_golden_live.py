@@ -1,0 +1,188 @@
+"""Golden tables on LIVE data (#53): every profile number recounted from the raw recorded CCRS rows, by code that
+shares nothing with the app's cleaning. The app decides which crashes are in the study (assignment, tested
+elsewhere); this file checks that T1 and T3-T11 count those crashes correctly from what CHP published.
+
+Fixtures: tests/fixtures/live/ (record_live_fixture.py): Crenshaw Blvd (LA County, GPS on most reports) and Union
+City Blvd (Union City PD records no GPS, #35), 2021-2025."""
+
+from __future__ import annotations
+
+import json
+from collections import Counter, defaultdict
+
+import pytest
+
+from crashiq import assign, crashes, network, placement, profile
+from crashiq.sources.ckan import Ckan
+from crashiq.sources.fake_ckan import FakeCkan
+
+from conftest import FIXTURES
+
+LIVE = FIXTURES / "live"
+STUDY = {"id": "golden", "from_year": 2021, "to_year": 2025, "radius_ft": 250, "buffer_ft": 100,
+         "covid_years_in_window": False}
+
+# The reference's own reading of CHP's codes (deliberately not imported from the app)
+LEVEL = {"Fatal": "K", "SuspectSerious": "A", "SevereInactive": "A", "SuspectMinor": "B",
+         "OtherVisibleInactive": "B", "PossibleInjury": "C", "ComplaintOfPainInactive": "C"}
+RANK = "KABCUO"
+
+
+def run(name, monkeypatch):
+    line = [tuple(p) for p in json.loads((LIVE / f"line_{name}.json").read_text())]
+    osm = json.loads((LIVE / f"overpass_{name}.json").read_text())
+    found = network.detect(osm, line)
+    ints = [{**i, "is_study": True} for i in found["intersections"]]
+    net = {"line": line, **found, "intersections": ints, "segments": network.segments(ints, found["length_ft"]),
+           "length_mi": found["length_ft"] / 5280, "is_freeway": found["corridor_highway"] == "motorway"}
+    monkeypatch.setattr(network, "fetch_overpass", lambda db, q: osm)
+    pull = crashes.pull(STUDY, net, Ckan(FakeCkan(LIVE / f"ckan_{name}.json"), retries=0))
+    placement.place_unmatched(None, net, pull)
+    a = assign.assign(pull["crashes"], net, STUDY["radius_ft"], STUDY["buffer_ft"])
+    return net, pull, a, profile.build(STUDY, net, pull, a)
+
+
+def raw_tables(name):
+    d = json.loads((LIVE / f"ckan_{name}.json").read_text())
+    kind = {r["id"]: r["name"].split("_")[0] for r in d["package"]["resources"]}
+    out = defaultdict(list)
+    for rid, t in d["tables"].items():
+        out[kind[rid]].extend(t["rows"])
+    return out
+
+
+def reference(name, study_ids: set[str]):
+    """Recount from raw rows: one row per crash (live CCRS has one per Collision Id), severity from IWP."""
+    raw = raw_tables(name)
+    crash = {str(r["Collision Id"]): r for r in raw["Crashes"] if str(r["Collision Id"]) in study_ids}
+    levels = defaultdict(list)
+    for r in raw["InjuredWitnessPassengers"]:
+        if str(r.get("IsWitnessOnly")) != "True" and r.get("ExtentOfInjuryCode") in LEVEL:
+            levels[str(r["CollisionId"])].append(LEVEL[r["ExtentOfInjuryCode"]])
+    types = defaultdict(set)
+    for r in raw["Parties"]:
+        types[str(r["CollisionId"])].add(str(r.get("PartyType")))
+    sev = {}
+    for cid, r in crash.items():
+        if int(r["NumberKilled"] or 0) > 0:
+            sev[cid] = "K"
+        elif levels[cid]:
+            sev[cid] = min(levels[cid], key=RANK.index)
+        else:
+            sev[cid] = "U" if int(r["NumberInjured"] or 0) > 0 else "O"
+    return crash, sev, types
+
+
+@pytest.fixture(scope="module", params=["crenshaw", "unioncity"])
+def case(request):
+    mp = pytest.MonkeyPatch()
+    try:
+        net, pull, a, p = run(request.param, mp)
+    finally:
+        mp.undo()
+    ids = {x["crash_id"] for x in a["assignments"] if x["kind"] in ("intersection", "segment")}
+    return request.param, pull, a, p, ids, *reference(request.param, ids)
+
+
+def table(p, tid):
+    return {r["key"]: r["values"] for r in next(t for t in p["tables"] if t["id"] == tid)["rows"]}
+
+
+def test_every_study_crash_is_in_the_raw_rows(case):
+    _, _, _, _, ids, crash, _, _ = case
+    assert ids and set(crash) == ids
+
+
+def test_T1_summary(case):
+    _, _, a, p, ids, crash, sev, _ = case
+    t1 = table(p, "T1")
+    sv = Counter(sev.values())
+    assert t1["crashes"]["value"] == len(ids)
+    assert t1["ksi_crashes"]["value"] == sv["K"] + sv["A"]
+    assert t1["fatal_crashes"]["value"] == sv["K"]
+    assert t1["injury_crashes"]["value"] == sum(sv[k] for k in "KABCU")
+    assert t1["pdo_crashes"]["value"] == sv["O"]
+    assert t1["killed"]["value"] == sum(int(r["NumberKilled"] or 0) for r in crash.values())
+    assert t1["injured"]["value"] == sum(int(r["NumberInjured"] or 0) for r in crash.values())
+    assert t1["dark_crashes"]["value"] == sum("DARK" in str(r.get("LightingDescription") or "") for r in crash.values())
+    assert t1["excluded"]["value"] == a["counts"]["excluded"] and t1["unplaced"]["value"] == a["counts"]["unmatched"]
+
+
+def test_T3_severity(case):
+    _, _, _, p, _, _, sev, _ = case
+    t3 = table(p, "T3")
+    sv = Counter(sev.values())
+    assert {k: t3[k]["crashes"] for k in RANK} == {k: sv[k] for k in RANK}
+
+
+@pytest.mark.parametrize("tid,col", [("T4", "Collision Type Description"), ("T6", "LightingDescription"),
+                                     ("T7", "Weather 1")])
+def test_T4_T6_T7_distributions(case, tid, col):
+    _, _, _, p, _, crash, sev, _ = case
+    want = Counter(str(r.get(col) or "").replace("PEDESTRAIN", "PEDESTRIAN").strip().upper() or "NOT_STATED"
+                   for r in crash.values())
+    got = {k.upper(): v["crashes"] for k, v in table(p, tid).items()}
+    assert got == dict(want)
+    ksi = Counter(str(r.get(col) or "").replace("PEDESTRAIN", "PEDESTRIAN").strip().upper() or "NOT_STATED"
+                  for cid, r in crash.items() if sev[cid] in "KA")
+    assert {k: v for k, v in ((k.upper(), v["ksi_crashes"]) for k, v in table(p, tid).items()) if v} == dict(ksi)
+
+
+def test_T5_one_row_per_violation(case):
+    _, _, _, p, _, crash, _, _ = case
+    def vc(v):
+        t = str(v or "").upper().replace("CVC", "").replace("VC", "").replace("(", "").replace(")", "").replace(" ", "")
+        return t or "NOT_STATED"
+    assert {k.upper(): v["crashes"] for k, v in table(p, "T5").items()} == dict(Counter(
+        vc(r.get("Primary Collision Factor Violation")) for r in crash.values()))
+
+
+def test_T8_surface(case):
+    _, _, _, p, _, crash, _, _ = case
+    code = {"A": "DRY", "B": "WET", "C": "SNOWY-ICY", "D": "SLIPPERY (MUDDY, OILY, ETC.)"}
+    want = Counter(code.get(str(r.get("RoadwaySurfaceCode") or ""), "NOT_STATED") for r in crash.values())
+    assert {k.upper(): v["crashes"] for k, v in table(p, "T8").items()} == dict(want)
+
+
+def test_T9_day_and_hour(case):
+    _, _, _, p, _, crash, _, _ = case
+    t9 = table(p, "T9")
+    want = Counter((r["Day Of Week"], int(r["Crash Date Time"][11:13])) for r in crash.values())
+    got = Counter({(d, int(h)): n for d, vals in t9.items() for h, n in vals.items() if h.isdigit() and n})
+    assert got == want
+
+
+def test_T10_road_users(case):
+    _, _, _, p, _, crash, sev, types = case
+    t10 = table(p, "T10")
+    ped = {cid for cid, r in crash.items() if "Pedestrian" in types[cid]
+           or "PEDESTRIAN" in str(r.get("MotorVehicleInvolvedWithDesc") or "")
+           or "PEDESTR" in str(r.get("Collision Type Description") or "")}
+    bike = {cid for cid, r in crash.items() if "Bicyclist" in types[cid]
+            or "BICYCLE" in str(r.get("MotorVehicleInvolvedWithDesc") or "")}
+    assert (t10["ped"]["crashes"], t10["bike"]["crashes"]) == (len(ped), len(bike))
+    assert t10["ped"]["ksi_crashes"] == sum(sev[c] in "KA" for c in ped)
+
+
+def test_T11_by_year(case):
+    _, _, _, p, _, crash, sev, _ = case
+    t11 = table(p, "T11")
+    want = Counter(r["Crash Date Time"][:4] for r in crash.values())
+    assert {k: v["crashes"] for k, v in t11.items()} == dict(want)
+
+
+def test_T2_locations_add_up(case):
+    _, _, _, p, ids, _, _, _ = case
+    assert sum(v["crashes"] for v in table(p, "T2").values()) == len(ids)
+
+
+def test_fixture_covers_the_hard_cases():
+    """#53: the hand fixture lacked these; the live one must keep them."""
+    raw = raw_tables("crenshaw")
+    iwp, cr, pa = raw["InjuredWitnessPassengers"], raw["Crashes"], raw["Parties"]
+    assert any(r["ExtentOfInjuryCode"] == "Fatal" for r in iwp)
+    assert any(str(r.get("IsWitnessOnly")) == "True" for r in iwp)
+    assert any(r.get("PartyType") == "Bicyclist" for r in pa)
+    assert any("Truck" in str(r.get("Vehicle1TypeDesc")) for r in pa)
+    assert any(r.get("SecondaryUnitOfMeasure") == "M" for r in cr)
+    assert any(str(r.get("Primary Collision Factor Violation") or "").startswith("VC ") for r in cr)
