@@ -326,7 +326,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                 f"{sum(1 for r in loc_rows if r['values'].get('critical_rate') is not None)}."})
     if gps_far:
         caveats.append({"key": "gps_far_from_stated", "count": gps_far,
-                        "text": f"{gps_far} crash{'es have' if gps_far != 1 else ' has'} a GPS point more than 400 ft "
+                        "text": f"{gps_far} crash{'es have' if gps_far != 1 else ' has'} a GPS point more than "
+                                f"{assign_mod.GPS_CHECK_FT:g} ft (plus the reported distance) "
                                 "from the intersection named in the report. They are counted where the GPS puts them; "
                                 "check them on the map."})
     if exclude:
