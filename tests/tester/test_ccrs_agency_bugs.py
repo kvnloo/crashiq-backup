@@ -260,3 +260,27 @@ def test_unincorporated_place_name_is_not_another_city():
     net = {**NET_X, "cities": {"cities": ["Hawthorne"], "outside": True, "counties": ["Los Angeles County"]}}
     out = crashes.pull(STUDY, net, Ckan(FakeCkan(d)))
     assert "9200001" in {c["crash_id"] for c in out["crashes"]}
+
+
+@pytest.mark.xfail(strict=True, reason="#154: a corridor name with 'of' (Avenue of Flags) never matches CHP's spelling")
+def test_corridor_name_with_of_matches_chp_spelling():
+    # Statewide run 4, corridor list v2 (#73), Buellton, Avenue of Flags: 2752702 'AVENUE OF FLAGS' & '1ST ST' (no GPS)
+    # was never read. street_key drops OF from the core ('AVENUE FLAGS'), so the prefilter looks for AVENUEFLAGS in
+    # CHP's AVENUEOFFLAGS.
+    d = _fixture(no_gps=True)
+    _, r = _row(d, 9200001)                     # no GPS, cross street W 144TH ST (a study cross street)
+    r["PrimaryRoad"] = "AVENUE OF FLAGS"
+    out = crashes.pull(STUDY, {**NET_X, "corridor_name": "Avenue of Flags"}, Ckan(FakeCkan(d)))
+    assert "9200001" in {c["crash_id"] for c in out["crashes"]}
+
+
+@pytest.mark.xfail(strict=True, reason="#155: a numbered corridor with a direction (East 4th Street) misses 'E 4TH ST'")
+def test_numbered_corridor_with_direction_matches_abbreviated_direction():
+    # Statewide run 4, corridor list v2 (#73), Dorris, East 4th Street: 2508053 'MAIN ST' & '4TH ST' (no GPS) was never
+    # read. A core too short without its direction keeps it (_search_core: 'EAST 4TH'), so the prefilter looks for
+    # EAST4TH, and CHP writes E 4TH ST (E4TH) or 4TH ST. The abbreviated form is plainly the same street.
+    d = _fixture(no_gps=True)
+    _, r = _row(d, 9200001)
+    r["PrimaryRoad"] = "E 4TH ST"
+    out = crashes.pull(STUDY, {**NET_X, "corridor_name": "East 4th Street"}, Ckan(FakeCkan(d)))
+    assert "9200001" in {c["crash_id"] for c in out["crashes"]}

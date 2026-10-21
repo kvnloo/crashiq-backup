@@ -141,7 +141,9 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
           "No-GPS reports expected (independent v2)", "Silent drops (v2)", "Known issue", "Corridor inside its own city %",
           "Cities the corridor enters (city filter, #142)", "On corridor: located",
           "On corridor: no location", "On-corridor located % (v2)", "No location: no cross street",
-          "No location: relaxed match held for review"]
+          "No location: relaxed match held for review", "No-GPS reports expected (independent v3)",
+          "Silent drops (v3)", "Silent drops (v4, offset-aware)", "v4 cleared (Collision Id: ft past the stretch end)",
+          "Result (v4 rule)", "Corridor list"]
     rows = []
     for r in sorted(results, key=lambda r: -r.get("crashes_5y", 0)):
         ex = Counter(r.get("excluded_by_rule") or {})
@@ -173,7 +175,10 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                                                      ", ".join(r["corridor_cities"]["cities"]) +
                                                      (" + unincorporated" if r["corridor_cities"]["outside"] else "")),
             on_, un_,
-            round(on_ / (on_ + un_), 3) if on_ + un_ else None, m_.get("unplaced_no_cross"), m_.get("unplaced_relaxed")])
+            round(on_ / (on_ + un_), 3) if on_ + un_ else None, m_.get("unplaced_no_cross"), m_.get("unplaced_relaxed"),
+            r.get("independent_expected_v3"), r.get("silent_drops_v3"), r.get("silent_drops_v4"),
+            ", ".join(f"{x['crash_id']}: {x['past_stretch_end_ft']}" for x in r.get("v4_cleared") or []) or None,
+            r.get("result_v4"), r.get("corridor_list", "v1")])
     n_city = table(wc, "Cities", ch, rows, {1: 20, 7: 24, 8: 24, 9: 20, 10: 20, 29: 24, 31: 40, 33: 40, 34: 40})
     for i in range(2, n_city + 1):
         for col in (19, 21, 47):
@@ -269,7 +274,10 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         ws.cell(i, 2, v)
     L = n_city
     has_v2 = any("silent_drops_v2" in r for r in results)
-    sd_col = "AO" if has_v2 else "AB"
+    has_v4 = any(r.get("silent_drops_v4") is not None for r in results)
+    col_of = {h: get_column_letter(i) for i, h in enumerate(ch, 1)}
+    sd_col = (col_of["Silent drops (v4, offset-aware)"] if has_v4 else "AO" if has_v2 else "AB")
+    r4_col = col_of["Result (v4 rule)"]
     counts = [
         ("Agencies scanned", f"=COUNTA(Agencies!A2:A{n_ag})"),
         ("Cities in CCRS (incorporated)", f"=COUNTA(Cities!A2:A{L})"),
@@ -279,6 +287,9 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         ("Warn", f'=COUNTIF(Cities!AF2:AF{L},"warn")'),
         ("Fail", f'=COUNTIF(Cities!AF2:AF{L},"fail")'),
         ("Untested (listed with reason)", f'=COUNTIF(Cities!AF2:AF{L},"untested")'),
+        ("Pass (v4 check)", f'=COUNTIF(Cities!{r4_col}2:{r4_col}{L},"pass")'),
+        ("Warn (v4 check)", f'=COUNTIF(Cities!{r4_col}2:{r4_col}{L},"warn")'),
+        ("Fail (v4 check)", f'=COUNTIF(Cities!{r4_col}2:{r4_col}{L},"fail")'),
         ("Cities with silent drops", f'=COUNTIF(Cities!{sd_col}2:{sd_col}{L},">0")'),
         ("No-GPS reports silently dropped", f"=SUM(Cities!{sd_col}2:{sd_col}{L})"),
         ("Union City-type agencies (local, < 20% GPS)", f'=COUNTIF(Agencies!AE2:AE{n_ag},"yes")'),
@@ -355,7 +366,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         f'="Where it is at risk: "&{c["Union City-type agencies (local, < 20% GPS)"]}&" local police agencies record GPS on under 20% of reports (Agencies!AE), so every crash there depends on name matching."',
         f'="Hidden gap: "&{c["Agencies with a reporting collapse"]}&" local agencies filed less than half their 2016-19 report count in a year since 2021 (Agencies!AF, AD). TIMS shows the same gaps: it is built from the same CHP records, so it can\'t fill them."',
         f'="TIMS vs CCRS, fatal+injury only: within 2% in "&{c["Counties where CCRS F+I 2021-24 is within 2% of TIMS"]}&" of "&{c["Counties compared"]}&" counties (2021-24 totals, TIMS by county!F) and in "&{c["County-years where CCRS F+I is within 2% of TIMS"]}&" of "&{c["County-years compared"]}&" county-years (TIMS vs CCRS!I). Two different units: a county can match over four years while single years differ. CCRS adds property-damage-only crashes, which TIMS leaves out."',
-        '="Every severity number is wrong until bug #79 is fixed: real CCRS injury codes map to U, so serious injuries (A) are never counted. Problems sheet lists all bugs."',
+        '="The plain-English conclusion of the whole test (what works, what doesn\'t, what to improve next) is on the Conclusion sheet."',
     ]
     for i, f in enumerate(lines, cc_):
         ws.cell(i, 1, f).alignment = WRAP
@@ -518,6 +529,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
             run_history.record(run_history.series_v2(results, v2_res), tims, dbs_, DATA / "ccrs_mirror.sqlite",
                                "tests/statewide/corridors_frozen_v2.json", run_history.HISTORY_V2,
                                run_history.CITY_HISTORY_V2)
+    rcell, hcell, acc_ref = {}, {}, None          # cells the Conclusion sheet quotes (filled below when present)
     wr = wb.create_sheet("Run history")
     hcols, hrows = run_history._read(run_history.HISTORY)
     if not hrows:
@@ -526,6 +538,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
     else:
         conv = lambda v: (float(v) if re.fullmatch(r"-?\d+(\.\d+)?", v or "") else (v or None))  # noqa: E731
         end = table(wr, "RunHistory", hcols, [[conv(r.get(c)) for c in hcols] for r in hrows], {8: 30})
+        hcell = {c_: f"'Run history'!{get_column_letter(j)}{end}" for j, c_ in enumerate(hcols, 1)}
         defs_at = end + 3
         wr.cell(defs_at, 1, "Measure definitions (a changed definition gets a new column, never a silent change)").font = B
         for i, (k, v) in enumerate(run_history.MEASURES.items(), defs_at + 1):
@@ -655,6 +668,10 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
               f'{ver} vs "&TEXT(Reconciliation!C{f0 + 2},"0.0%")&" in {before} · as measured: "&'
               f'TEXT(Reconciliation!C{f0 + 6},"0.0%")&" (all crashes kept for the corridor, Reconciliation sheet)"')
         ws["A2"] = hl
+        rcell = {"kept_both": f"Reconciliation!B{f0 + 1}", "lfl_before": f"Reconciliation!C{f0 + 2}",
+                 "lfl_after": f"Reconciliation!C{f0 + 3}", "as_measured": f"Reconciliation!C{f0 + 6}",
+                 **{f"b_{k_}": f"Reconciliation!D{v_}" for k_, v_ in bi.items()},
+                 **{f"bl_{k_}": f"Reconciliation!F{v_}" for k_, v_ in bi.items()}}
         ws["A2"].font = B
         wpc = wb.create_sheet("Reconciliation by city")
         table(wpc, "ReconcileCity", ["City", "County code"] + [b["bucket"] for b in rc["buckets"]],
@@ -677,7 +694,11 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
             sc = r.get("gps_self_consistent_pct")
             r["gps_usable_as_truth"] = None if sc is None else ("yes" if sc >= 50 else
                                                                 "no: GPS disagrees with the report's own streets")
-        table(wac, "AccuracyByAgency", cols_, [[r.get(c_) for c_ in cols_] for r in acc], {2: 20, 4: 28, 9: 30})
+        a_end = table(wac, "AccuracyByAgency", cols_, [[r.get(c_) for c_ in cols_] for r in acc],
+                      {2: 20, 4: 28, 9: 30})
+        acc_ref = {k_: f"'Accuracy by agency'!{get_column_letter(cols_.index(k_) + 1)}2:"
+                       f"{get_column_letter(cols_.index(k_) + 1)}{a_end}"
+                   for k_ in ("exact_intersection_acc_pct", "status")}
 
     # ---------------- Sources for unplaced crashes (#88) ----------------
     ps_file = HERE / "portal_survey.json"
@@ -756,11 +777,92 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         wba["A1"] = ("Before/after: filled in when the run is repeated after Engineering's fixes (#80-#84), on the "
                      "same frozen corridors, mirror and settings; only the app code commit differs.")
 
+    # ---------------- Conclusion (plain English; every number is a formula over the sheets) ----------------
+    wco = wb.create_sheet("Conclusion")
+    wco["A1"], wco["A1"].font = "Conclusion: what the statewide test shows", H1
+    wco["A2"] = ("Written for a reader who hasn't followed the runs. Every number below is an Excel formula that reads "
+                 "it from the sheet named in brackets, so it always matches the data. 'Corridor' = a 1-mile test "
+                 "stretch of a main road in each California city, run through the app's tabs 1-2.")
+    wco["A2"].alignment = WRAP
+    c = cell
+    T = lambda ref, fmt="#,##0": f'TEXT({ref},"{fmt}")'  # noqa: E731
+    v4 = c.get("Pass (v4 check)")
+    works = [
+        (f'="The app places crashes as well as before: of the "&{T(rcell["kept_both"])}&" crashes kept in both of the '
+         f'last two runs, "&{T(rcell["lfl_after"], "0.0%")}&" are on the map now vs "&{T(rcell["lfl_before"], "0.0%")}'
+         f'&" before (Reconciliation)."') if rcell else None,
+        (f'="Corridors that pass: "&{v4}&" of "&{c["Corridors run through the app"]}&" locate 90% or more of '
+         f'their crashes with no report missed ("&{c["Warn (v4 check)"]}&" warn, "&{c["Fail (v4 check)"]}&" fail; '
+         f'Summary, Cities)."') if v4 else None,
+        (f'="Of the crashes that count for a corridor, "&{T(hcell["on_corridor_located_pct_v2"], "0.0")}&"% have a '
+         f'location (Run history, latest run)."') if "on_corridor_located_pct_v2" in hcell else None,
+        (f'="Reports the app should have pulled but didn\'t (no GPS, naming the corridor and a study cross street, '
+         f'found by the Tester\'s own independent search, check v4): "&{c["No-GPS reports silently dropped"]}&", in "&'
+         f'{c["Cities with silent drops"]}&" cities (Cities; v2 and v3 counts beside it)."'),
+        (f'="Reports from other cities are kept out, and unincorporated places are kept in: "&'
+         f'{T(rcell["b_restored_147"])}&" reports filed under an unincorporated place\'s own name came back after '
+         f'#147 (Reconciliation)."') if "b_restored_147" in rcell else None,
+        (f'="The crash data itself is sound: CCRS fatal and injury counts are within 2% of TIMS in "&'
+         f'{c["Counties where CCRS F+I 2021-24 is within 2% of TIMS"]}&" of "&{c["Counties compared"]}&" counties '
+         f'(TIMS by county)."'),
+    ]
+    v2c = {c_: f"'Run history (corridors v2)'!{get_column_letter(j)}{3 + len(v2rows)}"
+           for j, c_ in enumerate(v2cols, 1)} if v2rows else {}
+    if "pass_v4" in v2c:
+        works.append(f'="On corridor list v2 (the corridors that lay mostly outside their own city, re-picked inside '
+                     f'it), "&{v2c["pass_v4"]}&" pass, "&{v2c["warn_v4"]}&" warn and "&{v2c["fail_v4"]}&" fail: its '
+                     f'own baseline, not comparable with the runs above (Run history (corridors v2))."')
+    sj = 'INDEX(Cities!AF:AF,MATCH("San Jose",Cities!A:A,0))'
+    fails = [
+        (f'="Where it falls short most often: "&Summary!A{fr + 1}&" ("&Summary!B{fr + 1}&" cities; Summary, '
+         f'Problems)."') if causes else None,
+        (f'="Crashes left without a location, two kinds: "&{T(hcell["unplaced_no_cross_street_v2"])}&" reports give '
+         f'no cross street, so they could be anywhere on the street; "&{T(hcell["unplaced_relaxed_held_v2"])}&" have '
+         f'a likely match that the safety gate holds for a person to review (Run history)."')
+        if "unplaced_relaxed_held_v2" in hcell else None,
+        ("Two street-name gaps make the app miss reports without saying so: a corridor name with 'of' (Avenue of "
+         "Flags, #154) and a numbered street with a direction (East 4th Street vs CHP's 'E 4TH ST', #155). Both "
+         "were found on corridor list v2; failing tests are filed."),
+        f'="San Jose is not tested fairly yet: its police write GPS in a different format (#143, waiting on the '
+        f'user\'s rule). Result now: "&{sj}&" (Cities)."',
+        (f'="Some police agencies give the app little to work with: "&{c["Union City-type agencies (local, < 20% GPS)"]}'
+         f'&" record GPS on under 20% of reports, and "&{c["Agencies with a reporting collapse"]}&" filed less than '
+         f'half their usual reports in a recent year (Agencies). No map can fix missing reports."'),
+        (f'="The \'exact\' match isn\'t always right: the median agency places "&'
+         f'TEXT(MEDIAN({acc_ref["exact_intersection_acc_pct"]}),"0.0")&"% of exact matches at the correct '
+         f'intersection when tested against their own hidden GPS (Accuracy by agency)."') if acc_ref else None,
+    ]
+    nxt = [
+        "1. Fix San Jose's GPS format (#143) once the user picks the rule, and the two street-name gaps (#154, "
+        "#155); run 5 measures all three.",
+        (f'="2. Decide whether the gate may auto-place \'relaxed\' matches: "&'
+         f'{T(hcell["unplaced_relaxed_held_v2"])}&" crashes wait on that decision (Run history)."')
+        if "unplaced_relaxed_held_v2" in hcell else None,
+        "3. Use the report's own distance and direction from the cross street to place crashes, and city open "
+        "data where it exists (Sources for unplaced: San Jose and Pasadena publish crash points linkable by report "
+        "number; terms to check first).",
+        "4. Report corridor list v2 (corridors re-picked inside their own city) alongside v1, so cities like "
+        "Sacramento are tested on their own streets (Run history (corridors v2)).",
+        "5. Finish the crash-by-crash TIMS match (#88) when the TIMS files are on disk, and start the scripted "
+        "screen tests (tabs 1-2 in the browser).",
+    ]
+    r_ = 4
+    for title, lines_ in (("What works", works), ("What doesn't work yet", fails), ("What to improve next", nxt)):
+        wco.cell(r_, 1, title).font = H1
+        r_ += 1
+        for f_ in [x for x in lines_ if x]:
+            wco.cell(r_, 1, f_).alignment = WRAP
+            wco.row_dimensions[r_].height = 48
+            r_ += 1
+        r_ += 1
+    wco.column_dimensions["A"].width = 120
+
     order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "TIMS by county", "Problems", "Run history",
              "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
              "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
-    wb._sheets = [wb[n] for n in order]
+    order[1:1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
+    wb._sheets = [wb[n] for n in order] + [w for w in wb._sheets if w.title not in order]   # never drop a sheet
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"CrashIQ-statewide-test-{today}.xlsx"
     wb.save(out)
