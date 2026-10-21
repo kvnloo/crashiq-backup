@@ -244,3 +244,19 @@ def test_gps_written_as_degrees_minutes_seconds_is_not_lost():
     out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
     found = {c["crash_id"] for c in out["crashes"]} & base
     assert len(found) >= 0.9 * len(base)        # the corridor's GPS crashes are still found (converted or by name)
+
+
+@pytest.mark.xfail(strict=True, reason="#147: a report filed under an unincorporated place's own name is dropped as another city")
+def test_unincorporated_place_name_is_not_another_city():
+    # Statewide run 3 (#73), Kensington, Arlington Avenue: CCRS files Kensington's crashes under City Name 'Kensington'
+    # (an unincorporated place; CCRS even marks it incorporated). The corridor enters Berkeley + unincorporated Contra
+    # Costa County, so the #142 filter allows BERKELEY / UNINCORPORATED / CONTRA COSTA COUNTY and drops 11 genuine
+    # 'Kensington' reports on Arlington Av as filed in another city (e.g. 2677748 ARLINGTON AV & WESTMINSTER).
+    # A place with no OSM city boundary (admin level 8) can't be "another city" when the corridor runs through
+    # unincorporated land.
+    d = _fixture(no_gps=True)
+    _, r = _row(d, 9200001)                     # CRENSHAW BL & W 144TH ST, no GPS
+    r["City Name"] = "KENSINGTON"
+    net = {**NET_X, "cities": {"cities": ["Hawthorne"], "outside": True, "counties": ["Los Angeles County"]}}
+    out = crashes.pull(STUDY, net, Ckan(FakeCkan(d)))
+    assert "9200001" in {c["crash_id"] for c in out["crashes"]}
