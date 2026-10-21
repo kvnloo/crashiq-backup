@@ -346,3 +346,12 @@ def test_city_names_chp_and_osm_spell_differently_still_match():
     assert crashes._city_allowed("Huntington Beach", {crashes.city_key("Buena Park")}) is False
     assert crashes._city_allowed("Uc Santa Barbara", {crashes.city_key("Goleta")}) is None      # a campus: not judged
     assert crashes._city_allowed(None, set()) is None
+
+
+def test_unincorporated_place_counts_only_where_the_corridor_is_unincorporated():
+    # #147: Kensington (an unincorporated place CHP files under its own name) is no city; Gardena is
+    hawthorne = {crashes.city_key("Hawthorne")}
+    assert crashes._city_allowed("KENSINGTON", hawthorne, outside=True) is True
+    assert crashes._city_allowed("KENSINGTON", hawthorne, outside=False) is False    # wholly inside Hawthorne
+    assert crashes._city_allowed("GARDENA", hawthorne, outside=True) is False         # a real city it never enters
+    assert crashes.city_key("Compton") in crashes.known_cities() and len(crashes.known_cities()) >= 470
