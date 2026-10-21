@@ -29,6 +29,7 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(HERE))
 import fields_check  # noqa: E402
 import run_history  # noqa: E402
+import reconcile  # noqa: E402
 import tims_compare  # noqa: E402
 from openpyxl.chart import LineChart  # noqa: E402
 
@@ -541,6 +542,74 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                [next((n for n in runs_ if v.get(n) == "pass"), None)] for (c, k), v in sorted(by.items())],
               {1: 22})
 
+    # ---------------- Reconciliation (run to run, crash by crash) ----------------
+    if before:
+        rc_file = DATA / f"reconcile_{before}_{ver}.json"
+        if not rc_file.exists():
+            rc_file.write_text(json.dumps(reconcile.reconcile(
+                load_results(before), results,
+                [ROOT / "data" / "tester.sqlite", *sorted(DATA.glob("tester_worker*.sqlite"))]), indent=1))
+        rc = json.loads(rc_file.read_text())
+        wrc = wb.create_sheet("Reconciliation")
+        wrc["A1"], wrc["A1"].font = f"Reconciliation {before} -> {ver}: every crash in exactly one bucket", H1
+        wrc["A2"] = (f"Like-for-like corridors only ({rc['cities']} cities with the same frozen line and a pull in both "
+                     "runs). Crashes matched by Collision Id. 'Kept' = kept for the corridor (not excluded by a "
+                     "rule); 'located' = kept with GPS or auto-placed. Bucket rules: tests/statewide/reconcile.py.")
+        wrc["A2"].alignment = WRAP
+        wrc.merge_cells("A2:G2")
+        wrc.row_dimensions[2].height = 45
+        hdr_r = 4
+        bend = table(wrc, "Waterfall", ["Bucket", "What happened", "Cause", "Crashes", "Change in kept",
+                                        "Change in located"],
+                     [[b["bucket"], b["what"], b["cause"], b["crashes"], b["change_in_kept"], b["change_in_located"]]
+                      for b in rc["buckets"]], {1: 18, 2: 52, 3: 34, 4: 12, 5: 14, 6: 14}, start_row=hdr_r)
+        r0 = bend + 2
+        k1, k2 = rc["kept"]
+        l1, l2 = rc["located"]
+        rowsx = [("Kept, run 1", k1), ("Kept, run 2", k2), ("Located, run 1", l1), ("Located, run 2", l2),
+                 ("Check: kept run 1 + changes = kept run 2", f"=B{r0}+SUM(E{hdr_r + 1}:E{bend})=B{r0 + 1}"),
+                 ("Check: located run 1 + changes = located run 2", f"=B{r0 + 2}+SUM(F{hdr_r + 1}:F{bend})=B{r0 + 3}")]
+        for i, (k_, v_) in enumerate(rowsx):
+            wrc.cell(r0 + i, 1, k_).font = B
+            wrc.cell(r0 + i, 2, v_)
+        bi = {b["bucket"]: hdr_r + 1 + i for i, b in enumerate(rc["buckets"])}
+        e0 = r0 + len(rowsx) + 1
+        wrc.cell(e0, 1, "Evidence: where run 1's own assignment put the GPS crashes run 2 no longer pulls").font = B
+        for i, (k_, v_) in enumerate(rc["gps_no_longer_pulled_run1_assignment"].items(), e0 + 1):
+            wrc.cell(i, 1, k_)
+            wrc.cell(i, 2, v_)
+        f0 = e0 + len(rc["gps_no_longer_pulled_run1_assignment"]) + 2
+        wrc.cell(f0, 1, "Located % on consistent denominators").font = H1
+        sc = rc["same_crashes"]
+        lines_ = [
+            ("Same crashes kept in both runs", sc["kept_in_both"], None),
+            ("  located in run 1", sc["located_run1"], f"=B{f0 + 2}/B{f0 + 1}"),
+            ("  located in run 2", sc["located_run2"], f"=B{f0 + 3}/B{f0 + 1}"),
+            ("Run 1 without the GPS crashes it kept but never placed on the corridor (gps_margin)",
+             f"=B{r0 + 2}+F{bi['gps_margin']}", f"=B{f0 + 4}/(B{r0}+E{bi['gps_margin']})"),
+            ("Run 2 without #121 junk and without no-cross-street reports kept for review (#94 policy)",
+             f"=B{r0 + 3}-F{bi['junk_121']}-F{bi['no_cross_review']}",
+             f"=B{f0 + 5}/(B{r0 + 1}-E{bi['junk_121']}-E{bi['no_cross_review']})"),
+            ("Run 2 as measured (all kept crashes)", f"=B{r0 + 3}", f"=B{r0 + 3}/B{r0 + 1}"),
+        ]
+        for i, (k_, n_, pct_) in enumerate(lines_, f0 + 1):
+            wrc.cell(i, 1, k_).alignment = WRAP
+            wrc.cell(i, 2, n_)
+            if pct_:
+                wrc.cell(i, 3, pct_).number_format = "0.0%"
+        wrc.cell(f0 + len(lines_) + 2, 1, (
+            "Reading: placement didn't change (same crashes: located % equal). The fall in located % is three "
+            "things: run 1 counted GPS crashes the corridor never used (gps_margin); run 2 keeps no-cross-street "
+            "reports for review (#94, a user decision); and the search fixes found crashes that mostly have no GPS "
+            "and land in review under the exact-only gate (found_unlocated vs found_located).")).alignment = WRAP
+        wrc.merge_cells(start_row=f0 + len(lines_) + 2, start_column=1, end_row=f0 + len(lines_) + 2, end_column=6)
+        wrc.row_dimensions[f0 + len(lines_) + 2].height = 70
+        wrc.column_dimensions["A"].width = 60
+        wpc = wb.create_sheet("Reconciliation by city")
+        table(wpc, "ReconcileCity", ["City", "County code"] + [b["bucket"] for b in rc["buckets"]],
+              [[r["city"], int(r["county"])] + [r[b["bucket"]] for b in rc["buckets"]] for r in rc["per_city"]],
+              {1: 22})
+
     # ---------------- Before / after ----------------
     wba = wb.create_sheet("Before-after")
     if before:
@@ -591,7 +660,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                      "same frozen corridors, mirror and settings; only the app code commit differs.")
 
     order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "TIMS by county", "Problems", "Run history",
-             "City by run", "Before-after", "Glossary"]
+             "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order]
     out_dir.mkdir(parents=True, exist_ok=True)
