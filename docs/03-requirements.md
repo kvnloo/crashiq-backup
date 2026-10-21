@@ -318,9 +318,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Heavy truck, trailers DECIDED (user, 2026-10-20, PM session):** a party whose vehicle is recorded as a trailer
   (semi-trailer, semi tank trailer, pull trailer, two trailers, etc.; a truck towing it) also counts as a heavy truck,
   since a tractor-trailer combination always has 3+ axles. Adds about 1,150 parties a year statewide (2024).
-- **PCF 2024 extension DECIDED (user, 2026-10-20, PM session):** for the 18 section keys CHP left "00 Unknown" in
-  2021–23 but categorized in 2024 (e.g. 21954 → 10, 21955(a) → 10, 23103(a) → 17), use the 2024 category for every
-  year, so one violation counts the same way across a study. Source: `data/reference/pcf_categories.md`.
+- **PCF 2024 extension DECIDED (user, 2026-10-20, PM session):** for every section key whose CHP category changed by
+  year, use CHP's 2024 category for all years, so one violation counts the same way across a study. Applied (PR #137):
+  most were "00 Unknown" in 2021–23 (e.g. 21954 → 10, 21955(a) → 10, 23103(a) → 17); 21809(A) was 09 and is now 17;
+  22106(1) is 00 in 2024, so Unknown; 21760(A) has no 2024 records and stays visibly split (27 crashes statewide).
+  Source: `data/reference/pcf_categories.md`.
 - **Pedestrians and bicyclists first-class on tab 3 DECIDED (user, 2026-10-20, PM session):** vulnerable road users
   get their own prominent section (share of KSI, severity comparison, always-visible markers, ranking column,
   pedestrian context incl. day/night). Over-representation testing for them comes with Findings.
