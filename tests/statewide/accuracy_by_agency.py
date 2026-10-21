@@ -143,6 +143,8 @@ def run() -> list[dict]:
         for tier in TIERS:
             n, k, nc, kc = t[(tier, "n")], t[(tier, "ok")], t[(tier, "n_c")], t[(tier, "ok_c")]
             res[f"{tier}_n"] = n
+            res[f"{tier}_counts"] = {"n": n, "ok_point": k, "ok_intersection": t[(tier, "ok_node")],
+                                     "n_consistent": nc, "ok_consistent": kc}   # raw counts, for pooling
             res[f"{tier}_share_pct"] = round(100 * n / len(sample), 1)
             res[f"{tier}_acc_pct"] = round(100 * k / n, 1) if n else None
             res[f"{tier}_acc_low_pct"] = round(100 * wilson_low(k, n), 1) if n else None

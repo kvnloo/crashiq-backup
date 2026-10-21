@@ -621,7 +621,12 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
             cols_ += [f"{t_}_share_pct", f"{t_}_intersection_acc_pct", f"{t_}_intersection_acc_low_pct",
                       f"{t_}_acc_consistent_pct", f"{t_}_acc_consistent_low_pct", f"{t_}_acc_pct",
                       f"{t_}_point_acc_with_distance_pct"]
-        table(wac, "AccuracyByAgency", cols_, [[r.get(c_) for c_ in cols_] for r in acc], {2: 20, 4: 28})
+        cols_.insert(8, "gps_usable_as_truth")
+        for r in acc:
+            sc = r.get("gps_self_consistent_pct")
+            r["gps_usable_as_truth"] = None if sc is None else ("yes" if sc >= 50 else
+                                                                "no: GPS disagrees with the report's own streets")
+        table(wac, "AccuracyByAgency", cols_, [[r.get(c_) for c_ in cols_] for r in acc], {2: 20, 4: 28, 9: 30})
 
     # ---------------- Sources for unplaced crashes (#88) ----------------
     ps_file = HERE / "portal_survey.json"
