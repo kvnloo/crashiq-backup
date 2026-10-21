@@ -185,3 +185,25 @@ def test_an_empty_map_cached_before_the_fix_is_downloaded_again(db):
     got = network.fetch_overpass(db, q, transport=lambda url, data, timeout: json.dumps(OSM).encode(),
                                  sleep=lambda s: None)
     assert got["elements"]
+
+
+def test_corridor_cities_from_osm_boundaries(tmp_path):
+    # #142: one `is_in` per point along the line and both buffer edges; a point in no city = unincorporated county
+    from crashiq.db import Database
+    db = Database(tmp_path / "t.sqlite")
+    line = [(33.89, -118.33), (33.91, -118.33)]
+    pts = network.city_points(line, 100)
+    assert len(pts) % 3 == 0 and len(pts) >= 3 * 2
+
+    def transport(url, data, timeout):
+        els = []
+        for i, (lat, _) in enumerate(pts):
+            els.append({"type": "pt", "id": i + 1, "tags": {"idx": str(i)}})
+            els.append({"type": "area", "id": 1, "tags": {"admin_level": "6", "name": "Los Angeles County"}})
+            if lat < 33.90:
+                els.append({"type": "area", "id": 2, "tags": {"admin_level": "8", "name": "Hawthorne"}})
+        return json.dumps({"elements": els}).encode()
+    got = network.corridor_cities(db, line, 100, transport)
+    assert got == {"cities": ["Hawthorne"], "outside": True, "counties": ["Los Angeles County"]}
+    assert network.corridor_cities(db, [(34.0, -118.0), (34.01, -118.0)], 100,
+                                   lambda u, d, t: json.dumps({"elements": [{"type": "node", "id": 1}]}).encode()) is None

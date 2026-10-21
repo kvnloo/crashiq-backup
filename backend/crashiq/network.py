@@ -59,6 +59,60 @@ def overpass_query(line: list[tuple[float, float]]) -> str:
             f'out body;>;out body qt;')
 
 
+# The cities the corridor enters (#142): OSM admin boundaries containing points along the line and both buffer edges.
+# One `is_in` per point; a `make pt` marker before each tells which areas belong to which point.
+CITY_STEP_FT = 300
+
+
+def city_points(line: list[tuple[float, float]], buffer_ft: float) -> list[tuple[float, float]]:
+    pl = Polyline([tuple(p) for p in line])
+    n = max(1, math.ceil(pl.length_ft / CITY_STEP_FT))
+    out = []
+    for k in range(n + 1):
+        st = pl.length_ft * k / n
+        i = min(range(len(pl.cum) - 1), key=lambda j: 0 if pl.cum[j] <= st <= pl.cum[j + 1] else 1)
+        (x1, y1), (x2, y2) = pl.xy[i], pl.xy[i + 1]
+        seg = math.hypot(x2 - x1, y2 - y1) or 1.0
+        nx, ny = -(y2 - y1) / seg, (x2 - x1) / seg              # unit normal
+        x, y = pl.proj.to_xy(*pl.point_at(st))
+        out += [pl.proj.to_ll(x, y)] + [pl.proj.to_ll(x + sgn * buffer_ft * nx, y + sgn * buffer_ft * ny)
+                                         for sgn in (1, -1)]
+    return out
+
+
+def cities_query(line: list[tuple[float, float]], buffer_ft: float) -> str:
+    parts = [f'make pt idx="{i}";out;is_in({lat:.6f},{lon:.6f})->.a;'
+             f'area.a["boundary"="administrative"]["admin_level"~"^(6|8)$"];out tags;'
+             for i, (lat, lon) in enumerate(city_points(line, buffer_ft))]
+    return "[out:json][timeout:60];" + "".join(parts)
+
+
+def corridor_cities(db: Database, line: list[tuple[float, float]], buffer_ft: float,
+                    transport: Transport | None = None) -> dict | None:
+    """{"cities": incorporated cities (OSM admin level 8) the line + buffer enters, "outside": True when part of it is
+    outside every city (unincorporated county), "counties": admin level 6 names there}. None when OSM can't say."""
+    try:
+        raw = fetch_overpass(db, cities_query(line, buffer_ft), transport=transport)
+    except NetworkError:
+        return None
+    pts: list[list[dict]] = []
+    for e in raw.get("elements", []):
+        if e.get("type") == "pt":
+            pts.append([])
+        elif pts and e.get("type") == "area":
+            pts[-1].append(e.get("tags") or {})
+    if not pts:
+        return None
+    cities, counties, outside = set(), set(), False
+    for areas in pts:
+        lvl8 = [a.get("name") for a in areas if a.get("admin_level") == "8" and a.get("name")]
+        cities.update(lvl8)
+        if not lvl8:
+            outside = True
+            counties.update(a.get("name") for a in areas if a.get("admin_level") == "6" and a.get("name"))
+    return {"cities": sorted(cities), "outside": outside, "counties": sorted(counties)}
+
+
 def _http_post(url: str, data: bytes, timeout: float) -> bytes:
     req = urllib.request.Request(url, data=data, headers={"User-Agent": "CrashIQ/0.1 (+crash safety analysis)"})
     with urllib.request.urlopen(req, timeout=timeout) as r:

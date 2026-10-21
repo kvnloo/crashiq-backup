@@ -19,6 +19,7 @@ import urllib.parse
 from pathlib import Path
 
 AROUND = re.compile(r"way\(around:(\d+(?:\.\d+)?),([-\d.,]+)\)\[\"highway\"~\"\^\(([^)]*)\)\$\"\]")
+IS_IN = re.compile(r"make pt idx=\"(\d+)\";out;is_in\(([-\d.]+),([-\d.]+)\)")
 
 
 def _xy(lat0):
@@ -89,9 +90,25 @@ class LocalOSM:
                                              f"{self.meta.get('timestamp')})",
                 "elements": ways + [nodes[k] for k in sorted(nodes)]}
 
+    # ---- the app's corridor-cities query (#142): `make pt` marker + `is_in(lat,lon)` per point ----
+    def is_in(self, lat: float, lon: float) -> list[dict]:
+        """Tags of the admin level 6/8 areas containing the point (Overpass `is_in` + `area._[admin_level~6|8]`)."""
+        rows = self.db.execute("SELECT name, admin_level, rings FROM areas WHERE admin_level IN ('6', '8') "
+                               "AND minlat <= ? AND maxlat >= ? AND minlon <= ? AND maxlon >= ?", (lat, lat, lon, lon))
+        return [{"boundary": "administrative", "admin_level": lv, "name": n} for n, lv, rings in rows
+                if _inside((lat, lon), [[tuple(p) for p in r] for r in json.loads(rings)])]
+
     def transport(self, url: str, data: bytes, timeout: float) -> bytes:
         """`app.state.overpass` hook: (url, body, timeout) -> Overpass JSON bytes."""
         q = urllib.parse.parse_qs(data.decode()).get("data", [""])[0]
+        pts = IS_IN.findall(q)
+        if pts:
+            self.queries += 1
+            els = []
+            for i, lat, lon in pts:
+                els.append({"type": "pt", "id": int(i) + 1, "tags": {"idx": i}})
+                els += [{"type": "area", "id": 0, "tags": t} for t in self.is_in(float(lat), float(lon))]
+            return json.dumps({"version": 0.6, "elements": els}).encode()
         m = AROUND.search(q)
         if not m:
             raise ValueError(f"local OSM can't answer this query: {q[:120]}")
