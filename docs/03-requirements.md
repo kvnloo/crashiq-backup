@@ -339,3 +339,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   only if it lands near the streets the report names (within the GPS-check distance of the named intersection or
   road); otherwise treat the crash as having no GPS. Provenance `gps_dms_corrected`, counted in the pull log.
   Evidence: 491 SJPD crashes linked to San Jose open data, median 34 km off as written, 80 m after conversion.
+- **DMS-format GPS, partly affected years DECIDED (user, 2026-10-21, PM session; #143):** in agency-years where
+  the DMS signature is elevated but not clear (50–75% of points; ordinary agencies run 30–40%), convert per crash:
+  only if the point as written does not fit the report's streets and the converted point does. Every converted crash
+  is labelled `gps_dms_corrected`. Clear years (≥ 75%) are converted as decided above. As for clear years, a DMS-signed
+  point that fits neither way is treated as having no GPS.
