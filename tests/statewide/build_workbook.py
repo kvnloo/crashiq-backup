@@ -517,15 +517,16 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
 
     # ---------------- Run history ----------------
     city_list = json.loads((DATA / "cities.json").read_text())
-    complete = len(results) >= len(city_list)
-    if record and complete:
-        dbs_ = [ROOT / "data" / "tester.sqlite", *sorted(DATA.glob("tester_worker*.sqlite"))]
-        run_history.record(results, tims, dbs_, DATA / "ccrs_mirror.sqlite", "tests/statewide/corridors_frozen.json")
-        # corridor list v2: a separate series and files, recorded only when every re-picked corridor has a result
+    if record:   # completeness guard: an incomplete run raises run_history.IncompleteRun and is never recorded
+        run_history.require_complete("frozen list v1", city_list, results)
         v2_list = HERE / "corridors_frozen_v2.json"
         v2_res = [json.loads(p.read_text()) for p in sorted((DATA / "results_corridors_v2" / ver).glob("*.json"))]
-        if v2_list.exists() and len(v2_res) >= sum(1 for c in json.loads(v2_list.read_text())["cities"]
-                                                   if c.get("repicked")):
+        if v2_list.exists():
+            run_history.require_complete("corridor list v2", [c for c in json.loads(v2_list.read_text())["cities"]
+                                                               if c.get("repicked")], v2_res)
+        dbs_ = [ROOT / "data" / "tester.sqlite", *sorted(DATA.glob("tester_worker*.sqlite"))]
+        run_history.record(results, tims, dbs_, DATA / "ccrs_mirror.sqlite", "tests/statewide/corridors_frozen.json")
+        if v2_list.exists():
             run_history.record(run_history.series_v2(results, v2_res), tims, dbs_, DATA / "ccrs_mirror.sqlite",
                                "tests/statewide/corridors_frozen_v2.json", run_history.HISTORY_V2,
                                run_history.CITY_HISTORY_V2)

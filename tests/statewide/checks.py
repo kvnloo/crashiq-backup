@@ -147,3 +147,11 @@ def report_station(line, cross_pt, direction: str, dist_ft: float) -> float:
 def beyond_stretch(s: float, lo: float, hi: float) -> float:
     """How far (ft) a station lies past the stretch [lo, hi]; 0 inside it."""
     return max(lo - s, s - hi, 0.0)
+
+
+def completeness(expected: list[dict], results: list[dict]) -> dict:
+    """Completeness guard (PM, after run 5, where one worker stopped silently 5 cities short): every expected
+    (city, county) must have a result. Untested is a result; no file is not."""
+    have = {(r["city"], str(r["county"])) for r in results}
+    missing = [f"{c['city']} ({c['county']})" for c in expected if (c["city"], str(c["county"])) not in have]
+    return {"expected": len(expected), "got": len(expected) - len(missing), "missing": missing, "complete": not missing}
