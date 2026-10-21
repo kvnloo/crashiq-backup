@@ -228,8 +228,8 @@
 .danger { display: grid; gap: 8px; margin-bottom: 14px; }
 .dg { display: grid; grid-template-columns: 140px minmax(0, 1fr) 48px 72px; gap: 10px; align-items: center; font-size: 13px; }
 .dg .tr { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
-.dg .tr i { display: block; height: 100%; background: var(--sev-a); border-radius: 0 4px 4px 0; }   /* KSI = serious, the one ramp */
-.dg.ref .tr i { background: var(--sev-o); }      /* the comparison group, quiet */
+.dg .tr i { display: block; height: 100%; background: var(--info); border-radius: 0 4px 4px 0; }   /* a share, not a severity level */
+.dg.ref .tr i { background: var(--muted); }      /* the comparison group, quiet */
 .dg .v { text-align: right; font-weight: 600; } .dg .nn { font-size: 11px; text-align: right; }
 .ped-ctx { display: grid; gap: 14px; margin: 14px 0 6px; }
 .rank .vrun { grid-area: vru; font-size: 11px; color: var(--muted); } .rank .vrun.zero { opacity: .55; }
