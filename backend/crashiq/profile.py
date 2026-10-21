@@ -76,6 +76,56 @@ def _dist(tid, title, crashes, field, label_of=lambda v: v or "Not stated", orde
                                ("ksi_crashes", "KSI crashes"), ("share_pct", "Share %")], rows, crashes)
 
 
+def _movement(m) -> str:
+    t = re.sub(r"\s+", " ", str(m or "").strip().upper())
+    return {"ENTERING TRAFFICD": "ENTERING TRAFFIC"}.get(t, t)      # CHP's own typo in the code list (#52)
+
+
+def _at_fault_movement(c: dict) -> str:
+    """Movement before the collision of the party at fault (the CHP 555 PCF party); party 1 when none is marked."""
+    ps = c.get("parties") or []
+    p = next((x for x in ps if x.get("at_fault")), None) or next((x for x in ps if str(x.get("party_number")) == "1"), None)
+    return _movement(p.get("movement")) if p else ""
+
+
+def _safety_tables(crashes: list[dict], s: str) -> list[dict]:
+    """The standard safety-section rows that need no method choice (#52): hit-and-run, DUI and speed-related by
+    the PCF violation (VC 23152/23153 and 22350, as #52 defines them), pedestrian action, movement of the party
+    at fault, and broadside split into left turn vs right angle. Each count is crashes, with KSI and share."""
+    n = len(crashes)
+
+    def row(key, label, sub):
+        return _row(key, label, crashes=len(sub), ksi_crashes=sum(c["severity"] in "KA" for c in sub),
+                    share_pct=pct(len(sub), n))
+    vc = lambda c, *secs: any(str(c.get("pcf") or "").startswith(x) for x in secs)
+    hr = [c for c in crashes if str(c.get("hit_run") or "").upper() in ("F", "M", "FELONY", "MISDEMEANOR")]
+    flags = [row("hit_and_run", "Hit and run (felony or misdemeanor)", hr),
+             row("hit_and_run_felony", "  of which felony (injury or death)",
+                 [c for c in hr if str(c.get("hit_run")).upper() in ("F", "FELONY")]),
+             row("dui", "Driving under the influence (PCF VC 23152 / 23153)", [c for c in crashes if vc(c, "23152", "23153")]),
+             row("speed", "Unsafe speed (PCF VC 22350)", [c for c in crashes if vc(c, "22350")])]
+    cols = [("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"), ("share_pct", "Share %")]
+    out = [_table(f"T14{s}", "Hit and run, DUI and speed", cols, flags, crashes)]
+    peds = [c for c in crashes if c.get("ped_action") and "NO PEDESTRIAN" not in str(c["ped_action"]).upper()]
+    out.append(_dist(f"T15{s}", "Pedestrian action (crashes with a pedestrian action stated)", peds, "ped_action",
+                     lambda v: (v or "Not stated").capitalize()))
+    for c in crashes:
+        c["_mv"] = _at_fault_movement(c)
+    out.append(_dist(f"T16{s}", "Movement before the collision (party at fault)", crashes, "_mv",
+                     lambda v: (v or "Not stated").capitalize()))
+    broad = [c for c in crashes if str(c.get("collision_type") or "").upper() == "BROADSIDE"]
+    left = [c for c in broad if any(_movement(p.get("movement")) == "MAKING LEFT TURN" for p in c.get("parties") or [])]
+    right = [c for c in broad if c not in left]
+    out.append(_table(f"T17{s}", "Broadside crashes: left turn vs right angle (share of broadside)", cols,
+                      [_row(k, lbl, crashes=len(sub), ksi_crashes=sum(c["severity"] in "KA" for c in sub),
+                            share_pct=pct(len(sub), len(broad)))
+                       for k, lbl, sub in (("left_turn", "Left turn (a party was making a left turn)", left),
+                                           ("right_angle", "Right angle (no party turning left)", right))], broad))
+    for c in crashes:
+        c.pop("_mv", None)
+    return out
+
+
 def tables_for(crashes: list[dict], years: int, suffix: str = "", window: list[int] | None = None) -> list[dict]:
     """Distribution tables T3–T11 for a set of crashes (the whole study, or one location)."""
     s = suffix
@@ -94,7 +144,10 @@ def tables_for(crashes: list[dict], years: int, suffix: str = "", window: list[i
     out.append(_table(f"T9{s}", "Crashes by hour and day of week",
                       [(str(h), f"{h:02d}") for h in range(24)] + [("unknown_hour", "Hour not stated")],
                       [_row(d, d, **{str(h): hd[(d, h)] for h in range(24)},
-                            unknown_hour=sum(v for (dd, h), v in hd.items() if dd == d and h is None)) for d in DOW],
+                            unknown_hour=sum(v for (dd, h), v in hd.items() if dd == d and h is None)) for d in DOW]
+                      # a crash with no day stated keeps its own row, so T9 adds up to the crashes (#52)
+                      + ([_row("not_stated", "Day not stated", **{str(h): hd[(dd, h)] for h in range(24) for dd in [None]},
+                               unknown_hour=hd[(None, None)])] if any(c.get("day_of_week") not in DOW for c in crashes) else []),
                       crashes))
     rows = []
     for key, label in MODES:
@@ -103,6 +156,7 @@ def tables_for(crashes: list[dict], years: int, suffix: str = "", window: list[i
                          share_pct=pct(len(sub), n)))
     out.append(_table(f"T10{s}", "Road users involved", [("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"),
                                                          ("share_pct", "Share %")], rows, crashes))
+    out += _safety_tables(crashes, s)
     yr = Counter(c.get("year") for c in crashes)
     # every year of the window, zero years included, so a trend never hides a quiet year (#104); injury / property
     # damage split, CHP's preliminary reports and the COVID years (2020-21, docs/03 #34 item 13) per year

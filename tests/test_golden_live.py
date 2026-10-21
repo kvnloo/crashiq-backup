@@ -194,3 +194,22 @@ def test_every_placed_crash_has_a_station_for_the_strip_diagram(case):
     placed = [x for x in a["assignments"] if x["kind"] in ("intersection", "segment")]
     assert len(placed) == table(p, "T1")["crashes"]["value"] == len(ids)
     assert all(x.get("station_ft") is not None and x["station_ft"] >= 0 for x in placed)
+
+
+def test_T14_T17_safety_tables(case):
+    # #52: hit-and-run from CCRS HitRun, DUI / speed from the PCF section, broadside split by party movement
+    _, _, _, p, ids, crash, sev, _ = case
+    raw = raw_tables(case[0])
+    t14 = table(p, "T14")
+    hr = {cid for cid, r in crash.items() if r.get("HitRun") in ("F", "M")}
+    assert t14["hit_and_run"]["crashes"] == len(hr)
+    assert t14["hit_and_run_felony"]["crashes"] == sum(crash[c].get("HitRun") == "F" for c in hr)
+    sec = lambda r: str(r.get("Primary Collision Factor Violation") or "").upper().replace("VC", "").replace(" ", "")
+    assert t14["dui"]["crashes"] == sum(sec(r).startswith(("23152", "23153")) for r in crash.values())
+    assert t14["speed"]["crashes"] == sum(sec(r).startswith("22350") for r in crash.values())
+    assert t14["dui"]["ksi_crashes"] == sum(sev[c] in "KA" for c, r in crash.items() if sec(r).startswith(("23152", "23153")))
+    left = {str(r["CollisionId"]) for r in raw["Parties"] if str(r.get("MovementPrecCollDescription") or "").upper() == "MAKING LEFT TURN"}
+    broad = {c for c, r in crash.items() if r.get("Collision Type Description") == "BROADSIDE"}
+    t17 = table(p, "T17")
+    assert (t17["left_turn"]["crashes"], t17["right_angle"]["crashes"]) == (len(broad & left), len(broad - left))
+    assert sum(v["crashes"] for v in table(p, "T16").values()) == len(ids)

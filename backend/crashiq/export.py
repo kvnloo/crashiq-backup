@@ -247,6 +247,11 @@ def to_pdf(d: dict) -> bytes:
     sev_t.setStyle(TableStyle([("BACKGROUND", (0, i + 1), (0, i + 1), colors.HexColor(SEV_COLORS[r["key"]]))
                                for i, r in enumerate(t3["rows"]) if r["key"] in SEV_COLORS]))   # same ramp as the app
     story += [KeepTogether([Paragraph("Severity (each crash counted once)", h2), sev_t, src("T3")])]
+    t14 = _t(p, "T14")                        # standard safety-section rows (#52)
+    story += [KeepTogether([Paragraph("Hit and run, DUI and speed", h2),
+                            table([["", "Crashes", "KSI", "Share %"]] + [[r["label"].strip(), _fmt(r["values"]["crashes"]),
+                                   _fmt(r["values"]["ksi_crashes"]), _fmt(r["values"]["share_pct"], 1)] for r in t14["rows"]],
+                                  cols(W - 3.3 * inch, 3), (1, 2, 3)), src("T14")])]
     for tid, title, limit, label in (("T4", "Collision type", None, "Type"),
                                      ("T5", "Primary collision factor (top 10)", 10, "Factor"),
                                      ("T6", "Lighting", None, "Lighting")):
