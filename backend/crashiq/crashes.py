@@ -55,7 +55,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 13    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147)
+PULL_FORMAT = 14    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -94,9 +94,12 @@ def _paged(ckan: Ckan, sql_head: str, order_col: str) -> list[dict]:
 def _search_core(k) -> str:
     """The core the SQL prefilter searches for: without a leading direction, which is a superset (COLORADO is inside
     both COLORADO BL and E COLORADO BL; #113, Pasadena pulled 0). Python matching (`same_core`) then decides, as
-    before. A core that would be too short on its own ("1ST" from W 1ST ST) keeps its direction."""
+    before. Short cores are matched as whole words since #121, so "4TH" from East 4th Street no longer finds 14TH or
+    24TH, and it finds CHP's E 4TH ST and 4TH ST, which the spelled-out EAST4TH missed (Dorris, #155).
+    "Avenue of Flags" searches FLAGS: CHP writes AVENUE OF FLAGS, AVE OF FLAGS (#154)."""
     bare = drop_directional(k).core
-    return bare if bare != k.core and len(bare.replace(" ", "")) >= 4 else k.core
+    m = re.match(r"^AVENUE OF (?:THE )?(.+)$", bare)
+    return m.group(1) if m else bare
 
 
 def _corridor_cores(net: dict) -> list[str]:

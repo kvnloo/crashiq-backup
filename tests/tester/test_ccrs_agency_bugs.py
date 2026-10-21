@@ -262,7 +262,7 @@ def test_unincorporated_place_name_is_not_another_city():
     assert "9200001" in {c["crash_id"] for c in out["crashes"]}
 
 
-@pytest.mark.xfail(strict=True, reason="#154: a corridor name with 'of' (Avenue of Flags) never matches CHP's spelling")
+# Regression test for #154 (fixed on main).
 def test_corridor_name_with_of_matches_chp_spelling():
     # Statewide run 4, corridor list v2 (#73), Buellton, Avenue of Flags: 2752702 'AVENUE OF FLAGS' & '1ST ST' (no GPS)
     # was never read. street_key drops OF from the core ('AVENUE FLAGS'), so the prefilter looks for AVENUEFLAGS in
@@ -274,7 +274,7 @@ def test_corridor_name_with_of_matches_chp_spelling():
     assert "9200001" in {c["crash_id"] for c in out["crashes"]}
 
 
-@pytest.mark.xfail(strict=True, reason="#155: a numbered corridor with a direction (East 4th Street) misses 'E 4TH ST'")
+# Regression test for #155 (fixed on main).
 def test_numbered_corridor_with_direction_matches_abbreviated_direction():
     # Statewide run 4, corridor list v2 (#73), Dorris, East 4th Street: 2508053 'MAIN ST' & '4TH ST' (no GPS) was never
     # read. A core too short without its direction keeps it (_search_core: 'EAST 4TH'), so the prefilter looks for

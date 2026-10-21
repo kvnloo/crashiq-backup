@@ -51,3 +51,14 @@ def test_a_freeway_is_not_relaxed_to_a_street_of_the_same_name():
     assert not same_core(street_key("HARBOR FWY"), street_key("HARBOR BLVD"))
     assert same_core(street_key("HARBOR FRWY"), street_key("Harbor Freeway"))
     assert same_core(street_key("HARBOR"), street_key("HARBOR FWY"))       # no suffix written: still relaxed
+
+
+def test_avenue_of_keeps_of_and_matches_chp_spellings():
+    # #154, Buellton: OSM 'Avenue of Flags'; CHP writes AVENUE OF FLAGS, AVE OF FLAGS, now and then AVENUE FLAGS
+    k = street_key("Avenue of Flags")
+    assert k.core == "AVENUE OF FLAGS"
+    for chp in ("AVENUE OF FLAGS", "AVE OF FLAGS", "AV OF FLAGS", "AVENUE FLAGS"):
+        assert same_core(street_key(chp), k), chp
+    assert street_key("AV OF THE STARS").core == street_key("Avenue of the Stars").core == "AVENUE OF STARS"
+    assert street_key("AVENUE OF THE FLAGS") == street_key("AVENUE OF FLAGS")          # CHP adds THE now and then
+    assert street_key("100 FT NORTH OF THE BRIDGE").core == "FT NORTH BRIDGE"     # OF elsewhere is still noise
