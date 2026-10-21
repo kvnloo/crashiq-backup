@@ -227,3 +227,10 @@ def test_distribution_rows_carry_the_severity_split():
             v = r["values"]
             assert sum(v[f"sev_{k}"] for k in "kabcuo") == v["crashes"]
             assert v["sev_k"] + v["sev_a"] == v["ksi_crashes"]
+
+
+def test_t9_has_a_day_not_stated_row_only_when_needed():
+    p = P()
+    t9 = next(t for t in p["tables"] if t["id"] == "T9")
+    total = sum(v for r in t9["rows"] for k, v in r["values"].items())
+    assert total == v_(p, "T1/crashes/value")
