@@ -282,3 +282,37 @@ def test_heavy_truck_is_three_axles_or_a_truck_tractor():
               "TwoTankTrailer", "ThreeTrailers", "ContainerChassis", "FederallyLegalSemi"):
         assert h(v), v
     assert not h("PickupsAndPanels", "PullTrailer")        # only as Vehicle 1: a pickup towing a trailer is not
+
+
+
+
+def test_street_name_area_far_from_the_corridor_is_not_searched():
+    # #132: Santa Maria's Main St & Ray St pulled 6 Pleasanton crashes (~250 mi away): the street-name area search
+    # (#111) added any county with the same street pair. Here: three no-GPS reports in county 1 (Alameda) name
+    # CRENSHAW BL & MARINE AV, but no county-1 crash has GPS anywhere near the corridor.
+    d = json.loads((FIXTURES / "ckan_crenshaw.json").read_text())
+    t = next(t for rid, t in d["tables"].items() if rid.startswith("cra-2021"))
+    base = dict(t["rows"][0])
+    for i in range(3):
+        t["rows"].append({**base, "Collision Id": 9777001 + i, "County Code": "1", "City Code": "0109",
+                          "Latitude": "", "Longitude": "", "PrimaryRoad": "CRENSHAW BL", "SecondaryRoad": "MARINE AV"})
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    ids = {c["crash_id"] for c in out["crashes"]}
+    assert not ids & {"9777001", "9777002", "9777003"}
+    assert any(r["area"] == "1" for r in out["cleaning"]["area_rejected"])
+
+
+def test_one_stray_gps_crash_does_not_make_a_distant_county_a_search_area():
+    # #132, Santa Maria: one Pleasanton (county 1) report with GPS inside the corridor box named MAIN ST, so county 1
+    # became a "GPS area" and 30 Pleasanton no-GPS crashes reached the review list.
+    d = json.loads((FIXTURES / "ckan_crenshaw.json").read_text())
+    t = next(t for rid, t in d["tables"].items() if rid.startswith("cra-2021"))
+    base = dict(t["rows"][0])                       # a Crenshaw crash with GPS in the box
+    t["rows"].append({**base, "Collision Id": 9777100, "County Code": "1", "City Code": "0111"})
+    for i in range(3):
+        t["rows"].append({**base, "Collision Id": 9777101 + i, "County Code": "1", "City Code": "0111",
+                          "Latitude": "", "Longitude": "", "PrimaryRoad": "CRENSHAW BL", "SecondaryRoad": "W 144TH ST"})
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    ids = {c["crash_id"] for c in out["crashes"]}
+    assert not ids & {"9777101", "9777102", "9777103"}
+    assert [r["found_by"] for r in out["cleaning"]["area_rejected"] if r["area"] == "1"] == ["GPS crash in the corridor box"]

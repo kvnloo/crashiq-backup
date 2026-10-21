@@ -51,7 +51,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 10    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024)
+PULL_FORMAT = 11    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -195,10 +195,40 @@ def _road_aliases(pr: str, sr: str) -> str:
     return f"{_sq_sql(pr)} AS sq_p, {_sq_sql(sr)} AS sq_s, {_sp_sql(pr)} AS sp_p, {_sp_sql(sr)} AS sp_s"
 
 
+# A street-name area must be near the corridor (#132): Santa Maria's Main St & Ray St found Pleasanton, 250 mi away.
+# Near = at least PLAUSIBLE_MIN of that area's own GPS crashes within PLAUSIBLE_MI of the corridor box. CCRS gives no
+# jurisdiction boundaries; an area's GPS crashes show where it is (its other agencies record GPS even when the
+# corridor's own police don't: Alameda County around Union City, #35).
+PLAUSIBLE_MI = 5
+PLAUSIBLE_MIN = 3
+
+
+def _areas_near(ckan: Ckan, rid: str, cols: dict, area_col: str, near: tuple) -> dict[str, int]:
+    """GPS crashes per area within the widened corridor box (one grouped query)."""
+    lat, lon = cc.num_expr(cols["lat"]), cc.num_expr(cols["lon"])
+    s, w, n, e = near
+    a = cc.q(cols[area_col]["id"])
+    rows = ckan.sql(f"SELECT {a} AS area, COUNT(*) AS n FROM {cc.q(rid)} WHERE {lat} BETWEEN {s:.6f} AND {n:.6f} "
+                    f"AND {lon} BETWEEN {w:.6f} AND {e:.6f} GROUP BY {a}")
+    return {str(r["area"]).strip(): int(r["n"]) for r in rows if r.get("area") not in (None, "")}
+
+
+def _plausible(areas, near: dict[str, int], why: str, log: dict | None) -> set[str]:
+    """The areas with PLAUSIBLE_MIN or more GPS crashes near the corridor; the rest are logged once each (#132)."""
+    keep = {x for x in areas if near.get(x, 0) >= PLAUSIBLE_MIN}
+    if log is not None:
+        seen = {r["area"] for r in log.setdefault("area_rejected", [])}
+        log["area_rejected"] += [{"area": x, "found_by": why, "reason": f"{near.get(x, 0)} of its GPS crashes within "
+                                  f"{PLAUSIBLE_MI} mi of the corridor (needs {PLAUSIBLE_MIN})"}
+                                 for x in sorted(set(areas) - keep) if x not in seen]
+    return keep
+
+
 def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_xy: str, cores: list[str],
-                          cross: list[str]) -> list[str]:
-    """Area (county or city code) from reports naming the corridor street AND one of its study cross streets.
-    Areas with >= 2 such reports are searched; otherwise the single best area."""
+                          cross: list[str], near: dict[str, int] | None = None, log: dict | None = None) -> list[str]:
+    """Area (county or city code) from reports naming the corridor street AND one of its study cross streets,
+    near the corridor (`near`: GPS crashes per area around it, #132). Areas with >= 2 such reports are searched;
+    otherwise the single best area."""
     if not cores or not cross:
         return []
     pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
@@ -226,6 +256,9 @@ def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_x
                 k = str(r["area"]).strip()
                 counts[k] = counts.get(k, 0) + int(r["n"])
     rows = sorted(counts.items(), key=lambda kv: -kv[1])
+    if rows and near:                                         # without GPS nearby there is nothing to judge by
+        keep = _plausible([x for x, _ in rows], near, "street names", log)
+        rows = [(x, n) for x, n in rows if x in keep]
     if not rows:
         return []
     return [x for x, n in rows if n >= 2] or [rows[0][0]]
@@ -363,10 +396,11 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
            "no_coords_grade_separated": 0, "gps_beyond_margin_dropped": 0,
            "implausible_coords": 0, "bad_dates_dropped": 0, "duplicate_parties_dropped": 0, "version_ties_first_kept": 0, "preliminary_kept": 0,
            "feet_typed_as_miles_fixed": 0, "years_missing": [], "parties_missing_years": [], "iwp_missing_years": [],
-           "missing_fields": {}, "unknown_injury_values": [], "cities": []}
+           "missing_fields": {}, "unknown_injury_values": [], "cities": [], "area_rejected": []}
     margin = margin_ft(study)
     line = Polyline([tuple(p) for p in net["line"]])
     s, w, n, e = bbox(net["line"], margin)
+    near = bbox(net["line"], margin + PLAUSIBLE_MI * 5280)     # where a street-name area must have crashes (#132)
     cores = _corridor_cores(net)
     corridor_keys = grade.corridor_keys(net)
     # One corner can carry two cross-street names ("Eastin Drive / Lowry Road"): each one counts (Lowry Rd, Union City).
@@ -375,6 +409,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
     cross_cores = [c for c in dict.fromkeys(_search_core(k) for k in cross_keys) if c not in cores and len(c) >= 3]
     gs_keys = grade.crossing_keys(net)      # roads crossing over/under the corridor (N7, #67)
     name_area: list[str] | None = None     # found once from street names, reused for every year
+    near_n: dict[str, int] | None = None   # GPS crashes per area near the corridor, read once (#132)
     log["area_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
 
@@ -413,13 +448,23 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         # (ELM ST & COURT ST, county 57) with GPS in Marina must not send the search to Yolo County (#111).
         gps_area = {str(r[area_col]) for r, _ in recs if area_col and r.get(area_col)
                     and any(_names_street(r.get(f), corridor_keys) for f in ("primary_road", "secondary_road"))}
+        # Where each area's own crashes are (once per pull): a stray GPS point (a Pleasanton report placed in Santa
+        # Maria) or a shared street pair must not send the search 250 mi away (#132).
+        if area_col and near_n is None:
+            near_n = _areas_near(ckan, rid, cols, area_col, near)
+            if not any(n >= PLAUSIBLE_MIN for n in near_n.values()):
+                log["area_unchecked"] = (f"no area has {PLAUSIBLE_MIN} GPS crashes within {PLAUSIBLE_MI} mi of the "
+                                         "corridor, so the search areas were not checked")
+                near_n = {}
+        if near_n:
+            gps_area = _plausible(gps_area, near_n, "GPS crash in the corridor box", log)
         bad_xy = (f"{lat} IS NULL OR {lon} IS NULL OR {lat} NOT BETWEEN {cc.CA_LAT[0]} AND {cc.CA_LAT[1]} "
                   f"OR {lon} NOT BETWEEN {cc.CA_LON[0]} AND {cc.CA_LON[1]}")
         # The area found from the reports' own street names (corridor street + a study cross street) is always
         # searched too, found once per pull (tried again each year until a year has such reports): GPS alone can
         # point at the wrong county (#111; Union City has no GPS, #35).
         if cores and area_col and not name_area:
-            name_area = _area_by_street_names(ckan, rid, cols, area_col, bad_xy, cores, cross_cores)
+            name_area = _area_by_street_names(ckan, rid, cols, area_col, bad_xy, cores, cross_cores, near_n, log)
         area = sorted(gps_area | set(name_area or []))
         if gps_area:
             log["area_source"] = log["area_source"] or "GPS crashes in the corridor box"
