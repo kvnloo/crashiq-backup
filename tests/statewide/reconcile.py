@@ -37,7 +37,10 @@ BUCKETS = [  # (key, label, cause)
     ("found_located", "Newly found and located", "#80 #83 #111 #113 (search fixes)"),
     ("found_unlocated", "Newly found, no location (review)", "#80 #83 #111 #113 (search fixes)"),
     ("found_excluded", "Newly found, excluded (side street / other rule)", "#80 #83 #111 #113 (search fixes)"),
-    ("lost", "In run 1, not pulled in run 2 (other reason)", "other"),
+    ("other_city_142", "Report filed in a city the corridor doesn't enter: no longer pulled", "#142 (#145)"),
+    ("area_rejected_132", "Search area with no GPS crashes near the corridor: no longer searched", "#132 (#141)"),
+    ("junk_removed_121", "Placeholder 'NOT STATED' no longer read as the corridor street", "#121 (#131)"),
+    ("lost", "In the earlier run, not pulled in the later one (other reason)", "other"),
     ("placement_changed", "Kept in both runs, location status changed", "placement / gate"),
     ("rule_changed", "Exclusion status changed (other)", "other"),
 ]
@@ -56,7 +59,18 @@ def status(c: dict | None) -> str:
     return "unlocated" if c.get("location_source") == "unmatched" else "located"
 
 
-def bucket(c1: dict | None, c2: dict | None, core: str, refiled: set[str]) -> str:
+def _city_allowed(city, cc: dict | None) -> bool | None:
+    """Same rule as the app's #142 filter, from the later run's logged corridor cities (None = filter off)."""
+    if cc is None:
+        return None
+    from crashiq.crashes import city_key
+    allowed = {city_key(x) for x in cc.get("cities", [])}
+    if cc.get("outside"):
+        allowed |= {"UNINCORPORATED"} | {city_key(x) for x in cc.get("counties", [])}
+    return city_key(city) in allowed
+
+
+def bucket(c1: dict | None, c2: dict | None, core: str, refiled: set[str], ctx: dict | None = None) -> str:
     s1, s2 = status(c1), status(c2)
     r1, r2 = (c1 or {}).get("exclude_rule"), (c2 or {}).get("exclude_rule")
     if s1 == s2 and r1 == r2:
@@ -69,6 +83,14 @@ def bucket(c1: dict | None, c2: dict | None, core: str, refiled: set[str]) -> st
         return "refile_87"
     if c2 is None and s1 in ("located", "excluded") and c1.get("location_source") == "gps":
         return "gps_margin"
+    if c2 is None and ctx:
+        if (core and len(core) >= 3 and _sq(c1.get("secondary_road")) in PLACEHOLDERS and core in
+                _sq(c1.get("secondary_road")) and core not in _sq(c1.get("primary_road"))):
+            return "junk_removed_121"
+        if ctx.get("cities_logged") and _city_allowed(c1.get("city"), ctx.get("corridor_cities")) is False:
+            return "other_city_142"
+        if str(c1.get("county_code")) in ctx.get("rejected_areas", set()):
+            return "area_rejected_132"
     if s1 == "located" and s2 == "excluded" and c1.get("location_source") == "gps":
         return "gps_rule_excluded"
     if s2 == "unlocated" and c2.get("review_reason") == "no_cross_street":
@@ -98,6 +120,8 @@ def reconcile(before: list[dict], after: list[dict], dbs: list[Path]) -> dict:
     from crashiq.db import Database
     app_dbs = [Database(d) for d in dbs if d.exists()]
     gps_check = Counter()                          # where run 1's assignment put the GPS crashes run 2 no longer pulls
+    city_dropped_located = Counter()               # located crashes the #142 city filter removed, by placement tier
+    city_examples = []
     rows = Counter()
     d_kept, d_loc = Counter(), Counter()
     per_city = []
@@ -110,16 +134,25 @@ def reconcile(before: list[dict], after: list[dict], dbs: list[Path]) -> dict:
         m2 = {str(c["crash_id"]): c for c in p2["crashes"]}
         refiled = {str(i) for g in p2["cleaning"].get("same_crash_refiled", []) for i in g.get("dropped", [])}
         core = run_cities.indep_core(r2.get("corridor_name") or (r2.get("corridor") or {}).get("road"))
+        lg = p2["cleaning"]
+        ctx = {"cities_logged": "corridor_cities" in lg, "corridor_cities": lg.get("corridor_cities"),
+               "rejected_areas": {str(a.get("area")) for a in lg.get("area_rejected") or []}}
         cb = Counter()
         gone = []
         for cid in set(m1) | set(m2):
             c1, c2 = m1.get(cid), m2.get(cid)
-            k = bucket(c1, c2, core, refiled)
+            k = bucket(c1, c2, core, refiled, ctx)
             s1, s2 = status(c1), status(c2)
             rows[k] += 1
             cb[k] += 1
             if k == "gps_margin" and s1 == "located":
                 gone.append(c1)
+            if k == "other_city_142" and s1 == "located":
+                city_dropped_located[c1.get("location_source")] += 1
+                if len(city_examples) < 8 and not any(x.startswith(f"{r2['city']} corridor") for x in city_examples):
+                    city_examples.append(f"{r2['city']} corridor ({r2.get('corridor_name')}): report filed in "
+                                         f"{c1.get('city')}, {c1.get('primary_road')} & {c1.get('secondary_road')}, "
+                                         f"placed '{c1.get('location_source')}' in the earlier run")
             d_kept[k] += (s2 in ("located", "unlocated")) - (s1 in ("located", "unlocated"))
             d_loc[k] += (s2 == "located") - (s1 == "located")
             if s1 in ("located", "unlocated") and s2 in ("located", "unlocated"):
@@ -144,6 +177,7 @@ def reconcile(before: list[dict], after: list[dict], dbs: list[Path]) -> dict:
     assert sum(d_kept.values()) == kept2 - kept1 and sum(d_loc.values()) == loc2 - loc1, "waterfall doesn't add up"
     return {"cities": len(per_city), "kept": (kept1, kept2), "located": (loc1, loc2),
             "gps_no_longer_pulled_run1_assignment": dict(gps_check.most_common()),
+            "located_removed_by_city_filter": {"by_tier": dict(city_dropped_located), "examples": city_examples},
             "buckets": [{"bucket": k, "what": LABEL[k][0], "cause": LABEL[k][1], "crashes": rows.get(k, 0),
                          "change_in_kept": d_kept.get(k, 0), "change_in_located": d_loc.get(k, 0)}
                         for k, _, _ in BUCKETS],

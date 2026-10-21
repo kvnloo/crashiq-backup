@@ -138,7 +138,8 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
           "Silent drops", "Example dropped Collision Ids", "Overpass empty retries", "Warnings", "Result", "Reason",
           "Cause", "Agency GPS % (2021-25)", "Agency worst year / 2016-19 median", "Result (run-1 rule)",
           "Independent street core (v2)", "Reports in the city naming the street (v2)",
-          "No-GPS reports expected (independent v2)", "Silent drops (v2)", "On corridor: located",
+          "No-GPS reports expected (independent v2)", "Silent drops (v2)", "Known issue", "Corridor inside its own city %",
+          "Cities the corridor enters (city filter, #142)", "On corridor: located",
           "On corridor: no location", "On-corridor located % (v2)", "No location: no cross street",
           "No location: relaxed match held for review"]
     rows = []
@@ -166,11 +167,16 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                                   if r.get("parties_missing_years") else None] if x),
             r["result"], r["result_reason"], cause(r, ag_by), a.get("gps_pct"), a.get("drop_ratio"),
             r.get("result_v1", r["result"]), r.get("independent_core_v2"), r.get("city_reports_naming_street_v2"),
-            r.get("independent_expected_v2"), r.get("silent_drops_v2"), on_, un_,
+            r.get("independent_expected_v2"), r.get("silent_drops_v2"), r.get("known_issue"),
+            r.get("corridor_inside_own_city_pct"),
+            None if "corridor_cities" not in r else ("FILTER OFF (OSM couldn't say)" if r["corridor_cities"] is None else
+                                                     ", ".join(r["corridor_cities"]["cities"]) +
+                                                     (" + unincorporated" if r["corridor_cities"]["outside"] else "")),
+            on_, un_,
             round(on_ / (on_ + un_), 3) if on_ + un_ else None, m_.get("unplaced_no_cross"), m_.get("unplaced_relaxed")])
     n_city = table(wc, "Cities", ch, rows, {1: 20, 7: 24, 8: 24, 9: 20, 10: 20, 29: 24, 31: 40, 33: 40, 34: 40})
     for i in range(2, n_city + 1):
-        for col in (19, 21, 44):
+        for col in (19, 21, 47):
             wc.cell(i, col).number_format = "0%"
         res = wc.cell(i, 32).value
         if res in RESULT_FILL:
@@ -566,31 +572,44 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         r0 = bend + 2
         k1, k2 = rc["kept"]
         l1, l2 = rc["located"]
-        rowsx = [("Kept, run 1", k1), ("Kept, run 2", k2), ("Located, run 1", l1), ("Located, run 2", l2),
-                 ("Check: kept run 1 + changes = kept run 2", f"=B{r0}+SUM(E{hdr_r + 1}:E{bend})=B{r0 + 1}"),
-                 ("Check: located run 1 + changes = located run 2", f"=B{r0 + 2}+SUM(F{hdr_r + 1}:F{bend})=B{r0 + 3}")]
+        rowsx = [(f"Kept, {before}", k1), (f"Kept, {ver}", k2), (f"Located, {before}", l1), (f"Located, {ver}", l2),
+                 ("Check: kept earlier + changes = kept later", f"=B{r0}+SUM(E{hdr_r + 1}:E{bend})=B{r0 + 1}"),
+                 ("Check: located earlier + changes = located later", f"=B{r0 + 2}+SUM(F{hdr_r + 1}:F{bend})=B{r0 + 3}")]
         for i, (k_, v_) in enumerate(rowsx):
             wrc.cell(r0 + i, 1, k_).font = B
             wrc.cell(r0 + i, 2, v_)
         bi = {b["bucket"]: hdr_r + 1 + i for i, b in enumerate(rc["buckets"])}
         e0 = r0 + len(rowsx) + 1
-        wrc.cell(e0, 1, "Evidence: where run 1's own assignment put the GPS crashes run 2 no longer pulls").font = B
+        wrc.cell(e0, 1, "Evidence: where the earlier run's own assignment put the GPS crashes the later run no longer pulls").font = B
         for i, (k_, v_) in enumerate(rc["gps_no_longer_pulled_run1_assignment"].items(), e0 + 1):
             wrc.cell(i, 1, k_)
             wrc.cell(i, 2, v_)
-        f0 = e0 + len(rc["gps_no_longer_pulled_run1_assignment"]) + 2
+        e1 = e0 + len(rc["gps_no_longer_pulled_run1_assignment"]) + 1
+        cf = rc.get("located_removed_by_city_filter") or {}
+        if cf.get("by_tier"):
+            wrc.cell(e1, 1, "Evidence: located crashes the #142 city filter removed, by placement tier (reports filed "
+                            "in another city with the same street pair)").font = B
+            for t_, n_ in cf["by_tier"].items():
+                e1 += 1
+                wrc.cell(e1, 1, t_)
+                wrc.cell(e1, 2, n_)
+            for ex_ in cf.get("examples", []):
+                e1 += 1
+                wrc.cell(e1, 1, ex_).alignment = WRAP
+            e1 += 1
+        f0 = e1 + 1
         wrc.cell(f0, 1, "Located % on consistent denominators").font = H1
         sc = rc["same_crashes"]
         lines_ = [
             ("Same crashes kept in both runs", sc["kept_in_both"], None),
-            ("  located in run 1", sc["located_run1"], f"=B{f0 + 2}/B{f0 + 1}"),
-            ("  located in run 2", sc["located_run2"], f"=B{f0 + 3}/B{f0 + 1}"),
-            ("Run 1 without the GPS crashes it kept but never placed on the corridor (gps_margin)",
+            (f"  located in {before}", sc["located_run1"], f"=B{f0 + 2}/B{f0 + 1}"),
+            (f"  located in {ver}", sc["located_run2"], f"=B{f0 + 3}/B{f0 + 1}"),
+            (f"{before} without GPS crashes it kept but never placed on the corridor (gps_margin bucket)",
              f"=B{r0 + 2}+F{bi['gps_margin']}", f"=B{f0 + 4}/(B{r0}+E{bi['gps_margin']})"),
-            ("Run 2 without #121 junk and without no-cross-street reports kept for review (#94 policy)",
+            (f"{ver} without #121 junk and without no-cross-street reports kept for review (#94 policy)",
              f"=B{r0 + 3}-F{bi['junk_121']}-F{bi['no_cross_review']}",
              f"=B{f0 + 5}/(B{r0 + 1}-E{bi['junk_121']}-E{bi['no_cross_review']})"),
-            ("Run 2 as measured (all kept crashes)", f"=B{r0 + 3}", f"=B{r0 + 3}/B{r0 + 1}"),
+            (f"{ver} as measured (all kept crashes)", f"=B{r0 + 3}", f"=B{r0 + 3}/B{r0 + 1}"),
         ]
         for i, (k_, n_, pct_) in enumerate(lines_, f0 + 1):
             wrc.cell(i, 1, k_).alignment = WRAP
@@ -598,13 +617,17 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
             if pct_:
                 wrc.cell(i, 3, pct_).number_format = "0.0%"
         wrc.cell(f0 + len(lines_) + 2, 1, (
-            "Reading: placement didn't change (same crashes: located % equal). The fall in located % is three "
-            "things: run 1 counted GPS crashes the corridor never used (gps_margin); run 2 keeps no-cross-street "
-            "reports for review (#94, a user decision); and the search fixes found crashes that mostly have no GPS "
-            "and land in review under the exact-only gate (found_unlocated vs found_located).")).alignment = WRAP
+            f'="Reading: on the "&TEXT(B{f0 + 1},"#,##0")&" crashes kept in both runs, located went from "&'
+            f'TEXT(C{f0 + 2},"0.0%")&" to "&TEXT(C{f0 + 3},"0.0%")&". Changes in the as-measured figure come from the '
+            f'buckets above (each crash in exactly one)."')).alignment = WRAP
         wrc.merge_cells(start_row=f0 + len(lines_) + 2, start_column=1, end_row=f0 + len(lines_) + 2, end_column=6)
         wrc.row_dimensions[f0 + len(lines_) + 2].height = 70
         wrc.column_dimensions["A"].width = 60
+        hl = (f'="Headline (like for like): "&TEXT(Reconciliation!C{f0 + 3},"0.0%")&" of the same crashes located in '
+              f'{ver} vs "&TEXT(Reconciliation!C{f0 + 2},"0.0%")&" in {before} · as measured: "&'
+              f'TEXT(Reconciliation!C{f0 + 6},"0.0%")&" (all crashes kept for the corridor, Reconciliation sheet)"')
+        ws["A2"] = hl
+        ws["A2"].font = B
         wpc = wb.create_sheet("Reconciliation by city")
         table(wpc, "ReconcileCity", ["City", "County code"] + [b["bucket"] for b in rc["buckets"]],
               [[r["city"], int(r["county"])] + [r[b["bucket"]] for b in rc["buckets"]] for r in rc["per_city"]],

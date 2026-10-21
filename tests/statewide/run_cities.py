@@ -253,8 +253,10 @@ def _inside_pct(line, city: str) -> float | None:
     if not LOCAL or not line:
         return None
     key = corridors.norm_city(city)
-    hit = sum(any(a.get("admin_level") == "8" and corridors.norm_city(a.get("name")) == key
-                  for a in LOCAL.is_in(lat, lon)) for lat, lon in line)
+    if not any(corridors.norm_city(b["name"]) == key for b in LOCAL.boundaries()):
+        return None                                        # no OSM boundary (Compton): can't say
+    hit = sum(any(a.get("admin_level") in ("8", "6") and corridors.norm_city(a.get("name")) == key
+                  for a in LOCAL.is_in(lat, lon)) for lat, lon in line)        # 6: San Francisco is a city-county
     return round(100 * hit / len(line), 1)
 
 
