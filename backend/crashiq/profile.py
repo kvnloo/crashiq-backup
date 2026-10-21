@@ -152,7 +152,8 @@ def _counts(crashes):
             "injury_crashes": sum(sev[k] for k in INJURY), "pdo_crashes": sev["O"],
             "killed": sum(c.get("killed", 0) for c in crashes), "injured": sum(c.get("injured", 0) for c in crashes),
             "dark_crashes": sum(is_dark(c) for c in crashes), "ped_crashes": sum(bool(c.get("ped")) for c in crashes),
-            "bike_crashes": sum(bool(c.get("bike")) for c in crashes)}
+            "bike_crashes": sum(bool(c.get("bike")) for c in crashes),
+            "moto_crashes": sum(bool(c.get("motorcycle")) for c in crashes)}
 
 
 def segment_rate(crashes: int, years: float, aadt: float | None, length_mi: float) -> float | None:
@@ -257,7 +258,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         k = _counts(cs)
         sev = Counter(c["severity"] for c in cs)
         vals = {"kind": kind, **{x: k[x] for x in ("crashes", "ksi_crashes", "fatal_crashes", "injury_crashes",
-                                                   "dark_crashes", "ped_crashes", "bike_crashes")},
+                                                   "dark_crashes", "ped_crashes", "bike_crashes", "moto_crashes")},
                 **{f"sev_{lvl.lower()}": sev[lvl] for lvl in "KABCUO"},   # the ranking's severity bar (#103)
                 "crashes_per_year": r2(k["crashes"] / years) if years else None}
         if kind == "segment":
@@ -299,16 +300,28 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         r["values"].setdefault("rate_to_critical", None)
     tables.append(_table("T2", "Locations (corridor order)", [
         ("crashes", "Crashes"), ("crashes_per_year", "Per year"), ("ksi_crashes", "KSI"), ("fatal_crashes", "Fatal"),
-        ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"),
+        ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"), ("moto_crashes", "Motorcycle"),
         ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate"),
         ("reference_rate", "Average rate, similar sites"), ("critical_rate", "Critical rate (95%)"),
         ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),
         ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"), ("sev_c", "Possible (C)"),
         ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")], loc_rows, placed))
+    # T13: collision type x location (#105 grid): one row per T2 location, one column per collision type with crashes
+    tcount = Counter((c.get("collision_type") or "") for c in placed)
+    types = sorted(tcount, key=lambda k: (-tcount[k], k))
+    grid_rows = []
+    for r in loc_rows:
+        cs = groups.get(r["key"], [])
+        n = Counter((c.get("collision_type") or "") for c in cs)
+        grid_rows.append(_row(r["key"], r["label"], **{(k or "not_stated"): n[k] for k in types}, total=len(cs)))
+    t13 = _table("T13", "Collision type by location", [((k or "not_stated"), (k or "Not stated").title()) for k in types]
+                 + [("total", "All types")], grid_rows, placed)
+    tables_after_t12 = [t13]
     tables += tables_for(placed, years, window=[y for y in pull["years"] if y not in years_missing])
     from . import signals as signals_mod          # C7; imported here because signals imports this module
     scr = signals_mod.screen(placed, [(r["key"], r["label"]) for r in loc_rows])
     tables.append(scr["table"])
+    tables += tables_after_t12
 
     # Caveats (computed; shown only when they apply)
     caveats = []

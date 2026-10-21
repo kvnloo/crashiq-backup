@@ -202,3 +202,18 @@ def test_t1_location_sources_add_up_to_crashes():
     p = P()
     parts = ("located_gps", "located_exact", "located_other", "user_placed")
     assert sum(v_(p, f"T1/{k}/value") for k in parts) == v_(p, "T1/crashes/value")
+
+
+def test_t13_collision_type_by_location_matches_t2_and_t4():
+    # #105 grid: rows = T2 locations in corridor order; each row sums to the location's crashes; columns to T4
+    p = P()
+    t2 = next(t for t in p["tables"] if t["id"] == "T2")
+    t4 = next(t for t in p["tables"] if t["id"] == "T4")
+    t13 = next(t for t in p["tables"] if t["id"] == "T13")
+    assert [r["key"] for r in t13["rows"]] == [r["key"] for r in t2["rows"]]
+    cols = [c["key"] for c in t13["columns"] if c["key"] != "total"]
+    for r, l in zip(t13["rows"], t2["rows"]):
+        assert sum(r["values"][k] for k in cols) == r["values"]["total"] == l["values"]["crashes"]
+    for row in t4["rows"]:
+        assert sum(r["values"][row["key"]] for r in t13["rows"]) == row["values"]["crashes"]
+    assert all("moto_crashes" in r["values"] for r in t2["rows"])

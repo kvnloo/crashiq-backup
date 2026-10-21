@@ -197,3 +197,17 @@
 .quality .qline { overflow: hidden; }
 .quality .qline > :last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
 .trend .col i[class^="sev-"]:last-child { border-radius: 4px 4px 0 0; }
+
+/* E. collision type x location grid (#105): numbers in cells, one-hue shade, no gridlines */
+.grid13 { border-collapse: separate; border-spacing: 2px; font-size: 12px; width: 100%; }
+.grid13 th { font: 600 11px var(--font-body); color: var(--muted); text-align: left; padding: 4px 6px; vertical-align: bottom; }
+.grid13 thead th.sf-num { text-align: center; max-width: 70px; white-space: normal; line-height: 1.2; }
+.grid13 tbody th { color: var(--fg); white-space: nowrap; }
+.grid13 td { text-align: center; padding: 6px 4px; border-radius: 3px; min-width: 30px; }
+/* F. vulnerable road users (#105) */
+.vru { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.vru li { display: grid; gap: 3px; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
+.vru-h { display: flex; gap: 12px; align-items: baseline; flex-wrap: wrap; }
+.vru-h .n { font-size: 16px; } .vru-h .ksi { color: var(--muted); font-size: 12px; }
+.vru-h .linkbtn { margin-left: auto; padding: 0; font-size: 12px; } .vru-h .linkbtn.on { color: var(--amber); }
+.vru-top { font-size: 12px; }
