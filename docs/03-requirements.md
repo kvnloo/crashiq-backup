@@ -333,3 +333,9 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   PM test-method calls so far: crash-by-crash ID matching with only computed fields re-checked (#88); like-for-like
   located % as the headline (#125); silent-drop check v3 beside v2 and a separately labelled corridor list v2 series
   (#148, #149). The user approved the run-history requirement and the same-basis rule (CLAUDE.md).
+- **DMS-format GPS DECIDED (user, 2026-10-21, PM session; #143):** where an agency's CCRS GPS carries the
+  degrees-minutes-seconds-written-as-decimal signature (San Jose PD: 85–88% of points 2021–24), convert it
+  (37.142677 → 37°14′26.77″ → 37.2408). Per agency and year, only where the signature is clear. Keep a converted point
+  only if it lands near the streets the report names (within the GPS-check distance of the named intersection or
+  road); otherwise treat the crash as having no GPS. Provenance `gps_dms_corrected`, counted in the pull log.
+  Evidence: 491 SJPD crashes linked to San Jose open data, median 34 km off as written, 80 m after conversion.
