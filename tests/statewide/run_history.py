@@ -76,6 +76,8 @@ MEASURES = {
                        "'Silent drops v4 cleared' sheet with its distance (PM, after #149; from run 4).",
     "pass_v4": "Cities with result pass under the run-2 rule using silent_drops_v4.", "warn_v4": "As pass_v4: warn.",
     "fail_v4": "As pass_v4: fail.",
+    "gps_dms_corrected_v1": "Corridor crashes whose GPS was written as degrees-minutes-seconds and that the app converted "
+                            "after checking it against the report's streets (#143, from run 5).",
     "placement_accuracy_pct_v1": "Hidden-GPS test (#88): % of auto-placed crashes within the gate distance of their "
                                  "own GPS. Blank until #88 exists.",
 }
@@ -279,6 +281,8 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
            "pass_v3": n3.get("pass"), "warn_v3": n3.get("warn"), "fail_v3": n3.get("fail"),
            "silent_drops_v4": sum(r.get("silent_drops_v4") or 0 for r in results) if has_v4 else None,
            "pass_v4": n4.get("pass"), "warn_v4": n4.get("warn"), "fail_v4": n4.get("fail"),
+           "gps_dms_corrected_v1": (sum(r.get("gps_dms_corrected") or 0 for r in results)
+                                    if any("gps_dms_corrected" in r for r in results) else None),
            "new_corridors_v1": sum(1 for r in results if str(r.get("corridor_source", "")).startswith("picked (added")
                                    and (r.get("corridor") or {}).get("line")),
            "on_corridor_located_pct_v2": _on_corridor_pct(tested),

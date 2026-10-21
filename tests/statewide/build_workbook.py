@@ -143,7 +143,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
           "On corridor: no location", "On-corridor located % (v2)", "No location: no cross street",
           "No location: relaxed match held for review", "No-GPS reports expected (independent v3)",
           "Silent drops (v3)", "Silent drops (v4, offset-aware)", "v4 cleared (Collision Id: ft past the stretch end)",
-          "Result (v4 rule)", "Corridor list"]
+          "Result (v4 rule)", "Corridor list", "GPS converted from DMS (#143)"]
     rows = []
     for r in sorted(results, key=lambda r: -r.get("crashes_5y", 0)):
         ex = Counter(r.get("excluded_by_rule") or {})
@@ -178,7 +178,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
             round(on_ / (on_ + un_), 3) if on_ + un_ else None, m_.get("unplaced_no_cross"), m_.get("unplaced_relaxed"),
             r.get("independent_expected_v3"), r.get("silent_drops_v3"), r.get("silent_drops_v4"),
             ", ".join(f"{x['crash_id']}: {x['past_stretch_end_ft']}" for x in r.get("v4_cleared") or []) or None,
-            r.get("result_v4"), r.get("corridor_list", "v1")])
+            r.get("result_v4"), r.get("corridor_list", "v1"), r.get("gps_dms_corrected")])
     n_city = table(wc, "Cities", ch, rows, {1: 20, 7: 24, 8: 24, 9: 20, 10: 20, 29: 24, 31: 40, 33: 40, 34: 40})
     for i in range(2, n_city + 1):
         for col in (19, 21, 47):
@@ -784,7 +784,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                  "it from the sheet named in brackets, so it always matches the data. 'Corridor' = a 1-mile test "
                  "stretch of a main road in each California city, run through the app's tabs 1-2.")
     wco["A2"].alignment = WRAP
-    c = cell
+    c = {k_: f"Summary!{v_}" for k_, v_ in cell.items()}      # Summary's cells, read from another sheet
     T = lambda ref, fmt="#,##0": f'TEXT({ref},"{fmt}")'  # noqa: E731
     v4 = c.get("Pass (v4 check)")
     works = [
@@ -802,17 +802,20 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         (f'="Reports from other cities are kept out, and unincorporated places are kept in: "&'
          f'{T(rcell["b_restored_147"])}&" reports filed under an unincorporated place\'s own name came back after '
          f'#147 (Reconciliation)."') if "b_restored_147" in rcell else None,
-        (f'="The crash data itself is sound: CCRS fatal and injury counts are within 2% of TIMS in "&'
-         f'{c["Counties where CCRS F+I 2021-24 is within 2% of TIMS"]}&" of "&{c["Counties compared"]}&" counties '
-         f'(TIMS by county)."'),
     ]
+    sj = 'INDEX(Cities!AF:AF,MATCH("San Jose",Cities!A:A,0))'
     v2c = {c_: f"'Run history (corridors v2)'!{get_column_letter(j)}{3 + len(v2rows)}"
            for j, c_ in enumerate(v2cols, 1)} if v2rows else {}
+    dms = get_column_letter(ch.index("GPS converted from DMS (#143)") + 1)
+    works.append(f'="San Jose\'s GPS, which its police write as degrees-minutes-seconds, is now converted when it '
+                 f'checks out against the report\'s streets (#143): "&TEXT(SUM(Cities!{dms}2:{dms}{L}),"#,##0")&" '
+                 f'corridor crashes recovered statewide. San Jose\'s result: "&{sj}&" (Cities)."')
+    works.append("The two street-name gaps found on corridor list v2 are fixed and re-checked: names with 'of' "
+                 "(Avenue of Flags, #154) and numbered streets with a direction (East 4th Street, #155).")
     if "pass_v4" in v2c:
         works.append(f'="On corridor list v2 (the corridors that lay mostly outside their own city, re-picked inside '
                      f'it), "&{v2c["pass_v4"]}&" pass, "&{v2c["warn_v4"]}&" warn and "&{v2c["fail_v4"]}&" fail: its '
                      f'own baseline, not comparable with the runs above (Run history (corridors v2))."')
-    sj = 'INDEX(Cities!AF:AF,MATCH("San Jose",Cities!A:A,0))'
     fails = [
         (f'="Where it falls short most often: "&Summary!A{fr + 1}&" ("&Summary!B{fr + 1}&" cities; Summary, '
          f'Problems)."') if causes else None,
@@ -820,11 +823,11 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
          f'no cross street, so they could be anywhere on the street; "&{T(hcell["unplaced_relaxed_held_v2"])}&" have '
          f'a likely match that the safety gate holds for a person to review (Run history)."')
         if "unplaced_relaxed_held_v2" in hcell else None,
-        ("Two street-name gaps make the app miss reports without saying so: a corridor name with 'of' (Avenue of "
-         "Flags, #154) and a numbered street with a direction (East 4th Street vs CHP's 'E 4TH ST', #155). Both "
-         "were found on corridor list v2; failing tests are filed."),
-        f'="San Jose is not tested fairly yet: its police write GPS in a different format (#143, waiting on the '
-        f'user\'s rule). Result now: "&{sj}&" (Cities)."',
+        (f'="CrashIQ\'s counts agree with TIMS (built from the same CHP records) within 2% on fatal and injury '
+         f'crashes 2021-24 in "&{c["Counties where CCRS F+I 2021-24 is within 2% of TIMS"]}&" of "&'
+         f'{c["Counties compared"]}&" counties (TIMS by county). Agreement shows the records are processed '
+         f'consistently, not that the source is complete: completeness is a separate issue (Agencies; pain points '
+         f'26-27)."'),
         (f'="Some police agencies give the app little to work with: "&{c["Union City-type agencies (local, < 20% GPS)"]}'
          f'&" record GPS on under 20% of reports, and "&{c["Agencies with a reporting collapse"]}&" filed less than '
          f'half their usual reports in a recent year (Agencies). No map can fix missing reports."'),
@@ -833,18 +836,16 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
          f'intersection when tested against their own hidden GPS (Accuracy by agency)."') if acc_ref else None,
     ]
     nxt = [
-        "1. Fix San Jose's GPS format (#143) once the user picks the rule, and the two street-name gaps (#154, "
-        "#155); run 5 measures all three.",
-        (f'="2. Decide whether the gate may auto-place \'relaxed\' matches: "&'
-         f'{T(hcell["unplaced_relaxed_held_v2"])}&" crashes wait on that decision (Run history)."')
+        (f'="1. Decide whether the safety gate may place \'relaxed\' matches on its own: "&'
+         f'{T(hcell["unplaced_relaxed_held_v2"])}&" crashes wait on it (Run history), Dorris\'s among them (#155)."')
         if "unplaced_relaxed_held_v2" in hcell else None,
-        "3. Use the report's own distance and direction from the cross street to place crashes, and city open "
+        "2. Use the report's own distance and direction from the cross street to place crashes, and city open "
         "data where it exists (Sources for unplaced: San Jose and Pasadena publish crash points linkable by report "
         "number; terms to check first).",
-        "4. Report corridor list v2 (corridors re-picked inside their own city) alongside v1, so cities like "
+        "3. Report corridor list v2 (corridors re-picked inside their own city) alongside v1, so cities like "
         "Sacramento are tested on their own streets (Run history (corridors v2)).",
-        "5. Finish the crash-by-crash TIMS match (#88) when the TIMS files are on disk, and start the scripted "
-        "screen tests (tabs 1-2 in the browser).",
+        "4. Finish the crash-by-crash TIMS match (#88) when the TIMS files are on disk, and extend the screen tests "
+        "to drawing on the map and phone widths.",
     ]
     r_ = 4
     for title, lines_ in (("What works", works), ("What doesn't work yet", fails), ("What to improve next", nxt)):

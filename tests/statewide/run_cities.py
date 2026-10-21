@@ -57,10 +57,9 @@ FROZEN = HERE / "corridors_frozen.json"
 FROZEN_V2 = HERE / "corridors_frozen_v2.json"
 RESULTS_V2 = DATA / "results_corridors_v2"
 V2_BELOW_PCT = 50.0          # "mostly outside": under half the v1 corridor's vertices inside its own city
-HARNESS = "5"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check, 5: v4)
+HARNESS = "6"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check, 5: v4, 6: DMS counts)
 # Known open bugs that affect a city's result, shown on the Cities sheet (PM, run 3).
-KNOWN_ISSUES = {("San Jose", "43"): "affected by #143: San Jose PD's GPS is degrees-minutes-seconds (fix pending the "
-                                    "user's rule choice)"}
+KNOWN_ISSUES: dict = {}   # run 3-4: San Jose "affected by #143"; fixed in #159 (run 5)
 
 
 def code_version() -> str:
@@ -326,7 +325,9 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
         "silent_drop_ids_v2": dropped2[:10], "independent_expected_v3": len(expected3), "silent_drops_v3": len(dropped3),
         "silent_drop_ids_v3": dropped3[:10],
         "silent_drops_v4": None if v4 is None else len(v4[0]), "silent_drop_ids_v4": None if v4 is None else v4[0][:10],
-        "v4_cleared": None if v4 is None else v4[1], "city_reports_naming_street_v2": city_reports_naming(mirror, c["city"], core2),
+        "v4_cleared": None if v4 is None else v4[1],
+        "gps_dms_corrected": log.get("gps_dms_corrected"), "gps_dms_unconfirmed": log.get("gps_dms_unconfirmed"),
+        "gps_dms_agencies": log.get("gps_dms_agencies"), "city_reports_naming_street_v2": city_reports_naming(mirror, c["city"], core2),
     }
 
 
