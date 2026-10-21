@@ -508,8 +508,16 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
     city_list = json.loads((DATA / "cities.json").read_text())
     complete = len(results) >= len(city_list)
     if record and complete:
-        run_history.record(results, tims, [ROOT / "data" / "tester.sqlite", *sorted(DATA.glob("tester_worker*.sqlite"))],
-                           DATA / "ccrs_mirror.sqlite", "tests/statewide/corridors_frozen.json")
+        dbs_ = [ROOT / "data" / "tester.sqlite", *sorted(DATA.glob("tester_worker*.sqlite"))]
+        run_history.record(results, tims, dbs_, DATA / "ccrs_mirror.sqlite", "tests/statewide/corridors_frozen.json")
+        # corridor list v2: a separate series and files, recorded only when every re-picked corridor has a result
+        v2_list = HERE / "corridors_frozen_v2.json"
+        v2_res = [json.loads(p.read_text()) for p in sorted((DATA / "results_corridors_v2" / ver).glob("*.json"))]
+        if v2_list.exists() and len(v2_res) >= sum(1 for c in json.loads(v2_list.read_text())["cities"]
+                                                   if c.get("repicked")):
+            run_history.record(run_history.series_v2(results, v2_res), tims, dbs_, DATA / "ccrs_mirror.sqlite",
+                               "tests/statewide/corridors_frozen_v2.json", run_history.HISTORY_V2,
+                               run_history.CITY_HISTORY_V2)
     wr = wb.create_sheet("Run history")
     hcols, hrows = run_history._read(run_history.HISTORY)
     if not hrows:
@@ -547,6 +555,19 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
               [[c, int(k) if str(k).isdigit() else k] + [v.get(n) for n in runs_] +
                [next((n for n in runs_ if v.get(n) == "pass"), None)] for (c, k), v in sorted(by.items())],
               {1: 22})
+
+    v2cols, v2rows = run_history._read(run_history.HISTORY_V2)
+    if v2rows:          # corridor list v2: its own sheet, never merged into Run history (v1)
+        w2 = wb.create_sheet("Run history (corridors v2)")
+        w2["A1"] = ("Second series (PM, PR #148): the corridor list with the corridors that lay mostly outside their "
+                    "own city re-picked inside it. Its own baseline; don't compare these rows with Run history (v1).")
+        conv2 = lambda v: (float(v) if re.fullmatch(r"-?\d+(\.\d+)?", v or "") else (v or None))  # noqa: E731
+        hdr_row = 3
+        for j, c_ in enumerate(v2cols, 1):
+            w2.cell(hdr_row, j, c_).font = B
+        for i, r_ in enumerate(v2rows, hdr_row + 1):
+            for j, c_ in enumerate(v2cols, 1):
+                w2.cell(i, j, conv2(r_.get(c_)))
 
     # ---------------- Reconciliation (run to run, crash by crash) ----------------
     if before:

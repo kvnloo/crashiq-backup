@@ -233,6 +233,19 @@ def pick(rel: int, cache_dir: Path, local=None) -> dict:
     return _pick_from(d)
 
 
+def pick_inside(rel: int, local) -> dict:
+    """Corridor list v2 (PM, PR #148): the same rule as `pick`, on the parts of the city's roads that lie inside the
+    city (v1 ranked and drew roads with any node inside, so 78 of 479 v1 corridors lie mostly outside their city)."""
+    import checks
+    rings = local.area_rings(rel)
+    if not rings:
+        return {"reason": "no OSM boundary rings for this city"}
+    out = _pick_from(checks.clip_inside(local.roads_in_area(rel), rings))
+    if "line" in out:
+        out["inside_own_city_pct"] = checks.inside_share(out["line"], rings)
+    return out
+
+
 def _pick_from(d: dict) -> dict:
     by_name: dict[tuple[str, str], list[dict]] = defaultdict(list)
     for w in d.get("elements", []):
