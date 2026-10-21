@@ -1,0 +1,481 @@
+ccrs_city_name,osm_name
+Adelanto,Adelanto
+Agoura Hills,Agoura Hills
+Alameda,Alameda
+Albany,Albany
+Alhambra,Alhambra
+Aliso Viejo,Aliso Viejo
+Alturas,Alturas
+Amador City,Amador City
+American Canyon,American Canyon Facility
+Anaheim,Anaheim
+Anderson,Anderson
+Angels Camp,Angels
+Antioch,Antioch
+Apple Valley,Apple Valley
+Arcadia,Arcadia
+Arcata,Arcata
+Arroyo Grande,Arroyo Grande
+Artesia,Artesia
+Arvin,Arvin
+Atascadero,Atascadero
+Atherton,Atherton
+Atwater,Atwater
+Auburn,Auburn
+Avalon,Avalon
+Avenal,Avenal
+Azusa,Azusa
+Bakersfield,Bakersfield
+Baldwin Park,Baldwin Park
+Banning,Banning
+Barstow,Barstow
+Beaumont,Beaumont
+Bell,Bell
+Bell Gardens,Bell Gardens
+Bellflower,Bellflower
+Belmont,Belmont
+Belvedere,Belvedere
+Benicia,Benicia
+Berkeley,Berkeley
+Beverly Hills,Beverly Hills
+Big Bear Lake,Big Bear Lake
+Biggs,Biggs
+Bishop,Bishop
+Blue Lake,Blue Lake
+Blythe,Blythe
+Bradbury,Bradbury
+Brawley,Brawley
+Brea,Brea
+Brentwood,Brentwood
+Brisbane,Brisbane
+Buellton,Buellton
+Buena Park,Buena Park
+Burbank,Burbank
+Burlingame,Burlingame
+Calabasas,Calabasas
+Calexico,Calexico
+California City,California City
+Calimesa,Calimesa
+Calistoga,Calistoga
+Camarillo,Camarillo
+Campbell,Campbell
+Canyon Lake,Canyon Lake
+Capitola,Capitola
+Carlsbad,Carlsbad
+Carmel,Carmel-by-the-Sea
+Carpinteria,Carpinteria
+Carson,Carson
+Cathedral City,Cathedral City
+Ceres,Ceres
+Cerritos,Cerritos
+Chico,Chico
+Chino,Chino
+Chino Hills,Chino Hills
+Chowchilla,Chowchilla
+Chula Vista,Chula Vista
+Citrus Heights,Citrus Heights
+City of Industry,City of Industry
+Claremont,Claremont
+Clayton,Clayton
+Clearlake,Clearlake
+Cloverdale,Cloverdale
+Clovis,Clovis
+Coachella,Coachella
+Coalinga,Coalinga
+Colfax,Colfax
+Colma,Colma
+Colton,Colton
+Colusa,Colusa
+Commerce,Commerce
+Concord,Concord
+Corcoran,Corcoran
+Corning,Corning
+Corona,Coronado
+Coronado,Coronado
+Corte Madera,Corte Madera
+Costa Mesa,Costa Mesa
+Cotati,Cotati
+Covina,Covina
+Crescent City,Crescent City
+Cudahy,Cudahy
+Culver City,Culver City
+Cupertino,City of Cupertino Service Center
+Cypress,Cypress
+Daly City,Daly City
+Dana Point,Dana Point
+Danville,Danville
+Davis,Davis
+Del Mar,Del Mar
+Del Rey Oaks,Del Rey Oaks
+Delano,Delano
+Desert Hot Springs,Desert Hot Springs
+Diamond Bar,Diamond Bar
+Dinuba,Dinuba
+Dixon,Dixon
+Dorris,Dorris
+Dos Palos,Dos Palos
+Downey,Downey
+Duarte,Duarte
+Dublin,Dublin
+Dunsmuir,Dunsmuir
+East Palo Alto,East Palo Alto
+Eastvale,Eastvale
+El Cajon,El Cajon
+El Centro,El Centro
+El Cerrito,El Cerrito
+El Monte,El Monte
+El Segundo,El Segundo
+Elk Grove,Elk Grove
+Emeryville,Emeryville
+Encinitas,Encinitas
+Escalon,Escalon
+Escondido,Escondido
+Etna,Etna
+Eureka,Eureka
+Exeter,Exeter
+Fairfax,Fairfax
+Fairfield,Fairfield
+Farmersville,Farmersville
+Ferndale,Ferndale
+Fillmore,Fillmore
+Firebaugh,Firebaugh
+Folsom,Folsom
+Fontana,Fontana
+Fort Bragg,Fort Bragg
+Fort Jones,Fort Jones
+Fortuna,Fortuna
+Foster City,Foster City
+Fountain Valley,Fountain Valley
+Fowler,Fowler
+Fremont,Fremont
+Fresno,Fresno
+Fullerton,Fullerton
+Galt,Galt
+Garden Grove,Garden Grove
+Gardena,Gardena
+Gilroy,Gilroy
+Glendale,Glendale
+Glendora,Glendora
+Goleta,Goleta
+Gonzales,Gonzales
+Grand Terrace,Grand Terrace
+Grass Valley,Grass Valley
+Greenfield,Greenfield
+Gridley,Gridley
+Grover Beach,Grover Beach
+Guadalupe,Guadalupe
+Gustine,Gustine
+Half Moon Bay,Half Moon Bay
+Hanford,Hanford
+Hawaiian Gardens,Hawaiian Gardens
+Hawthorne,Hawthorne
+Hayward,Hayward
+Healdsburg,Healdsburg
+Hemet,Hemet
+Hercules,Hercules
+Hermosa Beach,Hermosa Beach
+Hesperia,Hesperia
+Hidden Hills,Hidden Hills
+Highland,Highland
+Hillsborough,Hillsborough
+Hollister,Hollister
+Hollister Hills Pk,Hollister
+Holtville,Holtville
+Hughson,Hughson
+Huntington Beach,Huntington Beach
+Huntington Park,Huntington Park
+Huron,Huron
+Imperial,Imperial
+Imperial Beach,Imperial
+Indian Wells,Indian Wells
+Indio,Indio
+Inglewood,Inglewood
+Ione,Ione
+Irvine,Irvine
+Irwindale,Irwindale
+Isleton,Isleton
+Jackson,Jackson
+Jurupa Valley,Jurupa Valley
+Kerman,Kerman
+King City,King City
+Kingsburg,Kingsburg
+La Canada Flintridge,La Cañada Flintridge
+La Habra,La Habra
+La Habra Heights,La Habra
+La Mesa,La Mesa
+La Mirada,La Mirada
+La Palma,La Palma
+La Puente,La Puente
+La Quinta,La Quinta
+La Verne,La Verne
+Lafayette,Lafayette
+Laguna Beach,Laguna Beach
+Laguna Hills,Laguna Hills
+Laguna Niguel,Laguna Niguel
+Laguna Woods,Laguna Woods
+Lake Elsinore,Lake Elsinore
+Lake Forest,Lake Forest
+Lakeport,Lakeport
+Lakewood,Lakewood
+Lancaster,Lancaster
+Larkspur,Larkspur
+Lathrop,Lathrop
+Lawndale,Lawndale
+Lemon Grove,Lemon Grove
+Lemoore,Lemoore
+Lincoln,Lincoln
+Lindsay,Lindsay
+Live Oak,Live Oak
+Livermore,Livermore
+Livingston,Livingston
+Lodi,Lodi
+Loma Linda,Loma Linda
+Lomita,Lomita
+Lompoc,Lompoc
+Long Beach,Long Beach
+Loomis,Loomis
+Los Alamitos,Los Alamitos
+Los Altos,Los Altos
+Los Altos Hills,Los Altos
+Los Angeles,Los Angeles
+Los Banos,Los Banos
+Los Gatos,Los Gatos
+Loyalton,Loyalton
+Lynwood,Lynwood
+Madera,Madera
+Malibu,Malibu
+Mammoth Lakes,Mammoth Lakes
+Manhattan Beach,Manhattan Beach
+Manteca,Manteca
+Marina,Marina
+Martinez,Martinez
+Marysville,Marysville
+Maywood,Maywood
+Mc Farland,McFarland
+Mendota,Mendota
+Menifee,Menifee
+Menlo Park,Menlo Park
+Merced,Merced
+Mill Valley,Mill Valley
+Millbrae,Millbrae
+Milpitas,Milpitas
+Mission Viejo,Mission Viejo
+Modesto,Modesto
+Monrovia,Monrovia
+Montague,Montague
+Montclair,Montclair
+Monte Sereno,Monte Sereno
+Montebello,Montebello
+Monterey,Monterey Park
+Monterey Park,Monterey Park
+Moorpark,Moorpark
+Moraga,Moraga
+Moreno Valley,Moreno Valley
+Morgan Hill,Morgan Hill
+Morro Bay,Morro Bay
+Mount Shasta,Mount Shasta
+Mountain House,Mountain House
+Mountain View,Mountain View
+Murrieta,Murrieta
+Napa,Napa
+National City,National City
+Needles,Needles
+Nevada City,Nevada City
+Newark,Newark
+Newman,Newman
+Newport Beach,Newport Beach
+Norco,Norco
+Norwalk,Norwalk
+Novato,Novato
+Oakdale,Oakdale
+Oakland,Oakland
+Oakley,Oakley
+Oceanside,Oceanside
+Ojai,Ojai
+Ontario,Ontario
+Orange,Orange
+Orinda,Orinda
+Orland,Orland
+Oroville,Oroville
+Oxnard,Oxnard
+Pacific Grove,Pacific Grove
+Pacifica,Pacifica
+Palm Desert,Palm Desert
+Palm Springs,Palm Springs
+Palmdale,Palmdale
+Palo Alto,Palo Alto
+Palos Verdes Estates,Palos Verdes Estates
+Paradise,Paradise Cay
+Paramount,Paramount
+Parlier,Parlier
+Pasadena,Pasadena
+Paso Robles,Paso Robles
+Patterson,Patterson
+Perris,Perris
+Petaluma,Petaluma
+Pico Rivera,Pico Rivera
+Piedmont,Piedmont
+Pinole,Pinole
+Pismo Beach,Pismo Beach
+Pittsburg,Pittsburg
+Placentia,Placentia
+Placerville,Placerville
+Pleasant Hill,Pleasant Hill
+Pleasanton,Pleasanton
+Plymouth,Plymouth
+Pomona,Pomona
+Port Hueneme,Port Hueneme
+Porterville,Porterville
+Portola,Portola Valley
+Portola Valley,Portola Valley
+Poway,Poway
+Rancho Cordova,Rancho Cordova
+Rancho Cucamonga,Rancho Cucamonga
+Rancho Mirage,Rancho Mirage
+Rancho Palos Verdes,Rancho Palos Verdes
+Rancho Santa Margarita,Rancho Santa Margarita
+Red Bluff,Red Bluff
+Redding,Redding
+Redlands,Redlands
+Redondo Beach,Redondo Beach
+Redwood City,Redwood City
+Reedley,Reedley
+Rialto,Rialto
+Richmond,Richmond
+Ridgecrest,Ridgecrest Heights
+Rio Dell,Rio Dell
+Rio Vista,Rio Vista
+Ripon,Ripon
+Riverbank,Riverbank
+Riverside,Riverside
+Rocklin,Rocklin
+Rohnert Park,Rohnert Park
+Rolling Hills,Rolling Hills
+Rosemead,Rosemead
+Roseville,Roseville
+Ross,Ross
+Sacramento,Sacramento
+Saint Helena,St. Helena
+Salinas,Salinas
+San Anselmo,San Anselmo
+San Bernardino,San Bernardino
+San Bruno,San Bruno
+San Carlos,San Carlos
+San Clemente,San Clemente
+San Diego,San Diego
+San Dimas,San Dimas
+San Fernando,San Fernando
+San Francisco,San Francisco
+San Gabriel,San Gabriel
+San Jacinto,San Jacinto
+San Joaquin,San Joaquin
+San Jose,San Jose
+San Jose Evergrn Comm Clg,San Jose
+San Juan Bautista,San Juan Bautista
+San Juan Capistrano,San Juan Capistrano
+San Leandro,San Leandro
+San Luis Obispo,San Luis Obispo
+San Marcos,San Marcos
+San Marino,San Marino
+San Mateo,San Mateo
+San Pablo,San Pablo
+San Rafael,San Rafael
+San Ramon,San Ramon
+Sand City,Sand City
+Sanger,Sanger
+Santa Ana,Santa Ana
+Santa Barbara,Santa Barbara
+Santa Clara,Santa Clara
+Santa Clarita,Santa Clarita
+Santa Cruz,Santa Cruz
+Santa Fe Springs,Santa Fe Springs
+Santa Maria,Santa Maria
+Santa Monica,Santa Monica
+Santa Paula,Santa Paula
+Santa Rosa,Santa Rosa Valley
+Santee,Santee
+Saratoga,Saratoga
+Sausalito,Sausalito
+Scotts Valley,Scotts Valley
+Seal Beach,Seal Beach
+Seaside,Seaside
+Sebastopol,Sebastopol
+Selma,Selma
+Shafter,Shafter
+Shasta Lake,Shasta Lake
+Sierra Madre,Sierra Madre
+Signal Hill,Signal Hill
+Simi Valley,Simi Valley
+Solana Beach,Solana Beach
+Soledad,Soledad
+Solvang,Solvang
+Sonoma,Sonoma
+Sonora,Sonora
+South El Monte,South El Monte
+South Gate,South Gate
+South Lake Tahoe,South Lake Tahoe
+South Pasadena,South Pasadena
+South San Francisco,South San Francisco
+Stanton,Stanton
+Stockton,Stockton
+Suisun City,Suisun City
+Sunnyvale,Sunnyvale
+Susanville,Susanville
+Sutter Creek,Sutter Creek
+Taft,Taft
+Tehachapi,Tehachapi
+Tehama,Tehama
+Temecula,Temecula
+Temple City,Temple City
+Thousand Oaks,Thousand Oaks
+Tiburon,Tiburon
+Torrance,Torrance
+Tracy,Tracy
+Trinidad,Trinidad
+Truckee,Truckee
+Tulare,Tulare
+Tulelake,Tulelake
+Turlock,Turlock
+Tustin,Tustin
+Twentynine Palms,Twentynine Palms
+Ukiah,Ukiah
+Union City,Union City
+Upland,Upland
+Vacaville,Vacaville
+Vallejo,Vallejo
+Ventura,Ventura
+Vernon,Vernon
+Victorville,Victorville
+Villa Park,Villa Park
+Visalia,Visalia
+Vista,Vista
+Walnut,Walnut Creek
+Walnut Creek,Walnut Creek
+Wasco,Wasco
+Waterford,Waterford
+Watsonville,Watsonville
+Weed,Weed
+West Covina,West Covina
+West Hollywood,West Hollywood
+West Sacramento,West Sacramento
+Westlake Village,Westlake Village
+Westminster,Westminster
+Westmorland,Westmorland
+Wheatland,Wheatland
+Whittier,Whittier
+Wildomar,Wildomar
+Williams,Williams
+Willits,Willits
+Willows,Willows
+Windsor,Windsor
+Winters,Winters
+Woodlake,Woodlake
+Woodland,Woodland
+Woodside,Woodside
+Yorba Linda,Yorba Linda
+Yountville,Yountville
+Yreka,Yreka
+Yuba City,Yuba City
+Yucaipa,Yucaipa
+Yucca Valley,Yucca Valley
+Compton,Compton

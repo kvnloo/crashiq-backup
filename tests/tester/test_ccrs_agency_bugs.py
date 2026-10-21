@@ -246,7 +246,7 @@ def test_gps_written_as_degrees_minutes_seconds_is_not_lost():
     assert len(found) >= 0.9 * len(base)        # the corridor's GPS crashes are still found (converted or by name)
 
 
-@pytest.mark.xfail(strict=True, reason="#147: a report filed under an unincorporated place's own name is dropped as another city")
+# Regression test for #147 (fixed on main).
 def test_unincorporated_place_name_is_not_another_city():
     # Statewide run 3 (#73), Kensington, Arlington Avenue: CCRS files Kensington's crashes under City Name 'Kensington'
     # (an unincorporated place; CCRS even marks it incorporated). The corridor enters Berkeley + unincorporated Contra

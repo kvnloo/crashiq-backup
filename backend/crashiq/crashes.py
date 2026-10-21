@@ -9,6 +9,8 @@ then Parties and InjuredWitnessPassengers joined by Collision Id. Cleaning steps
 
 from __future__ import annotations
 
+import csv
+import functools
 import hashlib
 import json
 import threading
@@ -53,7 +55,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 12    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142)
+PULL_FORMAT = 13    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -346,14 +348,32 @@ def city_key(name: str | None) -> str:
     return re.sub(r"[^A-Z0-9]", "", t)
 
 
-def _city_allowed(city: str | None, allowed: set[str]) -> bool | None:
-    """True / False, or None when the report's city can't be judged (blank, a campus or district)."""
+def _same_city(k: str, a: str) -> bool:
+    return k == a or (min(len(k), len(a)) >= 6 and (a.startswith(k) or k.startswith(a)))
+
+
+@functools.lru_cache(maxsize=1)
+def known_cities() -> frozenset[str]:
+    """California's incorporated cities (data/reference/ca_cities.csv): CCRS names that OSM also has as cities."""
+    from .settings import ROOT
+    with (ROOT / "data" / "reference" / "ca_cities.csv").open(newline="") as f:
+        return frozenset(city_key(r["ccrs_city_name"]) for r in csv.DictReader(f))
+
+
+def _city_allowed(city: str | None, allowed: set[str], outside: bool = False) -> bool | None:
+    """True / False, or None when the report's city can't be judged (blank, a campus or district). Where the corridor
+    runs through unincorporated land, a name that is no incorporated city (Kensington, Broadmoor: unincorporated places
+    CHP files under their own name, #147) counts like Unincorporated."""
     if not city or _SPECIAL_AREA.search(city):
         return None
     k = city_key(city)
     if not k:
         return None
-    return any(k == a or (min(len(k), len(a)) >= 6 and (a.startswith(k) or k.startswith(a))) for a in allowed)
+    if any(_same_city(k, a) for a in allowed):
+        return True
+    if outside and not any(_same_city(k, a) for a in known_cities()):
+        return True
+    return False
 
 
 def _refile_key(c: dict) -> tuple | None:
@@ -524,7 +544,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                 allowed |= {"UNINCORPORATED"} | {city_key(x) for x in corridor_cities["counties"]}
         for r in no_xy:
             c = cc.crash_record(r, cols)
-            if allowed is not None and _city_allowed(c.get("city"), allowed) is False:
+            if allowed is not None and _city_allowed(c.get("city"), allowed, corridor_cities["outside"]) is False:
                 log["no_coords_other_city"] += 1
                 other_city[c["city"]] += 1
                 continue
