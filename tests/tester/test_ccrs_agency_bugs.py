@@ -168,3 +168,25 @@ def test_wrong_county_gps_crash_does_not_redirect_the_no_gps_search():     # fix
     out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
     ids = {c["crash_id"] for c in out["crashes"]}
     assert "9200001" in ids                    # Crenshaw & W 144th St, 2023, no GPS, county 19
+
+
+@pytest.mark.xfail(strict=True, reason="#113: a corridor name starting with a direction (East Colorado Blvd) pulls 0 no-GPS crashes")
+@pytest.mark.parametrize("osm_name, written", [
+    ("East Colorado Boulevard", "COLORADO BL"), ("East Colorado Boulevard", "E COLORADO BL"),
+    ("West Manning Avenue", "MANNING AV"), ("North Center Street", "CENTER ST"), ("South Main Street", "S MAIN ST"),
+])
+def test_corridor_name_with_leading_direction_finds_no_gps_reports(osm_name, written):
+    # Statewide run 1 (#73/#112), Pasadena: test road 'East Colorado Boulevard' pulled 0 crashes; CCRS 2021 alone has
+    # 48 Pasadena no-GPS reports on 'COLORADO BL'. Blythe ('East Hobsonway') the same. The no-GPS SQL prefilter
+    # squeezes the core with its directional ('ECOLORADO'), so LIKE '%ECOLORADO%' never matches 'COLORADOBL'.
+    d = _fixture(no_gps=True)
+    for rid, t in d["tables"].items():
+        if rid.startswith("cra-"):
+            for r in t["rows"]:
+                for col in ("PrimaryRoad", "SecondaryRoad"):
+                    if str(r.get(col) or "").upper().startswith("CRENSHAW"):
+                        r[col] = written
+    net = {**NET_X, "corridor_name": osm_name}
+    out = crashes.pull(STUDY, net, Ckan(FakeCkan(d)))
+    ids = {c["crash_id"] for c in out["crashes"]}
+    assert {"9200001", "9200002", "9200003"} <= ids

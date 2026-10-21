@@ -37,7 +37,10 @@ MEASURES = {
     "pass_v1": "Cities with result pass (rules on the Method sheet).", "warn_v1": "Cities with result warn.",
     "fail_v1": "Cities with result fail.", "pass_pct_v1": "pass / cities tested, %.",
     "silent_drops_v1": "No-GPS reports naming the corridor and a study cross street, in the city, that the app never "
-                       "pulled (independent SQL on the mirror).",
+                       "pulled (independent SQL on the mirror; street core from the app's names.py).",
+    "silent_drops_v2": "As v1, with the Tester's own street core (leading direction and suffix dropped, #113).",
+    "pass_v2": "Cities with result pass under the run-2 rule (Method sheet).", "warn_v2": "Run-2 rule: warn.",
+    "fail_v2": "Run-2 rule: fail (adds 0-pulled-while-reports-name-the-street as fail).",
     "double_counts_v1": "Extra crashes among those pulled: same agency + report number + both roads under 2+ "
                         "Collision Ids (each group counts n-1).",
     "excluded_no_cross_street_v1": "Corridor-street crashes the pull excluded under the side-street rule (#39) "
@@ -168,12 +171,14 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
         if row.get("backend_tree") == tree:
             return row                                         # already recorded: never rewritten
     cm = city_measures(results, dbs, mirror_db)
-    tested = [r for r in results if r.get("result") in ("pass", "warn", "fail")]
+    tested = [r for r in results if r.get("result_v1", r.get("result")) in ("pass", "warn", "fail")]
     cand = sum(cm[f"{r['city']}|{r['county']}"]["candidates"] or 0 for r in tested)
 
     def pct(key):
         return round(100 * sum(cm[f"{r['city']}|{r['county']}"][key] or 0 for r in tested) / cand, 2) if cand else None
-    n = {k: sum(1 for r in tested if r["result"] == k) for k in ("pass", "warn", "fail")}
+    n = {k: sum(1 for r in tested if r.get("result_v1", r["result"]) == k) for k in ("pass", "warn", "fail")}
+    has_v2 = any("result_v1" in r for r in results)
+    n2 = {k: sum(1 for r in results if r["result"] == k) for k in ("pass", "warn", "fail")} if has_v2 else {}
     first = next((r for r in results if r.get("commit")), {})
     row = {"run": len(runs) + 1, "date": dt.date.today().isoformat(),
            "app_commit": first.get("commit"), "backend_tree": tree, "mirror_date": first.get("mirror_built"),
@@ -186,13 +191,15 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
            "silent_drops_v1": sum(r.get("silent_drops") or 0 for r in tested),
            "double_counts_v1": sum(cm[f"{r['city']}|{r['county']}"]["double_counts"] or 0 for r in tested),
            "excluded_no_cross_street_v1": sum(cm[f"{r['city']}|{r['county']}"]["excluded_wrongly"] or 0 for r in tested),
-           "tims_counties_within_2pct_v1": tims_within(tims_rows), "placement_accuracy_pct_v1": None}
+           "tims_counties_within_2pct_v1": tims_within(tims_rows), "placement_accuracy_pct_v1": None,
+           "silent_drops_v2": sum(r.get("silent_drops_v2") or 0 for r in results) if has_v2 else None,
+           "pass_v2": n2.get("pass"), "warn_v2": n2.get("warn"), "fail_v2": n2.get("fail")}
     _append(HISTORY, [row], RUN_COLS + list(MEASURES))
     crow = []
     for r in results:
         m = cm[f"{r['city']}|{r['county']}"]
         crow.append({"run": row["run"], "city": r["city"], "county": r["county"], "result": r.get("result"),
-                     "reason": r.get("result_reason"), "candidates_v1": m["candidates"], "located_v1": m["located"],
+                     "reason": r.get("result_reason"), "result_run1_rule": r.get("result_v1", r.get("result")), "candidates_v1": m["candidates"], "located_v1": m["located"],
                      "silent_drops_v1": r.get("silent_drops"), "double_counts_v1": m["double_counts"],
                      "excluded_no_cross_street_v1": m["excluded_wrongly"]})
     _append(CITY_HISTORY, crow, list(crow[0]) if crow else [])

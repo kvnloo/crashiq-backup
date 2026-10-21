@@ -115,6 +115,35 @@ def _sq(s: str | None) -> str:
     return re.sub(r"[^A-Z0-9]", "", (s or "").upper())
 
 
+DIRS = {"N", "S", "E", "W", "NORTH", "SOUTH", "EAST", "WEST", "NB", "SB", "EB", "WB"}
+SUFFIX_WORDS = {"ST", "STREET", "AVE", "AV", "AVENUE", "BLVD", "BL", "BOULEVARD", "DR", "DRIVE", "RD", "ROAD", "WAY",
+                "WY", "LN", "LANE", "CT", "COURT", "PL", "PLACE", "PKWY", "PARKWAY", "HWY", "HIGHWAY", "CIR", "CIRCLE",
+                "TER", "TERRACE", "EXPY", "EXPRESSWAY", "PLZ", "PLAZA", "LOOP", "TRL", "TRAIL"}
+
+
+def indep_core(name: str | None) -> str:
+    """Street core for the Tester's own checks, independent of the app's names.py (v2, run 2 on): letters and digits
+    only, leading directions and trailing suffixes dropped ('East Colorado Boulevard' -> 'COLORADO')."""
+    toks = re.sub(r"[^A-Z0-9 ]", " ", (name or "").upper()).split()
+    while len(toks) > 1 and toks[0] in DIRS:
+        toks = toks[1:]
+    while len(toks) > 1 and toks[-1] in SUFFIX_WORDS | DIRS:
+        toks = toks[:-1]
+    return "".join(toks)
+
+
+def city_reports_naming(mirror, city: str, core: str) -> int:
+    """Reports in the city (any GPS) whose primary or secondary road contains the street core."""
+    if len(core) < 3:
+        return 0
+    n = 0
+    for (rid,) in mirror.db.execute("SELECT rid FROM _meta WHERE tbl='crashes'"):
+        q = (f'SELECT "PrimaryRoad" p, "SecondaryRoad" s FROM "{rid}" WHERE "City Name" = ? '
+             f'AND COALESCE("IsDeleted", \'\') <> \'True\'')
+        n += sum(1 for r in mirror.db.execute(q, (city,)) if core in _sq(r["p"]) or core in _sq(r["s"]))
+    return n
+
+
 def independent_no_gps(mirror, city: str, corridor_core: str, cross_cores: list[str]) -> set[str]:
     """No-GPS crash ids in the city whose one road names the corridor and the other a study cross street."""
     core = _sq(corridor_core)
@@ -175,6 +204,9 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
     expected = independent_no_gps(mirror, c["city"], k.core if k else "", cross_cores)
     got = {str(x["crash_id"]) for x in crashes}
     dropped = sorted(expected - got)
+    core2 = indep_core(net.get("corridor_name") or (corr.get("road")))
+    expected2 = independent_no_gps(mirror, c["city"], core2, [indep_core(x) for x in cross])
+    dropped2 = sorted(expected2 - got)
     return {
         "stage": "done", "study_id": sid, "settings": settings, "overpass_empty_retries": empty_retries, "corridor_name": net.get("corridor_name"),
         "ends": [inters[0]["name"], inters[-1]["name"]] if inters else [None, None],
@@ -189,11 +221,29 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
         "no_coords_read": log.get("no_coords_read"), "duplicate_versions_dropped": log.get("duplicate_versions_dropped"),
         "independent_expected": len(expected), "silent_drops": len(dropped), "silent_drop_ids": dropped[:10],
         "assignment_status": a.status_code,
+        "independent_core_v2": core2, "independent_expected_v2": len(expected2), "silent_drops_v2": len(dropped2),
+        "silent_drop_ids_v2": dropped2[:10], "city_reports_naming_street_v2": city_reports_naming(mirror, c["city"], core2),
     }
 
 
+def classify_v2(r: dict) -> tuple[str, str]:
+    """Run 2 rule (PM review of #112): silent drops from the independent v2 core, and 0 crashes pulled counts as
+    fail (suspected silent drop) unless no report in the city names the street at all."""
+    if r.get("stage") != "done":
+        return classify(r)
+    if r.get("silent_drops_v2"):
+        return "fail", (f"{r['silent_drops_v2']} no-GPS reports naming the corridor and a study cross street were "
+                        "not pulled")
+    if r.get("corridor_name") and r["pulled"] == 0:
+        if r.get("city_reports_naming_street_v2"):
+            return "fail", (f"0 crashes pulled while {r['city_reports_naming_street_v2']} reports in the city name "
+                            f"{r.get('independent_core_v2')} (suspected silent drop)")
+        return "untested", "0 crashes: no report in the city names this street (nothing to test)"
+    return classify({**r, "silent_drops": 0})
+
+
 def classify(r: dict) -> tuple[str, str]:
-    """Proposed pass/warn/fail rules from #73 (user to confirm on the first report)."""
+    """Run 1 rule (#73 proposal, user to confirm)."""
     if r.get("stage") != "done":
         return "untested", f"{r.get('stage')} step failed: {r.get('error', r.get('reason', ''))[:120]}"
     if r["silent_drops"]:
@@ -212,6 +262,26 @@ def classify(r: dict) -> tuple[str, str]:
     if loc < 0.90 or rev > 0.20:
         return "warn", f"{loc:.0%} located or placed, {rev:.0%} sent for review"
     return "pass", f"{loc:.0%} located or placed"
+
+
+NOT_A_CITY = re.compile(r"\b(PK|PARK|DIST|UNIV|UC|CSU|CAL POLY|STATE|AIRPORT|AIRPRT|INTL|HARBOR|PORT|CLG|COLLEGE|"
+                        r"MEDICAL|CENTER)\b", re.I)
+
+
+def gps_box(mirror, city: str) -> list[list[tuple]] | None:
+    """Area for a city OSM has no boundary for (Compton): the 2nd-98th percentile box of the city's own crash GPS."""
+    pts = []
+    for (rid,) in mirror.db.execute("SELECT rid FROM _meta WHERE tbl='crashes'"):
+        pts += mirror.db.execute(f'SELECT "Latitude", "Longitude" FROM "{rid}" WHERE "City Name" = ? AND '
+                                 f'"Latitude" BETWEEN 32 AND 42.1 AND "Longitude" BETWEEN -124.5 AND -114', (city,)
+                                 ).fetchall()
+    if len(pts) < 50:
+        return None
+    la = sorted(p[0] for p in pts)
+    lo = sorted(p[1] for p in pts)
+    q = lambda v, f: v[int(f * (len(v) - 1))]  # noqa: E731
+    s_, n_, w_, e_ = q(la, .02), q(la, .98), q(lo, .02), q(lo, .98)
+    return [[(s_, w_), (s_, e_), (n_, e_), (n_, w_), (s_, w_)]]
 
 
 def prefetch() -> None:
@@ -265,6 +335,8 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
         for n, c in enumerate(todo, 1):
             out = out_dir / f"{corridors.norm_city(c['city'])}_{c['county']}.json"
             fz = frozen.get((c["city"], c["county"])) or earlier.get((c["city"], c["county"]))
+            if fz and not (fz.get("corridor") or {}).get("line"):
+                fz = None                             # frozen without a line: may get one now ("added" below)
             b = None
             if fz:                                    # same basis as the earlier run: the exact same line
                 corr = fz.get("corridor") or {"reason": fz.get("reason") or "not in the frozen corridor list"}
@@ -273,9 +345,14 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
                 try:
                     b = bounds.get(corridors.norm_city(c["city"])) or (None if LOCAL else
                                                                          corridors.find_rel(c["city"], OSM))
-                    corr = (corridors.pick(b["rel"], OSM, LOCAL) if b
-                            else {"reason": "no OSM city boundary with this name (CCRS also files state parks, "
-                                            "campuses, airports and some unincorporated places as cities)"})
+                    if b:
+                        corr = corridors.pick(b["rel"], OSM, LOCAL)
+                    elif LOCAL and not NOT_A_CITY.search(c["city"]) and (box := gps_box(mirror, c["city"])):
+                        b = {"name": "crash-GPS box (OSM has no boundary for this city)"}
+                        corr = corridors.pick_in_rings(box, LOCAL)
+                    else:
+                        corr = {"reason": "no OSM city boundary with this name (CCRS also files state parks, "
+                                          "campuses, airports and some unincorporated places as cities)"}
                 except corridors.OverpassUnavailable as e:
                     print(f"[{n}/{len(todo)}] {c['city']}: not tested (Overpass) - {e}", flush=True)
                     continue                          # not saved: the next pass tries again
@@ -286,8 +363,9 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
                 continue
             row = {**c, "key": key, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
                    "osm_boundary": (b or {}).get("name"), "osm_source": osm_source,
-                   "corridor_source": ("frozen list" if (c["city"], c["county"]) in frozen else
-                                       "earlier run (live Overpass)" if fz else "picked")}
+                   "corridor_source": ("frozen list" if fz and (c["city"], c["county"]) in frozen else
+                                       "earlier run (live Overpass)" if fz else
+                                       "picked (added after the corridor list was frozen)" if frozen else "picked")}
             if "line" not in corr:
                 row.update(stage="corridor", reason=corr["reason"])
             else:
@@ -299,7 +377,8 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
             if "Overpass" in json.dumps(row.get("error", "")) or "OverpassUnavailable" in str(row.get("error", "")):
                 print(f"[{n}/{len(todo)}] {c['city']}: not tested (Overpass) - {row.get('error', '')[:120]}", flush=True)
                 continue                              # the app's corridor fetch got no streets: retry next pass
-            row["result"], row["result_reason"] = classify(row)
+            row["result_v1"], row["result_reason_v1"] = classify(row)
+            row["result"], row["result_reason"] = classify_v2(row)
             out.write_text(json.dumps(row, indent=1, default=str))
             print(f"[{n}/{len(todo)} {time.time() - t0:.0f}s] {c['city']}: {row['result']} - {row['result_reason']}",
                   flush=True)

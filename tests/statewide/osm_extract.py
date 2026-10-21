@@ -62,7 +62,8 @@ def build(pbf: Path, db_path: Path) -> None:
                              min(c[0] for c in coords), max(c[0] for c in coords),
                              min(c[1] for c in coords), max(c[1] for c in coords)))
         elif o.is_area():
-            lvl = o.tags.get("admin_level")
+            # Rosemead's boundary is tagged admin=8 instead of admin_level=8 (OSM typo, found 2026-10-20)
+            lvl = o.tags.get("admin_level") or o.tags.get("admin")
             if lvl in ("6", "8") and o.tags.get("name"):
                 rings = [[(round(n.lat, 6), round(n.lon, 6)) for n in ring] for ring in o.outer_rings()]
                 if rings:
