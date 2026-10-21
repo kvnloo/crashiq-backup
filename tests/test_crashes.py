@@ -316,3 +316,33 @@ def test_one_stray_gps_crash_does_not_make_a_distant_county_a_search_area():
     ids = {c["crash_id"] for c in out["crashes"]}
     assert not ids & {"9777101", "9777102", "9777103"}
     assert [r["found_by"] for r in out["cleaning"]["area_rejected"] if r["area"] == "1"] == ["GPS crash in the corridor box"]
+
+
+def test_no_gps_report_from_a_city_the_corridor_never_enters_is_dropped():
+    # #142: Buena Park's Beach Blvd review list held ~220 Huntington Beach reports naming Beach Blvd and a study cross
+    # street. Here the corridor is wholly in Hawthorne; Gardena reports name the same corner.
+    d = _no_gps_fixture()
+    t = next(t for rid, t in d["tables"].items() if rid.startswith("cra-2021"))
+    base = dict(t["rows"][0])
+    for i in range(3):
+        t["rows"].append({**base, "Collision Id": 9777201 + i, "City Name": "GARDENA", "Latitude": "", "Longitude": "",
+                          "PrimaryRoad": "CRENSHAW BL", "SecondaryRoad": "W 144TH ST",
+                          "Crash Date Time": f"2021-03-0{i + 1}T1{i}:15:00"})          # three crashes, not one refiled
+    net = {**NET_X, "cities": {"cities": ["Hawthorne"], "outside": False, "counties": []}}
+    out = crashes.pull(STUDY, net, Ckan(FakeCkan(d)))
+    ids = {c["crash_id"] for c in out["crashes"]}
+    assert not ids & {"9777201", "9777202", "9777203"}
+    assert "9200001" in ids                                     # Hawthorne's own no-GPS report stays
+    assert out["cleaning"]["no_coords_other_city"] >= 3 and out["cleaning"]["other_cities"]["GARDENA"] >= 3
+    # OSM couldn't say which cities: nothing is dropped
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    assert {"9777201", "9777202", "9777203"} <= {c["crash_id"] for c in out["crashes"]}
+
+
+def test_city_names_chp_and_osm_spell_differently_still_match():
+    allowed = {crashes.city_key(x) for x in ("Carmel-by-the-Sea", "St. Helena", "Angels", "La Cañada Flintridge")}
+    for chp in ("Carmel", "Saint Helena", "Angels Camp", "La Canada Flintridge"):
+        assert crashes._city_allowed(chp, allowed) is True, chp
+    assert crashes._city_allowed("Huntington Beach", {crashes.city_key("Buena Park")}) is False
+    assert crashes._city_allowed("Uc Santa Barbara", {crashes.city_key("Goleta")}) is None      # a campus: not judged
+    assert crashes._city_allowed(None, set()) is None

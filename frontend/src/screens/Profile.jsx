@@ -458,6 +458,10 @@ function DataSources({ p, pull, onRefresh, busy }) {
           <li><span>Deleted by CHP, dropped</span><span className="mono">{fmt(cl.deleted_dropped)}</span></li>
           <li><span>Older report versions, dropped</span><span className="mono">{fmt(cl.duplicate_versions_dropped)}</span></li>
           <li><span>Preliminary, kept and flagged</span><span className="mono">{fmt(cl.preliminary_kept)}</span></li>
+          {cl.no_coords_other_city ? (
+            <li title={Object.entries(cl.other_cities || {}).map(([c, n]) => `${c} ${n}`).join(', ')}>
+              <span>No GPS, filed in a city the corridor doesn&apos;t enter, left out</span><span className="mono">{fmt(cl.no_coords_other_city)}</span></li>
+          ) : null}
         </ul>
         <button type="button" className="sf-btn" onClick={onRefresh} disabled={busy}>Pull fresh data from CCRS</button>
       </div>

@@ -28,13 +28,13 @@ LEVEL = {"Fatal": "K", "SuspectSerious": "A", "SevereInactive": "A", "SuspectMin
 RANK = "KABCUO"
 
 
-def run(name, monkeypatch):
+def run(name, monkeypatch, cities=None):
     line = [tuple(p) for p in json.loads((LIVE / f"line_{name}.json").read_text())]
     osm = json.loads((LIVE / f"overpass_{name}.json").read_text())
     found = network.detect(osm, line)
     ints = [{**i, "is_study": True} for i in found["intersections"]]
     net = {"line": line, **found, "intersections": ints, "segments": network.segments(ints, found["length_ft"]),
-           "length_mi": found["length_ft"] / 5280, "is_freeway": found["corridor_highway"] == "motorway"}
+           "length_mi": found["length_ft"] / 5280, "is_freeway": found["corridor_highway"] == "motorway", "cities": cities}
     monkeypatch.setattr(network, "fetch_overpass", lambda db, q: osm)
     pull = crashes.pull(STUDY, net, Ckan(FakeCkan(LIVE / f"ckan_{name}.json"), retries=0))
     placement.place_unmatched(None, net, pull)
@@ -312,3 +312,14 @@ def test_T2_ped_bike_column_adds_up(case):
     t2 = table(p, "T2")
     assert sum(v["vru_crashes"] for v in t2.values()) == len(ped | bike)
     assert sum(v["vru_ksi_crashes"] for v in t2.values()) == sum(sev[c] in "KA" for c in ped | bike)
+
+
+def test_a_corridor_crossing_into_the_next_city_keeps_both_cities(monkeypatch):
+    # #142: Union City Blvd runs into Fremont as Ardenwood Blvd (#53). Reports from both cities stay; a city the line
+    # doesn't enter loses its no-GPS reports.
+    _, _, a0, _ = run("unioncity", monkeypatch)
+    _, pull, a, _ = run("unioncity", monkeypatch, {"cities": ["Union City", "Fremont"], "outside": False, "counties": []})
+    assert a["assignments"] == a0["assignments"] and pull["cleaning"]["no_coords_other_city"] == 0
+    _, pull, a, _ = run("unioncity", monkeypatch, {"cities": ["Union City"], "outside": False, "counties": []})
+    assert pull["cleaning"]["other_cities"].get("Fremont", 0) > 0
+    assert all(c.get("city") != "Fremont" or c["location_source"] == "gps" for c in pull["crashes"])

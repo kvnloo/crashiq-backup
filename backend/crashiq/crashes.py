@@ -14,6 +14,8 @@ import json
 import threading
 import urllib.parse
 import re
+import unicodedata
+from collections import Counter
 from datetime import datetime, timezone
 
 from fastapi import APIRouter, HTTPException, Request, Response
@@ -51,7 +53,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 11    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132)
+PULL_FORMAT = 12    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -327,6 +329,33 @@ def _like_words(core: str) -> list[str]:
     return [p + m.group(2) for p in ROUTE_SPELLINGS[m.group(1)]]
 
 
+# A no-GPS report filed in a city the corridor never enters can't be on it (#142): Buena Park's Beach Blvd pulled
+# ~220 Huntington Beach reports naming Beach Blvd and a study cross street. The corridor's cities come from OSM
+# boundaries along the line + buffer (network.corridor_cities). CHP and OSM spell some cities differently (Carmel /
+# Carmel-by-the-Sea, Saint Helena / St. Helena, Angels Camp / Angels, La Canada / La Cañada), and CHP files some
+# reports under campuses, park districts, airports and harbors that are no OSM city: those are never judged.
+_SPECIAL_AREA = re.compile(r"^(UC |CSU |CAL POLY|SAN FRANCISCO STATE|SAN JOSE STATE|SAN DIEGO STATE)|UNIV|PK DIST|"
+                           r"PARK DIST|AIRPORT|HARBOR|PORT OF|MEDICAL CENTER", re.I)
+
+
+def city_key(name: str | None) -> str:
+    t = unicodedata.normalize("NFKD", str(name or "")).encode("ascii", "ignore").decode().upper().strip()
+    for p in ("CITY AND COUNTY OF ", "CITY OF ", "TOWN OF "):
+        t = t.removeprefix(p)
+    t = re.sub(r"\bSAINT\b", "ST", t)
+    return re.sub(r"[^A-Z0-9]", "", t)
+
+
+def _city_allowed(city: str | None, allowed: set[str]) -> bool | None:
+    """True / False, or None when the report's city can't be judged (blank, a campus or district)."""
+    if not city or _SPECIAL_AREA.search(city):
+        return None
+    k = city_key(city)
+    if not k:
+        return None
+    return any(k == a or (min(len(k), len(a)) >= 6 and (a.startswith(k) or k.startswith(a))) for a in allowed)
+
+
 def _refile_key(c: dict) -> tuple | None:
     """Same crash filed twice under two Collision Ids (#81): same agency, same report number (when CCRS gives one),
     same date-time and the same two roads. Report numbers alone are not unique (SFPD reuses them), hence the rest."""
@@ -392,7 +421,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
     years = list(range(study["from_year"], study["to_year"] + 1))
     res = cc.table_resources(ckan.get("package_show", id=cc.PACKAGE))
     log = {"rows_read": 0, "outside_window_dropped": 0, "deleted_dropped": 0, "duplicate_versions_dropped": 0,
-           "no_coords_read": 0, "no_coords_not_corridor_street": 0, "no_coords_off_study_stretch": 0,
+           "no_coords_read": 0, "no_coords_other_city": 0, "no_coords_not_corridor_street": 0, "no_coords_off_study_stretch": 0,
            "no_coords_grade_separated": 0, "gps_beyond_margin_dropped": 0,
            "implausible_coords": 0, "bad_dates_dropped": 0, "duplicate_parties_dropped": 0, "version_ties_first_kept": 0, "preliminary_kept": 0,
            "feet_typed_as_miles_fixed": 0, "years_missing": [], "parties_missing_years": [], "iwp_missing_years": [],
@@ -410,6 +439,9 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
     gs_keys = grade.crossing_keys(net)      # roads crossing over/under the corridor (N7, #67)
     name_area: list[str] | None = None     # found once from street names, reused for every year
     near_n: dict[str, int] | None = None   # GPS crashes per area near the corridor, read once (#132)
+    corridor_cities = net.get("cities")      # OSM cities along the line (#142); None = not known, nothing dropped
+    gps_cities: Counter = Counter()
+    other_city: Counter = Counter()
     log["area_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
 
@@ -481,8 +513,21 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                      f"WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in})")
             no_xy = _paged(ckan, f"SELECT * FROM ({inner}) q WHERE ({names})", cid)
         log["no_coords_read"] += len(no_xy)
+        # cities a no-GPS report may come from (#142): those the line enters, unincorporated county where it leaves
+        # city limits, and any city with 2+ of its GPS crashes along the corridor (an OSM boundary can be missing)
+        gps_cities.update(r["city"] for r, _ in recs if r.get("city"))
+        allowed = None
+        if corridor_cities is not None:
+            allowed = {city_key(x) for x in corridor_cities["cities"]}
+            allowed |= {city_key(x) for x, n in gps_cities.items() if n >= 2}
+            if corridor_cities["outside"]:
+                allowed |= {"UNINCORPORATED"} | {city_key(x) for x in corridor_cities["counties"]}
         for r in no_xy:
             c = cc.crash_record(r, cols)
+            if allowed is not None and _city_allowed(c.get("city"), allowed) is False:
+                log["no_coords_other_city"] += 1
+                other_city[c["city"]] += 1
+                continue
             log["implausible_coords"] += c["bad_coords"]
             roads = [c["primary_road"], c["secondary_road"]]
             on_idx = [i for i, rd in enumerate(roads) if _names_street(rd, corridor_keys)]
@@ -603,6 +648,8 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         log["feet_typed_as_miles_fixed"] += c.pop("offset_fixed")
         out.append(c)
     log["unknown_injury_values"] = sorted(unknown)
+    log["other_cities"] = dict(other_city.most_common())        # no-GPS reports filed in cities off the corridor (#142)
+    log["corridor_cities"] = corridor_cities                     # None: OSM couldn't say, so nothing was dropped
     log["kept"] = len(out)
     if not out:  # never a silent empty study
         log["warning"] = ("No crashes found. " + (
@@ -658,7 +705,8 @@ def fresh(db: Database, sid: str) -> dict | None:
     return cached if cached and cached["cache_key"] == key and not stale(cached, study) else None
 
 
-def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=None) -> tuple[dict, bool]:
+def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=None,
+           overpass=None) -> tuple[dict, bool]:
     """(pull result, from_cache). Re-pulls when refreshed or when window/corridor changed. The result is stored
     only if the study still has the same key when the pull ends (compare-and-set); if the corridor or window was
     edited meanwhile, it pulls once more for the new study."""
@@ -671,6 +719,8 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
             study = study_mod.require(db, sid)
             net = network_mod.network(db, sid)
             key = cache_key(study, net) if net.get("line") else None
+            if net.get("line"):                    # the cities the line enters (#142); cached with the OSM answers
+                net = {**net, "cities": network_mod.corridor_cities(db, net["line"], study["buffer_ft"], overpass)}
             result = pull(study, net, ckan, progress)
             from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
             place_unmatched(db, net, result)
@@ -709,11 +759,11 @@ def _error_status(e: Exception) -> tuple[int, str]:
     return 500, f"The crash pull failed: {e}"
 
 
-def _run_job(db: Database, sid: str, ckan: Ckan, refresh: bool, job: dict) -> None:
+def _run_job(db: Database, sid: str, ckan: Ckan, refresh: bool, job: dict, overpass=None) -> None:
     def progress(step, done, total):
         job.update(step=step, done=done, total=total)
     try:
-        result, hit = ensure(db, sid, ckan, refresh, progress)
+        result, hit = ensure(db, sid, ckan, refresh, progress, overpass)
         job.update(state="done", step="Done", summary=summary(result, hit))
     except Exception as e:  # noqa: BLE001 - reported to the screen through the status endpoint
         code, msg = _error_status(e)
@@ -736,11 +786,12 @@ def post_pull(sid: str, request: Request, response: Response, refresh: bool = Fa
                 job = {"state": "running", "step": "Starting", "done": 0, "total": 0,
                        "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
                 _JOBS[sid] = job
-                threading.Thread(target=_run_job, args=(db, sid, ckan_for(request), refresh, job), daemon=True).start()
+                threading.Thread(target=_run_job, args=(db, sid, ckan_for(request), refresh, job,
+                                                         getattr(request.app.state, "overpass", None)), daemon=True).start()
         response.status_code = 202
         return {"job": dict(job)}
     try:
-        result, hit = ensure(db, sid, ckan_for(request), refresh)
+        result, hit = ensure(db, sid, ckan_for(request), refresh, overpass=getattr(request.app.state, "overpass", None))
     except (CkanError, PullError, network_mod.NetworkError) as e:
         code, msg = _error_status(e)
         raise HTTPException(code, msg) from e
