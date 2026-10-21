@@ -75,12 +75,17 @@ UA = {"User-Agent": "CrashIQ-tester/0.1 (statewide data test, #73)"}
 TARGET_M = 1609.0
 
 
+# CCRS city name -> OSM boundary name, where they differ (checked against the extract, 2026-10-20)
+ALIASES = {"CARMEL": "CARMELBYTHESEA", "ANGELSCAMP": "ANGELS"}
+
+
 def norm_city(s: str) -> str:
     s = unicodedata.normalize("NFKD", s or "").encode("ascii", "ignore").decode().upper()
     s = re.sub(r"\bCITY OF\b", " ", s)
     s = re.sub(r"\bSAINT\b", "ST", s)
     s = re.sub(r"\bST\.?\b", "ST", s)
-    return re.sub(r"[^A-Z0-9]", "", s)
+    s = re.sub(r"[^A-Z0-9]", "", s)
+    return ALIASES.get(s, s)
 
 
 def overpass(query: str, cache: Path, pause: float = 1.0) -> dict:

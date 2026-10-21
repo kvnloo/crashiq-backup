@@ -149,3 +149,20 @@ def test_empty_overpass_answer_is_not_cached(db):
     except network.NetworkError:
         pass
     assert db.one("SELECT 1 FROM http_cache WHERE source = 'overpass'") is None
+
+
+@pytest.mark.xfail(strict=True, reason="bug: one wrong-county GPS crash in the box sends the no-GPS search to the wrong county")
+def test_wrong_county_gps_crash_does_not_redirect_the_no_gps_search():
+    # Statewide run 2026-10-20 (#73), Marina (Monterey, county 27), Reservation Rd: in 2021 the only GPS crashes in
+    # the corridor box are two Woodland PD reports (Yolo, county 57; ids 2796970, 2829517, ELM ST & COURT ST, a
+    # Woodland corner) with GPS in Marina. The pull takes the no-GPS search area from the GPS crashes in the box,
+    # searches county 57 for 2021, and misses every Marina no-GPS report that year (10 of 11 silent drops).
+    d = _fixture()
+    for rid, t in d["tables"].items():
+        if rid == "cra-2023-0000-0000":
+            for r in t["rows"]:
+                if r.get("Latitude"):
+                    r["County Code"] = "57"            # every GPS crash in the box that year is from another county
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    ids = {c["crash_id"] for c in out["crashes"]}
+    assert "9200001" in ids                    # Crenshaw & W 144th St, 2023, no GPS, county 19

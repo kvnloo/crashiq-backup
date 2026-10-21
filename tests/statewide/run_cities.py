@@ -270,9 +270,11 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
                 b = {"name": fz.get("osm_boundary")}
             else:
                 try:
-                    b = bounds.get(corridors.norm_city(c["city"])) or corridors.find_rel(c["city"], OSM)
+                    b = bounds.get(corridors.norm_city(c["city"])) or (None if LOCAL else
+                                                                         corridors.find_rel(c["city"], OSM))
                     corr = (corridors.pick(b["rel"], OSM, LOCAL) if b
-                            else {"reason": "no OSM city boundary with this name"})
+                            else {"reason": "no OSM city boundary with this name (CCRS also files state parks, "
+                                            "campuses, airports and some unincorporated places as cities)"})
                 except corridors.OverpassUnavailable as e:
                     print(f"[{n}/{len(todo)}] {c['city']}: not tested (Overpass) - {e}", flush=True)
                     continue                          # not saved: the next pass tries again
