@@ -217,6 +217,9 @@ def test_T14_T17_safety_tables(case):
 
 # Heavy truck (#52, user decision 2C): 3+ axles or a truck-tractor; CCRS carries axles only in the type code.
 REF_HEAVY = {"TruckTractor", "ThreeOrMoreAxleTruck", "ThreeAxleTankTruck", "ThreeAxleTowTruck"}
+REF_TRAILER = {"SemiTrailer", "SemiTankTrailer", "PullTrailer", "PullTankTrailer", "TwoTrailersIncludesSemiAndPull",
+               "TwoTankTrailer", "ThreeTrailers", "ContainerChassis", "FederallyLegalSemi",
+               "FederallyLegalDoubleComboOver75FeetLong"}
 
 
 def test_T10_heavy_truck_is_three_axles_or_a_tractor(case):
@@ -225,7 +228,7 @@ def test_T10_heavy_truck_is_three_axles_or_a_tractor(case):
     heavy = set()
     for r in raw["Parties"]:
         types = {str(r.get("Vehicle1TypeDesc") or ""), str(r.get("Vehicle2TypeDesc") or "")}
-        if {t.removeprefix("Hmw").removeprefix("Hm") for t in types} & REF_HEAVY:
+        if {t.removeprefix("Hmw").removeprefix("Hm") for t in types} & REF_HEAVY or r.get("Vehicle1TypeDesc") in REF_TRAILER:
             heavy.add(str(r["CollisionId"]))
     assert table(p, "T10")["heavy_truck"]["crashes"] == len(heavy & set(ids))
 
