@@ -14,6 +14,7 @@ Status: OPEN / ANSWERED (who, date) / RESEARCHED (source).
 | N7 | Grade separation: a road passing over or under the corridor (interchange, overcrossing, undercrossing) sits inside the buffer but never meets the corridor at grade. Its crashes, and interchange crashes on a freeway corridor, must not be counted | The 2D buffer and the 30 m "near" rule in `locate.py` can't tell levels apart, so these crashes leak in | ANSWERED (user, 2026-10-18): exclude them; only at-grade intersections the corridor passes through count. Detection: #67 |
 | N8 | Crashes that can't be placed from any source (no GPS, cross street NOT STATED, no other source with a location): count them in the corridor's totals (crashes per mile, severity mix) without assigning them to any location, or leave them out of all counts? | Corridor totals vs location totals; hidden undercount if left out | OPEN (user). Until decided they stay on the review list labelled "on this corridor, location unknown". Other sources first: TIMS and city open data, measured in #88, terms in #126 |
 | N9 | E-scooters and e-bikes: show them as their own road users on tab 3 (next to pedestrians, bicyclists, motorcyclists), fold e-bikes into bicyclists, or leave as is? | CCRS codes them, but today an e-scooter crash is in no road-user group, and an e-bike is a bicyclist only when CHP also typed the party as one | OPEN (user). Proposal and counts below (Engineering, 2026-10-20, from #139) |
+| N10 | Collision diagram (#106): which arrow symbol stands for each CCRS movement code, and which parties get an arrow? | The diagram is drawn by code from these codes; the mapping decides what a reviewer reads into it | OPEN (user). Proposal and counts below (Engineering, 2026-10-20) |
 
 ## N9 proposal: e-scooters and e-bikes (Engineering, 2026-10-20; not built)
 
@@ -41,4 +42,68 @@ Options for the user:
 - **C. Leave as is:** CHP's party type decides.
 
 Whichever is chosen, `MotorizedBicycle` and `MotorDrivenCycleScooter15HpOrLess` need a call too: count them with motorcycles, or leave them out.
+
+## N10 proposal: collision diagram symbols (Engineering, 2026-10-20; not built, #106)
+
+A collision diagram draws each crash at an intersection as one arrow per party, placed on the approach the party came
+from, with the crash's severity at the point where they met. CCRS gives three things per party (Parties table):
+- **movement before the collision:** `MovementPrecCollDescription`
+- **direction of travel:** `DirectionOfTravel`, N / S / E / W
+- **party type:** Driver, Pedestrian, Bicyclist, ParkedVehicle, …
+
+Everything below is from live CCRS Parties 2024, statewide (data.ca.gov, pulled 2026-10-20): **815,978 parties**.
+
+### Proposed symbols (standard collision-diagram arrows, as in FHWA / ITE practice)
+| CCRS movement | Parties 2024 | Proposed symbol | Glyph |
+|---|---|---|---|
+| `PROCEEDING STRAIGHT` | 387,764 (47.5%) | Straight arrow | → |
+| `STOPPED` | 88,167 (10.8%) | Stopped: short arrow ending in a bar | ⇥ |
+| `SLOWING/STOPPING` | 39,757 (4.9%) | Stopped: short arrow ending in a bar | ⇥ |
+| `PARKED` | 58,255 (7.1%) | Parked: small box, no arrow | ▭ |
+| `MAKING LEFT TURN` | 53,489 (6.6%) | Left-turn arrow | ↰ |
+| `MAKING RIGHT TURN` | 23,389 (2.9%) | Right-turn arrow | ↱ |
+| `MAKING U TURN` | 5,164 (0.6%) | U-turn arrow | ↶ |
+| `OTHER UNSAFE TURNING` | 27,898 (3.4%) | Turning, side not stated: bent arrow with a '?' (see question 2) | ↝? |
+| `CHANGING LANES` | 33,552 (4.1%) | Lane-change arrow (offset to the next lane) | ⤳ |
+| `MERGING` | 3,566 (0.4%) | Lane-change arrow | ⤳ |
+| `LANE SPLITTING` | 1,335 (0.2%) | Lane-change arrow | ⤳ |
+| `PASSING OTHER VEHICLE` | 4,615 (0.6%) | Lane-change arrow | ⤳ |
+| `XING INTO OPPOSING LANE` | 2,947 (0.4%) | Straight arrow drawn in the opposing lane | → |
+| `TRAVELLING WRONG WAY` | 2,452 (0.3%) | Straight arrow against the lane's direction, labelled 'wrong way' | ← |
+| `BACKING` | 14,633 (1.8%) | Backing arrow (dashed, reversed) | ⇠ |
+| `PARKING MANEUVER` | 3,173 (0.4%) | Backing arrow | ⇠ |
+| `ENTERING TRAFFICD` | 8,599 (1.1%) | Entering arrow (curving in from the curb or a driveway) | ↪ |
+| `RAN OFF ROAD` | 13,050 (1.6%) | Out-of-control arrow (wavy) | ↯ |
+| `OTHER` | 31,055 (3.8%) | No arrow: counted under the diagram as 'movement not stated' | — |
+| `(blank)` | 13,118 (1.6%) | No arrow: counted under the diagram as 'movement not stated' | — |
+
+Symbols are drawn in the text colour (no hue). The crash's severity is a dot at the conflict point, in the existing
+severity ramp: fatal and serious stand out, and the colour-blind check (#108) is unchanged.
+`ENTERING TRAFFICD` is CHP's own spelling ("ENTERING TRAFFIC").
+
+### Placement
+- **Approach:** the party's direction of travel picks the leg it came from (northbound comes from the south leg).
+  Each N/S/E/W is matched to the intersection's nearest leg by bearing, since legs are rarely exactly north-south.
+- **No direction:** 22,875 parties in 2024 (2.8%; 10,183 of them drivers) can't be placed, so they aren't drawn and
+  are counted under the diagram.
+- **Pedestrians** (14,690 parties): most have no movement code (6,864 blank, 2,129 OTHER, 4,555 PROCEEDING STRAIGHT).
+  Proposed: a dashed walking line across the leg, whatever the movement code; what they were doing is already in T15.
+- **Bicyclists** (11,872 parties): the same arrows as vehicles, drawn thinner with a small bicycle mark.
+  8,567 go straight; 662 travel the wrong way.
+- **Parked vehicles** (60,080 parties; 56,297 coded PARKED): the parked box at the curb of their leg.
+
+### Questions for the user
+1. **Which symbol set?**
+   - **A, the full set above:** 11 distinct symbols.
+   - **B, a simpler six:** straight, left, right, U-turn or backing, lane change, stopped or parked. Ran-off-road,
+     entering and wrong-way would fold into straight, and their codes would be listed in the drill-down table.
+2. **`OTHER UNSAFE TURNING`** (27,898; 3.4%): CHP doesn't say which side.
+   - (a) A generic turn arrow marked "?" (proposed).
+   - (b) Leave it undrawn and count it.
+   - Inferring the side from the collision type would be a guess, so it isn't offered.
+3. **Which parties get an arrow?**
+   - (a) Every party (proposed): a two-car crash shows both.
+   - (b) Only the party at fault, which is simpler but hides the other driver's movement.
+4. **Where the diagram shows:** per intersection in the location drill-down (#106 as written), and only for
+   intersections with at least one crash.
 
