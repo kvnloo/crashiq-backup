@@ -556,6 +556,13 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                [next((n for n in runs_ if v.get(n) == "pass"), None)] for (c, k), v in sorted(by.items())],
               {1: 22})
 
+    cleared = [[r["city"], r["county"], x["crash_id"], x["cross_street"], x["direction"], x["offset_ft"],
+                x["past_stretch_end_ft"]] for r in results for x in (r.get("v4_cleared") or [])]
+    if any(r.get("silent_drops_v4") is not None for r in results):
+        wv = wb.create_sheet("Silent drops v4 cleared")
+        table(wv, "V4Cleared", ["City", "County code", "Collision Id", "Cross street (report)", "Direction",
+                                "Offset ft (report)", "Past the stretch end ft (computed)"], cleared, {1: 22, 4: 26})
+
     v2cols, v2rows = run_history._read(run_history.HISTORY_V2)
     if v2rows:          # corridor list v2: its own sheet, never merged into Run history (v1)
         w2 = wb.create_sheet("Run history (corridors v2)")

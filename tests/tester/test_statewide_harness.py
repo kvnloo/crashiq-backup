@@ -73,3 +73,40 @@ def test_series_v2_swaps_only_the_repicked_cities():
     v2 = [{"city": "B", "county": "2", "result": "warn", "corridor_list": "v2"}]
     assert [r["result"] for r in run_history.series_v2(v1, v2)] == ["pass", "warn"]
     assert run_history.HISTORY_V2 != run_history.HISTORY
+
+
+# ---- silent-drop check v4 (PM, after #149): v3 + the report's own offset, computed here, not by the app ----
+# An east-west corridor ~1 mile long at latitude 38.5; cross streets at its two ends.
+LINE_EW = [(38.5, -122.50), (38.5, -122.4815)]
+
+
+def test_offset_units_and_unusable_values():
+    assert checks.offset_ft(206, "F") == 206
+    assert round(checks.offset_ft(0.39, "M")) == 2059
+    assert checks.offset_ft(None, "F") is None
+    assert checks.offset_ft(52800, "F") is None          # over a mile: a typo, can't be used to clear a report
+    assert checks.offset_ft(173.88, "M") is None
+
+
+def test_report_station_moves_along_the_corridor_by_the_offset():
+    s0, length = checks.station(LINE_EW, (38.5, -122.50)), checks.station(LINE_EW, LINE_EW[-1])
+    assert abs(s0) < 1 and 5200 < length < 5400
+    assert abs(checks.report_station(LINE_EW, (38.5, -122.4815), "W", 500) - (length - 500)) < 1
+    assert abs(checks.report_station(LINE_EW, (38.5, -122.50), "W", 500) + 500) < 1
+    assert abs(checks.report_station(LINE_EW, (38.5, -122.50), "N", 500)) < 1   # across the corridor: no move
+
+
+def test_v4_clears_only_reports_beyond_the_stretch_plus_tolerance():
+    ends = [(38.5, -122.50), (38.5, -122.4815)]
+    lo, hi = sorted(checks.station(LINE_EW, p) for p in ends)
+    # 2,059 ft west of the west end: beyond the 250 ft tolerance -> cleared, with its distance
+    assert round(checks.beyond_stretch(checks.report_station(LINE_EW, ends[0], "W", 2059), lo, hi)) == 2059
+    # 200 ft past the end is within the tolerance band -> still expected (beyond_stretch <= tol)
+    assert checks.beyond_stretch(checks.report_station(LINE_EW, ends[0], "W", 200), lo, hi) <= 250
+    # inside the stretch: 0
+    assert checks.beyond_stretch(checks.report_station(LINE_EW, ends[0], "E", 900), lo, hi) == 0
+
+
+def test_nearest_node_to_the_line_picks_the_crossing():
+    nodes = [(38.51, -122.49), (38.5001, -122.49), (38.49, -122.49)]
+    assert checks.nearest_to_line(LINE_EW, nodes) == (38.5001, -122.49)

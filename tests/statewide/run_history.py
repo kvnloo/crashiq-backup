@@ -69,6 +69,13 @@ MEASURES = {
                        "Rd), and a refiled copy whose kept twin was pulled doesn't count (PM, PR #148; from run 4).",
     "pass_v3": "Cities with result pass under the run-2 rule using silent_drops_v3.", "warn_v3": "As pass_v3: warn.",
     "fail_v3": "As pass_v3: fail.",
+    "silent_drops_v4": "As v3, less reports whose own stated offset from their cross street (CCRS distance, direction, "
+                       "unit; computed by the Tester from OSM cross-street nodes and the frozen line, not by the app) "
+                       "puts them more than 250 ft (or the study radius) past either end of the stretch. Offsets over "
+                       "a mile, or without a direction, never clear a report. Every cleared report is listed on the "
+                       "'Silent drops v4 cleared' sheet with its distance (PM, after #149; from run 4).",
+    "pass_v4": "Cities with result pass under the run-2 rule using silent_drops_v4.", "warn_v4": "As pass_v4: warn.",
+    "fail_v4": "As pass_v4: fail.",
     "placement_accuracy_pct_v1": "Hidden-GPS test (#88): % of auto-placed crashes within the gate distance of their "
                                  "own GPS. Blank until #88 exists.",
 }
@@ -251,6 +258,8 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
     n2 = {k: sum(1 for r in results if r["result"] == k) for k in ("pass", "warn", "fail")} if has_v2 else {}
     has_v3 = any("result_v3" in r for r in results)
     n3 = {k: sum(1 for r in results if r.get("result_v3") == k) for k in ("pass", "warn", "fail")} if has_v3 else {}
+    has_v4 = any(r.get("silent_drops_v4") is not None for r in results)
+    n4 = {k: sum(1 for r in results if r.get("result_v4") == k) for k in ("pass", "warn", "fail")} if has_v4 else {}
     first = next((r for r in results if r.get("commit")), {})
     row = {"run": len(runs) + 1, "date": dt.date.today().isoformat(),
            "app_commit": first.get("commit"), "backend_tree": tree, "mirror_date": first.get("mirror_built"),
@@ -268,6 +277,8 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
            "pass_v2": n2.get("pass"), "warn_v2": n2.get("warn"), "fail_v2": n2.get("fail"),
            "silent_drops_v3": sum(r.get("silent_drops_v3") or 0 for r in results) if has_v3 else None,
            "pass_v3": n3.get("pass"), "warn_v3": n3.get("warn"), "fail_v3": n3.get("fail"),
+           "silent_drops_v4": sum(r.get("silent_drops_v4") or 0 for r in results) if has_v4 else None,
+           "pass_v4": n4.get("pass"), "warn_v4": n4.get("warn"), "fail_v4": n4.get("fail"),
            "new_corridors_v1": sum(1 for r in results if str(r.get("corridor_source", "")).startswith("picked (added")
                                    and (r.get("corridor") or {}).get("line")),
            "on_corridor_located_pct_v2": _on_corridor_pct(tested),
@@ -286,6 +297,7 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
                      "silent_drops_v1": r.get("silent_drops"), "double_counts_v1": m["double_counts"],
                      "excluded_no_cross_street_v1": m["excluded_wrongly"],
                      "result_v3": r.get("result_v3"), "silent_drops_v3": r.get("silent_drops_v3"),
+                     "result_v4": r.get("result_v4"), "silent_drops_v4": r.get("silent_drops_v4"),
                      "corridor_source": r.get("corridor_source")})
     _append(city_history, crow, list(crow[0]) if crow else [])
     return row

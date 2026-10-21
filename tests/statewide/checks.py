@@ -3,6 +3,7 @@ tests/tester/test_statewide_harness.py."""
 
 from __future__ import annotations
 
+import math
 import re
 
 import osm_local
@@ -78,3 +79,71 @@ def inside_share(line, rings) -> float | None:
     if not line:
         return None
     return round(100 * sum(osm_local._inside(tuple(p), rings) for p in line) / len(line), 1)
+
+
+# ---- silent-drop check v4 (PM, after #149): v3 + the report's stated offset from its cross street ----
+# Computed here from the frozen corridor line, OSM cross-street nodes and the CCRS offset fields; nothing is taken
+# from the app's own offset handling (a checker must not borrow what it checks).
+FT_PER_DEG = 111_320 * 3.28084
+MAX_OFFSET_FT = 5280.0         # longer stated offsets are mostly typos (52,800 ft; 317 "miles"): never used to clear
+V4_TOLERANCE_FT = 250.0        # band past each end of the stretch where a report still counts (HSM influence radius)
+DIRV = {"N": (0.0, 1.0), "S": (0.0, -1.0), "E": (1.0, 0.0), "W": (-1.0, 0.0)}
+
+
+def offset_ft(dist, unit) -> float | None:
+    """The report's offset in feet, or None when it can't be used (missing, negative, unknown unit, over a mile)."""
+    try:
+        d = float(dist)
+    except (TypeError, ValueError):
+        return None
+    ft = {"F": d, "M": d * 5280}.get(str(unit or "").strip().upper())
+    return ft if ft is not None and 0 <= ft <= MAX_OFFSET_FT else None
+
+
+def _xy(line):
+    lat0 = sum(p[0] for p in line) / len(line)
+    k = math.cos(math.radians(lat0))
+    return lambda la, lo: ((lo - line[0][1]) * FT_PER_DEG * k, (la - line[0][0]) * FT_PER_DEG)
+
+
+def _project(line, p) -> tuple[float, tuple[float, float], float]:
+    """(station ft along the line, unit direction of the nearest segment, distance ft from the line)."""
+    to = _xy(line)
+    pts = [to(*q) for q in line]
+    x, y = to(*p)
+    best, run = None, 0.0
+    for (ax, ay), (bx, by) in zip(pts, pts[1:]):
+        L = math.hypot(bx - ax, by - ay)
+        if L == 0:
+            continue
+        ux, uy = (bx - ax) / L, (by - ay) / L
+        t = (x - ax) * ux + (y - ay) * uy
+        tc = min(max(t, 0.0), L)
+        d = math.hypot(ax + ux * tc - x, ay + uy * tc - y)
+        s = run + (t if (t < 0 and run == 0) or (t > L and (bx, by) == pts[-1]) else tc)   # extend past the ends
+        if best is None or d < best[2]:
+            best = (s, (ux, uy), d)
+        run += L
+    return best
+
+
+def station(line, p) -> float:
+    return _project(line, p)[0]
+
+
+def nearest_to_line(line, nodes):
+    """The node closest to the corridor line (where a cross street meets it)."""
+    return min(nodes, key=lambda n: _project(line, n)[2]) if nodes else None
+
+
+def report_station(line, cross_pt, direction: str, dist_ft: float) -> float:
+    """Station of a report placed `dist_ft` in compass `direction` from its cross street: the offset's component
+    along the corridor at that point (an offset across the corridor doesn't move it)."""
+    s, (ux, uy), _ = _project(line, cross_pt)
+    dx, dy = DIRV[direction]
+    return s + dist_ft * (dx * ux + dy * uy)
+
+
+def beyond_stretch(s: float, lo: float, hi: float) -> float:
+    """How far (ft) a station lies past the stretch [lo, hi]; 0 inside it."""
+    return max(lo - s, s - hi, 0.0)
