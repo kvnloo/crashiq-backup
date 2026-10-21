@@ -171,6 +171,7 @@ PARTY_COLS = {
     "at_fault": ["IsAtFault", "Is At Fault"],
     "movement": ["MovementPrecCollDescription", "Movement Prec Coll Description", "MovementPrecCollCode"],
     "vehicle_type": ["Vehicle1TypeDesc", "Vehicle 1 Type Desc"],
+    "vehicle2_type": ["Vehicle2TypeDesc", "Vehicle 2 Type Desc"],
     "age": ["StatedAge", "Stated Age"],
     "direction": ["DirectionOfTravel", "Direction Of Travel"],
 }
@@ -203,7 +204,13 @@ def kabco(extent) -> str | None:
 
 SEVERITY_ORDER = "KABCUO"   # U = injured but the injury level wasn't reported (no IWP row); O = property damage only
 
-TRUCK_WORDS = ("TRUCK TRACTOR", "TRACTOR", "SEMI", "HEAVY TRUCK", "TRUCK OR TRUCK TRACTOR")
+# Heavy truck (user decision 2026-10-20, #52 option 2C): a party vehicle with 3 or more axles, or a truck-tractor with
+# or without a trailer. CCRS has no axle-count column: the axles are in the vehicle type code (Vehicle1TypeDesc for the
+# vehicle, Vehicle2TypeDesc for what it tows). Hm / Hmw = carrying hazardous material / waste. Keyed squeezed, so the
+# data dictionary's text ("Truck Tractor") matches too. Two-axle trucks, buses, fire trucks, motor homes and
+# trailers on their own are not heavy trucks under this definition.
+HEAVY_TRUCK_TYPES = frozenset(p + t for p in ("", "HM", "HMW")
+                              for t in ("TRUCKTRACTOR", "THREEORMOREAXLETRUCK", "THREEAXLETANKTRUCK")) | {"THREEAXLETOWTRUCK"}
 MOTORCYCLE_WORDS = ("MOTORCYCLE", "MOTOR CYCLE", "MOTORCYCLE/SCOOTER", "MOTOR SCOOTER", "MOPED")
 
 
@@ -388,7 +395,8 @@ def party_record(raw: dict, cols: dict[str, dict]) -> dict:
     s = lambda v: (str(v).strip() or None) if v is not None else None
     return {"party_number": s(g("party_number")),
             "party_type": (s(g("party_type")) or "").upper() or None, "at_fault": _truthy(g("at_fault")),
-            "movement": s(g("movement")), "vehicle_type": s(g("vehicle_type")), "age": s(g("age")),
+            "movement": s(g("movement")), "vehicle_type": s(g("vehicle_type")),
+            "vehicle2_type": s(g("vehicle2_type")), "age": s(g("age")),
             "direction": s(g("direction"))}
 
 
@@ -412,6 +420,12 @@ def severity(crash: dict, iwp_extents: list[str] | None) -> tuple[str, list[str]
     return best, unknown
 
 
+def heavy_truck(party: dict) -> bool:
+    """3+ axles or a truck-tractor, from the party's vehicle and towed-unit type codes (#52, 2C)."""
+    sq = lambda v: "".join(ch for ch in str(v or "").upper() if ch.isalnum())
+    return sq(party.get("vehicle_type")) in HEAVY_TRUCK_TYPES or sq(party.get("vehicle2_type")) in HEAVY_TRUCK_TYPES
+
+
 def mode_flags(crash: dict, parties: list[dict]) -> dict:
     types = {p["party_type"] for p in parties if p["party_type"]}
     vehicles = " | ".join((p["vehicle_type"] or "").upper() for p in parties)
@@ -421,5 +435,5 @@ def mode_flags(crash: dict, parties: list[dict]) -> dict:
         "ped": "PEDESTRIAN" in types or "PEDESTRIAN" in iw or "PEDESTR" in ct,
         "bike": "BICYCLIST" in types or "BICYCLE" in iw,
         "motorcycle": any(w in vehicles for w in MOTORCYCLE_WORDS),
-        "heavy_truck": any(w in vehicles for w in TRUCK_WORDS),
+        "heavy_truck": any(heavy_truck(p) for p in parties),
     }

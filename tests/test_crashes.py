@@ -263,3 +263,16 @@ def test_sql_matches_short_names_as_words():
                       ("O'NEIL  ST", " ONEIL ST ")):
         assert db.execute(f"SELECT {sp} FROM (SELECT ? AS x)", (raw,)).fetchone()[0] == want
         assert crashes._spaced(raw) == want
+
+
+def test_heavy_truck_is_three_axles_or_a_truck_tractor():
+    # #52, user decision 2C. Live CCRS type codes (Parties 2024); axles exist only in the code.
+    h = lambda v1, v2=None: cc.heavy_truck({"vehicle_type": v1, "vehicle2_type": v2})
+    for v in ("TruckTractor", "HmTruckTractor", "HmwTruckTractor", "ThreeOrMoreAxleTruck", "HmThreeOrMoreAxleTruck",
+              "ThreeAxleTankTruck", "HmwThreeAxleTankTruck", "ThreeAxleTowTruck", "Truck Tractor"):
+        assert h(v), v
+    for v in ("TwoAxleTruck", "TwoAxleTankTruck", "TwoAxleTowTruck", "PickupsAndPanels", "OtherCommercial",
+              "FireTruck", "TourBus", "MotorHomeGreaterThan40FeetInLength", "SemiTrailer", "ImplementOfHusbandry", None):
+        assert not h(v), v
+    assert h("OtherUnknownHitAndRunDriver", "TruckTractor")       # the tractor coded as the towed unit
+    assert not h("PickupsAndPanels", "UtilityTrailer")
