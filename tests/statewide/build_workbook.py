@@ -37,8 +37,8 @@ TIMS_DIR = ROOT / "data" / "cache" / "statewide" / "tims"
 BUGS = {79: "Real CCRS injury codes all became U (no A/B/C, KSI = fatal only). Fixed on main by #76; in this run's code",
         80: "Hyphen in the OSM corridor name stops the no-GPS search (Union City, Saratoga). Fixed on main by #89, after this run",
         81: "One crash filed under two Collision Ids is counted twice. Fixed on main by #87, after this run",
-        82: "'NOT STATED' cross street excluded as a side street. Open",
-        83: "Crashes written by route number (SR-1) not found on state-highway corridors. Open",
+        82: "'NOT STATED' cross street excluded as a side street. Fixed on main, after this run",
+        83: "Crashes written by route number (SR-1) not found on state-highway corridors. Fixed on main, after this run",
         84: "Empty Overpass answer cached; corridor silently has no streets. Fixed on main by #91, after this run",
         111: "One wrong-county GPS crash in the box sends the no-GPS search to the wrong county (Marina). Open"}
 H1 = Font(bold=True, size=14)

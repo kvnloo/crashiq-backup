@@ -1,8 +1,8 @@
 """Tester: failing tests for CCRS recording habits found in the statewide agency profile (2026-10-19).
 
 Each test reproduces, on the offline Crenshaw fixture, a pattern measured in real 2023-24 CCRS data
-(`reports/CCRS agency recording profile.md`). They are strict xfails: when Engineering fixes the bug the test
-passes, pytest reports XPASS as a failure, and the marker comes off in the fix PR.
+(#73 workbook, reports/testing/). Open bugs are strict xfails (XPASS fails the suite, so the
+marker comes off when the fix lands); fixed ones stay as plain regression tests.
 """
 
 from __future__ import annotations
@@ -44,7 +44,7 @@ def _row(d: dict, cid: int) -> tuple[list, dict]:
     raise KeyError(cid)
 
 
-@pytest.mark.xfail(strict=True, reason="#81: one crash filed under two Collision Ids is counted twice")
+# Regression test for #81 (fixed on main).
 def test_same_crash_filed_under_two_collision_ids_counts_once():
     # Real CCRS 2023: CHP 9630-2023-00084 is in the table twice, Collision Ids 1975974 and 1975975, same minute,
     # I-10 E/B & BOB HOPE DR, same GPS. Statewide 2023-24: 445 report numbers with 2+ Collision Ids and the same two
@@ -56,12 +56,16 @@ def test_same_crash_filed_under_two_collision_ids_counts_once():
     twin = copy.deepcopy(r)
     twin["Collision Id"], twin["Report Version"] = 9299999, 2      # the re-filed copy, a new id
     rows.append(twin)
+    for rid, t in d["tables"].items():          # a re-filed report carries its own party and victim rows
+        if rid.startswith(("par-", "iwp-")):
+            col = next(f["id"] for f in t["fields"] if f["id"].replace(" ", "").lower() == "collisionid")
+            t["rows"] += [{**r, col: 9299999} for r in t["rows"] if str(r.get(col)) == "9200001"]
     out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
     ids = {c["crash_id"] for c in out["crashes"]}
     assert len(ids & {"9200001", "9299999"}) == 1
 
 
-@pytest.mark.xfail(strict=True, reason="#82: 'NOT STATED' cross street is treated as a side street named NOT STATED")
+# Regression test for #82 (fixed on main).
 def test_cross_street_not_stated_is_not_called_a_side_street():
     # Real CCRS 2024: SecondaryRoad is 'NOT STATED' on 4,649 rows and 'PRIVATE PROPERTY' on 644. Santa Monica PD
     # (8% GPS) has no usable cross street on 16% of its street crashes, Signal Hill (1% GPS) 15%. The no-GPS
@@ -92,7 +96,7 @@ def _state_route_osm() -> dict:
     return {"elements": nodes + ways}
 
 
-@pytest.mark.xfail(strict=True, reason="#83: crashes written by route number (SR-1) are not found on a state-highway corridor")
+# Regression test for #83 (fixed on main).
 def test_no_gps_crash_written_by_route_number_is_found():
     # Real CCRS 2023-24: Laguna Beach PD (0% GPS) writes 26% of its road fields as route numbers ('SR-1',
     # 'PCH - SR1', 'SR-133'); Yuba City (1% GPS) 14%, San Carlos/SMCSO (0.4% GPS) 9%. OSM tags the road with
@@ -116,7 +120,7 @@ def test_no_gps_crash_written_by_route_number_is_found():
     assert "9200001" in ids
 
 
-@pytest.mark.xfail(strict=True, reason="#80: a hyphen in the OSM corridor name stops the no-GPS search matching")
+# Regression test for #80 (fixed on main).
 def test_hyphenated_corridor_name_finds_no_gps_reports():
     # Union City, statewide run 2026-10-19 (#73): OSM names the road 'Alvarado-Niles Road'; Union City PD (0% GPS)
     # writes 'ALVARADO NILES RD'. street_key keeps the hyphen in the core, the no-GPS search becomes
@@ -135,7 +139,7 @@ def test_hyphenated_corridor_name_finds_no_gps_reports():
     assert {"9200001", "9200002", "9200003"} <= ids
 
 
-@pytest.mark.xfail(strict=True, reason="#84: an empty Overpass answer is cached forever and the corridor silently has no streets")
+# Regression test for #84 (fixed on main).
 def test_empty_overpass_answer_is_not_cached(db):
     # Statewide run 2026-10-19 (#73): overpass-api.de answered valid corridor queries with 0 elements and no remark
     # 7 times in 14 calls (the same query live a minute later: 312 elements). fetch_overpass accepts the empty list,
