@@ -255,7 +255,14 @@ def to_pdf(d: dict) -> bytes:
                             table([["", "Crashes", "KSI", "Share %"]] + [[r["label"].strip(), _fmt(r["values"]["crashes"]),
                                    _fmt(r["values"]["ksi_crashes"]), _fmt(r["values"]["share_pct"], 1)] for r in t14["rows"]],
                                   cols(W - 3.3 * inch, 3), (1, 2, 3)), src("T14")])]
-    for tid, title, limit, label in (("T4", "Collision type", None, "Type"),
+    t19 = _t(p, "T19")                        # pedestrians and bicyclists first (#136)
+    story += [KeepTogether([Paragraph("Pedestrians and bicyclists", h2),
+                            table([["", "Crashes", "KSI", "KSI % of group", "Share of KSI %"]]
+                                  + [[r["label"], _fmt(r["values"]["crashes"]), _fmt(r["values"]["ksi_crashes"]),
+                                      _fmt(r["values"]["ksi_pct"], 1), _fmt(r["values"]["share_of_ksi_pct"], 1)]
+                                     for r in t19["rows"]], cols(W - 4.0 * inch, 4), (1, 2, 3, 4)), src("T19")])]
+    for tid, title, limit, label in (("T20", "Pedestrian crashes by lighting", None, "Lighting"),
+                                     ("T4", "Collision type", None, "Type"),
                                      ("T5", "Primary collision factor (top 10)", 10, "Factor"),
                                      ("T18", "Primary collision factor category", None, "Category"),
                                      ("T6", "Lighting", None, "Lighting")):

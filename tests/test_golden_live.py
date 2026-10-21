@@ -258,3 +258,53 @@ def test_T18_pcf_categories_match_the_testers_coverage(case):
     got = {k: v["crashes"] for k, v in table(p, "T18").items()}
     assert got == dict(want)
     assert sum(got.values()) == len(ids)
+
+
+def _ref_ped_bike(crash, types):
+    ped = {cid for cid, r in crash.items() if "Pedestrian" in types[cid]
+           or "PEDESTRIAN" in str(r.get("MotorVehicleInvolvedWithDesc") or "")
+           or "PEDESTR" in str(r.get("Collision Type Description") or "")}
+    bike = {cid for cid, r in crash.items() if "Bicyclist" in types[cid]
+            or "BICYCLE" in str(r.get("MotorVehicleInvolvedWithDesc") or "")}
+    return ped, bike
+
+
+def test_T19_how_dangerous_matches_raw_rows(case):
+    # #136: KSI share of pedestrian, bicycle and all other crashes, and the ped+bike share of all KSI crashes
+    _, _, _, p, ids, crash, sev, types = case
+    ped, bike = _ref_ped_bike(crash, types)
+    vru = ped | bike
+    other = set(crash) - vru
+    ksi = {c for c in crash if sev[c] in "KA"}
+    pct = lambda a, b: round(100 * a / b, 1) if b else 0.0
+    t = table(p, "T19")
+    for key, grp in (("ped", ped), ("bike", bike), ("ped_or_bike", vru), ("other", other), ("all", set(crash))):
+        assert t[key]["crashes"] == len(grp), key
+        assert t[key]["ksi_crashes"] == len(grp & ksi), key
+        assert t[key]["ksi_pct"] == (pct(len(grp & ksi), len(grp)) if grp else None), key   # no crashes: no %
+        assert t[key]["share_of_ksi_pct"] == pct(len(grp & ksi), len(ksi)), key
+    assert t["ped_or_bike"]["crashes"] + t["other"]["crashes"] == len(ids)
+
+
+def test_T20_pedestrian_lighting_matches_raw_rows(case):
+    _, _, _, p, _, crash, _, types = case
+    ped, _ = _ref_ped_bike(crash, types)
+
+    def group(t):
+        t = (t or "").upper()
+        if not t:
+            return "not_stated"
+        if t.startswith("DARK"):
+            return "dark_unlit" if ("NO STREET" in t or "NOT FUNCTION" in t) else "dark_lit"
+        return "dusk_dawn" if "DUSK" in t else "daylight" if t == "DAYLIGHT" else "not_stated"
+    want = Counter(group(crash[c].get("LightingDescription")) for c in ped)
+    got = {k: v["crashes"] for k, v in table(p, "T20").items() if v["crashes"]}
+    assert got == dict(want)
+
+
+def test_T2_ped_bike_column_adds_up(case):
+    _, _, _, p, _, crash, sev, types = case
+    ped, bike = _ref_ped_bike(crash, types)
+    t2 = table(p, "T2")
+    assert sum(v["vru_crashes"] for v in t2.values()) == len(ped | bike)
+    assert sum(v["vru_ksi_crashes"] for v in t2.values()) == sum(sev[c] in "KA" for c in ped | bike)

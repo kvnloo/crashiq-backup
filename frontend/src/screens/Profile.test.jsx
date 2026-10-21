@@ -290,22 +290,61 @@ describe('Crash profile screen', () => {
     expect(heads.every((th) => th.textContent.length <= 9)).toBe(true)                          // short headers (#119)
   })
 
-  it('vulnerable road users: counts and KSI equal T10, top locations from T2, map toggle filters (#105)', async () => {
+  it('pedestrians and bicyclists: right under the trust strip, numbers equal T19 cells, map toggle filters (#136)', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')
     await screen.findByLabelText('Key numbers')
-    const v = screen.getByLabelText('Vulnerable road users')
-    const t10 = table(profile, 'T10')
+    const v = screen.getByLabelText('Pedestrians and bicyclists')
+    // placed directly after "Can I trust these numbers?"
+    expect(screen.getByLabelText('Data quality').nextElementSibling).toBe(v)
+    const t19 = table(profile, 'T19')
+    const val = (k) => t19.rows.find((x) => x.key === k).values
     for (const k of ['ped', 'bike', 'motorcycle']) {
-      const r = t10.rows.find((x) => x.key === k)
       const li = within(v).getByTestId(`vru-${k}`)
-      expect(li.querySelector('.n').textContent).toBe(nf.format(r.values.crashes))
-      expect(li.querySelector('.ksi').textContent).toBe(`${nf.format(r.values.ksi_crashes)} KSI`)
+      expect(li.querySelector('.n').textContent).toBe(nf.format(val(k).crashes))
+      expect(li.querySelector('.ksi').textContent).toBe(`${nf.format(val(k).ksi_crashes)} KSI`)
+    }
+    const head = within(v).getByTestId('vru-headline').textContent
+    expect(head).toContain(`${nf.format(val('ped').crashes)} pedestrian and ${nf.format(val('bike').crashes)} bicycle`)
+    if (val('all').ksi_crashes && val('ped_or_bike').crashes) {
+      expect(head).toContain(`${nf.format(val('ped_or_bike').share_of_ksi_pct)}%`)
+      expect(head).toContain(`(${nf.format(val('ped_or_bike').ksi_crashes)} of ${nf.format(val('all').ksi_crashes)})`)
+    }
+    for (const k of ['ped', 'other']) {
+      if (!val(k).crashes) continue
+      const row = within(v).getByTestId(`danger-${k}`)
+      expect(row.querySelector('.v').textContent).toBe(`${nf.format(val(k).ksi_pct)}%`)
+      expect(row.querySelector('.nn').textContent).toBe(`${nf.format(val(k).ksi_crashes)} of ${nf.format(val(k).crashes)}`)
     }
     const map = screen.getByTestId('map')
     const before = Number(map.getAttribute('data-n'))
-    fireEvent.click(within(within(v).getByTestId('vru-motorcycle')).getByRole('button', { name: 'Show on map' }))
+    fireEvent.click(within(within(v).getByTestId('vru-motorcycle')).getByRole('button', { name: 'Show only these on the map' }))
     await waitFor(() => expect(Number(screen.getByTestId('map').getAttribute('data-n'))).toBeLessThan(before))
-    expect(within(v).getByRole('button', { name: 'Showing on map' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(v).getByRole('button', { name: 'Showing only these on the map' })).toHaveAttribute('aria-pressed', 'true')
+  })
+
+  it('ranking: a ped/bike count per location and a sort by it (#136)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const rk = screen.getByLabelText('Location ranking')
+    fireEvent.click(within(rk).getByRole('radio', { name: 'Pedestrians + bicyclists' }))
+    const t2 = table(profile, 'T2')
+    const top = [...t2.rows].filter((r) => r.values.crashes > 0).sort((a, b) => b.values.vru_crashes - a.values.vru_crashes
+      || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))[0]
+    const first = rk.querySelector('.rank li')
+    expect(first.querySelector('.rowlink').textContent).toBe(top.label)
+    expect(first.querySelector('[data-testid="rank-vru"]').textContent).toContain(`${nf.format(top.values.vru_crashes)} ped/bike`)
+  })
+
+  it('strip: every pedestrian or bicycle crash has the ring marker, and the legend says so (#136)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const strip = screen.getByLabelText('Crashes along the corridor')
+    const placed = new Set(assignment.assignments.filter((a) => a.kind === 'intersection' || a.kind === 'segment').map((a) => a.crash_id))
+    const vru = crashes.crashes.filter((c) => placed.has(c.crash_id) && (c.ped || c.bike))
+    expect(strip.querySelectorAll('[data-testid="strip-vru"]').length).toBe(vru.length)
+    if (vru.length) expect(within(strip).getByText('Ring: pedestrian or bicyclist involved')).toBeTruthy()
   })
 })
