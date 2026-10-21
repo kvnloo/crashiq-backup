@@ -23,6 +23,8 @@ from collections import defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
+import sys  # noqa: E402
+sys.path.insert(0, str(HERE))
 ROOT = HERE.parents[1]
 HISTORY = HERE / "run_history.csv"
 CITY_HISTORY = HERE / "run_history_cities.csv"
@@ -232,6 +234,20 @@ def _fixes(prev_commit: str | None, commit: str) -> str:
     subjects = _git("log", "--format=%s", f"{prev_commit}..{commit}").splitlines()
     nums = sorted({n for s in subjects if re.match(r"(fix|feat)", s) for n in re.findall(r"#(\d+)", s)}, key=int)
     return ", ".join(f"#{n}" for n in nums) or "none"
+
+
+class IncompleteRun(RuntimeError):
+    """A run with a city missing its result: never recorded (completeness guard)."""
+
+
+def require_complete(series: str, expected: list[dict], results: list[dict]) -> dict:
+    """Raise IncompleteRun naming every city without a result; else return the completeness counts."""
+    import checks
+    c = checks.completeness(expected, results)
+    if not c["complete"]:
+        raise IncompleteRun(f"{series}: {len(c['missing'])} of {c['expected']} cities have no result, run NOT "
+                            f"recorded: " + ", ".join(c["missing"]))
+    return c
 
 
 def series_v2(v1_results: list[dict], v2_results: list[dict]) -> list[dict]:

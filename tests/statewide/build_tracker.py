@@ -9,6 +9,7 @@ results and the repo's bug issues, so the page only displays them:
   bugs.csv         every GitHub issue labelled bug, open or closed
   recon.csv        latest reconciliation (crash by crash, previous run -> latest)
   context.csv      one row of standing facts (agencies, TIMS, hidden-GPS accuracy, San Jose)
+  completeness.csv latest run, per corridor series: cities expected, cities with a result, the missing ones
 
 Run: python tests/statewide/build_tracker.py   (after build_workbook.py --record)
 """
@@ -23,6 +24,7 @@ from collections import Counter
 from pathlib import Path
 
 import build_workbook as bw
+import checks
 import run_history
 import tims_compare
 
@@ -100,6 +102,22 @@ def context(results: list[dict]) -> dict:
             "san_jose_result": sj.get("result_v4") or sj.get("result")}
 
 
+def completeness(ver: str, results: list[dict]) -> list[dict]:
+    """Completeness guard on the tracker: one row per series, status INCOMPLETE when any city has no result."""
+    rows = [("frozen list v1", json.loads((DATA / "cities.json").read_text()), results)]
+    v2_list = HERE / "corridors_frozen_v2.json"
+    if v2_list.exists():
+        v2_res = [json.loads(p.read_text()) for p in sorted((DATA / "results_corridors_v2" / ver).glob("*.json"))]
+        rows.append(("corridor list v2", [c for c in json.loads(v2_list.read_text())["cities"] if c.get("repicked")],
+                     v2_res))
+    out = []
+    for series, expected, got in rows:
+        c = checks.completeness(expected, got)
+        out.append({"series": series, "expected": c["expected"], "got": c["got"], "missing_count": len(c["missing"]),
+                    "missing": "; ".join(c["missing"]), "status": "complete" if c["complete"] else "INCOMPLETE"})
+    return out
+
+
 def main() -> None:
     vs = bw.versions()
     ver, before = vs[-1], (vs[-2] if len(vs) > 1 else None)
@@ -112,6 +130,8 @@ def main() -> None:
     _write("recon.csv", list(rr[0]) if rr else ["bucket"], rr)
     cx = context(results)
     _write("context.csv", list(cx), [cx])
+    _write("completeness.csv", ["series", "expected", "got", "missing_count", "missing", "status"],
+           completeness(ver, results))
     print(f"tracker data for {ver} -> {OUT}")
 
 

@@ -110,3 +110,24 @@ def test_v4_clears_only_reports_beyond_the_stretch_plus_tolerance():
 def test_nearest_node_to_the_line_picks_the_crossing():
     nodes = [(38.51, -122.49), (38.5001, -122.49), (38.49, -122.49)]
     assert checks.nearest_to_line(LINE_EW, nodes) == (38.5001, -122.49)
+
+
+# ---- completeness guard (PM, after run 5): a run with a city missing must fail loudly ----
+def test_completeness_names_every_city_without_a_result():
+    expected = [{"city": "A", "county": "1"}, {"city": "B", "county": "2"}, {"city": "C", "county": "3"}]
+    results = [{"city": "A", "county": "1"}, {"city": "C", "county": "3"}]
+    c = checks.completeness(expected, results)
+    assert c == {"expected": 3, "got": 2, "missing": ["B (2)"], "complete": False}
+
+
+def test_completeness_passes_when_every_city_has_a_result():
+    rows = [{"city": "A", "county": "1"}]
+    assert checks.completeness(rows, rows)["complete"] is True
+
+
+def test_recording_an_incomplete_run_fails(tmp_path):
+    import pytest
+    import run_history
+    with pytest.raises(run_history.IncompleteRun, match="B \\(2\\)"):
+        run_history.require_complete("frozen list v1", [{"city": "A", "county": "1"}, {"city": "B", "county": "2"}],
+                                     [{"city": "A", "county": "1"}])
