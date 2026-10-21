@@ -39,6 +39,7 @@ BUCKETS = [  # (key, label, cause)
     ("found_excluded", "Newly found, excluded (side street / other rule)", "#80 #83 #111 #113 (search fixes)"),
     ("other_city_142", "Report filed in a city the corridor doesn't enter: no longer pulled", "#142 (#145)"),
     ("area_rejected_132", "Search area with no GPS crashes near the corridor: no longer searched", "#132 (#141)"),
+    ("dms_found_143", "GPS written as degrees-minutes-seconds, converted: now on the corridor", "#143 (#159)"),
     ("restored_147", "Report filed under an unincorporated place's own name: pulled again", "#147 (#152)"),
     ("junk_removed_121", "Placeholder 'NOT STATED' no longer read as the corridor street", "#121 (#131)"),
     ("lost", "In the earlier run, not pulled in the later one (other reason)", "other"),
@@ -92,6 +93,8 @@ def bucket(c1: dict | None, c2: dict | None, core: str, refiled: set[str], ctx: 
             return "other_city_142"
         if str(c1.get("county_code")) in ctx.get("rejected_areas", set()):
             return "area_rejected_132"
+    if (c2 or {}).get("location_source") == "gps_dms_corrected" and (c1 or {}).get("location_source") != "gps_dms_corrected":
+        return "dms_found_143"
     if (c1 is None and ctx and ctx.get("before_cities_logged")
             and _city_allowed(c2.get("city"), ctx.get("before_corridor_cities")) is False):
         return "restored_147"

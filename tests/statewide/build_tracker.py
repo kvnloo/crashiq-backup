@@ -34,7 +34,7 @@ OUT = DATA / "tracker"
 RUN_COLS = ["run", "date", "app_commit", "fixes_since_last", "cities_tested_v1", "pass_v1", "warn_v1", "fail_v1",
             "pass_v4", "warn_v4", "fail_v4", "silent_drops_v1", "silent_drops_v2", "silent_drops_v3",
             "silent_drops_v4", "located_pct_v1", "on_corridor_located_pct_v2", "unplaced_no_cross_street_v2",
-            "unplaced_relaxed_held_v2", "corridor_crashes_v1"]
+            "unplaced_relaxed_held_v2", "corridor_crashes_v1", "gps_dms_corrected_v1"]
 
 
 def _write(name: str, cols: list[str], rows: list[dict]) -> None:
