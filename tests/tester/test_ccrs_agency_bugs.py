@@ -192,3 +192,24 @@ def test_corridor_name_with_leading_direction_finds_no_gps_reports(osm_name, wri
     out = crashes.pull(STUDY, net, Ckan(FakeCkan(d)))
     ids = {c["crash_id"] for c in out["crashes"]}
     assert {"9200001", "9200002", "9200003"} <= ids
+
+
+@pytest.mark.xfail(strict=True, reason="#121: 'NOT STATED' contains STATE, so it counts as naming a 'State Street' corridor")
+def test_not_stated_does_not_name_a_state_street_corridor():
+    # Statewide run 2 (#73), Santa Barbara, 'State Street': 6,136 no-GPS reports with SecondaryRoad 'NOT STATED' were
+    # pulled from four counties (Riverside, San Diego, Santa Clara, Santa Barbara), e.g. '32456 HAUN ROAD | NOT STATED'
+    # in Menifee, and listed as side-street exclusions. The squeezed placeholder 'NOTSTATED' contains the corridor
+    # core 'STATE', so the SQL prefilter and _names_street both read it as the corridor, and the street-name search
+    # area spreads to every county with such a report.
+    d = _fixture(no_gps=True)
+    rows, r = _row(d, 9200001)
+    junk = copy.deepcopy(r)
+    junk.update({"Collision Id": 9288888, "PrimaryRoad": "32456 HAUN ROAD", "SecondaryRoad": "NOT STATED"})
+    real = copy.deepcopy(r)                    # a genuine State St report, so the street-name search area exists
+    real.update({"Collision Id": 9288887, "PrimaryRoad": "STATE ST", "SecondaryRoad": "W 144TH ST"})
+    rows += [junk, real]
+    net = {**NET_X, "corridor_name": "State Street"}
+    out = crashes.pull(STUDY, net, Ckan(FakeCkan(d)))
+    ids = {c["crash_id"] for c in out["crashes"]}
+    assert "9288887" in ids                    # control: the real State St report is found
+    assert "9288888" not in ids

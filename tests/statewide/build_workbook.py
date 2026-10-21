@@ -78,6 +78,11 @@ def versions() -> list[str]:
     return [d.name for d in sorted(ds, key=lambda d: min(f.stat().st_mtime for f in d.glob("*.json")))]
 
 
+def _oncor(r: dict) -> tuple:
+    a = r.get("assignment") or {}
+    return (a.get("intersection", 0) + a.get("segment", 0), a.get("unmatched", 0)) if a else (None, None)
+
+
 def load_results(ver: str) -> list[dict]:
     return [json.loads(p.read_text()) for p in sorted((DATA / "results" / ver).glob("*.json"))]
 
@@ -118,6 +123,8 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
     today = dt.date.today().isoformat()
     wb = Workbook()
 
+    cmeas = run_history.city_measures(results, [ROOT / "data" / "tester.sqlite",
+                                                *sorted(DATA.glob("tester_worker*.sqlite"))], DATA / "ccrs_mirror.sqlite")
     # ---------------- 3 Cities ----------------
     wc = wb.active
     wc.title = "Cities"
@@ -130,13 +137,18 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
           "Silent drops", "Example dropped Collision Ids", "Overpass empty retries", "Warnings", "Result", "Reason",
           "Cause", "Agency GPS % (2021-25)", "Agency worst year / 2016-19 median", "Result (run-1 rule)",
           "Independent street core (v2)", "Reports in the city naming the street (v2)",
-          "No-GPS reports expected (independent v2)", "Silent drops (v2)"]
+          "No-GPS reports expected (independent v2)", "Silent drops (v2)", "On corridor: located",
+          "On corridor: no location", "On-corridor located % (v2)", "No location: no cross street",
+          "No location: relaxed match held for review"]
     rows = []
     for r in sorted(results, key=lambda r: -r.get("crashes_5y", 0)):
         ex = Counter(r.get("excluded_by_rule") or {})
         tiers = r.get("placed_by_tier") or {}
         a = ag_by.get(r.get("agency") or "", {})
         cand = r.get("candidates") or 0
+        asg_ = r.get("assignment") or {}
+        on_, un_ = asg_.get("intersection", 0) + asg_.get("segment", 0), asg_.get("unmatched", 0)
+        m_ = cmeas.get(f"{r['city']}|{r['county']}", {})
         rows.append([
             r["city"], int(r["county"]) if str(r["county"]).isdigit() else r["county"], r.get("agency"),
             r.get("agency_share"), r.get("chp_share"), r.get("crashes_5y"), (r.get("corridor") or {}).get("road"),
@@ -153,10 +165,11 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                                   if r.get("parties_missing_years") else None] if x),
             r["result"], r["result_reason"], cause(r, ag_by), a.get("gps_pct"), a.get("drop_ratio"),
             r.get("result_v1", r["result"]), r.get("independent_core_v2"), r.get("city_reports_naming_street_v2"),
-            r.get("independent_expected_v2"), r.get("silent_drops_v2")])
+            r.get("independent_expected_v2"), r.get("silent_drops_v2"), on_, un_,
+            round(on_ / (on_ + un_), 3) if on_ + un_ else None, m_.get("unplaced_no_cross"), m_.get("unplaced_relaxed")])
     n_city = table(wc, "Cities", ch, rows, {1: 20, 7: 24, 8: 24, 9: 20, 10: 20, 29: 24, 31: 40, 33: 40, 34: 40})
     for i in range(2, n_city + 1):
-        for col in (19, 21):
+        for col in (19, 21, 44):
             wc.cell(i, col).number_format = "0%"
         res = wc.cell(i, 32).value
         if res in RESULT_FILL:
@@ -377,7 +390,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         ("What runs", "The app's own code, through its own API (FastAPI TestClient, in-process): create study → "
                       "PUT corridor (OSM detection) → POST crashes/pull (placement runs inside the pull) → GET "
                       "assignment. Nothing in backend/ was changed. App database: data/tester.sqlite (Tester's "
-                      "copy) and data/statewide/tester_worker1.sqlite for the second parallel worker."),
+                      "copy) and data/statewide/tester_worker<n>.sqlite for the other parallel workers."),
         ("Crash data", "CCRS Crashes, Parties and InjuredWitnessPassengers 2021-2025 (the app's default window: last "
                        "5 complete years), copied once from data.ca.gov into a local SQLite mirror "
                        "(tests/statewide/ccrs_mirror.py) with the real column names and types. The app sends the "
@@ -488,7 +501,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
     city_list = json.loads((DATA / "cities.json").read_text())
     complete = len(results) >= len(city_list)
     if record and complete:
-        run_history.record(results, tims, [ROOT / "data" / "tester.sqlite", DATA / "tester_worker1.sqlite"],
+        run_history.record(results, tims, [ROOT / "data" / "tester.sqlite", *sorted(DATA.glob("tester_worker*.sqlite"))],
                            DATA / "ccrs_mirror.sqlite", "tests/statewide/corridors_frozen.json")
     wr = wb.create_sheet("Run history")
     hcols, hrows = run_history._read(run_history.HISTORY)
@@ -532,19 +545,47 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
     wba = wb.create_sheet("Before-after")
     if before:
         old = {(r["city"], r["county"]): r for r in load_results(before)}
-        bah = ["City", "County code", "Same corridor line", f"Result before ({before})", f"Result after ({ver})",
-               "Pulled before", "Pulled after", "Located/placed before", "Located/placed after", "Silent drops before",
-               "Silent drops after", "Changed"]
+        bah = ["City", "County code", "Same corridor line", f"Result before ({before}, run-1 rule)",
+               f"Result after ({ver}, run-1 rule)", f"Result after ({ver}, run-2 rule)", "Pulled before",
+               "Pulled after", "Located/placed before", "Located/placed after", "Silent drops before (v1)",
+               "Silent drops after (v1)", "Silent drops after (v2)", "Changed (same rule)",
+               "On corridor with location before", "On corridor without location before",
+               "On corridor with location after", "On corridor without location after"]
         barows = []
         for r in sorted(results, key=lambda r: -r.get("crashes_5y", 0)):
             o = old.get((r["city"], r["county"]), {})
             same = (o.get("corridor") or {}).get("line") == (r.get("corridor") or {}).get("line")
-            barows.append([r["city"], int(r["county"]), "yes" if same else "NO", o.get("result"), r["result"],
-                           o.get("pulled"), r.get("pulled"), o.get("located"), r.get("located"),
-                           o.get("silent_drops"), r.get("silent_drops"),
-                           "yes" if (o.get("result"), o.get("pulled"), o.get("silent_drops")) !=
-                           (r["result"], r.get("pulled"), r.get("silent_drops")) else ""])
-        table(wba, "BeforeAfter", bah, barows)
+            ob, oa = o.get("result_v1", o.get("result")), r.get("result_v1", r.get("result"))
+            barows.append([r["city"], int(r["county"]), "yes" if same else "new corridor: not comparable", ob, oa,
+                           r["result"], o.get("pulled"), r.get("pulled"), o.get("located"), r.get("located"),
+                           o.get("silent_drops"), r.get("silent_drops"), r.get("silent_drops_v2"),
+                           ("yes" if (ob, o.get("pulled"), o.get("silent_drops")) !=
+                            (oa, r.get("pulled"), r.get("silent_drops")) else "") if same else "n/a",
+                           *_oncor(o), *_oncor(r)])
+        top = 16                               # like-for-like summary above the table, formulas only
+        end_ba = table(wba, "BeforeAfter", bah, barows, {1: 22, 3: 26}, start_row=top)
+        rng = lambda col: f"{col}{top + 1}:{col}{end_ba}"  # noqa: E731
+        same_ok = f'{rng("C")},"yes"'
+        wba["A1"], wba["A1"].font = f"Before / after: {before} -> {ver} (same mirror, OSM extract, settings)", H1
+        wba["A2"] = ("Like for like = cities run on the identical frozen corridor line in both runs, compared under "
+                     "the run-1 rule. Cities whose corridor was added after the freeze are counted separately.")
+        rows_ = [("Comparable cities (same corridor line)", f'=COUNTIF({rng("C")},"yes")'),
+                 ("Pass before (run-1 rule)", f'=COUNTIFS({same_ok},{rng("D")},"pass")'),
+                 ("Pass after (run-1 rule)", f'=COUNTIFS({same_ok},{rng("E")},"pass")'),
+                 ("Fail before (run-1 rule)", f'=COUNTIFS({same_ok},{rng("D")},"fail")'),
+                 ("Fail after (run-1 rule)", f'=COUNTIFS({same_ok},{rng("E")},"fail")'),
+                 ("Silent drops before (v1)", f'=SUMIFS({rng("K")},{same_ok})'),
+                 ("Silent drops after (v1)", f'=SUMIFS({rng("L")},{same_ok})'),
+                 ("On-corridor crashes with a location, before", f'=SUMIFS({rng("O")},{same_ok})'),
+                 ("On-corridor crashes without a location, before", f'=SUMIFS({rng("P")},{same_ok})'),
+                 ("On-corridor crashes with a location, after", f'=SUMIFS({rng("Q")},{same_ok})'),
+                 ("On-corridor crashes without a location, after", f'=SUMIFS({rng("R")},{same_ok})'),
+                 ("New corridors (not comparable)", f'=COUNTIF({rng("C")},"new corridor*")'),
+                 ("  of which pass after (run-2 rule)",
+                  f'=COUNTIFS({rng("C")},"new corridor*",{rng("F")},"pass")')]
+        for i, (k_, f_) in enumerate(rows_, 3):
+            wba.cell(i, 1, k_).font = B
+            wba.cell(i, 2, f_)
     else:
         wba["A1"] = ("Before/after: filled in when the run is repeated after Engineering's fixes (#80-#84), on the "
                      "same frozen corridors, mirror and settings; only the app code commit differs.")

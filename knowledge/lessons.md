@@ -1,5 +1,15 @@
 # Lessons (newest first)
 
+- 2026-10-20 · A coverage % is only as good as its denominator. Run 1 counted GPS crashes the assignment later
+  excluded (Canada Blvd beside a Verdugo Rd corridor) as "located", so it read 95.8%; on crashes that actually count
+  for the corridor it was 91.3%, and 65.0% in run 2 once the fixes found 10,600 reports run 1 silently missed.
+  Measure coverage on what the study counts, and version the measure when it changes (#73 run history).
+- 2026-10-20 · A test's own name matching must not borrow the app's. Run 1's independent check used the app's
+  street cores, so it shared the leading-direction blind spot (#113) and called Glendale and Pasadena fine.
+- 2026-10-20 · Substring matching on squeezed names needs a stop list: `NOT STATED` contains `STATE`, so every
+  no-cross-street report named "State Street" (Santa Barbara, 6,136 junk rows from four counties, #121).
+- 2026-10-20 · With parallel workers, every collector must read every worker's database. Run 1's history read 2 of 3
+  and under-counted payload measures by a third; corrected openly in the row's note.
 - 2026-10-19 · Test fixtures must be recorded from live data. The synthetic fixture spelled injury levels as phrases;
   live CCRS uses codes (`SuspectSerious`…), so every A/B/C crash became U and nobody noticed (#75/#79, fixed in #76). Same for a hyphen in
   an OSM street name: Union City lost 48 of 51 no-GPS corridor reports (#80). Only a run on real data found either.
