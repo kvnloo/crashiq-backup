@@ -176,3 +176,29 @@ def test_t2_carries_each_locations_severity_split_and_rate_ratio():
         if v["critical_rate"]:
             assert v["rate_to_critical"] == round(v["rate"] / v["critical_rate"], 2) or abs(
                 v["rate_to_critical"] - v["rate"] / v["critical_rate"]) < 0.02
+
+
+def test_t11_has_every_window_year_with_the_split_preliminary_and_covid():
+    # #104 year trend: zero years kept; injury + property damage = crashes; COVID years flagged per docs/03
+    p = P()
+    t11 = next(t for t in p["tables"] if t["id"] == "T11")
+    years = [int(r["key"]) for r in t11["rows"]]
+    assert years == list(range(2021, 2026))
+    for r in t11["rows"]:
+        v = r["values"]
+        assert v["injury_crashes"] + v["pdo_crashes"] == v["crashes"]
+        assert v["covid"] == ("Yes" if int(r["key"]) in (2020, 2021) else "No")
+        assert 0 <= v["preliminary"] <= v["crashes"]
+        assert sum(v[f"sev_{k}"] for k in "kabcuo") == v["crashes"]          # #104 round 1: the trend stacks the ramp
+    assert sum(r["values"]["crashes"] for r in t11["rows"]) == v_(p, "T1/crashes/value")
+
+
+def v_(p, addr):
+    return profile.cell(p["tables"], addr)
+
+
+def test_t1_location_sources_add_up_to_crashes():
+    # #104 data-quality strip: every counted crash is in exactly one "how located" row
+    p = P()
+    parts = ("located_gps", "located_exact", "located_other", "user_placed")
+    assert sum(v_(p, f"T1/{k}/value") for k in parts) == v_(p, "T1/crashes/value")

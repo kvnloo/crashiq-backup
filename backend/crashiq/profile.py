@@ -18,6 +18,7 @@ from collections import Counter
 from fastapi import APIRouter, Request
 
 from . import assign as assign_mod
+from . import study as study_mod
 
 SEVERITY_LABELS = {"K": "Fatal (K)", "A": "Suspected serious injury (A)", "B": "Suspected minor injury (B)",
                    "C": "Possible injury (C)", "U": "Injury, level not reported", "O": "Property damage only (O)"}
@@ -72,7 +73,7 @@ def _dist(tid, title, crashes, field, label_of=lambda v: v or "Not stated", orde
                                ("ksi_crashes", "KSI crashes"), ("share_pct", "Share %")], rows, crashes)
 
 
-def tables_for(crashes: list[dict], years: int, suffix: str = "") -> list[dict]:
+def tables_for(crashes: list[dict], years: int, suffix: str = "", window: list[int] | None = None) -> list[dict]:
     """Distribution tables T3–T11 for a set of crashes (the whole study, or one location)."""
     s = suffix
     n = len(crashes)
@@ -100,10 +101,25 @@ def tables_for(crashes: list[dict], years: int, suffix: str = "") -> list[dict]:
     out.append(_table(f"T10{s}", "Road users involved", [("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"),
                                                          ("share_pct", "Share %")], rows, crashes))
     yr = Counter(c.get("year") for c in crashes)
-    out.append(_table(f"T11{s}", "Crashes by year", [("crashes", "Crashes"), ("ksi_crashes", "KSI crashes")],
-                      [_row(y, str(y), crashes=yr[y], ksi_crashes=sum(1 for c in crashes if c.get("year") == y
-                                                                      and c["severity"] in "KA"))
-                       for y in sorted(k for k in yr if k is not None)], crashes))
+    # every year of the window, zero years included, so a trend never hides a quiet year (#104); injury / property
+    # damage split, CHP's preliminary reports and the COVID years (2020-21, docs/03 #34 item 13) per year
+    ys = sorted(set(window or []) | {k for k in yr if k is not None})
+    rows = []
+    for y in ys:
+        cy = [c for c in crashes if c.get("year") == y]
+        rows.append(_row(y, str(y), crashes=len(cy), ksi_crashes=sum(c["severity"] in "KA" for c in cy),
+                         injury_crashes=sum(c["severity"] in INJURY for c in cy),
+                         pdo_crashes=sum(c["severity"] == "O" for c in cy),
+                         preliminary=sum(bool(c.get("preliminary")) for c in cy),
+                         covid="Yes" if y in study_mod.COVID_YEARS else "No",
+                         **{f"sev_{lvl.lower()}": sum(c["severity"] == lvl for c in cy) for lvl in "KABCUO"}))
+    out.append(_table(f"T11{s}", "Crashes by year", [("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"),
+                                                     ("injury_crashes", "Injury crashes"), ("pdo_crashes", "Property damage only"),
+                                                     ("preliminary", "Preliminary reports"), ("covid", "COVID year"),
+                                                     ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"),
+                                                     ("sev_c", "Possible (C)"), ("sev_u", "Injury, level not stated"),
+                                                     ("sev_o", "Property damage (O)")],
+                      rows, crashes))
     return out
 
 
@@ -204,6 +220,12 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("unplaced", "Crashes not yet placed (no coordinates)", value=len(unmatched)),
         _row("user_placed", "Crashes placed by you (review list; included in Crashes)",
              value=sum(1 for c in placed if c.get("location_provenance") == "user")),
+        # how the counted crashes were located (#104 data-quality strip): GPS + exact + other tiers + you = Crashes
+        _row("located_gps", "Located by the officer's GPS", value=sum(1 for c in placed if c.get("location_provenance") == "gps")),
+        _row("located_exact", "Placed by exact street-name match",
+             value=sum(1 for c in placed if c.get("location_provenance") == "exact")),
+        _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
+             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "exact", "user"))),
         _row("excluded", "Crashes outside the study area", value=excluded_n),
     ]
     if exclude:
@@ -283,7 +305,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),
         ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"), ("sev_c", "Possible (C)"),
         ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")], loc_rows, placed))
-    tables += tables_for(placed, years)
+    tables += tables_for(placed, years, window=[y for y in pull["years"] if y not in years_missing])
     from . import signals as signals_mod          # C7; imported here because signals imports this module
     scr = signals_mod.screen(placed, [(r["key"], r["label"]) for r in loc_rows])
     tables.append(scr["table"])

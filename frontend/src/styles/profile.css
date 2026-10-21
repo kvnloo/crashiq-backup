@@ -168,3 +168,32 @@
 .sev-u { background: transparent; box-shadow: inset 0 0 0 1.5px var(--sev-u); }   /* level not stated: hollow */
 .sevsum .bar { grid-template-columns: minmax(0, 190px) minmax(0, 1fr) auto; }
 .sevsum .bar .v { white-space: nowrap; min-width: 84px; text-align: right; }
+
+/* H. data quality strip (#104): one thin bar + one line of counts */
+.quality .qbar { display: flex; gap: 2px; height: 6px; border-radius: 3px; overflow: hidden; }
+.quality .qbar i, .quality .qline i { display: block; height: 100%; }
+.quality .qline { display: flex; flex-wrap: nowrap; white-space: nowrap; gap: 4px 9px; margin: 6px 0 0; font: 11px var(--font-mono); color: var(--muted); }
+.quality .qline > * { display: inline-flex; align-items: center; gap: 5px; }
+.quality .qline i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
+.quality .linkbtn { padding: 0; font: 11px var(--font-mono); }
+.q-gps { background: var(--fg); } .q-exact { background: var(--muted); } .q-other { background: color-mix(in srgb, var(--muted) 55%, transparent); }
+.q-user { background: var(--info); } .q-review { background: var(--amber); } .q-ex { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
+.qrules { margin-top: 6px; }
+/* D. year trend (#104) */
+.trend { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; height: 150px; align-items: end; }
+.trend .yr { display: grid; grid-template-rows: auto 1fr auto; height: 100%; gap: 4px; text-align: center; border-radius: 6px; padding: 4px 2px; }
+.trend .yr.covid { background: color-mix(in srgb, var(--muted) 12%, transparent); }
+.trend .col { display: flex; flex-direction: column-reverse; justify-self: center; width: 60%; max-width: 44px; }
+.trend .col i { display: block; width: 100%; }
+.trend .col .inj { background: var(--sev-i); border-radius: 0; } .trend .col .pdo { background: var(--sev-p); border-radius: 0 0 2px 2px; }
+.trend .col i:last-child { border-radius: 4px 4px 0 0; }
+.trend .n { font-size: 12px; } .trend .y { font-size: 11px; color: var(--muted); display: grid; }
+.trend .prelim { font-weight: 400; font-size: 10px; color: var(--amber); }
+.trendline { width: 100%; height: auto; } .trendline .l-all { fill: none; stroke: var(--fg); stroke-width: 2; }
+.trendline .l-inj { fill: none; stroke: var(--sev-i); stroke-width: 2; } .trendline .l-all-dot { fill: var(--fg); }
+.trendline .covidband { fill: color-mix(in srgb, var(--muted) 14%, transparent); }
+.trendline .yl, .trendline .dl { font: 10px var(--font-mono); fill: var(--muted); }
+/* #104 round 1: the strip stays one line; the long last label truncates (full text on hover) */
+.quality .qline { overflow: hidden; }
+.quality .qline > :last-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; display: inline-block; }
+.trend .col i[class^="sev-"]:last-child { border-radius: 4px 4px 0 0; }
