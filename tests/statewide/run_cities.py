@@ -57,7 +57,7 @@ FROZEN = HERE / "corridors_frozen.json"
 FROZEN_V2 = HERE / "corridors_frozen_v2.json"
 RESULTS_V2 = DATA / "results_corridors_v2"
 V2_BELOW_PCT = 50.0          # "mostly outside": under half the v1 corridor's vertices inside its own city
-HARNESS = "4"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check)
+HARNESS = "5"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check, 5: v4)
 # Known open bugs that affect a city's result, shown on the Cities sheet (PM, run 3).
 KNOWN_ISSUES = {("San Jose", "43"): "affected by #143: San Jose PD's GPS is degrees-minutes-seconds (fix pending the "
                                     "user's rule choice)"}
@@ -207,6 +207,54 @@ def independent_no_gps_v3(mirror, city: str, core: str, cross_cores: list[str],
     return ids
 
 
+CROSS_CLASSES = {"motorway", "trunk", "primary", "secondary", "tertiary", "unclassified", "residential",
+                 "living_street", "road", "primary_link", "secondary_link", "tertiary_link", "trunk_link"}
+
+
+def silent_drops_v4(mirror, line, core: str, cross_cores: list[str], dropped3: list[str],
+                    tol_ft: float = checks.V4_TOLERANCE_FT) -> tuple[list[str], list[dict]] | None:
+    """v4 (PM, after #149): v3's drops less reports whose own stated offset (CCRS SecondaryDistance/Direction/Unit)
+    puts them more than `tol_ft` past either end of the stretch the study cross streets span. Cross-street points are
+    the OSM nodes nearest the frozen line (local extract), never the app's intersections. A report whose offset,
+    direction or cross street can't be used stays a drop. Returns (drops, cleared with their computed distance)."""
+    if not LOCAL or not dropped3:
+        return (list(dropped3), []) if LOCAL else None
+    els = LOCAL.around([tuple(p) for p in line], 40, CROSS_CLASSES)["elements"]
+    pts = {n["id"]: (n["lat"], n["lon"]) for n in els if n["type"] == "node"}
+    by_core: dict[str, list] = {}
+    for w in els:
+        if w["type"] == "way" and w.get("tags", {}).get("name"):
+            by_core.setdefault(indep_core(w["tags"]["name"]), []).extend(pts[i] for i in w["nodes"] if i in pts)
+    cross_pt = {c: checks.nearest_to_line(line, by_core[c]) for c in set(cross_cores) if c != core and c in by_core}
+    if not cross_pt:
+        return list(dropped3), []
+    st = [checks.station(line, p) for p in cross_pt.values()]
+    lo, hi = min(st), max(st)
+    rows = {}
+    for (rid,) in mirror.db.execute("SELECT rid FROM _meta WHERE tbl='crashes'"):
+        q = (f'SELECT "Collision Id" i, "PrimaryRoad" p, "SecondaryRoad" s, "SecondaryDirection" d, '
+             f'"SecondaryDistance" n, "SecondaryUnitOfMeasure" u FROM "{rid}" '
+             f'WHERE "Collision Id" IN ({",".join("?" * len(dropped3))})')
+        for r in mirror.db.execute(q, [int(x) for x in dropped3]):
+            rows[str(int(r["i"]))] = r
+    keep, cleared = [], []
+    for cid in dropped3:
+        r = rows.get(cid)
+        cross = None if r is None else next((indep_core(x) for x in (r["s"], r["p"]) if indep_core(x) != core), None)
+        off = checks.offset_ft(r["n"], r["u"]) if r is not None else None
+        d = str(r["d"] or "").strip().upper() if r is not None else ""
+        if cross not in cross_pt or off is None or d not in checks.DIRV:
+            keep.append(cid)
+            continue
+        past = checks.beyond_stretch(checks.report_station(line, cross_pt[cross], d, off), lo, hi)
+        if past > tol_ft:
+            cleared.append({"crash_id": cid, "cross_street": cross, "direction": d, "offset_ft": round(off),
+                            "past_stretch_end_ft": round(past)})
+        else:
+            keep.append(cid)
+    return keep, cleared
+
+
 def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
     st = client.post("/api/studies", json={"name": f"statewide {c['city']}", "mode": "profile",
                                            "from_year": YEARS[0], "to_year": YEARS[-1]}).json()
@@ -256,6 +304,8 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
     expected3 = independent_no_gps_v3(mirror, c["city"], core2, [indep_core(x) for x in cross],
                                       lead_dir(net.get("corridor_name")))
     dropped3 = checks.silent_drops_v3(expected3, got, log.get("same_crash_refiled") or [])
+    v4 = silent_drops_v4(mirror, corr["line"], core2, [indep_core(x) for x in cross], dropped3,
+                         max(checks.V4_TOLERANCE_FT, float(settings.get("radius_ft") or 0)))
     return {
         "stage": "done", "study_id": sid, "settings": settings, "overpass_empty_retries": empty_retries, "corridor_name": net.get("corridor_name"),
         "ends": [inters[0]["name"], inters[-1]["name"]] if inters else [None, None],
@@ -274,7 +324,9 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
         "corridor_inside_own_city_pct": _inside_pct(corr.get("line"), c["city"]),
         "independent_core_v2": core2, "independent_expected_v2": len(expected2), "silent_drops_v2": len(dropped2),
         "silent_drop_ids_v2": dropped2[:10], "independent_expected_v3": len(expected3), "silent_drops_v3": len(dropped3),
-        "silent_drop_ids_v3": dropped3[:10], "city_reports_naming_street_v2": city_reports_naming(mirror, c["city"], core2),
+        "silent_drop_ids_v3": dropped3[:10],
+        "silent_drops_v4": None if v4 is None else len(v4[0]), "silent_drop_ids_v4": None if v4 is None else v4[0][:10],
+        "v4_cleared": None if v4 is None else v4[1], "city_reports_naming_street_v2": city_reports_naming(mirror, c["city"], core2),
     }
 
 
@@ -314,6 +366,13 @@ def classify_v3(r: dict) -> tuple[str, str]:
     if r.get("stage") != "done" or "silent_drops_v3" not in r:
         return classify_v2(r)
     return classify_v2({**r, "silent_drops_v2": r["silent_drops_v3"]})
+
+
+def classify_v4(r: dict) -> tuple[str, str]:
+    """Run-2 rule with silent drops from check v4 (PM, after #149): a new column from run 4; v3 stays."""
+    if r.get("stage") != "done" or r.get("silent_drops_v4") is None:
+        return classify_v3(r)
+    return classify_v2({**r, "silent_drops_v2": r["silent_drops_v4"]})
 
 
 def classify(r: dict) -> tuple[str, str]:
@@ -466,6 +525,7 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
             row["result_v1"], row["result_reason_v1"] = classify(row)
             row["result"], row["result_reason"] = classify_v2(row)
             row["result_v3"], row["result_reason_v3"] = classify_v3(row)
+            row["result_v4"], row["result_reason_v4"] = classify_v4(row)
             out.write_text(json.dumps(row, indent=1, default=str))
             print(f"[{n}/{len(todo)} {time.time() - t0:.0f}s] {c['city']}: {row['result']} - {row['result_reason']}",
                   flush=True)
