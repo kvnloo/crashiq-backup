@@ -51,7 +51,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 5     # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111)
+PULL_FORMAT = 6     # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -130,6 +130,71 @@ def _like(col_sql: str, w: str) -> str:
     return f"{col_sql} LIKE '%{_like_word(w)}%'"
 
 
+# Short street names are matched as whole words, not inside other text (#121): squeezed, the placeholder NOT STATED
+# contains STATE, so every report without a cross street named a "State Street" corridor (Santa Barbara, 6,136 junk
+# rows from four counties); MAIN is inside MAINE AV and ROMAINE ST, STATE inside INTERSTATE and ESTATES. Longer names
+# stay squeezed: CHP splits words the map writes as one (MC FADDEN AV for McFadden Avenue, 2024: 23 rows), and a
+# long core inside other text is rare (CRENSHAW, WILSHIRE, ATLANTIC, EL CAMINO REAL: no false hits, 2024).
+SHORT_CORE = 6
+_SP_SPACE = ("-", ".", ",", "/", "(", ")", "&", "#", "@", ";", ":")    # read as a word break
+_SP_DROP = ("'", "%", "_")                                             # dropped (O'NEIL = ONEIL; never a pattern)
+
+
+def _sp_sql(col: str) -> str:
+    """' ' || UPPER(col) || ' ' with word breaks as single spaces, for whole-word LIKE matching (#121)."""
+    expr = f"UPPER({col})"
+    for ch in _SP_DROP:
+        expr = f"REPLACE({expr}, '{ch * 2 if ch == chr(39) else ch}', '')"
+    for ch in _SP_SPACE:
+        expr = f"REPLACE({expr}, '{ch}', ' ')"
+    for _ in range(2):
+        expr = f"REPLACE({expr}, '  ', ' ')"
+    return f"(' ' || {expr} || ' ')"
+
+
+def _spaced(t: str | None) -> str:
+    """Python twin of `_sp_sql`: ' WORD WORD '."""
+    u = (t or "").upper()
+    for ch in _SP_DROP:
+        u = u.replace(ch, "")
+    return " " + " ".join("".join(ch if ch.isalnum() else " " for ch in u).split()) + " "
+
+
+def _is_short(w: str) -> bool:
+    return len(_like_word(w)) <= SHORT_CORE
+
+
+def _placeholder(raw: str | None) -> bool:
+    """NOT STATED, UNKNOWN, PRIVATE PROPERTY, blank: the field names no street (#94, #121)."""
+    return _squeeze(raw) in NO_CROSS
+
+
+def _name_cond(alias: str, w: str, route: bool) -> str:
+    """One road column (alias suffix p or s) names this search word. A short word is matched as a whole word and
+    never in a placeholder (NOT STATED, PRIVATE PROPERTY; #121); longer words and route spellings stay squeezed."""
+    if route or not _is_short(w):
+        return _like(f"sq_{alias}", w)
+    words = " OR ".join(f"sp_{alias} LIKE '%{x}%'" for x in _word_forms(w))
+    return f"(({words}) AND sp_{alias} NOT IN ({_SP_PLACEHOLDERS}))"
+
+
+def _word_forms(w: str) -> list[str]:
+    """' DEL AMO ' and, run together as CHP also writes it, ' DELAMO ' (Lakewood, DELAMO BL)."""
+    sp = _spaced(w)
+    glued = f" {_like_word(w)} "
+    return [sp] if glued == sp else [sp, glued]
+
+
+# the spaced form of each placeholder CHP writes (squeezed set: NO_CROSS)
+_SP_PLACEHOLDERS = ", ".join(f"'{x}'" for x in (" NOT STATED ", " UNKNOWN ", " UNK ", " N A ", " NONE ", " NO STREET ",
+                                                 " PRIVATE PROPERTY "))
+
+
+def _road_aliases(pr: str, sr: str) -> str:
+    """Squeezed (sq_) and whole-word (sp_) forms of both road columns, computed once per row (short URL, #113)."""
+    return f"{_sq_sql(pr)} AS sq_p, {_sq_sql(sr)} AS sq_s, {_sp_sql(pr)} AS sp_p, {_sp_sql(sr)} AS sp_s"
+
+
 def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_xy: str, cores: list[str],
                           cross: list[str]) -> list[str]:
     """Area (county or city code) from reports naming the corridor street AND one of its study cross streets.
@@ -138,17 +203,17 @@ def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_x
         return []
     pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
 
-    def like(col: str, words: list[str]) -> str:
-        return " OR ".join(_like(col, x) for w in words for x in _like_words(w))
+    def like(alias: str, words: list[str]) -> str:
+        return " OR ".join(_name_cond(alias, x, route) for w in words for x, route in _search_words(w))
 
     # Each road column is squeezed ONCE in a subquery, then compared by its short alias: repeating the REPLACE chain
     # for every corridor x cross-street pattern made a 12 KB URL and HTTP 414 (Pasadena, 17 cross streets, #113).
     # A cross-street list still too long for one URL is split and the counts added.
     a = cc.q(cols[area_col]["id"])
-    inner = f"SELECT {a} AS area, {_sq_sql(pr)} AS sq_p, {_sq_sql(sr)} AS sq_s FROM {cc.q(rid)} WHERE ({bad_xy})"
+    inner = f"SELECT {a} AS area, {_road_aliases(pr, sr)} FROM {cc.q(rid)} WHERE ({bad_xy})"
 
     def query(xs: list[str]) -> str:
-        pair = f"(({like('sq_p', cores)}) AND ({like('sq_s', xs)})) OR (({like('sq_s', cores)}) AND ({like('sq_p', xs)}))"
+        pair = f"(({like('p', cores)}) AND ({like('s', xs)})) OR (({like('s', cores)}) AND ({like('p', xs)}))"
         return f"SELECT area, COUNT(*) AS n FROM ({inner}) q WHERE {pair} GROUP BY area ORDER BY n DESC LIMIT 20"
 
     parts = [cross]
@@ -200,14 +265,24 @@ def _squeeze(t: str | None) -> str:
 def _names_street(raw: str | None, keys) -> bool:
     """Does a CCRS road field name this street? CHP sometimes writes a full address ("14605 CRENSHAW BLVD.-
     GARDENA- CA 90249"), so fall back to the squeezed core inside the text, as the SQL prefilter does."""
+    if _placeholder(raw):
+        return False                          # NOT STATED contains STATE (#121)
     k = street_key(raw)
     if k and any(same_core(k, x) for x in keys):
         return True
     routes = {route_number(x) for x in keys} - {None}
     if routes & route_numbers(raw):        # SR-1, RT 1, HWY 1, "PCH - SR1" for a corridor tagged CA 1 (#83)
         return True
-    sq = _squeeze(raw)
-    return any(route_number(x) is None and len(_squeeze(x.core)) >= 4 and _squeeze(x.core) in sq for x in keys)
+    sq, sp = _squeeze(raw), _spaced(raw)
+    return any(route_number(x) is None and len(_squeeze(x.core)) >= 4
+               and (any(f in sp for f in _word_forms(x.core)) if _is_short(x.core) else _squeeze(x.core) in sq)
+               for x in keys)
+
+
+def _search_words(core: str) -> list[tuple[str, bool]]:
+    """(word, is a route spelling) for one corridor core. Route spellings stay squeezed (SR-1 = SR 1 = SR1)."""
+    words = _like_words(core)
+    return [(w, words != [core]) for w in words]
 
 
 def _like_words(core: str) -> list[str]:
@@ -354,9 +429,10 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         if cores and area:
             pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
             # squeezed once per row in a subquery, compared by alias (short URL, #113)
-            names = " OR ".join(_like(c, w) for core in cores for w in _like_words(core) for c in ("sq_p", "sq_s"))
+            names = " OR ".join(_name_cond(a, w, route) for core in cores for w, route in _search_words(core)
+                                for a in ("p", "s"))
             area_in = ", ".join("'" + c.replace("'", "''") + "'" for c in area)
-            inner = (f"SELECT {_select(cols)}, {_sq_sql(pr)} AS sq_p, {_sq_sql(sr)} AS sq_s FROM {cc.q(rid)} "
+            inner = (f"SELECT {_select(cols)}, {_road_aliases(pr, sr)} FROM {cc.q(rid)} "
                      f"WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in})")
             no_xy = _paged(ckan, f"SELECT * FROM ({inner}) q WHERE ({names})", cid)
         log["no_coords_read"] += len(no_xy)

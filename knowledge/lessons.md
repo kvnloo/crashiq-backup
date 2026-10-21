@@ -14,6 +14,7 @@
   street cores, so it shared the leading-direction blind spot (#113) and called Glendale and Pasadena fine.
 - 2026-10-20 · Substring matching on squeezed names needs a stop list: `NOT STATED` contains `STATE`, so every
   no-cross-street report named "State Street" (Santa Barbara, 6,136 junk rows from four counties, #121).
+  Fix: short names (≤ 6 letters) as whole words, long names squeezed (CHP splits MC FADDEN), placeholders never a street.
 - 2026-10-20 · With parallel workers, every collector must read every worker's database. Run 1's history read 2 of 3
   and under-counted payload measures by a third; corrected openly in the row's note.
 - 2026-10-19 · Test fixtures must be recorded from live data. The synthetic fixture spelled injury levels as phrases;
