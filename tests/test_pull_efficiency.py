@@ -41,7 +41,7 @@ def test_excluded_reports_get_no_party_or_injury_lookups():
     assert excluded and all(c["severity"] is None and c["details"] == "not_looked_up" for c in excluded)
     # 5 years x (Parties + IWP), at most one 500-id batch each for ~320 counted crashes; was 24 lookups of 150
     assert calls["id_lookups"] <= 10
-    assert calls["datastore_search_sql"] <= 20
+    assert calls["datastore_search_sql"] <= 25        # + the street-name area query, up to one per year (#111)
 
 
 def test_gps_rows_far_from_a_diagonal_line_stop_before_the_lookups():

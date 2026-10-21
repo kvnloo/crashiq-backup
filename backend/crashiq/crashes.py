@@ -51,7 +51,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 4     # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113)
+PULL_FORMAT = 5     # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -334,19 +334,22 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         # Crashes with no usable coordinates: same county (or city) as the GPS crashes, on the corridor street by
         # name; then, in code, only those whose cross street is one of the study intersections (the study stretch).
         area_col = "county_code" if "county_code" in cols else "city_code" if "city_code" in cols else None
-        area = sorted({str(r[area_col]) for r, _ in recs if area_col and r.get(area_col)})
+        # Only GPS crashes whose report names the corridor say where the corridor is: a Woodland PD crash
+        # (ELM ST & COURT ST, county 57) with GPS in Marina must not send the search to Yolo County (#111).
+        gps_area = {str(r[area_col]) for r, _ in recs if area_col and r.get(area_col)
+                    and any(_names_street(r.get(f), corridor_keys) for f in ("primary_road", "secondary_road"))}
         bad_xy = (f"{lat} IS NULL OR {lon} IS NULL OR {lat} NOT BETWEEN {cc.CA_LAT[0]} AND {cc.CA_LAT[1]} "
                   f"OR {lon} NOT BETWEEN {cc.CA_LON[0]} AND {cc.CA_LON[1]}")
-        if area:
+        # The area found from the reports' own street names (corridor street + a study cross street) is always
+        # searched too, found once per pull (tried again each year until a year has such reports): GPS alone can
+        # point at the wrong county (#111; Union City has no GPS, #35).
+        if cores and area_col and not name_area:
+            name_area = _area_by_street_names(ckan, rid, cols, area_col, bad_xy, cores, cross_cores)
+        area = sorted(gps_area | set(name_area or []))
+        if gps_area:
             log["area_source"] = log["area_source"] or "GPS crashes in the corridor box"
-        elif cores and area_col:
-            # No GPS crash in the box (Union City PD records GPS on 0% of reports, 2026-10-18): find the area from
-            # the reports themselves.
-            if not name_area:
-                name_area = _area_by_street_names(ckan, rid, cols, area_col, bad_xy, cores, cross_cores)
-            area = name_area
-            if area:
-                log["area_source"] = "street names (no GPS crash in the corridor box)"
+        elif area:
+            log["area_source"] = log["area_source"] or "street names (no GPS crash in the corridor box)"
         no_xy = []
         if cores and area:
             pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
