@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProfileMap from '../components/ProfileMap'
 import ReviewList from '../components/ReviewList'
 import StripDiagram from '../components/StripDiagram'
 import { locationPoints } from '../lib/mapcats'
 import { ApiError, api, errorText } from '../lib/api'
+import { shortName } from '../lib/strip'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
 
@@ -45,8 +46,8 @@ function Bars({ t }) {
         <div className="bar" key={r.key}>
           <span className="lab">{r.label}</span>
           <span className="tr" aria-hidden="true">
-            <i className="inj" style={{ width: `${(100 * r.values.injury_crashes) / max}%` }} />
-            <i className="pdo" style={{ width: `${(100 * (r.values.crashes - r.values.injury_crashes)) / max}%` }} />
+            {/* the one severity ramp, stacked (#119): orange means serious here as everywhere else */}
+            {SEV_PARTS.map(([k]) => (r.values[`sev_${k}`] ? <i key={k} className={`sev-${k}`} style={{ width: `${(100 * r.values[`sev_${k}`]) / max}%` }} /> : null))}
           </span>
           <span className="v mono">{fmt(r.values.crashes)}</span>
         </div>
@@ -312,6 +313,92 @@ function TrendLine({ rows, max }) {
   )
 }
 
+// E. Is there a pattern? (#105) Collision type x location from T13: locations in corridor order, types by count;
+// empty rows and columns hidden; a number in every cell, shade = crashes (one hue). Sets up Findings (T12).
+const TYPE_SHORT = { broadside: 'Broad.', 'rear end': 'Rear', 'side swipe': 'Swipe', 'hit object': 'Object', 'head-on': 'Head-on',
+  'vehicle/pedestrian': 'Ped.', other: 'Other', overturned: 'Roll', not_stated: 'n/s' }
+const gridName = (name) => String(name).split(' – ').map(shortName).join(' – ')
+
+function Grid({ p, onOpen }) {
+  const wrap = useRef(null)
+  const [more, setMore] = useState(false)             // columns still past the right edge: say so (#119)
+  useEffect(() => {
+    const el = wrap.current
+    if (!el) return undefined
+    const check = () => setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 2)
+    check()
+    el.addEventListener('scroll', check)
+    window.addEventListener('resize', check)
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(check) : null
+    ro?.observe(el)
+    if (el.firstElementChild) ro?.observe(el.firstElementChild)
+    return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check); ro?.disconnect() }
+  }, [p])
+  const t = table(p, 'T13')
+  const t2 = table(p, 'T2')
+  const cols = t.columns.filter((c) => c.key !== 'total' && t.rows.some((r) => r.values[c.key]))
+  const rows = t.rows.filter((r) => r.values.total)
+  const max = Math.max(1, ...rows.flatMap((r) => cols.map((c) => r.values[c.key] || 0)))
+  return (
+    <section aria-label="Collision type by location">
+      <div className="sect-h"><h2 className="h3">Is there a pattern?</h2><Src tid="T13" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="gridwrap" ref={wrap}>
+        <table className="grid13">
+          <thead><tr><th>Location</th>{cols.map((c) => <th key={c.key} className="sf-num" scope="col" title={c.label}>{TYPE_SHORT[c.key.toLowerCase()] || c.label}</th>)}</tr></thead>
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.key}>
+                <th scope="row"><button type="button" className="rowlink" title={r.label} onClick={() => { const row = t2.rows.find((x) => x.key === r.key); if (row) onOpen(row) }}>{gridName(r.label)}</button></th>
+                {cols.map((c) => {
+                  const n = r.values[c.key] || 0
+                  return <td key={c.key} className="sf-num mono" data-testid="grid-cell"
+                    style={n ? { background: `color-mix(in srgb, var(--info) ${Math.round(12 + (60 * n) / max)}%, transparent)` } : undefined}>{n || ''}</td>
+                })}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      {more ? <p className="gridmore" role="note">More columns → scroll the grid</p> : null}
+      <p className="muted small-note">Darker = more crashes of that type at that location. Findings tests which of these stand out.</p>
+    </section>
+  )
+}
+
+// F. Where are vulnerable road users hit? (#105) Pedestrian, bicycle and motorcycle crashes from T10 (with KSI), the
+// locations with the most of each from T2, and a toggle that shows only those crashes on the map.
+const ROAD_USERS = [['ped', 'Pedestrians', 'ped_crashes'], ['bike', 'Bicyclists', 'bike_crashes'], ['motorcycle', 'Motorcyclists', 'moto_crashes']]
+
+function RoadUsers({ p, onMap, mapMode }) {
+  const t10 = table(p, 'T10')
+  const t2 = table(p, 'T2')
+  return (
+    <section aria-label="Vulnerable road users">
+      <div className="sect-h"><h2 className="h3">Where are vulnerable road users hit?</h2><Src tid="T10" n={cell(p, 'T1/crashes/value')} /></div>
+      <ul className="vru">
+        {ROAD_USERS.map(([k, label, col]) => {
+          const r = t10.rows.find((x) => x.key === k)
+          const n = r?.values.crashes || 0
+          const top = t2.rows.filter((x) => x.values[col]).sort((a, b) => b.values[col] - a.values[col] || a.label.localeCompare(b.label)).slice(0, 3)
+          return (
+            <li key={k} data-testid={`vru-${k}`}>
+              <div className="vru-h"><b>{label}</b><span className="mono n">{fmt(n)}</span><span className="mono ksi">{fmt(r?.values.ksi_crashes || 0)} KSI</span>
+                {n ? <button type="button" className={`linkbtn${mapMode === k ? ' on' : ''}`} aria-pressed={mapMode === k}
+                  onClick={() => onMap(mapMode === k ? null : k)}>{mapMode === k ? 'Showing on map' : 'Show on map'}</button> : null}</div>
+              {top.length ? <div className="muted vru-top">{top.map((x) => `${x.label} ${fmt(x.values[col])}`).join(' · ')}</div>
+                : <div className="muted vru-top">None in this window.</div>}
+            </li>
+          )
+        })}
+      </ul>
+      <details className="showtable"><summary>Show table</summary>
+        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Road users involved</th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th><th className="sf-num">Share %</th></tr></thead>
+          <tbody>{t10.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.ksi_crashes)}</td><td className="sf-num mono">{fmt(r.values.share_pct)}</td></tr>)}</tbody></table></div>
+      </details>
+    </section>
+  )
+}
+
 function DataSources({ p, pull, onRefresh, busy }) {
   const prov = Object.entries(p.location_provenance || {}).filter(([, v]) => v)
   const cl = pull?.cleaning || {}
@@ -414,6 +501,7 @@ export default function Profile() {
   const [refreshing, setRefreshing] = useState(false)
   const [review, setReview] = useState(null)      // review list data while it's open (#97)
   const [picking, setPicking] = useState(null)    // { ids, done } while a map point is being picked
+  const [mapMode, setMapMode] = useState(null)    // 'ped' | 'bike' | 'motorcycle': only those crashes on the map (#105)
 
   useEffect(() => {
     let alive = true
@@ -476,7 +564,7 @@ export default function Profile() {
   return (
     <section className="profile" aria-label="Crash profile">
       <div className="mapcol">
-        <ProfileMap line={state.line} crashes={state.crashes || []} locations={locs} highlight={highlight} selected={drill?.row.key}
+        <ProfileMap line={state.line} crashes={mapMode ? (state.crashes || []).filter((c) => c[mapMode]) : state.crashes || []} locations={locs} highlight={highlight} selected={drill?.row.key}
           onPick={picking ? (pt) => picking.done(pt) : undefined} />
       </div>
       <div className="datacol">
@@ -505,6 +593,8 @@ export default function Profile() {
             <Ranking p={p} onOpen={openLocation} />
             <Severity p={p} />
             <Trend p={p} />
+            <Grid p={p} onOpen={openLocation} />
+            <RoadUsers p={p} onMap={setMapMode} mapMode={mapMode} />
             {p.caveats.length > 0 && (
               <ul className="caveats" aria-label="Caveats">
                 {p.caveats.map((c) => <li key={c.key} className={c.limitation ? 'warn' : ''}>{c.text}</li>)}
@@ -513,7 +603,7 @@ export default function Profile() {
             <section>
               <div className="sect-h"><h2 className="h3">Collision type</h2><Src tid="T4" n={cell(p, 'T1/crashes/value')} /></div>
               <Bars t={table(p, 'T4')} />
-              <div className="legend small"><span><i style={{ background: 'var(--sev-i)' }} />Injury</span><span><i style={{ background: 'var(--sev-p)' }} />Property damage</span></div>
+              <div className="legend small">{SEV_PARTS.filter(([k]) => table(p, 'T4').rows.some((r) => r.values[`sev_${k}`])).map(([k, l]) => <span key={k}><i className={`sev-${k}`} />{l}</span>)}</div>
             </section>
             <section>
               <div className="sect-h"><h2 className="h3">When crashes happen</h2><Src tid="T9" n={cell(p, 'T1/crashes/value')} /></div>

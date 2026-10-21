@@ -59,7 +59,7 @@ def test_beta_prior_and_invalid_cases():
 
 def test_intersections_and_segments_are_screened_against_their_own_kind():
     study, net, pull, a = golden()
-    t12 = profile.build(study, net, pull, a)["tables"][-1]
+    t12 = next(t for t in profile.build(study, net, pull, a)["tables"] if t["id"] == "T12")
     for r in t12["rows"]:
         lid = r["key"].split("~")[0]
         assert r["values"]["reference"] == ("corridor segments" if lid.startswith("seg") else "corridor intersections")
@@ -68,7 +68,7 @@ def test_intersections_and_segments_are_screened_against_their_own_kind():
 def test_golden_screen_rows_are_consistent():
     study, net, pull, a = golden()
     p = profile.build(study, net, pull, a)
-    t12 = p["tables"][-1]
+    t12 = next(t for t in p["tables"] if t["id"] == "T12")
     assert t12["id"] == "T12" and t12["rows"]
     for r in t12["rows"]:
         v = r["values"]

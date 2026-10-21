@@ -35,7 +35,8 @@ describe('Crash profile screen', () => {
     renderAt('/s/s1/profile')
     await screen.findByLabelText('Key numbers')
     const t2 = table(profile, 'T2')
-    const rows = screen.getAllByRole('row').filter((r) => within(r).queryByRole('button'))
+    const full = screen.getByLabelText('Location ranking').querySelector('details')       // the full T2 table (#103)
+    const rows = within(full).getAllByRole('row').filter((r) => within(r).queryByRole('button'))
     expect(rows).toHaveLength(t2.rows.length)
     t2.rows.forEach((r, i) => {
       const cells = within(rows[i]).getAllByRole('cell').map((c) => c.textContent)
@@ -43,7 +44,7 @@ describe('Crash profile screen', () => {
       expect(cells.slice(1, 6)).toEqual(['crashes', 'ksi_crashes', 'injury_crashes', 'dark_crashes', 'crashes_per_year']
         .map((k) => nf.format(r.values[k])))
     })
-    for (const r of table(profile, 'T4').rows) expect(screen.getByText(r.label)).toBeInTheDocument()
+    for (const r of table(profile, 'T4').rows) expect(screen.getAllByText(r.label).length).toBeGreaterThan(0)
   })
 
   it('cites tables with a small ⓘ, not visible text', async () => {
@@ -266,5 +267,45 @@ describe('Crash profile screen', () => {
     const rules = within(q).getByLabelText('Excluded, by rule')
     const sum = [...rules.querySelectorAll('li .mono')].reduce((t, e) => t + Number(e.textContent.replace(/,/g, '')), 0)
     expect(sum).toBe(v('excluded'))
+  })
+
+  it('collision type x location grid equals T13; empty rows and columns hidden (#105)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const g = screen.getByLabelText('Collision type by location')
+    expect(within(g).getByText('Is there a pattern?')).toBeInTheDocument()
+    const t13 = table(profile, 'T13')
+    const cols = t13.columns.filter((c) => c.key !== 'total' && t13.rows.some((r) => r.values[c.key]))
+    const rows = t13.rows.filter((r) => r.values.total)
+    const body = g.querySelectorAll('tbody tr')
+    expect(body).toHaveLength(rows.length)
+    rows.forEach((r, i) => {
+      expect(body[i].querySelector('th button').getAttribute('title')).toBe(r.label)       // short name shown, full on hover
+      const cells = [...body[i].querySelectorAll('td')].map((td) => Number(td.textContent || 0))
+      expect(cells).toEqual(cols.map((c) => r.values[c.key] || 0))
+    })
+    const heads = [...g.querySelectorAll('thead th')].slice(1)
+    expect(heads.map((th) => th.getAttribute('title'))).toEqual(cols.map((c) => c.label))
+    expect(heads.every((th) => th.textContent.length <= 9)).toBe(true)                          // short headers (#119)
+  })
+
+  it('vulnerable road users: counts and KSI equal T10, top locations from T2, map toggle filters (#105)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const v = screen.getByLabelText('Vulnerable road users')
+    const t10 = table(profile, 'T10')
+    for (const k of ['ped', 'bike', 'motorcycle']) {
+      const r = t10.rows.find((x) => x.key === k)
+      const li = within(v).getByTestId(`vru-${k}`)
+      expect(li.querySelector('.n').textContent).toBe(nf.format(r.values.crashes))
+      expect(li.querySelector('.ksi').textContent).toBe(`${nf.format(r.values.ksi_crashes)} KSI`)
+    }
+    const map = screen.getByTestId('map')
+    const before = Number(map.getAttribute('data-n'))
+    fireEvent.click(within(within(v).getByTestId('vru-motorcycle')).getByRole('button', { name: 'Show on map' }))
+    await waitFor(() => expect(Number(screen.getByTestId('map').getAttribute('data-n'))).toBeLessThan(before))
+    expect(within(v).getByRole('button', { name: 'Showing on map' })).toHaveAttribute('aria-pressed', 'true')
   })
 })
