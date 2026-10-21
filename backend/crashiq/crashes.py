@@ -387,7 +387,10 @@ def _city_allowed(city: str | None, allowed: set[str], outside: bool = False) ->
 # report names; otherwise the crash is treated as having no GPS.
 # Measured on CCRS 2021-25 (Tester's mirror): most agencies show the digits on 30-40% of their points, a few small
 # ones up to 67%; San Jose PD 85-88% in 2021-24 and 55% in 2025. 75% flags San Jose PD 2021-24 and nothing else.
-DMS_SHARE = 0.75         # share of an agency-year's GPS points with the DMS digits
+DMS_SHARE = 0.75         # share of an agency-year's GPS points with the DMS digits: clearly DMS
+# A mixed agency-year (SJPD 2025: 55%, likely fixed partway through the year), clearly above the 30-40% baseline: a
+# point is converted only if, as written, it doesn't fit the report's streets and, converted, it does (PM review).
+DMS_SHARE_MIXED = 0.5
 DMS_MIN_POINTS = 20      # sample needed to judge an agency-year
 DMS_SAMPLE = 1000
 
@@ -578,22 +581,28 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         if "ncic" in cols:
             for r in dms_rows:
                 agency = str(r.get(cols["ncic"]["id"]) or "").strip()
-                if not agency or _dms_share(ckan, rid, cols, agency, dms_cache) < DMS_SHARE:
+                share = _dms_share(ckan, rid, cols, agency, dms_cache) if agency else 0.0
+                if share < DMS_SHARE_MIXED:
                     continue
+                clear = share >= DMS_SHARE
                 c = cc.crash_record(r, cols)
                 la, lo = (dms_decode(c["lat"]), dms_decode(c["lon"])) if c["lat"] is not None else (None, None)
                 if la is None or lo is None:
                     continue
+                written_fits = _dms_check(c, line, studies, corridor_keys)
                 c.update(lat=la, lon=lo, gps_as_written=[r.get(la_id), r.get(lo_id)])
                 if line.project(la, lo).offset_ft > margin:
                     continue                  # converted, it's somewhere else along the box: not this corridor
-                if _dms_check(c, line, studies, corridor_keys):
+                if _dms_check(c, line, studies, corridor_keys) and not written_fits:
                     recs.append((c, "gps_dms_corrected"))
                     dms_ids["corrected"].add(c["crash_id"])
-                else:                         # doesn't land near its own streets: treated as having no GPS
+                elif clear:                   # clearly DMS, but doesn't land near its own streets: treated as no GPS
                     dms_no_gps.append({**r, la_id: None, lo_id: None})
                     dms_ids["unconfirmed"].add(c["crash_id"])
-                log["gps_dms_agencies"] = sorted(set(log["gps_dms_agencies"]) | {f"{agency} ({y})"})
+                else:                         # mixed year: a point that doesn't check out is left as written
+                    continue
+                log["gps_dms_agencies"] = sorted(set(log["gps_dms_agencies"])
+                                                 | {f"{agency} ({y}{'' if clear else ', mixed'})"})
         log["cities"] = sorted(set(log["cities"]) | {r["city"] for r, _ in recs if r["city"]})
         # Crashes with no usable coordinates: same county (or city) as the GPS crashes, on the corridor street by
         # name; then, in code, only those whose cross street is one of the study intersections (the study stretch).

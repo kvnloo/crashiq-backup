@@ -398,3 +398,31 @@ def test_dms_needs_the_agency_signature():
     # an agency whose GPS is ordinary decimal degrees is never converted, even if a point sits in the DMS box
     out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(json.loads((FIXTURES / "ckan_crenshaw.json").read_text()))))
     assert out["cleaning"]["gps_dms_corrected"] == 0 and out["cleaning"]["gps_dms_agencies"] == []
+
+
+def test_mixed_dms_year_converts_only_points_that_check_out():
+    # #143 review: SJPD 2025 (55% DMS digits, likely fixed partway through the year). Half the fixture's GPS points are
+    # DMS-encoded, half stay decimal: the DMS ones that land on their own streets are converted; the decimal ones are
+    # untouched; nothing is sent to the no-GPS path because of a failed conversion.
+    d = json.loads((FIXTURES / "ckan_crenshaw.json").read_text())
+    enc = set()
+    for rid, t in d["tables"].items():
+        if rid.startswith("cra-"):
+            for r in t["rows"]:
+                if r.get("Latitude") and r.get("Longitude") and int(r["Collision Id"]) % 3:   # about two thirds DMS
+                    enc.add(str(r["Collision Id"]))
+                    r["Latitude"] = f"{crashes.dms_encode(float(r['Latitude'])):.6f}"
+                    r["Longitude"] = f"{crashes.dms_encode(float(r['Longitude'])):.6f}"
+    shares = {}
+    real = crashes._dms_share
+    crashes._dms_share = lambda *a: shares.setdefault(a[3], 0.6)                  # a mixed year: 50-75%
+    try:
+        out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    finally:
+        crashes._dms_share = real
+    conv = {c["crash_id"] for c in out["crashes"] if c["location_source"] == "gps_dms_corrected"}
+    assert conv and conv <= enc
+    assert out["cleaning"]["gps_dms_unconfirmed"] == 0
+    assert any(a.endswith(", mixed)") for a in out["cleaning"]["gps_dms_agencies"])
+    plain = {c["crash_id"] for c in out["crashes"] if c["location_source"] == "gps"}
+    assert plain and not plain & enc                                           # decimal points stay as written
