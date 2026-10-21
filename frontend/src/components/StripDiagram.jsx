@@ -85,9 +85,10 @@ export default function StripDiagram({ crashes, intersections, lengthFt, onOpen 
             <g key={c.crash_id} className="strip-dot" onMouseEnter={() => setHover({ c, cx, cy })} onMouseLeave={() => setHover(null)}
               onClick={() => onOpen?.(c.location_id)} data-testid="strip-dot" data-location={c.location_id}>
               <circle cx={cx} cy={cy} r={R + 3} className="hit" />
+              {c.ped || c.bike ? <circle cx={cx} cy={cy} r={R + 0.75} className="vru-ring" data-testid="strip-vru" /> : null}
               {dim === 'severity' && hollow.has(catOf(dim, c))
                 ? <circle cx={cx} cy={cy} r={R - 0.5} fill="none" stroke={color.get(catOf(dim, c))} strokeWidth={1.5} className="hollow" />
-                : <circle cx={cx} cy={cy} r={c.severity === 'K' || c.severity === 'A' ? R + 1 : R} fill={color.get(catOf(dim, c)) || '#6B7682'} />}
+                : <circle cx={cx} cy={cy} r={c.ped || c.bike ? R - 0.75 : c.severity === 'K' || c.severity === 'A' ? R + 1 : R} fill={color.get(catOf(dim, c)) || '#6B7682'} />}
             </g>
           )
         })}
@@ -97,9 +98,11 @@ export default function StripDiagram({ crashes, intersections, lengthFt, onOpen 
         <div className="strip-tip" style={{ left: Math.min(width - 190, Math.max(0, hover.cx - 90)), top: Math.max(0, hover.cy - 64) }} role="tooltip">
           <b>{hover.c.collision_type ? hover.c.collision_type.toLowerCase() : 'crash'}</b><br />
           {hover.c.date}{hover.c.hour != null ? ` · ${String(hover.c.hour).padStart(2, '0')}:00` : ''} · {SEV[hover.c.severity] || hover.c.severity}
+          {hover.c.ped || hover.c.bike ? <><br />{[hover.c.ped && 'pedestrian', hover.c.bike && 'bicyclist'].filter(Boolean).join(' and ')} involved</> : null}
         </div>
       ) : null}
-      <div className="legend">{cats.map((c) => <span key={c.key}><i style={c.hollow ? { background: 'transparent', boxShadow: `inset 0 0 0 1.5px ${c.color}` } : { background: c.color }} />{c.label}</span>)}</div>
+      <div className="legend">{crashes.some((c) => c.ped || c.bike) ? <span><i className="vru-key" />Ring: pedestrian or bicyclist involved</span> : null}
+        {cats.map((c) => <span key={c.key}><i style={c.hollow ? { background: 'transparent', boxShadow: `inset 0 0 0 1.5px ${c.color}` } : { background: c.color }} />{c.label}</span>)}</div>
     </div>
   )
 }

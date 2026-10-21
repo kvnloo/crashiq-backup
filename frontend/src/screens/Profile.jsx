@@ -6,6 +6,7 @@ import StripDiagram from '../components/StripDiagram'
 import { locationPoints } from '../lib/mapcats'
 import { ApiError, api, errorText } from '../lib/api'
 import { shortName } from '../lib/strip'
+import { vruHeadline } from '../lib/vru'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
 
@@ -141,7 +142,7 @@ function Locations({ t, onOpen }) {
 const SEV_PARTS = [['k', 'Fatal'], ['a', 'Serious injury'], ['b', 'Minor injury'], ['c', 'Possible injury'],
   ['u', 'Injury, level not stated'], ['o', 'Property damage']]
 const SORTS = [['crashes', 'Crashes', (v) => v.crashes], ['ksi', 'KSI', (v) => v.ksi_crashes],
-  ['rate', 'Rate vs critical', (v) => v.rate_to_critical ?? -1]]
+  ['vru', 'Pedestrians + bicyclists', (v) => v.vru_crashes ?? 0], ['rate', 'Rate vs critical', (v) => v.rate_to_critical ?? -1]]
 
 function SevBar({ v, max }) {
   return (
@@ -177,6 +178,8 @@ function Ranking({ p, onOpen }) {
             <button type="button" className="rowlink" onClick={() => onOpen(r)}>{r.label}</button>
             <span className="mono n" title="Crashes">{fmt(r.values.crashes)}</span>
             <span className="mono n ksi" title="KSI crashes (fatal + serious)">{fmt(r.values.ksi_crashes)} KSI</span>
+            <span className={`mono vrun${r.values.vru_crashes ? '' : ' zero'}`} data-testid="rank-vru"
+              title="Crashes with a pedestrian or bicyclist (KSI among them)">◯ {fmt(r.values.vru_crashes || 0)} ped/bike{r.values.vru_ksi_crashes ? ` · ${fmt(r.values.vru_ksi_crashes)} KSI` : ''}</span>
             <SevBar v={r.values} max={max} />
             {hasCrit && r.values.critical_rate != null ? <RateBar v={r.values} max={maxBy[r.values.kind] || 1} /> : null}
           </li>
@@ -365,35 +368,76 @@ function Grid({ p, onOpen }) {
   )
 }
 
-// F. Where are vulnerable road users hit? (#105) Pedestrian, bicycle and motorcycle crashes from T10 (with KSI), the
-// locations with the most of each from T2, and a toggle that shows only those crashes on the map.
+// F. Pedestrians and bicyclists first (#136, user decision 2026-10-20): right under the trust strip. Headline and the
+// "how dangerous" comparison from T19; the locations with the most of each from T2; pedestrian action (T15) and the
+// lighting split (T20). Motorcyclists are shown alongside. Every number is a table cell; this only draws them.
 const ROAD_USERS = [['ped', 'Pedestrians', 'ped_crashes'], ['bike', 'Bicyclists', 'bike_crashes'], ['motorcycle', 'Motorcyclists', 'moto_crashes']]
+const DANGER = [['ped', 'Pedestrian crashes'], ['bike', 'Bicycle crashes'], ['motorcycle', 'Motorcycle crashes'],
+  ['other', 'All other crashes']]
 
-function RoadUsers({ p, onMap, mapMode }) {
-  const t10 = table(p, 'T10')
-  const t2 = table(p, 'T2')
+function Vru({ p, onMap, mapMode }) {
+  const t19 = table(p, 'T19'), t2 = table(p, 'T2'), t15 = table(p, 'T15'), t20 = table(p, 'T20')
+  const v = (k) => t19.rows.find((r) => r.key === k)?.values || {}
+  const h = vruHeadline(t19)
+  const rows = DANGER.map(([k, label]) => ({ k, label, ...v(k) })).filter((r) => r.crashes)
+  const max = Math.max(1, ...rows.map((r) => r.ksi_pct || 0))
+  const n = cell(p, 'T1/crashes/value')
   return (
-    <section aria-label="Vulnerable road users">
-      <div className="sect-h"><h2 className="h3">Where are vulnerable road users hit?</h2><Src tid="T10" n={cell(p, 'T1/crashes/value')} /></div>
+    <section className="vru-sect" aria-label="Pedestrians and bicyclists">
+      <div className="sect-h"><h2 className="h3">Pedestrians and bicyclists</h2><Src tid="T19" n={n} /></div>
+      <p className="vru-head" data-testid="vru-headline">{h.lead}{h.pct != null ? <b className="mono">{fmt(h.pct)}%</b> : null}{h.rest}</p>
+      {rows.length > 1 ? (
+        <>
+          <h3 className="h4">How dangerous is it? <span className="muted">share of each group&apos;s crashes that killed or seriously injured someone</span></h3>
+          <div className="danger" data-testid="danger">
+            {rows.map((r) => (
+              <div className={`dg${r.k === 'other' ? ' ref' : ''}`} key={r.k} data-testid={`danger-${r.k}`}>
+                <span className="lab">{r.label}</span>
+                <span className="tr" aria-hidden="true"><i style={{ width: `${(100 * (r.ksi_pct || 0)) / max}%` }} /></span>
+                <span className="v mono">{fmt(r.ksi_pct)}%</span>
+                <span className="nn mono muted">{fmt(r.ksi_crashes)} of {fmt(r.crashes)}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      ) : null}
       <ul className="vru">
         {ROAD_USERS.map(([k, label, col]) => {
-          const r = t10.rows.find((x) => x.key === k)
-          const n = r?.values.crashes || 0
+          const r = v(k)
           const top = t2.rows.filter((x) => x.values[col]).sort((a, b) => b.values[col] - a.values[col] || a.label.localeCompare(b.label)).slice(0, 3)
           return (
             <li key={k} data-testid={`vru-${k}`}>
-              <div className="vru-h"><b>{label}</b><span className="mono n">{fmt(n)}</span><span className="mono ksi">{fmt(r?.values.ksi_crashes || 0)} KSI</span>
-                {n ? <button type="button" className={`linkbtn${mapMode === k ? ' on' : ''}`} aria-pressed={mapMode === k}
-                  onClick={() => onMap(mapMode === k ? null : k)}>{mapMode === k ? 'Showing on map' : 'Show on map'}</button> : null}</div>
-              {top.length ? <div className="muted vru-top">{top.map((x) => `${x.label} ${fmt(x.values[col])}`).join(' · ')}</div>
+              <div className="vru-h"><b>{label}</b><span className="mono n">{fmt(r.crashes || 0)}</span><span className="mono ksi">{fmt(r.ksi_crashes || 0)} KSI</span>
+                {r.crashes ? <button type="button" className={`linkbtn${mapMode === k ? ' on' : ''}`} aria-pressed={mapMode === k}
+                  onClick={() => onMap(mapMode === k ? null : k)}>{mapMode === k ? 'Showing only these on the map' : 'Show only these on the map'}</button> : null}</div>
+              {top.length ? <div className="muted vru-top">Most at {top.map((x) => `${x.label} ${fmt(x.values[col])}`).join(' · ')}</div>
                 : <div className="muted vru-top">None in this window.</div>}
             </li>
           )
         })}
       </ul>
+      {v('ped').crashes ? (
+        <div className="ped-ctx">
+          <div>
+            <div className="sect-h"><h3 className="h4">What the pedestrian was doing</h3><Src tid="T15" n={n} /></div>
+            <Bars t={t15} />
+          </div>
+          <div>
+            <div className="sect-h"><h3 className="h4">Day or night</h3><Src tid="T20" n={n} /></div>
+            <Bars t={{ ...t20, rows: t20.rows.filter((r) => r.values.crashes) }} />
+          </div>
+        </div>
+      ) : null}
       <details className="showtable"><summary>Show table</summary>
-        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Road users involved</th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th><th className="sf-num">Share %</th></tr></thead>
-          <tbody>{t10.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.ksi_crashes)}</td><td className="sf-num mono">{fmt(r.values.share_pct)}</td></tr>)}</tbody></table></div>
+        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Group</th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th>
+          <th className="sf-num">KSI % of group</th><th className="sf-num">Share of crashes %</th><th className="sf-num">Share of KSI %</th></tr></thead>
+          <tbody>{t19.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td>
+            <td className="sf-num mono">{fmt(r.values.ksi_crashes)}</td><td className="sf-num mono">{r.values.ksi_pct == null ? '—' : fmt(r.values.ksi_pct)}</td>
+            <td className="sf-num mono">{fmt(r.values.share_of_crashes_pct)}</td><td className="sf-num mono">{fmt(r.values.share_of_ksi_pct)}</td></tr>)}</tbody></table></div>
+        {[t15, t20].map((t) => (
+          <div className="sf-table-wrap" key={t.id}><table className="sf-table"><caption>{t.title}</caption><thead><tr><th></th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th><th className="sf-num">Share %</th></tr></thead>
+            <tbody>{t.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.ksi_crashes)}</td><td className="sf-num mono">{fmt(r.values.share_pct)}</td></tr>)}</tbody></table></div>
+        ))}
       </details>
     </section>
   )
@@ -589,12 +633,12 @@ export default function Profile() {
           <>
             <Kpis p={p} />
             <Quality p={p} excluded={state.excludedByRule || {}} onReview={openReview} />
+            <Vru p={p} onMap={setMapMode} mapMode={mapMode} />
             <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
             <Ranking p={p} onOpen={openLocation} />
             <Severity p={p} />
             <Trend p={p} />
             <Grid p={p} onOpen={openLocation} />
-            <RoadUsers p={p} onMap={setMapMode} mapMode={mapMode} />
             {p.caveats.length > 0 && (
               <ul className="caveats" aria-label="Caveats">
                 {p.caveats.map((c) => <li key={c.key} className={c.limitation ? 'warn' : ''}>{c.text}</li>)}

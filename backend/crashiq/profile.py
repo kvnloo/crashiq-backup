@@ -90,6 +90,55 @@ def _pcf_categories(tid: str, crashes: list[dict]) -> dict:
     return t
 
 
+def is_vru(c) -> bool:
+    """A pedestrian or a bicyclist involved (#136). Motorcyclists are shown alongside, not counted in."""
+    return bool(c.get("ped") or c.get("bike"))
+
+
+def light_group(c) -> str:
+    """Daylight / dusk-dawn / dark with street lights / dark without working street lights / not stated (#136)."""
+    t = (c.get("lighting") or "").upper()
+    if not t:
+        return "not_stated"
+    if is_unlit(c):
+        return "dark_unlit"
+    if is_dark(c):
+        return "dark_lit"
+    return "dusk_dawn" if "DUSK" in t or "DAWN" in t else "daylight" if "DAYLIGHT" in t else "not_stated"
+
+
+LIGHT_GROUPS = [("daylight", "Daylight"), ("dusk_dawn", "Dusk or dawn"), ("dark_lit", "Dark, street lights on"),
+                ("dark_unlit", "Dark, no street lights or not working"), ("not_stated", "Not stated")]
+
+
+def _vru_tables(crashes: list[dict], s: str) -> list[dict]:
+    """T19: pedestrian and bicycle crashes, their share of all crashes and of KSI crashes, and how often each group's
+    crashes are KSI next to all other crashes ("how dangerous", #136). T20: pedestrian crashes by lighting."""
+    n = len(crashes)
+    ksi_all = sum(c["severity"] in "KA" for c in crashes)
+    groups = [("ped", "Pedestrian crashes", lambda c: bool(c.get("ped"))),
+              ("bike", "Bicycle crashes", lambda c: bool(c.get("bike"))),
+              ("ped_or_bike", "Pedestrian or bicycle crashes", is_vru),
+              ("motorcycle", "Motorcycle crashes", lambda c: bool(c.get("motorcycle"))),
+              ("other", "All other crashes (no pedestrian or bicyclist)", lambda c: not is_vru(c)),
+              ("all", "All crashes", lambda c: True)]
+    rows = []
+    for key, label, f in groups:
+        sub = [c for c in crashes if f(c)]
+        ksi = sum(c["severity"] in "KA" for c in sub)
+        rows.append(_row(key, label, crashes=len(sub), ksi_crashes=ksi, fatal_crashes=sum(c["severity"] == "K" for c in sub),
+                         ksi_pct=pct(ksi, len(sub)) if sub else None, share_of_crashes_pct=pct(len(sub), n),
+                         share_of_ksi_pct=pct(ksi, ksi_all)))
+    t19 = _table(f"T19{s}", "Pedestrians and bicyclists", [
+        ("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"), ("fatal_crashes", "Fatal crashes"),
+        ("ksi_pct", "KSI % of the group's crashes"), ("share_of_crashes_pct", "Share of all crashes %"),
+        ("share_of_ksi_pct", "Share of all KSI crashes %")], rows, crashes)
+    peds = [{**c, "_light": light_group(c)} for c in crashes if c.get("ped")]
+    t20 = _dist(f"T20{s}", "Pedestrian crashes by lighting", peds, "_light", dict(LIGHT_GROUPS).get,
+                [k for k, _ in LIGHT_GROUPS])
+    return [t19, t20]
+
+
 def _movement(m) -> str:
     t = re.sub(r"\s+", " ", str(m or "").strip().upper())
     return {"ENTERING TRAFFICD": "ENTERING TRAFFIC"}.get(t, t)      # CHP's own typo in the code list (#52)
@@ -172,6 +221,7 @@ def tables_for(crashes: list[dict], years: int, suffix: str = "", window: list[i
     out.append(_table(f"T10{s}", "Road users involved", [("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"),
                                                          ("share_pct", "Share %")], rows, crashes))
     out += _safety_tables(crashes, s)
+    out += _vru_tables(crashes, s)
     yr = Counter(c.get("year") for c in crashes)
     # every year of the window, zero years included, so a trend never hides a quiet year (#104); injury / property
     # damage split, CHP's preliminary reports and the COVID years (2020-21, docs/03 #34 item 13) per year
@@ -225,7 +275,9 @@ def _counts(crashes):
             "killed": sum(c.get("killed", 0) for c in crashes), "injured": sum(c.get("injured", 0) for c in crashes),
             "dark_crashes": sum(is_dark(c) for c in crashes), "ped_crashes": sum(bool(c.get("ped")) for c in crashes),
             "bike_crashes": sum(bool(c.get("bike")) for c in crashes),
-            "moto_crashes": sum(bool(c.get("motorcycle")) for c in crashes)}
+            "moto_crashes": sum(bool(c.get("motorcycle")) for c in crashes),
+            "vru_crashes": sum(is_vru(c) for c in crashes),
+            "vru_ksi_crashes": sum(is_vru(c) and c["severity"] in "KA" for c in crashes)}
 
 
 def segment_rate(crashes: int, years: float, aadt: float | None, length_mi: float) -> float | None:
@@ -330,7 +382,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         k = _counts(cs)
         sev = Counter(c["severity"] for c in cs)
         vals = {"kind": kind, **{x: k[x] for x in ("crashes", "ksi_crashes", "fatal_crashes", "injury_crashes",
-                                                   "dark_crashes", "ped_crashes", "bike_crashes", "moto_crashes")},
+                                                   "dark_crashes", "ped_crashes", "bike_crashes", "moto_crashes",
+                                                   "vru_crashes", "vru_ksi_crashes")},
                 **{f"sev_{lvl.lower()}": sev[lvl] for lvl in "KABCUO"},   # the ranking's severity bar (#103)
                 "crashes_per_year": r2(k["crashes"] / years) if years else None}
         if kind == "segment":
@@ -373,6 +426,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     tables.append(_table("T2", "Locations (corridor order)", [
         ("crashes", "Crashes"), ("crashes_per_year", "Per year"), ("ksi_crashes", "KSI"), ("fatal_crashes", "Fatal"),
         ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"), ("moto_crashes", "Motorcycle"),
+        ("vru_crashes", "Ped + bike"), ("vru_ksi_crashes", "Ped + bike KSI"),
         ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate"),
         ("reference_rate", "Average rate, similar sites"), ("critical_rate", "Critical rate (95%)"),
         ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),

@@ -7,6 +7,7 @@ import { TILE_MAX_NATIVE_ZOOM, TILE_URL } from '../lib/tiles'
 
 const TILE_ATTR_HTML = 'Tiles © Esri — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 const PITCH_3D = 55
+const VRU_RING = '#E6EAEE'     // --fg on the (always dark) map: no hue, so the severity ramp and its CVD check stand
 const EMPTY = { type: 'FeatureCollection', features: [] }
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`)
 const round = (b) => Math.round(((b % 360) + 540) % 360 - 180)
@@ -36,6 +37,10 @@ function style() {
         'circle-opacity': ['case', ['get', 'hollow'], 0, ['get', 'dim'], 0.15, 0.9],
         'circle-stroke-color': ['case', ['get', 'hollow'], ['get', 'color'], '#0D1013'],
         'circle-stroke-width': 1.5, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.2, 1], 'circle-pitch-alignment': 'map' } },
+      // pedestrian or bicyclist involved (#136): a light ring around the severity dot, always on, any colour mode
+      { id: 'vru', type: 'circle', source: 'crashes', filter: ['==', ['get', 'vru'], true], paint: {
+        'circle-radius': ['case', ['get', 'big'], 9, 7.5], 'circle-opacity': 0, 'circle-stroke-color': VRU_RING,
+        'circle-stroke-width': 1.75, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.25, 1], 'circle-pitch-alignment': 'map' } },
       { id: 'columns', type: 'fill-extrusion', source: 'columns', paint: {
         'fill-extrusion-color': ['get', 'color'], 'fill-extrusion-base': ['get', 'base'], 'fill-extrusion-height': ['get', 'top'],
         'fill-extrusion-opacity': 0.92 } },
@@ -98,7 +103,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
       const p = e.features?.[0]?.properties
       if (!p) return
       map.getCanvas().style.cursor = 'pointer'
-      popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.type)}</b><br>${esc(p.date)}${p.hour ? ` · ${esc(p.hour)}` : ''} · ${esc(p.sev)}`).addTo(map)
+      popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.type)}</b><br>${esc(p.date)}${p.hour ? ` · ${esc(p.hour)}` : ''} · ${esc(p.sev)}${p.road ? `<br>${esc(p.road)} involved` : ''}`).addTo(map)
     })
     map.on('mousemove', 'columns', (e) => {
       const p = e.features?.[0]?.properties
@@ -140,7 +145,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
     map.getSource('crashes').setData({ type: 'FeatureCollection', features: shown.filter((c) => c.lat != null && c.lon != null).map((c) => ({
       type: 'Feature', geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
       properties: { color: colorOf.get(catOf(dim, c)) || '#6B7682', dim: Boolean(highlight && !highlight.has(c.crash_id)),
-        hollow: dim === 'severity' && HOLLOW.has(catOf(dim, c)), big: c.severity === 'K' || c.severity === 'A', type: (c.collision_type || 'Crash').toLowerCase(), date: c.date || '',
+        hollow: dim === 'severity' && HOLLOW.has(catOf(dim, c)), vru: Boolean(c.ped || c.bike), road: [c.ped && 'pedestrian', c.bike && 'bicyclist'].filter(Boolean).join(' and '), big: c.severity === 'K' || c.severity === 'A', type: (c.collision_type || 'Crash').toLowerCase(), date: c.date || '',
         hour: c.hour != null ? `${String(c.hour).padStart(2, '0')}:00` : '', sev: c.severity },
     })) })
     map.getSource('columns').setData(is3d ? columns(locations, shown, dim, cats, scale.h, scale.r) : EMPTY)
@@ -223,6 +228,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
             )
           })}
         </div>
+        {crashes.some((c) => c.ped || c.bike) ? <div className="vru-key-row"><i className="vru-key" />Ring: pedestrian or bicyclist involved</div> : null}
         <div className="foot mono">
           <span>Showing {shown.length} of {crashes.length} crashes{is3d ? ' · column height = crashes at the location' : ''}</span>
           {nFilters ? <button type="button" className="link" onClick={() => setHidden({})}>Clear {nFilters} filter{nFilters > 1 ? 's' : ''}</button> : null}

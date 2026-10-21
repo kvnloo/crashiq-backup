@@ -137,7 +137,7 @@
 .strip-tick, .strip-dot { cursor: pointer; }
 .strip-tick:hover text { fill: var(--fg); }
 .strip .hit { fill: transparent; }
-.strip-dot circle:not(.hit):not(.hollow) { stroke: var(--bg); stroke-width: 1.5; }
+.strip-dot circle:not(.hit):not(.hollow):not(.vru-ring) { stroke: var(--bg); stroke-width: 1.5; }
 .strip-more { font: 10px var(--font-mono); fill: var(--muted); }
 .strip-tip { position: absolute; width: 180px; pointer-events: none; background: var(--surface); color: var(--fg);
   border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 12px var(--font-body); }
@@ -149,7 +149,7 @@
 
 /* B. location ranking + C. severity (#103) */
 .rank { list-style: none; margin: 10px 0 0; padding: 0; display: grid; gap: 8px; }
-.rank li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "name n ksi" "bar bar bar" "rate rate rate";
+.rank li { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; grid-template-areas: "name n ksi" "bar bar bar" "vru vru vru" "rate rate rate";
   gap: 4px 12px; align-items: baseline; padding-bottom: 8px; border-bottom: 1px solid var(--line); }
 .rank li .rowlink { grid-area: name; text-align: left; }
 .rank .n { grid-area: n; font-size: 13px; }
@@ -219,3 +219,23 @@
 .grid13 td { min-width: 22px; padding: 5px 2px; }
 .gridmore { margin: 4px 0 0; font: 11px var(--font-mono); color: var(--info); text-align: right; }
 .bar .tr i[class^="sev-"]:last-child { border-radius: 0 4px 4px 0; }
+
+/* #136 pedestrians and bicyclists first */
+.vru-sect .vru-head { margin: 0 0 12px; font-size: 15px; line-height: 1.45; }
+.vru-sect .vru-head b { font-size: 20px; margin-right: 2px; }
+.vru-sect .h4 { margin: 0 0 8px; font-size: 13px; font-weight: 600; }
+.vru-sect .h4 .muted { font-weight: 400; }
+.danger { display: grid; gap: 8px; margin-bottom: 14px; }
+.dg { display: grid; grid-template-columns: 140px minmax(0, 1fr) 48px 72px; gap: 10px; align-items: center; font-size: 13px; }
+.dg .tr { height: 10px; background: var(--surface-2); border-radius: 5px; overflow: hidden; }
+.dg .tr i { display: block; height: 100%; background: var(--sev-a); border-radius: 0 4px 4px 0; }   /* KSI = serious, the one ramp */
+.dg.ref .tr i { background: var(--sev-o); }      /* the comparison group, quiet */
+.dg .v { text-align: right; font-weight: 600; } .dg .nn { font-size: 11px; text-align: right; }
+.ped-ctx { display: grid; gap: 14px; margin: 14px 0 6px; }
+.rank .vrun { grid-area: vru; font-size: 11px; color: var(--muted); } .rank .vrun.zero { opacity: .55; }
+.vru-ring { fill: none; stroke: var(--fg); stroke-width: 1.5; }
+.vru-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--fg); background: transparent; }
+.map-legend2 .vru-key { box-shadow: inset 0 0 0 1.5px #E6EAEE; margin-right: 6px; vertical-align: -1px; }
+.vru-key-row { font-size: 11px; margin: 6px 0 2px; }
+@media (max-width: 900px) { .dg { grid-template-columns: 110px minmax(0, 1fr) 44px 64px; } }
+.ped-ctx .bar { grid-template-columns: minmax(150px, 260px) minmax(0, 1fr) 44px; }
