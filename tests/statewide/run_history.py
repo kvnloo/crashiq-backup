@@ -37,7 +37,22 @@ MEASURES = {
     "pass_v1": "Cities with result pass (rules on the Method sheet).", "warn_v1": "Cities with result warn.",
     "fail_v1": "Cities with result fail.", "pass_pct_v1": "pass / cities tested, %.",
     "silent_drops_v1": "No-GPS reports naming the corridor and a study cross street, in the city, that the app never "
-                       "pulled (independent SQL on the mirror).",
+                       "pulled (independent SQL on the mirror; street core from the app's names.py).",
+    "silent_drops_v2": "As v1, with the Tester's own street core (leading direction and suffix dropped, #113).",
+    "new_corridors_v1": "Cities whose corridor was picked after the corridor list was frozen (not like-for-like with "
+                        "earlier runs; the Before-after sheet keeps them separate).",
+    "on_corridor_located_pct_v2": "Of crashes that count for the corridor (assigned to a study intersection or "
+                                  "segment, or still without a location): % with a location. Replaces located_pct_v1"
+                                  "'s denominator, which also held GPS crashes the assignment later excluded.",
+    "double_counts_on_corridor_v2": "As double_counts_v1, but only groups with at least one crash that counts for the "
+                                    "corridor (v1 also counted crashes excluded anyway). Same-minute refilings are "
+                                    "dropped by the app since #81; what's left differs in time.",
+    "unplaced_no_cross_street_v2": "Unplaced corridor crashes whose report gives no cross street (blank / NOT STATED): "
+                                   "kept for review since #82; they can lie anywhere along the street in the county.",
+    "unplaced_relaxed_held_v2": "Unplaced corridor crashes whose locator suggestion is on the 'relaxed' tier (name "
+                                "match without the direction), held for review by the exact-only gate (PR #16).",
+    "pass_v2": "Cities with result pass under the run-2 rule (Method sheet).", "warn_v2": "Run-2 rule: warn.",
+    "fail_v2": "Run-2 rule: fail (adds 0-pulled-while-reports-name-the-street as fail).",
     "double_counts_v1": "Extra crashes among those pulled: same agency + report number + both roads under 2+ "
                         "Collision Ids (each group counts n-1).",
     "excluded_no_cross_street_v1": "Corridor-street crashes the pull excluded under the side-street rule (#39) "
@@ -49,7 +64,28 @@ MEASURES = {
     "placement_accuracy_pct_v1": "Hidden-GPS test (#88): % of auto-placed crashes within the gate distance of their "
                                  "own GPS. Blank until #88 exists.",
 }
-RUN_COLS = ["run", "date", "app_commit", "backend_tree", "mirror_date", "years", "corridor_list", "fixes_since_last"]
+RUN_COLS = ["run", "date", "app_commit", "backend_tree", "mirror_date", "years", "corridor_list", "fixes_since_last",
+            "note"]
+
+
+def correct_run(run: int, results: list[dict], dbs: list[Path], mirror_db: Path, note: str) -> None:
+    """A documented correction of a recording error in one run's row (never a redefinition): recompute the
+    payload-based measures of that run and say why in its `note`. Other runs and columns are untouched."""
+    cols, rows = _read(HISTORY)
+    cm = city_measures(results, dbs, mirror_db)
+    tested = [r for r in results if r.get("result_v1", r.get("result")) in ("pass", "warn", "fail")]
+    get = lambda r, k: cm[f"{r['city']}|{r['county']}"][k] or 0  # noqa: E731
+    cand = sum(get(r, "candidates") for r in tested)
+    fix = {"corridor_crashes_v1": cand,
+           **{f"{k}_pct_v1": round(100 * sum(get(r, k) for r in tested) / cand, 2) if cand else None
+              for k in ("located", "review", "unplaced")},
+           "double_counts_v1": sum(get(r, "double_counts") for r in tested),
+           "excluded_no_cross_street_v1": sum(get(r, "excluded_wrongly") for r in tested)}
+    for row in rows:
+        if str(row["run"]) == str(run):
+            row.update({k: v for k, v in fix.items() if k in cols})
+            row["note"] = ((row.get("note") or "") + " " + note).strip()
+    _write_atomic(HISTORY, cols + [c for c in ["note"] if c not in cols], rows)
 
 
 def _git(*a) -> str:
@@ -69,16 +105,23 @@ def _append(path: Path, rows: list[dict], cols: list[str]) -> None:
     old_cols, old = _read(path)
     allc = old_cols + [c for c in cols if c not in old_cols]
     if allc != old_cols and old:
-        with open(path, "w", newline="") as f:
-            w = csv.DictWriter(f, allc)
-            w.writeheader()
-            w.writerows(old)
+        _write_atomic(path, allc, old)
     new_file = not path.exists()
     with open(path, "a", newline="") as f:
         w = csv.DictWriter(f, allc)
         if new_file:
             w.writeheader()
         w.writerows(rows)
+
+
+def _write_atomic(path: Path, cols: list[str], rows: list[dict]) -> None:
+    """Rewrite a history file via a temp file + rename, so a failed write never truncates history."""
+    tmp = path.with_suffix(".tmp")
+    with open(tmp, "w", newline="") as f:
+        w = csv.DictWriter(f, cols, extrasaction="raise")
+        w.writeheader()
+        w.writerows(rows)
+    tmp.replace(path)
 
 
 def _payloads(results: list[dict], dbs: list[Path]) -> dict[str, dict]:
@@ -121,7 +164,8 @@ def city_measures(results: list[dict], dbs: list[Path], mirror_db: Path) -> dict
     for r in results:
         p = pays.get(r.get("study_id") or "")
         m = {"located": None, "review": None, "unplaced": None, "candidates": None, "double_counts": None,
-             "excluded_wrongly": None}
+             "excluded_wrongly": None, "unplaced_no_cross": None, "unplaced_relaxed": None,
+             "double_counts_on_corridor": None}
         if p:
             cand = [c for c in p["crashes"] if not c.get("exclude_rule")]
             un = [c for c in cand if c.get("location_source") == "unmatched"]
@@ -135,10 +179,23 @@ def city_measures(results: list[dict], dbs: list[Path], mirror_db: Path) -> dict
                  "review": sum(1 for c in un if c.get("suggestion")),
                  "unplaced": sum(1 for c in un if not c.get("suggestion")),
                  "double_counts": sum(len(v) - 1 for v in groups.values() if len(v) > 1),
+                 "double_counts_on_corridor": sum(len(v) - 1 for v in groups.values() if len(v) > 1
+                                                  and any(not c.get("exclude_rule") for c in p["crashes"]
+                                                          if str(c["crash_id"]) in v)),
                  "excluded_wrongly": sum(1 for c in p["crashes"] if c.get("exclude_rule") == "cross_street_not_on_corridor"
-                                         and (sq(c.get("secondary_road")) in UNUSABLE or len(sq(c.get("secondary_road"))) <= 2))}
+                                         and (sq(c.get("secondary_road")) in UNUSABLE or len(sq(c.get("secondary_road"))) <= 2)),
+                 "unplaced_no_cross": sum(1 for c in un if sq(c.get("secondary_road")) in UNUSABLE
+                                          or len(sq(c.get("secondary_road"))) <= 2),
+                 "unplaced_relaxed": sum(1 for c in un if (c.get("suggestion") or {}).get("tier") == "relaxed")}
         out[f"{r['city']}|{r['county']}"] = m
     return out
+
+
+def _on_corridor_pct(results: list[dict]) -> float | None:
+    on = sum((r.get("assignment") or {}).get("intersection", 0) + (r.get("assignment") or {}).get("segment", 0)
+             for r in results)
+    un = sum((r.get("assignment") or {}).get("unmatched", 0) for r in results)
+    return round(100 * on / (on + un), 2) if on + un else None
 
 
 def tims_within(tims_rows: list[dict], tol_pct: float = 2.0) -> int | None:
@@ -168,12 +225,14 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
         if row.get("backend_tree") == tree:
             return row                                         # already recorded: never rewritten
     cm = city_measures(results, dbs, mirror_db)
-    tested = [r for r in results if r.get("result") in ("pass", "warn", "fail")]
+    tested = [r for r in results if r.get("result_v1", r.get("result")) in ("pass", "warn", "fail")]
     cand = sum(cm[f"{r['city']}|{r['county']}"]["candidates"] or 0 for r in tested)
 
     def pct(key):
         return round(100 * sum(cm[f"{r['city']}|{r['county']}"][key] or 0 for r in tested) / cand, 2) if cand else None
-    n = {k: sum(1 for r in tested if r["result"] == k) for k in ("pass", "warn", "fail")}
+    n = {k: sum(1 for r in tested if r.get("result_v1", r["result"]) == k) for k in ("pass", "warn", "fail")}
+    has_v2 = any("result_v1" in r for r in results)
+    n2 = {k: sum(1 for r in results if r["result"] == k) for k in ("pass", "warn", "fail")} if has_v2 else {}
     first = next((r for r in results if r.get("commit")), {})
     row = {"run": len(runs) + 1, "date": dt.date.today().isoformat(),
            "app_commit": first.get("commit"), "backend_tree": tree, "mirror_date": first.get("mirror_built"),
@@ -186,13 +245,24 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
            "silent_drops_v1": sum(r.get("silent_drops") or 0 for r in tested),
            "double_counts_v1": sum(cm[f"{r['city']}|{r['county']}"]["double_counts"] or 0 for r in tested),
            "excluded_no_cross_street_v1": sum(cm[f"{r['city']}|{r['county']}"]["excluded_wrongly"] or 0 for r in tested),
-           "tims_counties_within_2pct_v1": tims_within(tims_rows), "placement_accuracy_pct_v1": None}
+           "tims_counties_within_2pct_v1": tims_within(tims_rows), "placement_accuracy_pct_v1": None,
+           "silent_drops_v2": sum(r.get("silent_drops_v2") or 0 for r in results) if has_v2 else None,
+           "pass_v2": n2.get("pass"), "warn_v2": n2.get("warn"), "fail_v2": n2.get("fail"),
+           "new_corridors_v1": sum(1 for r in results if str(r.get("corridor_source", "")).startswith("picked (added")
+                                   and (r.get("corridor") or {}).get("line")),
+           "on_corridor_located_pct_v2": _on_corridor_pct(tested),
+           "double_counts_on_corridor_v2": sum(cm[f"{r['city']}|{r['county']}"].get("double_counts_on_corridor") or 0
+                                               for r in tested),
+           "unplaced_no_cross_street_v2": sum(cm[f"{r['city']}|{r['county']}"].get("unplaced_no_cross") or 0
+                                              for r in tested),
+           "unplaced_relaxed_held_v2": sum(cm[f"{r['city']}|{r['county']}"].get("unplaced_relaxed") or 0
+                                           for r in tested)}
     _append(HISTORY, [row], RUN_COLS + list(MEASURES))
     crow = []
     for r in results:
         m = cm[f"{r['city']}|{r['county']}"]
         crow.append({"run": row["run"], "city": r["city"], "county": r["county"], "result": r.get("result"),
-                     "reason": r.get("result_reason"), "candidates_v1": m["candidates"], "located_v1": m["located"],
+                     "reason": r.get("result_reason"), "result_run1_rule": r.get("result_v1", r.get("result")), "candidates_v1": m["candidates"], "located_v1": m["located"],
                      "silent_drops_v1": r.get("silent_drops"), "double_counts_v1": m["double_counts"],
                      "excluded_no_cross_street_v1": m["excluded_wrongly"]})
     _append(CITY_HISTORY, crow, list(crow[0]) if crow else [])

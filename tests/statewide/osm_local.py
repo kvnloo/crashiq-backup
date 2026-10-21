@@ -111,7 +111,12 @@ class LocalOSM:
                               "ORDER BY CAST(admin_level AS INT) DESC LIMIT 1", (area_id,)).fetchone()
         if not row:
             return {"elements": []}
-        rings = [[tuple(p) for p in r] for r in json.loads(row[0])]
+        return self.roads_in_rings([[tuple(p) for p in r] for r in json.loads(row[0])], classes)
+
+    def roads_in_rings(self, rings: list[list[tuple]], classes=("primary", "secondary", "tertiary")) -> dict:
+        lats = [p[0] for r in rings for p in r]
+        lons = [p[1] for r in rings for p in r]
+        row = (None, min(lats), min(lons), max(lats), max(lons))
         cand = self.db.execute(
             "SELECT w.id, w.highway, w.tags, w.coords FROM way_box b JOIN ways w ON w.id = b.id "
             "WHERE b.maxlat >= ? AND b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ? AND w.name IS NOT NULL",

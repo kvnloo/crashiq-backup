@@ -216,6 +216,11 @@ def _candidate_lines(ways: list[dict]):
         yield [tuple(round(v, 6) for v in to_ll(*p)) for p in line], round(length)
 
 
+def pick_in_rings(rings, local) -> dict:
+    """Same rule as `pick`, inside an area given as rings (used when OSM has no boundary for the city)."""
+    return _pick_from(local.roads_in_rings(rings))
+
+
 def pick(rel: int, cache_dir: Path, local=None) -> dict:
     """The test corridor for one city boundary, or {'reason': ...}. `local`: an osm_local.LocalOSM to read the
     city's roads from the extract instead of Overpass."""
@@ -225,6 +230,10 @@ def pick(rel: int, cache_dir: Path, local=None) -> dict:
         q = (f'[out:json][timeout:180];area(id:{3600000000 + rel})->.a;'
              f'way(area.a)["highway"~"^(primary|secondary|tertiary)$"]["name"];out geom;')
         d = overpass(q, cache_dir / f"roads_{rel}.json")
+    return _pick_from(d)
+
+
+def _pick_from(d: dict) -> dict:
     by_name: dict[tuple[str, str], list[dict]] = defaultdict(list)
     for w in d.get("elements", []):
         t = w.get("tags", {})
