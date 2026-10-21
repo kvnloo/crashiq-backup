@@ -89,7 +89,7 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
         x, y = line.proj.to_xy(c["lat"], c["lon"])
         cands = [(math.hypot(x - px, y - py), it) for it in studies for px, py in [pts[it["id"]]]
                  if math.hypot(x - px, y - py) <= radius_ft]
-        gps = base["location_provenance"] == "gps"
+        gps = base["location_provenance"] in ("gps", "gps_dms_corrected")     # a converted DMS point is GPS (#143)
         if gps:
             # #53: GPS far from the intersection the report itself names -> flagged and counted (not moved)
             st = _stated_intersection(c, studies, corridor_keys)

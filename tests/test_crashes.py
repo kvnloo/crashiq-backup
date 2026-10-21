@@ -355,3 +355,80 @@ def test_unincorporated_place_counts_only_where_the_corridor_is_unincorporated()
     assert crashes._city_allowed("KENSINGTON", hawthorne, outside=False) is False    # wholly inside Hawthorne
     assert crashes._city_allowed("GARDENA", hawthorne, outside=True) is False         # a real city it never enters
     assert crashes.city_key("Compton") in crashes.known_cities() and len(crashes.known_cities()) >= 470
+
+
+def test_dms_encode_decode_round_trip():
+    # #143: San Jose PD writes 37°14'26.77" as 37.142677 (report 2024-240190382; city point 37.24078, -121.76354)
+    assert abs(crashes.dms_decode(37.142677) - 37.24077) < 1e-5
+    assert abs(crashes.dms_decode(-121.454889) - (-121.76358)) < 1e-4
+    assert crashes.dms_decode(37.65) is None and crashes.dms_decode(37.1275) is None     # minutes or seconds >= 60
+    for v in (33.9040, -118.32662, 37.0001, 41.99):
+        assert abs(crashes.dms_decode(crashes.dms_encode(v)) - v) < 1e-6
+
+
+def _dms_fixture():
+    d = json.loads((FIXTURES / "ckan_crenshaw.json").read_text())
+    for rid, t in d["tables"].items():
+        if rid.startswith("cra-"):
+            for r in t["rows"]:
+                if r.get("Latitude") and r.get("Longitude"):
+                    r["Latitude"] = f"{crashes.dms_encode(float(r['Latitude'])):.6f}"
+                    r["Longitude"] = f"{crashes.dms_encode(float(r['Longitude'])):.6f}"
+    return d
+
+
+def test_gps_written_as_dms_is_converted_and_kept_near_its_streets():
+    base = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(json.loads((FIXTURES / "ckan_crenshaw.json").read_text()))))
+    gps = {c["crash_id"]: c for c in base["crashes"] if c["location_source"] == "gps"}
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(_dms_fixture())))
+    by = {c["crash_id"]: c for c in out["crashes"]}
+    conv = [c for c in out["crashes"] if c["location_source"] == "gps_dms_corrected"]
+    assert conv and out["cleaning"]["gps_dms_corrected"] == len(conv)
+    for c in conv:                       # back where the agency meant it (sub-metre: 6 decimals of DDD.MMSSss)
+        g = gps[c["crash_id"]]
+        assert abs(c["lat"] - g["lat"]) < 2e-5 and abs(c["lon"] - g["lon"]) < 2e-5
+        assert c["gps_as_written"]
+    # every converted crash either kept its GPS or went to the no-GPS path; none lost
+    unconfirmed = out["cleaning"]["gps_dms_unconfirmed"]
+    assert len(conv) + unconfirmed >= len([g for g in gps.values() if g.get("primary_road")]) * 0.9
+    assert all(by[i]["location_source"] in ("gps_dms_corrected", "unmatched") for i in gps if i in by)
+
+
+def test_dms_needs_the_agency_signature():
+    # an agency whose GPS is ordinary decimal degrees is never converted, even if a point sits in the DMS box
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(json.loads((FIXTURES / "ckan_crenshaw.json").read_text()))))
+    assert out["cleaning"]["gps_dms_corrected"] == 0 and out["cleaning"]["gps_dms_agencies"] == []
+
+
+def test_mixed_dms_year_converts_only_points_that_check_out():
+    # #143 review: SJPD 2025 (55% DMS digits, likely fixed partway through the year). Two thirds of the fixture's GPS
+    # points are DMS-encoded, the rest stay decimal: the DMS ones that land on their own streets are converted, those
+    # that fit neither way go to the no-GPS path (never left ~30 km away), and the decimal ones are untouched.
+    d = json.loads((FIXTURES / "ckan_crenshaw.json").read_text())
+    enc = set()
+    for rid, t in d["tables"].items():
+        if rid.startswith("cra-"):
+            for r in t["rows"]:
+                if r.get("Latitude") and r.get("Longitude") and int(r["Collision Id"]) % 3:   # about two thirds DMS
+                    enc.add(str(r["Collision Id"]))
+                    r["Latitude"] = f"{crashes.dms_encode(float(r['Latitude'])):.6f}"
+                    r["Longitude"] = f"{crashes.dms_encode(float(r['Longitude'])):.6f}"
+    shares = {}
+    real = crashes._dms_share
+    crashes._dms_share = lambda *a: shares.setdefault(a[3], 0.6)                  # a mixed year: 50-75%
+    try:
+        out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    finally:
+        crashes._dms_share = real
+    by = {c["crash_id"]: c for c in out["crashes"]}
+    conv = {i for i, c in by.items() if c["location_source"] == "gps_dms_corrected"}
+    assert conv and conv <= enc
+    assert any(a.endswith(", mixed)") for a in out["cleaning"]["gps_dms_agencies"])
+    plain = {i for i, c in by.items() if c["location_source"] == "gps"}
+    assert plain and not plain & enc                                           # decimal points stay as written
+    # every encoded crash the decimal pull found is found again: converted, or by name without GPS; none lost
+    base = {c["crash_id"] for c in crashes.pull(STUDY, NET_X, Ckan(FakeCkan(json.loads(
+        (FIXTURES / "ckan_crenshaw.json").read_text()))))["crashes"]}
+    found = {i for i in enc & base if by.get(i, {}).get("location_source") in ("gps_dms_corrected", "unmatched")}
+    assert len(found) >= 0.9 * len(enc & base)
+    assert out["cleaning"]["gps_dms_unconfirmed"] > 0                         # some fit neither way: no GPS, not lost

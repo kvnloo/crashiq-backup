@@ -346,11 +346,15 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("user_placed", "Crashes placed by you (review list; included in Crashes)",
              value=sum(1 for c in placed if c.get("location_provenance") == "user")),
         # how the counted crashes were located (#104 data-quality strip): GPS + exact + other tiers + you = Crashes
-        _row("located_gps", "Located by the officer's GPS", value=sum(1 for c in placed if c.get("location_provenance") == "gps")),
+        _row("located_gps", "Located by the officer's GPS",
+             value=sum(1 for c in placed if c.get("location_provenance") in ("gps", "gps_dms_corrected"))),
+        # of which written as degrees-minutes-seconds and converted (#143); already in located_gps
+        _row("located_gps_dms", "Of these, GPS converted from degrees-minutes-seconds",
+             value=sum(1 for c in placed if c.get("location_provenance") == "gps_dms_corrected")),
         _row("located_exact", "Placed by exact street-name match",
              value=sum(1 for c in placed if c.get("location_provenance") == "exact")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
-             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "exact", "user"))),
+             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "exact", "user"))),
         _row("excluded", "Crashes outside the study area", value=excluded_n),
     ]
     if exclude:

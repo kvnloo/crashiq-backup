@@ -10,7 +10,7 @@ import { vruHeadline } from '../lib/vru'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
 
-const PROV_LABEL = { gps: 'GPS from the report', exact: 'Matched by street names', fuzzy: 'Fuzzy name match',
+const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from the report, converted from degrees-minutes-seconds', exact: 'Matched by street names', fuzzy: 'Fuzzy name match',
   user: 'Placed by you', unmatched: 'Not placed yet (no coordinates)' }
 const provLabel = (k) => PROV_LABEL[k] || (k.startsWith('jev') ? `Jev suggestion ${k.slice(3)}` : k)
 
@@ -245,7 +245,9 @@ function Quality({ p, excluded, onReview }) {
           if (!v(k)) return null
           if (k === 'unplaced') return <button key={k} type="button" className="linkbtn" title={full} onClick={onReview}><i className={c} />{fmt(v(k))} {label}</button>
           if (k === 'excluded') return <button key={k} type="button" className="linkbtn" title={full} aria-expanded={open} onClick={() => setOpen(!open)}><i className={c} />{fmt(v(k))} {label}</button>
-          return <span key={k} title={full} data-testid={`q-${k}`}><i className={c} />{fmt(v(k))} {label}</span>
+          const dms = k === 'located_gps' ? v('located_gps_dms') : 0       // GPS converted from degrees-minutes-seconds (#143)
+          return <span key={k} title={dms ? `${full}; ${fmt(dms)} converted from degrees-minutes-seconds` : full} data-testid={`q-${k}`}>
+            <i className={c} />{fmt(v(k))} {label}{dms ? <small className="muted"> ({fmt(dms)} converted)</small> : null}</span>
         })}
       </p>
       {open ? (
