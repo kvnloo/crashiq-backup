@@ -50,7 +50,10 @@ YEARS = [2021, 2022, 2023, 2024, 2025]
 
 
 FROZEN = HERE / "corridors_frozen.json"
-HARNESS = "2"   # bump when the harness's own checks or rules change, so cached cities are rerun
+HARNESS = "3"
+# Known open bugs that affect a city's result, shown on the Cities sheet (PM, run 3).
+KNOWN_ISSUES = {("San Jose", "43"): "affected by #143: San Jose PD's GPS is degrees-minutes-seconds (fix pending the "
+                                    "user's rule choice)"}   # bump when the harness's own checks or rules change, so cached cities are rerun
 
 
 def code_version() -> str:
@@ -237,9 +240,22 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
         "no_coords_read": log.get("no_coords_read"), "duplicate_versions_dropped": log.get("duplicate_versions_dropped"),
         "independent_expected": len(expected), "silent_drops": len(dropped), "silent_drop_ids": dropped[:10],
         "assignment_status": a.status_code,
+        "corridor_cities": log.get("corridor_cities"),
+        "corridor_inside_own_city_pct": _inside_pct(corr.get("line"), c["city"]),
         "independent_core_v2": core2, "independent_expected_v2": len(expected2), "silent_drops_v2": len(dropped2),
         "silent_drop_ids_v2": dropped2[:10], "city_reports_naming_street_v2": city_reports_naming(mirror, c["city"], core2),
     }
+
+
+def _inside_pct(line, city: str) -> float | None:
+    """Share of the frozen corridor's vertices inside its own city's OSM boundary (the picker took any road with a
+    node inside the city, so a few windows lie partly outside: Palm Springs, run 3)."""
+    if not LOCAL or not line:
+        return None
+    key = corridors.norm_city(city)
+    hit = sum(any(a.get("admin_level") == "8" and corridors.norm_city(a.get("name")) == key
+                  for a in LOCAL.is_in(lat, lon)) for lat, lon in line)
+    return round(100 * hit / len(line), 1)
 
 
 def classify_v2(r: dict) -> tuple[str, str]:
@@ -247,6 +263,8 @@ def classify_v2(r: dict) -> tuple[str, str]:
     fail (suspected silent drop) unless no report in the city names the street at all."""
     if r.get("stage") != "done":
         return classify(r)
+    if "corridor_cities" in r and r["corridor_cities"] is None:   # #142's city filter silently off: not a valid test
+        return "untested", "city filter unavailable (OSM couldn't say which cities the corridor enters)"
     if r.get("silent_drops_v2"):
         return "fail", (f"{r['silent_drops_v2']} no-GPS reports naming the corridor and a study cross street were "
                         "not pulled")
@@ -393,6 +411,8 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
             if "Overpass" in json.dumps(row.get("error", "")) or "OverpassUnavailable" in str(row.get("error", "")):
                 print(f"[{n}/{len(todo)}] {c['city']}: not tested (Overpass) - {row.get('error', '')[:120]}", flush=True)
                 continue                              # the app's corridor fetch got no streets: retry next pass
+            if (c["city"], c["county"]) in KNOWN_ISSUES:
+                row["known_issue"] = KNOWN_ISSUES[(c["city"], c["county"])]
             row["result_v1"], row["result_reason_v1"] = classify(row)
             row["result"], row["result_reason"] = classify_v2(row)
             out.write_text(json.dumps(row, indent=1, default=str))
