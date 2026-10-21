@@ -39,6 +39,7 @@ BUCKETS = [  # (key, label, cause)
     ("found_excluded", "Newly found, excluded (side street / other rule)", "#80 #83 #111 #113 (search fixes)"),
     ("other_city_142", "Report filed in a city the corridor doesn't enter: no longer pulled", "#142 (#145)"),
     ("area_rejected_132", "Search area with no GPS crashes near the corridor: no longer searched", "#132 (#141)"),
+    ("restored_147", "Report filed under an unincorporated place's own name: pulled again", "#147 (#152)"),
     ("junk_removed_121", "Placeholder 'NOT STATED' no longer read as the corridor street", "#121 (#131)"),
     ("lost", "In the earlier run, not pulled in the later one (other reason)", "other"),
     ("placement_changed", "Kept in both runs, location status changed", "placement / gate"),
@@ -91,6 +92,9 @@ def bucket(c1: dict | None, c2: dict | None, core: str, refiled: set[str], ctx: 
             return "other_city_142"
         if str(c1.get("county_code")) in ctx.get("rejected_areas", set()):
             return "area_rejected_132"
+    if (c1 is None and ctx and ctx.get("before_cities_logged")
+            and _city_allowed(c2.get("city"), ctx.get("before_corridor_cities")) is False):
+        return "restored_147"
     if s1 == "located" and s2 == "excluded" and c1.get("location_source") == "gps":
         return "gps_rule_excluded"
     if s2 == "unlocated" and c2.get("review_reason") == "no_cross_street":
@@ -136,7 +140,9 @@ def reconcile(before: list[dict], after: list[dict], dbs: list[Path]) -> dict:
         core = run_cities.indep_core(r2.get("corridor_name") or (r2.get("corridor") or {}).get("road"))
         lg = p2["cleaning"]
         ctx = {"cities_logged": "corridor_cities" in lg, "corridor_cities": lg.get("corridor_cities"),
-               "rejected_areas": {str(a.get("area")) for a in lg.get("area_rejected") or []}}
+               "rejected_areas": {str(a.get("area")) for a in lg.get("area_rejected") or []},
+               "before_cities_logged": "corridor_cities" in p1["cleaning"],
+               "before_corridor_cities": p1["cleaning"].get("corridor_cities")}
         cb = Counter()
         gone = []
         for cid in set(m1) | set(m2):
