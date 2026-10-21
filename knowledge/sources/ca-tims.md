@@ -23,4 +23,13 @@ it for engineering decisions. Commercial use isn't addressed: ask tims_info@berk
   SafeTREC now checks officer GPS on state highways and uses postmiles as the fallback.
 - Query & Map counts include ungeocoded crashes; the GIS Map shows only geocoded ones.
 - CHP finalizes a year 12–18 months late; provisional years grow over time.
-- Join key to CCRS not tested: `CASE_ID` vs CCRS `Collision Id`, or `local_report_number` vs `Report Number`. UNVERIFIED.
+- **Join key to CCRS (tested 2026-10-20, LA County sample, #88):** an **8-digit `CASE_ID` (prefix 8 or 9) is the CCRS
+  `Collision Id` with one leading digit added** (92223176 → 2223176; 26 of 26 matched on Collision Id, agency and
+  minute; CHP and most city PDs). **7-digit `CASE_ID`s** (LAPD 1942, LASD 1900, Long Beach 1941 and others) have no
+  arithmetic link, and the Crashes export has **no `local_report_number` column**: link those by agency (`JURIS` =
+  CCRS `NCIC Code`) + date/time + roads.
+- **Downloads in the built-in browser:** the Download button posts a form to `/tools/common/api/download.php`; the
+  browser pane doesn't save the file, but the same POST from the page returns the CSV (LA 2021–24: 52 MB, 165,741
+  rows, 80 columns), which can be processed in the page. One query = one county, any date range.
+- **PCF categories:** `PCF_VIOL_CATEGORY` is CHP's computed category; the section→category crosswalk built from it is
+  `data/reference/pcf_categories.csv` (#52). `PCF_VIOL_CODE` is blank (`-`) in exports.
