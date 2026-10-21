@@ -12,6 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import threading
+import urllib.parse
 import re
 from datetime import datetime, timezone
 
@@ -22,12 +23,14 @@ from . import network as network_mod
 from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection, Polyline
-from .names import ROUTE_SPELLINGS, route_number, route_numbers, same_core, street_key
+from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
 from .sources import ca_ccrs as cc
 from .sources.ckan import Ckan, CkanError
 
 PAGE = 5000
-ID_CHUNK = 500          # Collision Ids per Parties/IWP query (URL length; 600 checked live, 2026-10-19)
+ID_CHUNK = 500          # Collision Ids per Parties/IWP query, at most
+MAX_URL_SQL = 6000      # data.ca.gov takes the SQL in the URL: longer than ~8 KB is HTTP 414 (Pasadena, #113). The
+                        # encoded SQL is kept under this, splitting the id list as needed
 SOURCE = "CCRS (California Highway Patrol), data.ca.gov package 'ccrs', public domain"
 
 
@@ -48,7 +51,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 3     # bump when the cleaning changes what a cached pull holds (2: injury codes #75; 3: #80-#83, #94)
+PULL_FORMAT = 4     # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -84,12 +87,21 @@ def _paged(ckan: Ckan, sql_head: str, order_col: str) -> list[dict]:
         offset += len(batch)
 
 
+def _search_core(k) -> str:
+    """The core the SQL prefilter searches for: without a leading direction, which is a superset (COLORADO is inside
+    both COLORADO BL and E COLORADO BL; #113, Pasadena pulled 0). Python matching (`same_core`) then decides, as
+    before. A core that would be too short on its own ("1ST" from W 1ST ST) keeps its direction."""
+    bare = drop_directional(k).core
+    return bare if bare != k.core and len(bare.replace(" ", "")) >= 4 else k.core
+
+
 def _corridor_cores(net: dict) -> list[str]:
     """Squeezable cores of every corridor name/ref (#53), for the SQL name prefilter."""
     out = []
     for k in grade.corridor_keys(net):
-        if k.core not in out:
-            out.append(k.core)
+        c = _search_core(k)
+        if c not in out:
+            out.append(c)
     return out
 
 
@@ -127,13 +139,28 @@ def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_x
     pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
 
     def like(col: str, words: list[str]) -> str:
-        return " OR ".join(_like(_sq_sql(col), x) for w in words for x in _like_words(w))
+        return " OR ".join(_like(col, x) for w in words for x in _like_words(w))
 
-    pair = f"(({like(pr, cores)}) AND ({like(sr, cross)})) OR (({like(sr, cores)}) AND ({like(pr, cross)}))"
+    # Each road column is squeezed ONCE in a subquery, then compared by its short alias: repeating the REPLACE chain
+    # for every corridor x cross-street pattern made a 12 KB URL and HTTP 414 (Pasadena, 17 cross streets, #113).
+    # A cross-street list still too long for one URL is split and the counts added.
     a = cc.q(cols[area_col]["id"])
-    rows = ckan.sql(f"SELECT {a} AS area, COUNT(*) AS n FROM {cc.q(rid)} WHERE ({bad_xy}) AND ({pair}) "
-                    f"GROUP BY {a} ORDER BY n DESC LIMIT 20")
-    rows = [(str(r["area"]).strip(), int(r["n"])) for r in rows if r.get("area") not in (None, "")]
+    inner = f"SELECT {a} AS area, {_sq_sql(pr)} AS sq_p, {_sq_sql(sr)} AS sq_s FROM {cc.q(rid)} WHERE ({bad_xy})"
+
+    def query(xs: list[str]) -> str:
+        pair = f"(({like('sq_p', cores)}) AND ({like('sq_s', xs)})) OR (({like('sq_s', cores)}) AND ({like('sq_p', xs)}))"
+        return f"SELECT area, COUNT(*) AS n FROM ({inner}) q WHERE {pair} GROUP BY area ORDER BY n DESC LIMIT 20"
+
+    parts = [cross]
+    while any(len(urllib.parse.quote(query(x))) > MAX_URL_SQL and len(x) > 1 for x in parts):
+        parts = [h for x in parts for h in ((x[:len(x) // 2], x[len(x) // 2:]) if len(x) > 1 else (x,))]
+    counts: dict[str, int] = {}
+    for x in parts:
+        for r in ckan.sql(query(x)):
+            if r.get("area") not in (None, ""):
+                k = str(r["area"]).strip()
+                counts[k] = counts.get(k, 0) + int(r["n"])
+    rows = sorted(counts.items(), key=lambda kv: -kv[1])
     if not rows:
         return []
     return [x for x, n in rows if n >= 2] or [rows[0][0]]
@@ -153,7 +180,11 @@ def _ids_query(ckan: Ckan, rid: str, cols: dict[str, dict], ids: list[str]) -> l
     numeric = idcol.get("type", "text") in ("int", "int4", "int8", "numeric", "float8", "float")
     lit = ", ".join(str(int(x)) if numeric and str(x).isdigit() else "'" + str(x).replace("'", "''") + "'"
                     for x in ids)               # a text id column compared to bare numbers fails in PostgreSQL
-    rows, truncated = ckan.sql_page(f"SELECT {_select(cols)} FROM {cc.q(rid)} WHERE {cc.q(idcol['id'])} IN ({lit})")
+    sql = f"SELECT {_select(cols)} FROM {cc.q(rid)} WHERE {cc.q(idcol['id'])} IN ({lit})"
+    if len(ids) > 1 and len(urllib.parse.quote(sql)) > MAX_URL_SQL:       # would be HTTP 414: split first
+        mid = len(ids) // 2
+        return _ids_query(ckan, rid, cols, ids[:mid]) + _ids_query(ckan, rid, cols, ids[mid:])
+    rows, truncated = ckan.sql_page(sql)
     if not truncated:
         return rows
     if len(ids) == 1:
@@ -266,7 +297,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
     # One corner can carry two cross-street names ("Eastin Drive / Lowry Road"): each one counts (Lowry Rd, Union City).
     cross_keys = [k for k in (street_key(part) for i in net.get("intersections", []) if i.get("is_study")
                               for part in str(i.get("name") or "").split("/")) if k]
-    cross_cores = [k.core for k in cross_keys if k.core not in cores and len(k.core) >= 3]
+    cross_cores = [c for c in dict.fromkeys(_search_core(k) for k in cross_keys) if c not in cores and len(c) >= 3]
     gs_keys = grade.crossing_keys(net)      # roads crossing over/under the corridor (N7, #67)
     name_area: list[str] | None = None     # found once from street names, reused for every year
     log["area_source"] = None
@@ -319,10 +350,12 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         no_xy = []
         if cores and area:
             pr, sr = cc.q(cols["primary_road"]["id"]), cc.q(cols["secondary_road"]["id"])
-            names = " OR ".join(_like(_sq_sql(c), w) for core in cores for w in _like_words(core) for c in (pr, sr))
+            # squeezed once per row in a subquery, compared by alias (short URL, #113)
+            names = " OR ".join(_like(c, w) for core in cores for w in _like_words(core) for c in ("sq_p", "sq_s"))
             area_in = ", ".join("'" + c.replace("'", "''") + "'" for c in area)
-            no_xy = _paged(ckan, f"{head} WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in}) "
-                                 f"AND ({names})", cid)
+            inner = (f"SELECT {_select(cols)}, {_sq_sql(pr)} AS sq_p, {_sq_sql(sr)} AS sq_s FROM {cc.q(rid)} "
+                     f"WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in})")
+            no_xy = _paged(ckan, f"SELECT * FROM ({inner}) q WHERE ({names})", cid)
         log["no_coords_read"] += len(no_xy)
         for r in no_xy:
             c = cc.crash_record(r, cols)

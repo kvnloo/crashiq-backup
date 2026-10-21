@@ -212,3 +212,24 @@ def test_route_numbers_are_read_anywhere_but_zip_codes_are_not_routes():
     from crashiq.names import route_numbers
     assert route_numbers("PCH - SR1") == {"1"} and route_numbers("RT 046") == {"46"}
     assert route_numbers("14605 CRENSHAW BLVD.- GARDENA- CA 90249") == set()
+
+
+# -- #113 corridor names that start with a direction -------------------------------------------------------------
+def test_directional_corridor_name_finds_reports_with_and_without_the_direction():
+    # Pasadena: OSM "East Colorado Boulevard"; CCRS writes COLORADO BL (48 in 2021) and E COLORADO BL
+    for osm_name, written in (("East Colorado Boulevard", ("COLORADO BL", "E COLORADO BL")),
+                              ("West Manning Avenue", ("MANNING AV", "W MANNING AVE")),
+                              ("North Center Street", ("CENTER ST", "N CENTER ST")),
+                              ("South Coast Highway", ("COAST HWY", "S COAST HWY"))):
+        d = _fixture(no_gps=True)
+        _rename(d, written[0])
+        _, r = _row(d, 9200002)
+        r["SecondaryRoad"] = written[1]        # 9200002 is ROSECRANS AV / <corridor>: the corridor in the 2nd field
+        out = crashes.pull(STUDY, {**NET_X, "corridor_name": osm_name}, Ckan(FakeCkan(d)))
+        ids = {c["crash_id"] for c in out["crashes"]}
+        assert {"9200001", "9200002", "9200003"} <= ids, osm_name
+
+
+def test_sql_search_drops_a_leading_direction_but_not_down_to_a_bare_short_core():
+    assert crashes._corridor_cores({"corridor_name": "East Colorado Boulevard"}) == ["COLORADO"]
+    assert crashes._corridor_cores({"corridor_name": "West 1st Street"}) == ["WEST 1ST"]   # "1ST" alone floods
