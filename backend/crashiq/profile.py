@@ -66,9 +66,12 @@ def _dist(tid, title, crashes, field, label_of=lambda v: v or "Not stated", orde
     cnt = Counter((c.get(field) or "") for c in crashes)
     inj = Counter((c.get(field) or "") for c in crashes if c["severity"] in INJURY)
     ksi = Counter((c.get(field) or "") for c in crashes if c["severity"] in "KA")
+    lvl = {L: Counter((c.get(field) or "") for c in crashes if c["severity"] == L) for L in "KABCUO"}
     keys = order or sorted(cnt, key=lambda k: (-cnt[k], k))
+    # sev_k ... sev_o per row: the bars stack the one severity ramp, so orange always means serious (#119)
     rows = [_row(k or "not_stated", label_of(k), crashes=cnt[k], injury_crashes=inj[k], ksi_crashes=ksi[k],
-                 share_pct=pct(cnt[k], n)) for k in keys if cnt[k] or order]
+                 share_pct=pct(cnt[k], n), **{f"sev_{L.lower()}": lvl[L][k] for L in "KABCUO"})
+            for k in keys if cnt[k] or order]
     return _table(tid, title, [("crashes", "Crashes"), ("injury_crashes", "Injury crashes"),
                                ("ksi_crashes", "KSI crashes"), ("share_pct", "Share %")], rows, crashes)
 

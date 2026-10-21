@@ -281,11 +281,13 @@ describe('Crash profile screen', () => {
     const body = g.querySelectorAll('tbody tr')
     expect(body).toHaveLength(rows.length)
     rows.forEach((r, i) => {
-      expect(body[i].querySelector('th').textContent).toBe(r.label)
+      expect(body[i].querySelector('th button').getAttribute('title')).toBe(r.label)       // short name shown, full on hover
       const cells = [...body[i].querySelectorAll('td')].map((td) => Number(td.textContent || 0))
       expect(cells).toEqual(cols.map((c) => r.values[c.key] || 0))
     })
-    expect([...g.querySelectorAll('thead th')].slice(1).map((th) => th.textContent)).toEqual(cols.map((c) => c.label))
+    const heads = [...g.querySelectorAll('thead th')].slice(1)
+    expect(heads.map((th) => th.getAttribute('title'))).toEqual(cols.map((c) => c.label))
+    expect(heads.every((th) => th.textContent.length <= 9)).toBe(true)                          // short headers (#119)
   })
 
   it('vulnerable road users: counts and KSI equal T10, top locations from T2, map toggle filters (#105)', async () => {

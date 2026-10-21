@@ -217,3 +217,13 @@ def test_t13_collision_type_by_location_matches_t2_and_t4():
     for row in t4["rows"]:
         assert sum(r["values"][row["key"]] for r in t13["rows"]) == row["values"]["crashes"]
     assert all("moto_crashes" in r["values"] for r in t2["rows"])
+
+
+def test_distribution_rows_carry_the_severity_split():
+    # #119: collision-type bars stack the ramp; every T4..T8 row's severity split sums to its crashes
+    p = P()
+    for tid in ("T4", "T5", "T6", "T7", "T8"):
+        for r in next(t for t in p["tables"] if t["id"] == tid)["rows"]:
+            v = r["values"]
+            assert sum(v[f"sev_{k}"] for k in "kabcuo") == v["crashes"]
+            assert v["sev_k"] + v["sev_a"] == v["ksi_crashes"]

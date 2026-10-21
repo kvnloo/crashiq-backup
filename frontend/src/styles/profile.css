@@ -211,3 +211,11 @@
 .vru-h .n { font-size: 16px; } .vru-h .ksi { color: var(--muted); font-size: 12px; }
 .vru-h .linkbtn { margin-left: auto; padding: 0; font-size: 12px; } .vru-h .linkbtn.on { color: var(--amber); }
 .vru-top { font-size: 12px; }
+/* #119: the grid fits the column; an in-grid scroll with a visible cue only when it still doesn't */
+.gridwrap { overflow-x: auto; max-width: 100%; }
+.grid13 { table-layout: auto; }
+.grid13 tbody th { white-space: normal; max-width: 150px; } .grid13 tbody th .rowlink { white-space: normal; text-align: left; line-height: 1.25; }
+.grid13 thead th.sf-num { white-space: nowrap; max-width: none; }
+.grid13 td { min-width: 22px; padding: 5px 2px; }
+.gridmore { margin: 4px 0 0; font: 11px var(--font-mono); color: var(--info); text-align: right; }
+.bar .tr i[class^="sev-"]:last-child { border-radius: 0 4px 4px 0; }

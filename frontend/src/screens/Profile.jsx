@@ -1,10 +1,11 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import ProfileMap from '../components/ProfileMap'
 import ReviewList from '../components/ReviewList'
 import StripDiagram from '../components/StripDiagram'
 import { locationPoints } from '../lib/mapcats'
 import { ApiError, api, errorText } from '../lib/api'
+import { shortName } from '../lib/strip'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
 
@@ -45,8 +46,8 @@ function Bars({ t }) {
         <div className="bar" key={r.key}>
           <span className="lab">{r.label}</span>
           <span className="tr" aria-hidden="true">
-            <i className="inj" style={{ width: `${(100 * r.values.injury_crashes) / max}%` }} />
-            <i className="pdo" style={{ width: `${(100 * (r.values.crashes - r.values.injury_crashes)) / max}%` }} />
+            {/* the one severity ramp, stacked (#119): orange means serious here as everywhere else */}
+            {SEV_PARTS.map(([k]) => (r.values[`sev_${k}`] ? <i key={k} className={`sev-${k}`} style={{ width: `${(100 * r.values[`sev_${k}`]) / max}%` }} /> : null))}
           </span>
           <span className="v mono">{fmt(r.values.crashes)}</span>
         </div>
@@ -314,7 +315,25 @@ function TrendLine({ rows, max }) {
 
 // E. Is there a pattern? (#105) Collision type x location from T13: locations in corridor order, types by count;
 // empty rows and columns hidden; a number in every cell, shade = crashes (one hue). Sets up Findings (T12).
+const TYPE_SHORT = { broadside: 'Broad.', 'rear end': 'Rear', 'side swipe': 'Swipe', 'hit object': 'Object', 'head-on': 'Head-on',
+  'vehicle/pedestrian': 'Ped.', other: 'Other', overturned: 'Roll', not_stated: 'n/s' }
+const gridName = (name) => String(name).split(' – ').map(shortName).join(' – ')
+
 function Grid({ p, onOpen }) {
+  const wrap = useRef(null)
+  const [more, setMore] = useState(false)             // columns still past the right edge: say so (#119)
+  useEffect(() => {
+    const el = wrap.current
+    if (!el) return undefined
+    const check = () => setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 2)
+    check()
+    el.addEventListener('scroll', check)
+    window.addEventListener('resize', check)
+    const ro = typeof ResizeObserver !== 'undefined' ? new ResizeObserver(check) : null
+    ro?.observe(el)
+    if (el.firstElementChild) ro?.observe(el.firstElementChild)
+    return () => { el.removeEventListener('scroll', check); window.removeEventListener('resize', check); ro?.disconnect() }
+  }, [p])
   const t = table(p, 'T13')
   const t2 = table(p, 'T2')
   const cols = t.columns.filter((c) => c.key !== 'total' && t.rows.some((r) => r.values[c.key]))
@@ -323,13 +342,13 @@ function Grid({ p, onOpen }) {
   return (
     <section aria-label="Collision type by location">
       <div className="sect-h"><h2 className="h3">Is there a pattern?</h2><Src tid="T13" n={cell(p, 'T1/crashes/value')} /></div>
-      <div className="sf-table-wrap">
+      <div className="gridwrap" ref={wrap}>
         <table className="grid13">
-          <thead><tr><th>Location</th>{cols.map((c) => <th key={c.key} className="sf-num" scope="col">{c.label}</th>)}</tr></thead>
+          <thead><tr><th>Location</th>{cols.map((c) => <th key={c.key} className="sf-num" scope="col" title={c.label}>{TYPE_SHORT[c.key.toLowerCase()] || c.label}</th>)}</tr></thead>
           <tbody>
             {rows.map((r) => (
               <tr key={r.key}>
-                <th scope="row"><button type="button" className="rowlink" onClick={() => { const row = t2.rows.find((x) => x.key === r.key); if (row) onOpen(row) }}>{r.label}</button></th>
+                <th scope="row"><button type="button" className="rowlink" title={r.label} onClick={() => { const row = t2.rows.find((x) => x.key === r.key); if (row) onOpen(row) }}>{gridName(r.label)}</button></th>
                 {cols.map((c) => {
                   const n = r.values[c.key] || 0
                   return <td key={c.key} className="sf-num mono" data-testid="grid-cell"
@@ -340,6 +359,7 @@ function Grid({ p, onOpen }) {
           </tbody>
         </table>
       </div>
+      {more ? <p className="gridmore" role="note">More columns → scroll the grid</p> : null}
       <p className="muted small-note">Darker = more crashes of that type at that location. Findings tests which of these stand out.</p>
     </section>
   )
@@ -583,7 +603,7 @@ export default function Profile() {
             <section>
               <div className="sect-h"><h2 className="h3">Collision type</h2><Src tid="T4" n={cell(p, 'T1/crashes/value')} /></div>
               <Bars t={table(p, 'T4')} />
-              <div className="legend small"><span><i style={{ background: 'var(--sev-i)' }} />Injury</span><span><i style={{ background: 'var(--sev-p)' }} />Property damage</span></div>
+              <div className="legend small">{SEV_PARTS.filter(([k]) => table(p, 'T4').rows.some((r) => r.values[`sev_${k}`])).map(([k, l]) => <span key={k}><i className={`sev-${k}`} />{l}</span>)}</div>
             </section>
             <section>
               <div className="sect-h"><h2 className="h3">When crashes happen</h2><Src tid="T9" n={cell(p, 'T1/crashes/value')} /></div>
