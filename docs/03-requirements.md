@@ -306,3 +306,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **No cross street DECIDED (user, 2026-10-19, PM session):** a crash with no GPS whose report names the corridor but
   no cross street (`NOT STATED`, blank) goes to the review list for the engineer to place or exclude; it is not
   auto-excluded. `private_property` stays excluded. Build: #94.
+- **#52 safety tables DECIDED (user, 2026-10-20, PM session):** (1) **PCF categories:** the 24 official SWITRS
+  categories, with the Vehicle Code section → category crosswalk rebuilt from CHP's own output (TIMS SWITRS records
+  carry both PCF_VIOLATION and PCF_VIOL_CATEGORY). Keep sections that map to one category in ≥ 99% of records; list
+  the rest as unmapped. Only the mapping is used, never TIMS crash data in the product. Check TIMS terms before paid
+  launch. (2) **Heavy truck:** a party vehicle with 3 or more axles, or a truck-tractor (with or without trailer).
