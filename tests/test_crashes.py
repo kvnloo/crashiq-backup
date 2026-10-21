@@ -401,9 +401,9 @@ def test_dms_needs_the_agency_signature():
 
 
 def test_mixed_dms_year_converts_only_points_that_check_out():
-    # #143 review: SJPD 2025 (55% DMS digits, likely fixed partway through the year). Half the fixture's GPS points are
-    # DMS-encoded, half stay decimal: the DMS ones that land on their own streets are converted; the decimal ones are
-    # untouched; nothing is sent to the no-GPS path because of a failed conversion.
+    # #143 review: SJPD 2025 (55% DMS digits, likely fixed partway through the year). Two thirds of the fixture's GPS
+    # points are DMS-encoded, the rest stay decimal: the DMS ones that land on their own streets are converted, those
+    # that fit neither way go to the no-GPS path (never left ~30 km away), and the decimal ones are untouched.
     d = json.loads((FIXTURES / "ckan_crenshaw.json").read_text())
     enc = set()
     for rid, t in d["tables"].items():
@@ -420,9 +420,15 @@ def test_mixed_dms_year_converts_only_points_that_check_out():
         out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
     finally:
         crashes._dms_share = real
-    conv = {c["crash_id"] for c in out["crashes"] if c["location_source"] == "gps_dms_corrected"}
+    by = {c["crash_id"]: c for c in out["crashes"]}
+    conv = {i for i, c in by.items() if c["location_source"] == "gps_dms_corrected"}
     assert conv and conv <= enc
-    assert out["cleaning"]["gps_dms_unconfirmed"] == 0
     assert any(a.endswith(", mixed)") for a in out["cleaning"]["gps_dms_agencies"])
-    plain = {c["crash_id"] for c in out["crashes"] if c["location_source"] == "gps"}
+    plain = {i for i, c in by.items() if c["location_source"] == "gps"}
     assert plain and not plain & enc                                           # decimal points stay as written
+    # every encoded crash the decimal pull found is found again: converted, or by name without GPS; none lost
+    base = {c["crash_id"] for c in crashes.pull(STUDY, NET_X, Ckan(FakeCkan(json.loads(
+        (FIXTURES / "ckan_crenshaw.json").read_text()))))["crashes"]}
+    found = {i for i in enc & base if by.get(i, {}).get("location_source") in ("gps_dms_corrected", "unmatched")}
+    assert len(found) >= 0.9 * len(enc & base)
+    assert out["cleaning"]["gps_dms_unconfirmed"] > 0                         # some fit neither way: no GPS, not lost

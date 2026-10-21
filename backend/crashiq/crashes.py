@@ -388,8 +388,9 @@ def _city_allowed(city: str | None, allowed: set[str], outside: bool = False) ->
 # Measured on CCRS 2021-25 (Tester's mirror): most agencies show the digits on 30-40% of their points, a few small
 # ones up to 67%; San Jose PD 85-88% in 2021-24 and 55% in 2025. 75% flags San Jose PD 2021-24 and nothing else.
 DMS_SHARE = 0.75         # share of an agency-year's GPS points with the DMS digits: clearly DMS
-# A mixed agency-year (SJPD 2025: 55%, likely fixed partway through the year), clearly above the 30-40% baseline: a
-# point is converted only if, as written, it doesn't fit the report's streets and, converted, it does (PM review).
+# A mixed agency-year (SJPD 2025: 55%, likely fixed partway through the year), clearly above the 30-40% baseline:
+# the same per-point rule (user, 2026-10-21, docs/03). A point that fits the report's streets as written is left
+# alone; one that fits converted is converted; one that fits neither is treated as having no GPS.
 DMS_SHARE_MIXED = 0.5
 DMS_MIN_POINTS = 20      # sample needed to judge an agency-year
 DMS_SAMPLE = 1000
@@ -593,14 +594,14 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                 c.update(lat=la, lon=lo, gps_as_written=[r.get(la_id), r.get(lo_id)])
                 if line.project(la, lo).offset_ft > margin:
                     continue                  # converted, it's somewhere else along the box: not this corridor
-                if _dms_check(c, line, studies, corridor_keys) and not written_fits:
+                if written_fits:              # fits its streets as written (mixed years): left alone
+                    continue
+                if _dms_check(c, line, studies, corridor_keys):
                     recs.append((c, "gps_dms_corrected"))
                     dms_ids["corrected"].add(c["crash_id"])
-                elif clear:                   # clearly DMS, but doesn't land near its own streets: treated as no GPS
-                    dms_no_gps.append({**r, la_id: None, lo_id: None})
+                else:                         # fits neither as written nor converted: treated as having no GPS,
+                    dms_no_gps.append({**r, la_id: None, lo_id: None})      # never left ~30 km away (PM review 2)
                     dms_ids["unconfirmed"].add(c["crash_id"])
-                else:                         # mixed year: a point that doesn't check out is left as written
-                    continue
                 log["gps_dms_agencies"] = sorted(set(log["gps_dms_agencies"])
                                                  | {f"{agency} ({y}{'' if clear else ', mixed'})"})
         log["cities"] = sorted(set(log["cities"]) | {r["city"] for r, _ in recs if r["city"]})
