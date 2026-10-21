@@ -101,7 +101,8 @@ def cause(r: dict, agencies: dict) -> str:
     if a and a.get("drop_ratio") is not None and a["drop_ratio"] < 0.5:
         return "Agency stopped filing most reports in a recent year"
     if r.get("candidates") and r["review"] / r["candidates"] > 0.2:
-        return "Many crashes left for review (no GPS, not auto-placed)"
+        return ("Many crashes left for review (no GPS; the locator's suggestion is on a tier the user gate keeps "
+                "for review, PR #16)")
     return "Low share located or placed"
 
 
@@ -398,7 +399,9 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                               "Any such report the app didn't pull is a silent drop. v1 (run 1) took the street core "
                               "from the app's own names.py, so it shared the app's blind spots (#113). v2 (run 2 on) "
                               "uses its own core: leading directions and trailing suffixes dropped ('East Colorado "
-                              "Boulevard' -> COLORADO). v2 also counts every report in the city naming the street. "
+                              "Boulevard' -> COLORADO); a report whose road states the opposite direction ('W COLORADO "
+                              "BL' for East Colorado) isn't expected. v2 also counts every report in the city naming "
+                              "the street. "
                               "Limit: a core can be shared by two streets (Van Ness / South Van Ness), which could flag "
                               "a drop that isn't one; drops are listed by Collision Id for checking."),
         ("Located or placed %", "Of crashes the pull kept as corridor candidates (not excluded at pull time): the "

@@ -50,6 +50,7 @@ YEARS = [2021, 2022, 2023, 2024, 2025]
 
 
 FROZEN = HERE / "corridors_frozen.json"
+HARNESS = "2"   # bump when the harness's own checks or rules change, so cached cities are rerun
 
 
 def code_version() -> str:
@@ -132,6 +133,15 @@ def indep_core(name: str | None) -> str:
     return "".join(toks)
 
 
+_DIR1 = {"N": "N", "NORTH": "N", "S": "S", "SOUTH": "S", "E": "E", "EAST": "E", "W": "W", "WEST": "W"}
+
+
+def lead_dir(name: str | None) -> str | None:
+    """Leading direction of a street name (N/S/E/W), or None."""
+    toks = re.sub(r"[^A-Z0-9 ]", " ", (name or "").upper()).split()
+    return _DIR1.get(toks[0]) if len(toks) > 1 else None
+
+
 def city_reports_naming(mirror, city: str, core: str) -> int:
     """Reports in the city (any GPS) whose primary or secondary road contains the street core."""
     if len(core) < 3:
@@ -144,8 +154,10 @@ def city_reports_naming(mirror, city: str, core: str) -> int:
     return n
 
 
-def independent_no_gps(mirror, city: str, corridor_core: str, cross_cores: list[str]) -> set[str]:
-    """No-GPS crash ids in the city whose one road names the corridor and the other a study cross street."""
+def independent_no_gps(mirror, city: str, corridor_core: str, cross_cores: list[str],
+                       corridor_dir: str | None = None) -> set[str]:
+    """No-GPS crash ids in the city whose one road names the corridor and the other a study cross street.
+    v2: a report whose road states the opposite direction ('W COLORADO BL' for East Colorado) isn't counted."""
     core = _sq(corridor_core)
     crosses = [_sq(c) for c in cross_cores if len(_sq(c)) >= 3 and _sq(c) != core]
     if len(core) < 3 or not crosses:
@@ -156,7 +168,10 @@ def independent_no_gps(mirror, city: str, corridor_core: str, cross_cores: list[
              f'AND ("Latitude" IS NULL OR "Longitude" IS NULL) AND COALESCE("IsDeleted", \'\') <> \'True\'')
         for r in mirror.db.execute(q, (city,)):
             p, s = _sq(r["p"]), _sq(r["s"])
-            for a, b in ((p, s), (s, p)):
+            for a, b, raw in ((p, s, r["p"]), (s, p, r["s"])):
+                d = lead_dir(raw)
+                if corridor_dir and d and d != corridor_dir:
+                    continue
                 if core in a and any(x in b for x in crosses):
                     ids.add(str(int(r["i"])) if isinstance(r["i"], (int, float)) else str(r["i"]))
     return ids
@@ -205,7 +220,8 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
     got = {str(x["crash_id"]) for x in crashes}
     dropped = sorted(expected - got)
     core2 = indep_core(net.get("corridor_name") or (corr.get("road")))
-    expected2 = independent_no_gps(mirror, c["city"], core2, [indep_core(x) for x in cross])
+    expected2 = independent_no_gps(mirror, c["city"], core2, [indep_core(x) for x in cross],
+                                   lead_dir(net.get("corridor_name")))
     dropped2 = sorted(expected2 - got)
     return {
         "stage": "done", "study_id": sid, "settings": settings, "overpass_empty_retries": empty_retries, "corridor_name": net.get("corridor_name"),
@@ -358,10 +374,10 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
                     continue                          # not saved: the next pass tries again
                 except Exception as e:  # noqa: BLE001 - recorded per city, never skipped silently
                     corr = {"reason": f"OSM error: {e}"}
-            key = hashlib.sha1(json.dumps([ver, corr, osm_source], sort_keys=True).encode()).hexdigest()[:12]
+            key = hashlib.sha1(json.dumps([ver, corr, osm_source, HARNESS], sort_keys=True).encode()).hexdigest()[:12]
             if out.exists() and json.loads(out.read_text()).get("key") == key:
                 continue
-            row = {**c, "key": key, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
+            row = {**c, "key": key, "harness": HARNESS, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
                    "osm_boundary": (b or {}).get("name"), "osm_source": osm_source,
                    "corridor_source": ("frozen list" if fz and (c["city"], c["county"]) in frozen else
                                        "earlier run (live Overpass)" if fz else

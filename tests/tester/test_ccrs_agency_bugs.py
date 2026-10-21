@@ -10,6 +10,7 @@ from __future__ import annotations
 import copy
 import json
 
+import pytest
 
 from crashiq import crashes, network
 from crashiq.sources.ckan import Ckan
@@ -154,7 +155,8 @@ def test_empty_overpass_answer_is_not_cached(db):
     assert db.one("SELECT 1 FROM http_cache WHERE source = 'overpass'") is None
 
 
-def test_wrong_county_gps_crash_does_not_redirect_the_no_gps_search():     # fixed in #111
+# Regression test for #111 (fixed on main by #115).
+def test_wrong_county_gps_crash_does_not_redirect_the_no_gps_search():
     # Statewide run 2026-10-20 (#73), Marina (Monterey, county 27), Reservation Rd: in 2021 the only GPS crashes in
     # the corridor box are two Woodland PD reports (Yolo, county 57; ids 2796970, 2829517, ELM ST & COURT ST, a
     # Woodland corner) with GPS in Marina. The pull takes the no-GPS search area from the GPS crashes in the box,
@@ -170,7 +172,7 @@ def test_wrong_county_gps_crash_does_not_redirect_the_no_gps_search():     # fix
     assert "9200001" in ids                    # Crenshaw & W 144th St, 2023, no GPS, county 19
 
 
-@pytest.mark.xfail(strict=True, reason="#113: a corridor name starting with a direction (East Colorado Blvd) pulls 0 no-GPS crashes")
+# Regression test for #113 (fixed on main by #114).
 @pytest.mark.parametrize("osm_name, written", [
     ("East Colorado Boulevard", "COLORADO BL"), ("East Colorado Boulevard", "E COLORADO BL"),
     ("West Manning Avenue", "MANNING AV"), ("North Center Street", "CENTER ST"), ("South Main Street", "S MAIN ST"),
