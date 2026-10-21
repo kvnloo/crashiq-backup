@@ -224,7 +224,7 @@ def _to_dms(v: float) -> float:
     return s * round(d + int(m) / 100 + sec / 10000, 6)
 
 
-@pytest.mark.xfail(strict=True, reason="bug: an agency's GPS written as degrees-minutes-seconds lands ~30 km away and the crash is lost")
+@pytest.mark.xfail(strict=True, reason="#143: an agency's GPS written as degrees-minutes-seconds lands ~30 km away and the crash is lost")
 def test_gps_written_as_degrees_minutes_seconds_is_not_lost():
     # Portal survey (#88), 2026-10-20: 85-88% of San Jose PD's CCRS GPS points 2021-24 carry the DMS digit signature
     # (13% by chance); 2025: 56%. 491 SJPD 2024 crashes link by report number to San Jose's own open data (TCR

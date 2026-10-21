@@ -610,6 +610,47 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
               [[r["city"], int(r["county"])] + [r[b["bucket"]] for b in rc["buckets"]] for r in rc["per_city"]],
               {1: 22})
 
+    # ---------------- Accuracy by agency (#88, hidden-GPS test) ----------------
+    acc_file = DATA / "accuracy_by_agency.json"
+    if acc_file.exists():
+        acc = json.loads(acc_file.read_text())
+        wac = wb.create_sheet("Accuracy by agency")
+        cols_ = ["ncic", "city", "county", "status", "street_gps_pct", "gps_street_crashes", "sample",
+                 "gps_self_consistent_pct", "review_pct"]
+        for t_ in ("exact", "relaxed", "near", "fuzzy"):
+            cols_ += [f"{t_}_share_pct", f"{t_}_intersection_acc_pct", f"{t_}_intersection_acc_low_pct",
+                      f"{t_}_acc_consistent_pct", f"{t_}_acc_consistent_low_pct", f"{t_}_acc_pct",
+                      f"{t_}_point_acc_with_distance_pct"]
+        table(wac, "AccuracyByAgency", cols_, [[r.get(c_) for c_ in cols_] for r in acc], {2: 20, 4: 28})
+
+    # ---------------- Sources for unplaced crashes (#88) ----------------
+    ps_file = HERE / "portal_survey.json"
+    if ps_file.exists():
+        ps = json.loads(ps_file.read_text())
+        wsu = wb.create_sheet("Sources for unplaced")
+        wsu["A1"], wsu["A1"].font = "Sources for crashes CrashIQ can't place (measured only; nothing enters the app)", H1
+        wsu["A2"] = ps["note"]
+        wsu["A2"].alignment = WRAP
+        wsu.merge_cells("A2:H2")
+        wsu.row_dimensions[2].height = 45
+        scol = ["agency", "ncic", "dataset", "link", "coords", "linked_pct", "no_gps_linked_pct", "terms", "notes", "url"]
+        e_ = table(wsu, "OpenDataSources", scol, [[x.get(c_) for c_ in scol] for x in ps["sources"]],
+                   {1: 22, 3: 36, 4: 36, 5: 30, 8: 40, 9: 50, 10: 40}, start_row=4)
+        for row in wsu.iter_rows(min_row=5, max_row=e_):
+            for c_ in row:
+                c_.alignment = WRAP
+        r_ = e_ + 2
+        for k_, lbl in (("not_independent", "Not independent (copies of CHP/TIMS data)"), ("not_found", "No geocoded, "
+                        "report-numbered dataset found"), ("to_check", "Candidates not yet confirmed")):
+            wsu.cell(r_, 1, lbl).font = B
+            wsu.cell(r_, 2, ", ".join(ps.get(k_, [])))
+            r_ += 1
+        wsu.cell(r_ + 1, 1, "TIMS geocodes for unplaced crashes").font = B
+        wsu.cell(r_ + 1, 2, "Pending: the crash-by-crash TIMS match needs the two approved TIMS files on disk "
+                            "(the browser can't save them, and moving them via the page was blocked). Reason groups "
+                            "to report: no cross street (TIMS point is a guess), relaxed matches held by the gate, "
+                            "other.").alignment = WRAP
+
     # ---------------- Before / after ----------------
     wba = wb.create_sheet("Before-after")
     if before:
@@ -660,7 +701,8 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                      "same frozen corridors, mirror and settings; only the app code commit differs.")
 
     order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "TIMS by county", "Problems", "Run history",
-             "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Glossary"]
+             "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
+             "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order]
     out_dir.mkdir(parents=True, exist_ok=True)
