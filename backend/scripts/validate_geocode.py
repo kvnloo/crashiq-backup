@@ -261,6 +261,48 @@ def arm_line(name, rows, auto):
                                                  "accuracy": k/max(1, len(sel)), "wilson_low": wilson_low(k, len(sel))}
 
 
+def direction_match(net, raw, aliases):
+    """'exact' when the map has this street as written; 'dir' when the only difference is a leading direction
+    (same core and the same suffix: COLORADO BL vs East Colorado Boulevard); None otherwise. Also returns the
+    directional variants found, so East/West halves of one street show up as ambiguity (#116)."""
+    from crashiq.locate import _keys_matching, _same_core_keys
+    from crashiq.names import drop_directional, street_key
+    k = street_key(raw, aliases)
+    if not k:
+        return None, []
+    if _keys_matching(net, k):
+        return "exact", []
+    bare = drop_directional(k).core
+    var = sorted({s.core for s in _same_core_keys(net, k)
+                  if s.suffix == k.suffix and drop_directional(s).core == bare and s.core != k.core})
+    return ("dir", var) if var else (None, [])
+
+
+def direction_report(net, sample, rows, aliases):
+    """#116: would auto-placing 'exact except a leading direction' keep the >= 98% bar (Wilson lower bound)?"""
+    sub, amb = [], []
+    for c, r in zip(sample, rows):
+        if r["tier"] != "relaxed":
+            continue
+        (mp, vp), (ms, vs) = (direction_match(net, c["primary_road"], aliases),
+                              direction_match(net, c["secondary_road"], aliases))
+        if mp in ("exact", "dir") and ms in ("exact", "dir") and "dir" in (mp, ms):
+            sub.append(r)
+            if len(vp) > 1 or len(vs) > 1:          # both halves exist on the map (East and West Colorado)
+                amb.append(r)
+    n_all = len(rows)
+    print("\nExact except a leading direction (#116; subset of relaxed, same core and suffix)")
+    for name, rs in (("all", sub), ("both halves on the map (E/W ambiguity)", amb),
+                     ("one half only", [r for r in sub if r not in amb])):
+        k = sum(r["ok"] for r in rs)
+        print(f"  {name:40s} n={len(rs):5d}  accuracy {k / max(1, len(rs)):6.1%}  Wilson 95% low "
+              f"{wilson_low(k, len(rs)) if rs else 0:6.1%}  coverage gain {len(rs) / max(1, n_all):6.2%} of {n_all}")
+    exact = [r for r in rows if r["tier"] == "exact"]
+    k = sum(r["ok"] for r in exact)
+    print(f"  {'(reference) exact tier':40s} n={len(exact):5d}  accuracy {k / max(1, len(exact)):6.1%}  Wilson 95% low "
+          f"{wilson_low(k, len(exact)):6.1%}")
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--city", choices=list(CITIES), default="sf")
@@ -271,6 +313,8 @@ def main():
     ap.add_argument("--no-address", action="store_true", help="skip the OSM address tier (large cities)")
     ap.add_argument("--method", choices=["tiers", "scored"], default="tiers", help="tiers = current rules; scored = weighted clues")
     ap.add_argument("--network", choices=["osm", "tiger", "both"], default="osm", help="street network: OSM or Census TIGER")
+    ap.add_argument("--direction-tier", action="store_true",
+                    help="#116: measure 'exact except a leading direction' (a subset of relaxed), incl. East/West ambiguity")
     ap.add_argument("--normalizer", default="ours", help="ours | ours_usps | usaddress | libpostal (bake-off)")
     a = ap.parse_args()
 
@@ -343,6 +387,8 @@ def main():
             print(f"  {t:16s} {len(rs):7d} {k/len(rs):10.1%} {wilson_low(k, len(rs)):10.1%}   | "
                   + (f"{ik/len(iv):.1%} (low {wilson_low(ik, len(iv)):.1%}, n={len(iv)})" if iv else "n/a"))
     print(f"  {'review':16s} {sum(r['tier'] == 'review' for r in rows):7d}")
+    if a.direction_tier:
+        direction_report(net, sample, rows, aliases)
 
     # Arms: what auto-places in each pipeline. Address-tier crashes are excluded from every arm (user decision).
     J = lambda r: "jev" in r and r["jev"]["tier"] == "jev"
