@@ -272,7 +272,13 @@ def test_heavy_truck_is_three_axles_or_a_truck_tractor():
               "ThreeAxleTankTruck", "HmwThreeAxleTankTruck", "ThreeAxleTowTruck", "Truck Tractor"):
         assert h(v), v
     for v in ("TwoAxleTruck", "TwoAxleTankTruck", "TwoAxleTowTruck", "PickupsAndPanels", "OtherCommercial",
-              "FireTruck", "TourBus", "MotorHomeGreaterThan40FeetInLength", "SemiTrailer", "ImplementOfHusbandry", None):
+              "FireTruck", "TourBus", "MotorHomeGreaterThan40FeetInLength", "ImplementOfHusbandry", "UtilityTrailer",
+              "BoatTrailer", "TrailerCoach", "FifthWheelTravelTrailer", None):
         assert not h(v), v
     assert h("OtherUnknownHitAndRunDriver", "TruckTractor")       # the tractor coded as the towed unit
     assert not h("PickupsAndPanels", "UtilityTrailer")
+    # a truck trailer recorded as the party's vehicle counts (user decision 2026-10-20, docs/03)
+    for v in ("SemiTrailer", "SemiTankTrailer", "PullTrailer", "PullTankTrailer", "TwoTrailersIncludesSemiAndPull",
+              "TwoTankTrailer", "ThreeTrailers", "ContainerChassis", "FederallyLegalSemi"):
+        assert h(v), v
+    assert not h("PickupsAndPanels", "PullTrailer")        # only as Vehicle 1: a pickup towing a trailer is not

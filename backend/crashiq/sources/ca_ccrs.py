@@ -213,6 +213,14 @@ SEVERITY_ORDER = "KABCUO"   # U = injured but the injury level wasn't reported (
 # trailers on their own are not heavy trucks under this definition.
 HEAVY_TRUCK_TYPES = frozenset(p + t for p in ("", "HM", "HMW")
                               for t in ("TRUCKTRACTOR", "THREEORMOREAXLETRUCK", "THREEAXLETANKTRUCK")) | {"THREEAXLETOWTRUCK"}
+# A party whose vehicle (Vehicle 1) is recorded as a truck trailer: a truck tows it, and a tractor-trailer combination
+# always has 3+ axles (user decision 2026-10-20, docs/03). Parties 2024: SemiTrailer 787, SemiTankTrailer 120,
+# PullTrailer 107, TwoTrailersIncludesSemiAndPull 101, PullTankTrailer 16, TwoTankTrailer 15, ContainerChassis 11,
+# FederallyLegalSemi 9, ThreeTrailers 3 (1,169). Utility, boat, travel and fifth-wheel trailers and trailer coaches
+# are towed by cars and pickups, so they don't count.
+HEAVY_TRAILER_TYPES = frozenset({"SEMITRAILER", "SEMITANKTRAILER", "PULLTRAILER", "PULLTANKTRAILER",
+                                 "TWOTRAILERSINCLUDESSEMIANDPULL", "TWOTANKTRAILER", "THREETRAILERS", "CONTAINERCHASSIS",
+                                 "FEDERALLYLEGALSEMI", "FEDERALLYLEGALDOUBLECOMBOOVER75FEETLONG"})
 MOTORCYCLE_WORDS = ("MOTORCYCLE", "MOTOR CYCLE", "MOTORCYCLE/SCOOTER", "MOTOR SCOOTER", "MOPED")
 
 
@@ -424,9 +432,11 @@ def severity(crash: dict, iwp_extents: list[str] | None) -> tuple[str, list[str]
 
 
 def heavy_truck(party: dict) -> bool:
-    """3+ axles or a truck-tractor, from the party's vehicle and towed-unit type codes (#52, 2C)."""
+    """3+ axles or a truck-tractor, from the party's vehicle and towed-unit type codes (#52, 2C); or a vehicle
+    recorded as a truck trailer (user decision, docs/03)."""
     sq = lambda v: "".join(ch for ch in str(v or "").upper() if ch.isalnum())
-    return sq(party.get("vehicle_type")) in HEAVY_TRUCK_TYPES or sq(party.get("vehicle2_type")) in HEAVY_TRUCK_TYPES
+    v1, v2 = sq(party.get("vehicle_type")), sq(party.get("vehicle2_type"))
+    return v1 in HEAVY_TRUCK_TYPES or v1 in HEAVY_TRAILER_TYPES or v2 in HEAVY_TRUCK_TYPES
 
 
 def mode_flags(crash: dict, parties: list[dict]) -> dict:
