@@ -60,7 +60,7 @@ describe('Crash profile screen', () => {
     await screen.findByLabelText('Key numbers')
     const cav = screen.getByLabelText('Caveats')
     expect(within(cav).getAllByRole('listitem')).toHaveLength(profile.caveats.length)
-    expect(screen.queryByText(/COVID/)).toBeNull()                       // window 2021–2025
+    expect(within(cav).queryByText(/COVID/)).toBeNull()                  // this fixture's caveats carry no COVID note
     const details = screen.getByText('Where these crashes come from').closest('details')
     expect(details.open).toBe(false)
     expect(within(details).getByText('Not placed yet (no coordinates)')).toBeInTheDocument()
@@ -138,7 +138,7 @@ describe('Crash profile screen', () => {
     const calls = mockApi({ ...routes, 'GET /studies/:id/review': REVIEW,
       'POST /studies/:id/review/decisions': () => ({ decided: 2, review: AFTER }) })
     renderAt('/s/s1/profile')
-    fireEvent.click(await screen.findByRole('button', { name: 'Review them →' }))
+    fireEvent.click(await screen.findByRole('button', { name: /to review/ }))   // #104: the data-quality strip's link
     expect(await screen.findByText('CRENSHAW BLVD / NOT STATED')).toBeInTheDocument()
     expect(screen.getByText(/No cross street in the report/)).toBeInTheDocument()
     const group = screen.getByText('CRENSHAW BLVD / NOT STATED').closest('li')
@@ -160,7 +160,7 @@ describe('Crash profile screen', () => {
     const calls = mockApi({ ...routes, 'GET /studies/:id/review': REVIEW,
       'POST /studies/:id/review/decisions': () => ({ decided: 1, review: { ...REVIEW, open: 0, groups: [], can_undo: true } }) })
     renderAt('/s/s1/profile')
-    fireEvent.click(await screen.findByRole('button', { name: 'Review them →' }))
+    fireEvent.click(await screen.findByRole('button', { name: /to review/ }))   // #104: the data-quality strip's link
     fireEvent.click(await screen.findByRole('button', { name: 'At an intersection' }))
     fireEvent.change(screen.getByLabelText(/Intersection for crash 9/), { target: { value: 'osm-1' } })
     fireEvent.click(screen.getByRole('button', { name: 'Place' }))
@@ -231,5 +231,38 @@ describe('Crash profile screen', () => {
       expect(bars[i].querySelector('.lab').textContent).toBe(r.label)
       expect(bars[i].querySelector('.v').textContent).toBe(`${nf.format(r.values.crashes)} · ${nf.format(r.values.share_pct)}%`)
     })
+  })
+
+  it('year trend: bars equal T11, COVID 2021 shaded, preliminary marked (#104)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const tr = screen.getByLabelText('Crashes by year')
+    expect(within(tr).getByText('Getting better or worse?')).toBeInTheDocument()
+    const t11 = table(profile, 'T11').rows
+    const years = within(tr).getAllByTestId('trend-year')
+    expect(years).toHaveLength(t11.length)
+    t11.forEach((r, i) => {
+      expect(years[i].querySelector('.n').textContent).toBe(nf.format(r.values.crashes))
+      expect(years[i].classList.contains('covid')).toBe(r.values.covid === 'Yes')         // docs/03: 2020 and 2021
+      expect(Boolean(years[i].querySelector('.prelim'))).toBe(r.values.preliminary > 0)
+    })
+    expect(within(tr).getByText(/COVID-19 changed travel/)).toBeInTheDocument()
+  })
+
+  it('data quality strip: T1 parts add up to every crash read; review and excluded links (#104)', async () => {
+    mockApi({ ...routes, 'GET /studies/:id/review': { open: 0, groups: [], decided: [], can_undo: false, intersections: [] } })
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const q = screen.getByLabelText('Data quality')
+    expect(within(q).getByText('Can I trust these numbers?')).toBeInTheDocument()
+    const v = (k) => cell(profile, `T1/${k}/value`)
+    expect(v('located_gps') + v('located_exact') + v('located_other') + (v('user_placed') || 0)).toBe(v('crashes'))
+    expect(within(q).getByTestId('q-located_gps').textContent).toContain(nf.format(v('located_gps')))
+    const ex = within(q).getByRole('button', { name: new RegExp(`${nf.format(v('excluded'))} excluded`) })
+    fireEvent.click(ex)
+    const rules = within(q).getByLabelText('Excluded, by rule')
+    const sum = [...rules.querySelectorAll('li .mono')].reduce((t, e) => t + Number(e.textContent.replace(/,/g, '')), 0)
+    expect(sum).toBe(v('excluded'))
   })
 })

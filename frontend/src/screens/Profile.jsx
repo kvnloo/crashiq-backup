@@ -216,6 +216,103 @@ function Severity({ p }) {
   )
 }
 
+// H. Can I trust these numbers? (#104) One line: how the crashes were located, plus the review list and the
+// exclusions, all from T1; the segments add up to every crash the pull read (T1 conservation).
+const RULE_LABEL = { outside_buffer: 'outside the corridor buffer', outside_study_limits: 'beyond the study limits',
+  cross_street_not_on_corridor: 'at a cross street off the corridor', freeway: 'on a freeway or ramp',
+  grade_separated_crossing: 'on a road over or under the corridor', not_on_corridor_street: 'on another street',
+  private_property: 'on private property', user_excluded: 'excluded by you', no_segment: 'not on a study segment',
+  not_on_freeway: 'not on the freeway', ramp: 'on a freeway ramp' }
+// short labels so the line stays one line at the 400 px column; the T1 row labels (ⓘ, export) carry the full wording
+const QUALITY = [['located_gps', 'GPS', 'q-gps', "Located by the officer's GPS"], ['located_exact', 'exact', 'q-exact', 'Placed by exact street-name match'],
+  ['located_other', 'other', 'q-other', 'Placed by other matching tiers'], ['user_placed', 'by you', 'q-user', 'Placed by you on the review list'],
+  ['unplaced', 'to review', 'q-review', 'Not placed yet: open the review list'], ['excluded', 'excluded', 'q-ex', 'Outside the study area: show the rules']]
+
+function Quality({ p, excluded, onReview }) {
+  const v = (k) => cell(p, `T1/${k}/value`) || 0
+  const [open, setOpen] = useState(false)
+  const width = QUALITY.reduce((t, [k]) => t + v(k), 0) || 1   // drawing scale only: the bar spans every crash read
+  return (
+    <section className="quality" aria-label="Data quality">
+      <div className="sect-h"><h2 className="h3">Can I trust these numbers?</h2><Src tid="T1" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="qbar" aria-hidden="true">{QUALITY.map(([k, , c]) => (v(k) ? <i key={k} className={c} style={{ width: `${(100 * v(k)) / width}%` }} /> : null))}</div>
+      <p className="qline">
+        {QUALITY.map(([k, label, c, full]) => {
+          if (!v(k)) return null
+          if (k === 'unplaced') return <button key={k} type="button" className="linkbtn" title={full} onClick={onReview}><i className={c} />{fmt(v(k))} {label}</button>
+          if (k === 'excluded') return <button key={k} type="button" className="linkbtn" title={full} aria-expanded={open} onClick={() => setOpen(!open)}><i className={c} />{fmt(v(k))} {label}</button>
+          return <span key={k} title={full} data-testid={`q-${k}`}><i className={c} />{fmt(v(k))} {label}</span>
+        })}
+      </p>
+      {open ? (
+        <ul className="kv qrules" aria-label="Excluded, by rule">
+          {Object.entries(excluded).sort((a, b) => b[1] - a[1]).map(([r, n]) => <li key={r}><span>{RULE_LABEL[r] || r}</span><span className="mono">{fmt(n)}</span></li>)}
+        </ul>
+      ) : null}
+    </section>
+  )
+}
+
+// D. Getting better or worse? (#104) Crashes per year from T11, injury / property damage; COVID years banded,
+// years with preliminary CCRS reports marked. Bars up to 5 years, a line beyond. No trend line or forecast.
+function Trend({ p }) {
+  const rows = table(p, 'T11').rows
+  const max = Math.max(1, ...rows.map((r) => r.values.crashes))
+  const anyCovid = rows.some((r) => r.values.covid === 'Yes')
+  const anyPrelim = rows.some((r) => r.values.preliminary)
+  return (
+    <section aria-label="Crashes by year">
+      <div className="sect-h"><h2 className="h3">Getting better or worse?</h2><Src tid="T11" n={cell(p, 'T1/crashes/value')} /></div>
+      {rows.length <= 5 ? (
+        <div className="trend">
+          {rows.map((r) => (
+            <div key={r.key} className={`yr${r.values.covid === 'Yes' ? ' covid' : ''}`} data-testid="trend-year">
+              <span className="mono n">{fmt(r.values.crashes)}</span>
+              <span className="col" aria-hidden="true">
+                <i className="inj" style={{ height: `${(100 * r.values.injury_crashes) / max}%` }} />
+                <i className="pdo" style={{ height: `${(100 * r.values.pdo_crashes) / max}%` }} />
+              </span>
+              <span className="mono y">{r.label}{r.values.preliminary ? <b className="prelim" title={`${fmt(r.values.preliminary)} preliminary reports`}>prelim.</b> : null}</span>
+            </div>
+          ))}
+        </div>
+      ) : <TrendLine rows={rows} max={max} />}
+      <div className="legend small"><span><i style={{ background: 'var(--sev-i)' }} />Injury</span><span><i style={{ background: 'var(--sev-p)' }} />Property damage</span></div>
+      {anyCovid ? <p className="muted small-note">Shaded: 2020–2021, when COVID-19 changed travel and crash patterns.</p> : null}
+      {anyPrelim ? <p className="muted small-note">prelim.: CCRS still marks some of that year&apos;s reports preliminary; counts may change.</p> : null}
+      <details className="showtable"><summary>Show table</summary>
+        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Year</th><th className="sf-num">Crashes</th><th className="sf-num">Injury</th>
+          <th className="sf-num">Property damage</th><th className="sf-num">KSI</th><th className="sf-num">Preliminary</th></tr></thead>
+          <tbody>{rows.map((r) => <tr key={r.key}><td>{r.label}{r.values.covid === 'Yes' ? ' (COVID)' : ''}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td>
+            <td className="sf-num mono">{fmt(r.values.injury_crashes)}</td><td className="sf-num mono">{fmt(r.values.pdo_crashes)}</td>
+            <td className="sf-num mono">{fmt(r.values.ksi_crashes)}</td><td className="sf-num mono">{fmt(r.values.preliminary)}</td></tr>)}</tbody></table></div>
+      </details>
+    </section>
+  )
+}
+
+function TrendLine({ rows, max }) {
+  const W = 460, H = 140, P = 24
+  const x = (i) => P + (i * (W - 2 * P)) / Math.max(1, rows.length - 1)
+  const y = (n) => H - P - ((H - 2 * P) * n) / max
+  const path = (k) => rows.map((r, i) => `${i ? 'L' : 'M'}${x(i)},${y(r.values[k])}`).join(' ')
+  const last = rows[rows.length - 1]
+  return (
+    <svg className="trendline" viewBox={`0 0 ${W} ${H}`} role="img" aria-label="Crashes per year, line">
+      {rows.map((r, i) => (r.values.covid === 'Yes' ? <rect key={`c${r.key}`} x={x(i) - 12} y={P / 2} width={24} height={H - P * 1.5} className="covidband" /> : null))}
+      <path d={path('crashes')} className="l-all" /><path d={path('injury_crashes')} className="l-inj" />
+      {rows.map((r, i) => (
+        <g key={r.key} data-testid="trend-year">
+          <circle cx={x(i)} cy={y(r.values.crashes)} r={4} className="l-all-dot"><title>{`${r.label}: ${r.values.crashes} crashes, ${r.values.injury_crashes} injury`}</title></circle>
+          <text x={x(i)} y={H - 6} textAnchor="middle" className="yl">{r.label}{r.values.preliminary ? '*' : ''}</text>
+        </g>
+      ))}
+      <text x={x(rows.length - 1) - 6} y={y(last.values.crashes) - 8} textAnchor="end" className="dl">all crashes</text>
+      <text x={x(rows.length - 1) - 6} y={y(last.values.injury_crashes) - 8} textAnchor="end" className="dl">injury</text>
+    </svg>
+  )
+}
+
 function DataSources({ p, pull, onRefresh, busy }) {
   const prov = Object.entries(p.location_provenance || {}).filter(([, v]) => v)
   const cl = pull?.cleaning || {}
@@ -329,7 +426,7 @@ export default function Profile() {
         const pull = await pullCrashes(studyId, false, (job) => alive && setState((s) => ({ ...s, job })))
         const [p, cr, asg] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`),
           api(`/studies/${studyId}/assignment`)])
-        if (alive) setState({ phase: 'ready', line: net.line, net, pull, profile: p, crashes: placedCrashes(cr.crashes, asg) })
+        if (alive) setState({ phase: 'ready', line: net.line, net, pull, profile: p, crashes: placedCrashes(cr.crashes, asg), excludedByRule: asg.excluded_by_rule || {} })
       } catch (e) {
         if (alive) setState((s) => ({ ...s, phase: 'error', error: errorText(e) }))
       }
@@ -343,7 +440,7 @@ export default function Profile() {
       const pull = await pullCrashes(studyId, true, () => {})
       const [p, cr, asg] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`),
         api(`/studies/${studyId}/assignment`)])
-      setState((s) => ({ ...s, pull, profile: p, crashes: placedCrashes(cr.crashes, asg) }))
+      setState((s) => ({ ...s, pull, profile: p, crashes: placedCrashes(cr.crashes, asg), excludedByRule: asg.excluded_by_rule || {} }))
       setDrill(null)
     } catch (e) {
       setState((s) => ({ ...s, refreshError: errorText(e) }))
@@ -353,7 +450,7 @@ export default function Profile() {
   async function reload() {
     const [p, cr, asg] = await Promise.all([api(`/studies/${studyId}/profile`), api(`/studies/${studyId}/crashes`),
       api(`/studies/${studyId}/assignment`)])
-    setState((s) => ({ ...s, profile: p, crashes: placedCrashes(cr.crashes, asg) }))
+    setState((s) => ({ ...s, profile: p, crashes: placedCrashes(cr.crashes, asg), excludedByRule: asg.excluded_by_rule || {} }))
   }
 
   async function openReview() {
@@ -404,13 +501,11 @@ export default function Profile() {
         ) : (
           <>
             <Kpis p={p} />
-            {cell(p, 'T1/unplaced/value') > 0 ? (
-              <div className="note rv-entry">{fmt(cell(p, 'T1/unplaced/value'))} crash{cell(p, 'T1/unplaced/value') === 1 ? ' is' : 'es are'} not placed yet.
-                {' '}<button type="button" className="linkbtn" onClick={openReview}>Review them →</button></div>
-            ) : null}
+            <Quality p={p} excluded={state.excludedByRule || {}} onReview={openReview} />
             <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
             <Ranking p={p} onOpen={openLocation} />
             <Severity p={p} />
+            <Trend p={p} />
             {p.caveats.length > 0 && (
               <ul className="caveats" aria-label="Caveats">
                 {p.caveats.map((c) => <li key={c.key} className={c.limitation ? 'warn' : ''}>{c.text}</li>)}
