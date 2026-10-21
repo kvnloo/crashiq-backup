@@ -122,13 +122,16 @@ class LocalOSM:
         return [{"rel": i, "name": n, "admin_level": lv, "osm_type": t}
                 for i, t, n, lv in self.db.execute("SELECT id, osm_type, name, admin_level FROM areas")]
 
+    def area_rings(self, area_id: int) -> list[list[tuple]] | None:
+        """Outer rings of a boundary (the most local admin level when an id has several)."""
+        row = self.db.execute("SELECT rings FROM areas WHERE id = ? ORDER BY CAST(admin_level AS INT) DESC LIMIT 1",
+                              (area_id,)).fetchone()
+        return [[tuple(p) for p in r] for r in json.loads(row[0])] if row else None
+
     def roads_in_area(self, area_id: int, classes=("primary", "secondary", "tertiary")) -> dict:
         """Named ways of these classes with any node inside the boundary: Overpass `way(area.a)` + `out geom`."""
-        row = self.db.execute("SELECT rings, minlat, minlon, maxlat, maxlon FROM areas WHERE id = ? "
-                              "ORDER BY CAST(admin_level AS INT) DESC LIMIT 1", (area_id,)).fetchone()
-        if not row:
-            return {"elements": []}
-        return self.roads_in_rings([[tuple(p) for p in r] for r in json.loads(row[0])], classes)
+        rings = self.area_rings(area_id)
+        return self.roads_in_rings(rings, classes) if rings else {"elements": []}
 
     def roads_in_rings(self, rings: list[list[tuple]], classes=("primary", "secondary", "tertiary")) -> dict:
         lats = [p[0] for r in rings for p in r]

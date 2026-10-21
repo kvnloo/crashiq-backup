@@ -26,6 +26,9 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 HISTORY = HERE / "run_history.csv"
 CITY_HISTORY = HERE / "run_history_cities.csv"
+# Corridor list v2 series (PM, PR #148): its own files and its own baseline from run 4, never mixed with v1.
+HISTORY_V2 = HERE / "run_history_corridors_v2.csv"
+CITY_HISTORY_V2 = HERE / "run_history_corridors_v2_cities.csv"
 UNUSABLE = {"", "NOTSTATED", "PRIVATEPROPERTY", "UNKNOWN", "NONE", "NA", "PARKINGLOT"}
 
 MEASURES = {
@@ -61,6 +64,11 @@ MEASURES = {
                                    "an upper bound on wrong exclusions, not a count of them.",
     "tims_counties_within_2pct_v1": "Counties whose CCRS fatal+injury crashes 2021-2024 (final years, by crash date) "
                                     "are within +/-2% of TIMS's.",
+    "silent_drops_v3": "As v2, but a report counts only when its roads ARE the corridor and a study cross street "
+                       "(whole street names after normalising, not substrings: 'OLD MIDDLEFIELD WY' is not Middlefield "
+                       "Rd), and a refiled copy whose kept twin was pulled doesn't count (PM, PR #148; from run 4).",
+    "pass_v3": "Cities with result pass under the run-2 rule using silent_drops_v3.", "warn_v3": "As pass_v3: warn.",
+    "fail_v3": "As pass_v3: fail.",
     "placement_accuracy_pct_v1": "Hidden-GPS test (#88): % of auto-placed crashes within the gate distance of their "
                                  "own GPS. Blank until #88 exists.",
 }
@@ -217,10 +225,18 @@ def _fixes(prev_commit: str | None, commit: str) -> str:
     return ", ".join(f"#{n}" for n in nums) or "none"
 
 
-def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_db: Path, corridor_list: str) -> dict:
-    """Append this run (once) to both history files; returns its row."""
+def series_v2(v1_results: list[dict], v2_results: list[dict]) -> list[dict]:
+    """The corridor-list-v2 series of one code version: v1's results, with each re-picked city's v2 result in place
+    of its v1 one (the other v2 corridors are the v1 lines, so their v1 results are theirs)."""
+    v2 = {(r["city"], r["county"]): r for r in v2_results}
+    return [v2.get((r["city"], r["county"]), r) for r in v1_results]
+
+
+def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_db: Path, corridor_list: str,
+           history: Path = HISTORY, city_history: Path = CITY_HISTORY) -> dict:
+    """Append this run (once) to both history files of its series; returns its row."""
     tree = next((r.get("code_version") for r in results if r.get("code_version")), "")
-    _, runs = _read(HISTORY)
+    _, runs = _read(history)
     for row in runs:
         if row.get("backend_tree") == tree:
             return row                                         # already recorded: never rewritten
@@ -233,6 +249,8 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
     n = {k: sum(1 for r in tested if r.get("result_v1", r["result"]) == k) for k in ("pass", "warn", "fail")}
     has_v2 = any("result_v1" in r for r in results)
     n2 = {k: sum(1 for r in results if r["result"] == k) for k in ("pass", "warn", "fail")} if has_v2 else {}
+    has_v3 = any("result_v3" in r for r in results)
+    n3 = {k: sum(1 for r in results if r.get("result_v3") == k) for k in ("pass", "warn", "fail")} if has_v3 else {}
     first = next((r for r in results if r.get("commit")), {})
     row = {"run": len(runs) + 1, "date": dt.date.today().isoformat(),
            "app_commit": first.get("commit"), "backend_tree": tree, "mirror_date": first.get("mirror_built"),
@@ -248,6 +266,8 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
            "tims_counties_within_2pct_v1": tims_within(tims_rows), "placement_accuracy_pct_v1": None,
            "silent_drops_v2": sum(r.get("silent_drops_v2") or 0 for r in results) if has_v2 else None,
            "pass_v2": n2.get("pass"), "warn_v2": n2.get("warn"), "fail_v2": n2.get("fail"),
+           "silent_drops_v3": sum(r.get("silent_drops_v3") or 0 for r in results) if has_v3 else None,
+           "pass_v3": n3.get("pass"), "warn_v3": n3.get("warn"), "fail_v3": n3.get("fail"),
            "new_corridors_v1": sum(1 for r in results if str(r.get("corridor_source", "")).startswith("picked (added")
                                    and (r.get("corridor") or {}).get("line")),
            "on_corridor_located_pct_v2": _on_corridor_pct(tested),
@@ -257,13 +277,15 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
                                               for r in tested),
            "unplaced_relaxed_held_v2": sum(cm[f"{r['city']}|{r['county']}"].get("unplaced_relaxed") or 0
                                            for r in tested)}
-    _append(HISTORY, [row], RUN_COLS + list(MEASURES))
+    _append(history, [row], RUN_COLS + list(MEASURES))
     crow = []
     for r in results:
         m = cm[f"{r['city']}|{r['county']}"]
         crow.append({"run": row["run"], "city": r["city"], "county": r["county"], "result": r.get("result"),
                      "reason": r.get("result_reason"), "result_run1_rule": r.get("result_v1", r.get("result")), "candidates_v1": m["candidates"], "located_v1": m["located"],
                      "silent_drops_v1": r.get("silent_drops"), "double_counts_v1": m["double_counts"],
-                     "excluded_no_cross_street_v1": m["excluded_wrongly"]})
-    _append(CITY_HISTORY, crow, list(crow[0]) if crow else [])
+                     "excluded_no_cross_street_v1": m["excluded_wrongly"],
+                     "result_v3": r.get("result_v3"), "silent_drops_v3": r.get("silent_drops_v3"),
+                     "corridor_source": r.get("corridor_source")})
+    _append(city_history, crow, list(crow[0]) if crow else [])
     return row

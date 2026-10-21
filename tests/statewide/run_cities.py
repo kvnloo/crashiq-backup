@@ -31,6 +31,8 @@ sys.path.insert(0, str(HERE))
 os.environ.setdefault("DO_NOT_TRACK", "1")
 
 import ccrs_mirror  # noqa: E402
+import checks  # noqa: E402
+from checks import indep_core, lead_dir  # noqa: E402
 import corridors  # noqa: E402
 import osm_local  # noqa: E402
 from crashiq import network as network_mod  # noqa: E402
@@ -50,10 +52,15 @@ YEARS = [2021, 2022, 2023, 2024, 2025]
 
 
 FROZEN = HERE / "corridors_frozen.json"
-HARNESS = "3"
+# Corridor list v2 (PM, PR #148): a second, separately labelled series from run 4. v1 stays the like-for-like series;
+# v2 = v1 with the corridors that lie mostly outside their own city re-picked inside it. Never mixed with v1.
+FROZEN_V2 = HERE / "corridors_frozen_v2.json"
+RESULTS_V2 = DATA / "results_corridors_v2"
+V2_BELOW_PCT = 50.0          # "mostly outside": under half the v1 corridor's vertices inside its own city
+HARNESS = "4"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check)
 # Known open bugs that affect a city's result, shown on the Cities sheet (PM, run 3).
 KNOWN_ISSUES = {("San Jose", "43"): "affected by #143: San Jose PD's GPS is degrees-minutes-seconds (fix pending the "
-                                    "user's rule choice)"}   # bump when the harness's own checks or rules change, so cached cities are rerun
+                                    "user's rule choice)"}
 
 
 def code_version() -> str:
@@ -115,34 +122,40 @@ def cities(mirror: ccrs_mirror.Mirror) -> list[dict]:
     return out
 
 
+def freeze_v2(source_tree: str) -> None:
+    """Write corridors_frozen_v2.json: the v1 list, with every corridor under V2_BELOW_PCT inside its own city (as
+    measured in `source_tree`'s results) re-picked by `corridors.pick_inside`. Written once; reruns reuse it."""
+    if FROZEN_V2.exists():
+        raise SystemExit(f"{FROZEN_V2.name} exists: the v2 list is frozen (delete it only with a new baseline)")
+    v1 = json.loads(FROZEN.read_text())
+    measured = {(r["city"], r["county"]): r.get("corridor_inside_own_city_pct")
+                for r in (json.loads(f.read_text()) for f in (RESULTS / source_tree).glob("*.json"))}
+    bounds = corridors.local_boundaries(LOCAL)
+    out = {**{k: v for k, v in v1.items() if k != "cities"},
+           "note": ("Corridor list v2 for the #73 statewide test (PM, PR #148): a second series with its own baseline "
+                    "from run 4, never mixed with v1. Same as corridors_frozen.json except the corridors marked "
+                    f"`repicked`: those had under {V2_BELOW_PCT:g}% of their vertices inside their own city in "
+                    f"results/{source_tree} and were re-picked from the parts of the city's roads inside the city."),
+           "series": "v2", "based_on": FROZEN.name, "source_results": source_tree, "cities": []}
+    n = 0
+    for c in v1["cities"]:
+        pct = measured.get((c["city"], c["county"]))
+        if pct is None or pct >= V2_BELOW_PCT:
+            out["cities"].append(c)
+            continue
+        b = bounds.get(corridors.norm_city(c["city"]))
+        corr = corridors.pick_inside(b["rel"], LOCAL) if b else {"reason": "no OSM city boundary"}
+        out["cities"].append({**c, "corridor": corr if "line" in corr else None, "reason": corr.get("reason"),
+                              "repicked": True, "v1_inside_own_city_pct": pct, "v1_road": (c.get("corridor") or {}).get("road")})
+        n += 1
+        print(f"{c['city']}: {pct}% inside -> {corr.get('road')} ({corr.get('inside_own_city_pct')}% inside)"
+              if "line" in corr else f"{c['city']}: {pct}% inside -> no corridor: {corr['reason']}", flush=True)
+    FROZEN_V2.write_text(json.dumps(out, indent=1))
+    print(f"re-picked {n} of {len(out['cities'])} -> {FROZEN_V2}")
+
+
 def _sq(s: str | None) -> str:
     return re.sub(r"[^A-Z0-9]", "", (s or "").upper())
-
-
-DIRS = {"N", "S", "E", "W", "NORTH", "SOUTH", "EAST", "WEST", "NB", "SB", "EB", "WB"}
-SUFFIX_WORDS = {"ST", "STREET", "AVE", "AV", "AVENUE", "BLVD", "BL", "BOULEVARD", "DR", "DRIVE", "RD", "ROAD", "WAY",
-                "WY", "LN", "LANE", "CT", "COURT", "PL", "PLACE", "PKWY", "PARKWAY", "HWY", "HIGHWAY", "CIR", "CIRCLE",
-                "TER", "TERRACE", "EXPY", "EXPRESSWAY", "PLZ", "PLAZA", "LOOP", "TRL", "TRAIL"}
-
-
-def indep_core(name: str | None) -> str:
-    """Street core for the Tester's own checks, independent of the app's names.py (v2, run 2 on): letters and digits
-    only, leading directions and trailing suffixes dropped ('East Colorado Boulevard' -> 'COLORADO')."""
-    toks = re.sub(r"[^A-Z0-9 ]", " ", (name or "").upper()).split()
-    while len(toks) > 1 and toks[0] in DIRS:
-        toks = toks[1:]
-    while len(toks) > 1 and toks[-1] in SUFFIX_WORDS | DIRS:
-        toks = toks[:-1]
-    return "".join(toks)
-
-
-_DIR1 = {"N": "N", "NORTH": "N", "S": "S", "SOUTH": "S", "E": "E", "EAST": "E", "W": "W", "WEST": "W"}
-
-
-def lead_dir(name: str | None) -> str | None:
-    """Leading direction of a street name (N/S/E/W), or None."""
-    toks = re.sub(r"[^A-Z0-9 ]", " ", (name or "").upper()).split()
-    return _DIR1.get(toks[0]) if len(toks) > 1 else None
 
 
 def city_reports_naming(mirror, city: str, core: str) -> int:
@@ -177,6 +190,20 @@ def independent_no_gps(mirror, city: str, corridor_core: str, cross_cores: list[
                     continue
                 if core in a and any(x in b for x in crosses):
                     ids.add(str(int(r["i"])) if isinstance(r["i"], (int, float)) else str(r["i"]))
+    return ids
+
+
+def independent_no_gps_v3(mirror, city: str, core: str, cross_cores: list[str],
+                          corridor_dir: str | None = None) -> set[str]:
+    """v3 (PM, PR #148, from run 4): as v2, but the roads must BE the corridor and a study cross street (whole street
+    cores, `checks.names_pair_v3`), not merely contain them."""
+    ids = set()
+    for (rid,) in mirror.db.execute("SELECT rid FROM _meta WHERE tbl='crashes'"):
+        q = (f'SELECT "Collision Id" i, "PrimaryRoad" p, "SecondaryRoad" s FROM "{rid}" WHERE "City Name" = ? '
+             f'AND ("Latitude" IS NULL OR "Longitude" IS NULL) AND COALESCE("IsDeleted", \'\') <> \'True\'')
+        for r in mirror.db.execute(q, (city,)):
+            if checks.names_pair_v3(r["p"], r["s"], core, cross_cores, corridor_dir):
+                ids.add(str(int(r["i"])) if isinstance(r["i"], (int, float)) else str(r["i"]))
     return ids
 
 
@@ -226,6 +253,9 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
     expected2 = independent_no_gps(mirror, c["city"], core2, [indep_core(x) for x in cross],
                                    lead_dir(net.get("corridor_name")))
     dropped2 = sorted(expected2 - got)
+    expected3 = independent_no_gps_v3(mirror, c["city"], core2, [indep_core(x) for x in cross],
+                                      lead_dir(net.get("corridor_name")))
+    dropped3 = checks.silent_drops_v3(expected3, got, log.get("same_crash_refiled") or [])
     return {
         "stage": "done", "study_id": sid, "settings": settings, "overpass_empty_retries": empty_retries, "corridor_name": net.get("corridor_name"),
         "ends": [inters[0]["name"], inters[-1]["name"]] if inters else [None, None],
@@ -243,7 +273,8 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
         "corridor_cities": log.get("corridor_cities"),
         "corridor_inside_own_city_pct": _inside_pct(corr.get("line"), c["city"]),
         "independent_core_v2": core2, "independent_expected_v2": len(expected2), "silent_drops_v2": len(dropped2),
-        "silent_drop_ids_v2": dropped2[:10], "city_reports_naming_street_v2": city_reports_naming(mirror, c["city"], core2),
+        "silent_drop_ids_v2": dropped2[:10], "independent_expected_v3": len(expected3), "silent_drops_v3": len(dropped3),
+        "silent_drop_ids_v3": dropped3[:10], "city_reports_naming_street_v2": city_reports_naming(mirror, c["city"], core2),
     }
 
 
@@ -276,6 +307,13 @@ def classify_v2(r: dict) -> tuple[str, str]:
                             f"{r.get('independent_core_v2')} (suspected silent drop)")
         return "untested", "0 crashes: no report in the city names this street (nothing to test)"
     return classify({**r, "silent_drops": 0})
+
+
+def classify_v3(r: dict) -> tuple[str, str]:
+    """Run-2 rule with silent drops from check v3 (PM, PR #148): a new column from run 4; `result` (v2) stays."""
+    if r.get("stage") != "done" or "silent_drops_v3" not in r:
+        return classify_v2(r)
+    return classify_v2({**r, "silent_drops_v2": r["silent_drops_v3"]})
 
 
 def classify(r: dict) -> tuple[str, str]:
@@ -333,12 +371,20 @@ def prefetch() -> None:
             print(c["city"], e, flush=True)
 
 
-def main(limit: int | None = None, only: str | None = None, shard: tuple[int, int] = (0, 1)) -> None:
+def main(limit: int | None = None, only: str | None = None, shard: tuple[int, int] = (0, 1),
+         series: str = "v1") -> None:
+    """series v1: the frozen v1 list into results/<tree>/. series v2: only the re-picked corridors of the v2 list,
+    into results_corridors_v2/<tree>/ (the v2 series' other corridors are the v1 lines, whose results are v1's)."""
     mirror = ccrs_mirror.Mirror(DATA / "ccrs_mirror.sqlite", CACHE)
     ver = code_version()
-    out_dir = RESULTS / ver
+    out_dir = (RESULTS_V2 if series == "v2" else RESULTS) / ver
     out_dir.mkdir(parents=True, exist_ok=True)
-    frozen = {(c["city"], c["county"]): c for c in json.loads(FROZEN.read_text())["cities"]} if FROZEN.exists() else {}
+    flist = FROZEN_V2 if series == "v2" else FROZEN
+    frozen = {(c["city"], c["county"]): c for c in json.loads(flist.read_text())["cities"]} if flist.exists() else {}
+    if series == "v2":
+        if not frozen:
+            raise SystemExit("no corridors_frozen_v2.json: run --freeze-v2 <tree> first")
+        frozen = {k: c for k, c in frozen.items() if c.get("repicked")}
     city_list = cities(mirror)
     (DATA / "cities.json").write_text(json.dumps(city_list, indent=1))
     bounds = corridors.local_boundaries(LOCAL) if LOCAL else corridors.boundaries(OSM)
@@ -365,13 +411,14 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     app.state.ckan = mirror
     # harness: street data source (Method sheet): the local extract when built, else the Overpass server list
     app.state.overpass = LOCAL.transport if LOCAL else corridors.app_transport
-    todo = [c for i, c in enumerate(city_list) if (not only or c["city"] == only) and i % shard[1] == shard[0]][:limit]
+    todo = [c for i, c in enumerate(city_list) if (not only or c["city"] == only) and i % shard[1] == shard[0]
+            and (series == "v1" or (c["city"], c["county"]) in frozen)][:limit]
     t0 = time.time()
     with TestClient(app) as client:
         for n, c in enumerate(todo, 1):
             out = out_dir / f"{corridors.norm_city(c['city'])}_{c['county']}.json"
             fz = frozen.get((c["city"], c["county"])) or earlier.get((c["city"], c["county"]))
-            if fz and not (fz.get("corridor") or {}).get("line"):
+            if fz and not (fz.get("corridor") or {}).get("line") and series == "v1":
                 fz = None                             # frozen without a line: may get one now ("added" below)
             b = None
             if fz:                                    # same basis as the earlier run: the exact same line
@@ -397,9 +444,10 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
             key = hashlib.sha1(json.dumps([ver, corr, osm_source, HARNESS], sort_keys=True).encode()).hexdigest()[:12]
             if out.exists() and json.loads(out.read_text()).get("key") == key:
                 continue
-            row = {**c, "key": key, "harness": HARNESS, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
+            row = {**c, "key": key, "harness": HARNESS, "corridor_list": series, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
                    "osm_boundary": (b or {}).get("name"), "osm_source": osm_source,
-                   "corridor_source": ("frozen list" if fz and (c["city"], c["county"]) in frozen else
+                   "corridor_source": ("frozen list v2 (re-picked inside the city)" if series == "v2" else
+                                       "frozen list" if fz and (c["city"], c["county"]) in frozen else
                                        "earlier run (live Overpass)" if fz else
                                        "picked (added after the corridor list was frozen)" if frozen else "picked")}
             if "line" not in corr:
@@ -417,6 +465,7 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
                 row["known_issue"] = KNOWN_ISSUES[(c["city"], c["county"])]
             row["result_v1"], row["result_reason_v1"] = classify(row)
             row["result"], row["result_reason"] = classify_v2(row)
+            row["result_v3"], row["result_reason_v3"] = classify_v3(row)
             out.write_text(json.dumps(row, indent=1, default=str))
             print(f"[{n}/{len(todo)} {time.time() - t0:.0f}s] {c['city']}: {row['result']} - {row['result_reason']}",
                   flush=True)
@@ -431,6 +480,9 @@ if __name__ == "__main__":
     ap.add_argument("--prefetch", action="store_true")
     ap.add_argument("--shard", default="0/1", help="worker i of n, e.g. 1/2")
     ap.add_argument("--freeze", action="store_true", help="write corridors_frozen.json from this code version's run")
+    ap.add_argument("--freeze-v2", metavar="TREE", help="write corridors_frozen_v2.json from results/TREE")
+    ap.add_argument("--corridors", choices=("v1", "v2"), default="v1", help="corridor list series to run")
     a = ap.parse_args()
     i, n = (int(x) for x in a.shard.split("/"))
-    prefetch() if a.prefetch else freeze() if a.freeze else main(a.limit, a.city, (i, n))
+    (prefetch() if a.prefetch else freeze() if a.freeze else freeze_v2(a.freeze_v2) if a.freeze_v2
+     else main(a.limit, a.city, (i, n), a.corridors))
