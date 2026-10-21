@@ -98,7 +98,10 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
         kind = {"INTERSTATE": "I", "STATE ROUTE": "SR", "CA": "SR", "HWY": "SR", "HIGHWAY": "SR", "ROUTE": "SR", "RT": "SR", "RTE": "SR"}.get(route.group(1), route.group(1))
         return StreetKey(f"{kind} {int(route.group(2))}", None)
     s = re.sub(r"^\d+\s+(?=[A-Z])", "", s)       # house number "3144 W 147TH ST"
-    s = NOISE.sub(" ", s)
+    # "Avenue of Flags", "Avenue of the Stars": OF belongs to the name here. CHP writes AVE OF, AV OF, and adds or drops
+    # THE (Buellton: AVENUE OF FLAGS and AVENUE OF THE FLAGS), so THE is left out of the key (#154)
+    s = re.sub(r"\b(?:AVENUE|AVE|AV) OF (?:THE )?", "AVENUE_OF_", s)
+    s = NOISE.sub(" ", s).replace("_", " ")
     s = s.replace("/", " ").replace("-", " ")    # Alvarado-Niles Road = ALVARADO NILES RD (#80); routes matched above
     toks = [t for t in s.split() if t]
     if not toks:
@@ -118,9 +121,15 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     return StreetKey(core, suffix) if core else None
 
 
+def _flat(core: str) -> str:
+    """Core for comparison: spaces ignored (BAY SHORE == BAYSHORE), and an inner OF / OF THE too (AVENUE OF FLAGS ==
+    AVENUE FLAGS, #154)."""
+    return re.sub(r" OF (THE )?", " ", core).replace(" ", "")
+
+
 def same_street(a: StreetKey, b: StreetKey) -> bool:
     """Exact tier: same core (spaces ignored, so BAY SHORE == BAYSHORE), suffixes compatible."""
-    if a.core.replace(" ", "") != b.core.replace(" ", ""):
+    if _flat(a.core) != _flat(b.core):
         return False
     return a.suffix is None or b.suffix is None or a.suffix == b.suffix
 
@@ -138,10 +147,10 @@ def same_core(a: StreetKey, b: StreetKey) -> bool:
     HARBOR FWY (I-110) is not HARBOR BLVD (before #67 FWY wasn't a suffix, so these never matched)."""
     if (a.suffix == "FWY") != (b.suffix == "FWY") and a.suffix and b.suffix:
         return False
-    ca, cb = a.core.replace(" ", ""), b.core.replace(" ", "")
+    ca, cb = _flat(a.core), _flat(b.core)
     if ca == cb:
         return True
-    da, db = drop_directional(a).core.replace(" ", ""), drop_directional(b).core.replace(" ", "")
+    da, db = _flat(drop_directional(a).core), _flat(drop_directional(b).core)
     return (da == cb and da != ca) or (db == ca and db != cb)
 
 

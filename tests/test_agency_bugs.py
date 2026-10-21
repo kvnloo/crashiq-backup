@@ -230,6 +230,9 @@ def test_directional_corridor_name_finds_reports_with_and_without_the_direction(
         assert {"9200001", "9200002", "9200003"} <= ids, osm_name
 
 
-def test_sql_search_drops_a_leading_direction_but_not_down_to_a_bare_short_core():
+def test_sql_search_drops_a_leading_direction():
     assert crashes._corridor_cores({"corridor_name": "East Colorado Boulevard"}) == ["COLORADO"]
-    assert crashes._corridor_cores({"corridor_name": "West 1st Street"}) == ["WEST 1ST"]   # "1ST" alone floods
+    # a short bare core is a whole word since #121 (1ST no longer finds 21ST), so it's searched bare: CHP writes
+    # E 4TH ST and 4TH ST for East 4th Street, which EAST4TH missed (Dorris, #155); Python matching decides
+    assert crashes._corridor_cores({"corridor_name": "West 1st Street"}) == ["1ST"]
+    assert crashes._corridor_cores({"corridor_name": "Avenue of Flags"}) == ["FLAGS"]          # #154
