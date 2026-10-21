@@ -315,3 +315,6 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   except a leading direction" (COLORADO BL vs East Colorado Blvd) measured 82.5% (Wilson low 80.5%, n=1,574, Long Beach
   test half; 80.8% where East and West halves both exist), so it is not auto-placed; those crashes go to the review
   list, where "At suggestion" places a street pair in one click.
+- **Heavy truck, trailers DECIDED (user, 2026-10-20, PM session):** a party whose vehicle is recorded as a trailer
+  (semi-trailer, semi tank trailer, pull trailer, two trailers, etc.; a truck towing it) also counts as a heavy truck,
+  since a tractor-trailer combination always has 3+ axles. Adds about 1,150 parties a year statewide (2024).
