@@ -326,3 +326,10 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Pedestrians and bicyclists first-class on tab 3 DECIDED (user, 2026-10-20, PM session):** vulnerable road users
   get their own prominent section (share of KSI, severity comparison, always-visible markers, ranking column,
   pedestrian context incl. day/night). Over-representation testing for them comes with Findings.
+- **Testing methodology delegated to the PM session DECIDED (user, 2026-10-19, PM session):** in the user's words:
+  "you're deep in the data, so you know better. I'll leave it for you to decide what's the right methodology."
+  Scope: *how CrashIQ is tested* (test design, measures, matching method, run series, corridor lists for tests). It
+  does **not** cover product methods, thresholds or rules that change what the app reports; those stay the user's.
+  PM test-method calls so far: crash-by-crash ID matching with only computed fields re-checked (#88); like-for-like
+  located % as the headline (#125); silent-drop check v3 beside v2 and a separately labelled corridor list v2 series
+  (#148, #149). The user approved the run-history requirement and the same-basis rule (CLAUDE.md).
