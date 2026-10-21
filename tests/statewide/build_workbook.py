@@ -784,7 +784,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                  "it from the sheet named in brackets, so it always matches the data. 'Corridor' = a 1-mile test "
                  "stretch of a main road in each California city, run through the app's tabs 1-2.")
     wco["A2"].alignment = WRAP
-    c = cell
+    c = {k_: f"Summary!{v_}" for k_, v_ in cell.items()}      # Summary's cells, read from another sheet
     T = lambda ref, fmt="#,##0": f'TEXT({ref},"{fmt}")'  # noqa: E731
     v4 = c.get("Pass (v4 check)")
     works = [
@@ -802,9 +802,6 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         (f'="Reports from other cities are kept out, and unincorporated places are kept in: "&'
          f'{T(rcell["b_restored_147"])}&" reports filed under an unincorporated place\'s own name came back after '
          f'#147 (Reconciliation)."') if "b_restored_147" in rcell else None,
-        (f'="The crash data itself is sound: CCRS fatal and injury counts are within 2% of TIMS in "&'
-         f'{c["Counties where CCRS F+I 2021-24 is within 2% of TIMS"]}&" of "&{c["Counties compared"]}&" counties '
-         f'(TIMS by county)."'),
     ]
     v2c = {c_: f"'Run history (corridors v2)'!{get_column_letter(j)}{3 + len(v2rows)}"
            for j, c_ in enumerate(v2cols, 1)} if v2rows else {}
@@ -825,6 +822,9 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
          "were found on corridor list v2; failing tests are filed."),
         f'="San Jose is not tested fairly yet: its police write GPS in a different format (#143, waiting on the '
         f'user\'s rule). Result now: "&{sj}&" (Cities)."',
+        (f'="CCRS and TIMS (UC Berkeley\'s copy of the same CHP records) agree within 2% on fatal and injury '
+         f'crashes 2021-24 in "&{c["Counties where CCRS F+I 2021-24 is within 2% of TIMS"]}&" of "&'
+         f'{c["Counties compared"]}&" counties; the rest differ by more (TIMS by county, by year on TIMS vs CCRS)."'),
         (f'="Some police agencies give the app little to work with: "&{c["Union City-type agencies (local, < 20% GPS)"]}'
          f'&" record GPS on under 20% of reports, and "&{c["Agencies with a reporting collapse"]}&" filed less than '
          f'half their usual reports in a recent year (Agencies). No map can fix missing reports."'),
