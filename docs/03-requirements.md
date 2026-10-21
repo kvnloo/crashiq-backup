@@ -311,3 +311,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   carry both PCF_VIOLATION and PCF_VIOL_CATEGORY). Keep sections that map to one category in ≥ 99% of records; list
   the rest as unmapped. Only the mapping is used, never TIMS crash data in the product. Check TIMS terms before paid
   launch. (2) **Heavy truck:** a party vehicle with 3 or more axles, or a truck-tractor (with or without trailer).
+- **Placement gate stays exact-only DECIDED (user, 2026-10-20, PM session; #116):** the 98% bar stands. "Same name
+  except a leading direction" (COLORADO BL vs East Colorado Blvd) measured 82.5% (Wilson low 80.5%, n=1,574, Long Beach
+  test half; 80.8% where East and West halves both exist), so it is not auto-placed; those crashes go to the review
+  list, where "At suggestion" places a street pair in one click.
