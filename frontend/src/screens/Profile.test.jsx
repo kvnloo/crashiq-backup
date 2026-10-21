@@ -315,6 +315,7 @@ describe('Crash profile screen', () => {
       const row = within(v).getByTestId(`danger-${k}`)
       expect(row.querySelector('.v').textContent).toBe(`${nf.format(val(k).ksi_pct)}%`)
       expect(row.querySelector('.nn').textContent).toBe(`${nf.format(val(k).ksi_crashes)} of ${nf.format(val(k).crashes)}`)
+      expect(row.querySelector('.tr i').style.width).toBe(`${val(k).ksi_pct}%`)      // fixed 0-100% scale
     }
     const map = screen.getByTestId('map')
     const before = Number(map.getAttribute('data-n'))

@@ -380,7 +380,6 @@ function Vru({ p, onMap, mapMode }) {
   const v = (k) => t19.rows.find((r) => r.key === k)?.values || {}
   const h = vruHeadline(t19)
   const rows = DANGER.map(([k, label]) => ({ k, label, ...v(k) })).filter((r) => r.crashes)
-  const max = Math.max(1, ...rows.map((r) => r.ksi_pct || 0))
   const n = cell(p, 'T1/crashes/value')
   return (
     <section className="vru-sect" aria-label="Pedestrians and bicyclists">
@@ -388,12 +387,12 @@ function Vru({ p, onMap, mapMode }) {
       <p className="vru-head" data-testid="vru-headline">{h.lead}{h.pct != null ? <b className="mono">{fmt(h.pct)}%</b> : null}{h.rest}</p>
       {rows.length > 1 ? (
         <>
-          <h3 className="h4">How dangerous is it? <span className="muted">share of each group&apos;s crashes that killed or seriously injured someone</span></h3>
+          <h3 className="h4">How dangerous is it? <span className="muted">share of each group&apos;s crashes that killed or seriously injured someone (bars on a 0–100% scale)</span></h3>
           <div className="danger" data-testid="danger">
             {rows.map((r) => (
               <div className={`dg${r.k === 'other' ? ' ref' : ''}`} key={r.k} data-testid={`danger-${r.k}`}>
                 <span className="lab">{r.label}</span>
-                <span className="tr" aria-hidden="true"><i style={{ width: `${(100 * (r.ksi_pct || 0)) / max}%` }} /></span>
+                <span className="tr" aria-hidden="true"><i style={{ width: `${Math.min(100, r.ksi_pct || 0)}%` }} /></span>
                 <span className="v mono">{fmt(r.ksi_pct)}%</span>
                 <span className="nn mono muted">{fmt(r.ksi_crashes)} of {fmt(r.crashes)}</span>
               </div>
