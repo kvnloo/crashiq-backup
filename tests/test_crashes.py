@@ -4,6 +4,7 @@ import urllib.error
 import pytest
 
 from crashiq import crashes
+from crashiq.names import street_key
 from crashiq.sources import ca_ccrs as cc
 from crashiq.sources.ckan import Ckan, CkanError
 from crashiq.sources.fake_ckan import FakeCkan
@@ -233,3 +234,32 @@ def test_no_gps_reports_on_a_grade_separated_crossing_are_excluded_but_listed():
 def test_pull_cache_key_unchanged_without_grade_separations():
     assert crashes.cache_key(STUDY, NET) == crashes.cache_key(STUDY, {**NET, "grade_separations": []})
     assert crashes.cache_key(STUDY, NET) != crashes.cache_key(STUDY, {**NET, "grade_separations": [{"name": "X"}]})
+
+
+def test_short_names_match_whole_words_and_never_a_placeholder():
+    # #121: squeezed, NOT STATED contains STATE; MAIN is inside MAINE AV; STATE inside INTERSTATE 5 and ESTATES DR
+    keys = [street_key("State Street")]
+    for raw in ("NOT STATED", "INTERSTATE 5", "ESTATES DR", "AVENUE OF THE STATES"):
+        assert not crashes._names_street(raw, keys), raw
+    for raw in ("STATE ST", "1234 STATE STREET-SANTA BARBARA", "S. STATE ST"):
+        assert crashes._names_street(raw, keys), raw
+    assert not crashes._names_street("MAINE AV", [street_key("Main Street")])
+    assert not crashes._names_street("PRIVATE PROPERTY", [street_key("Private Road")])
+    assert crashes._names_street("WOODRUFF AV & DELAMO BL", [street_key("Del Amo Boulevard")])   # run together
+    # a long name stays squeezed: CHP writes MC FADDEN AV for McFadden Avenue
+    assert crashes._names_street("MC FADDEN AV", [street_key("McFadden Avenue")])
+
+
+def test_sql_matches_short_names_as_words():
+    # the SQL prefilter runs the same rule on FakeCkan (SQLite) as on data.ca.gov (PostgreSQL)
+    assert crashes._name_cond("p", "STATE", False).startswith("((sp_p LIKE '% STATE %') AND sp_p NOT IN (' NOT STATED '")
+    assert crashes._name_cond("p", "DEL AMO", False).startswith("((sp_p LIKE '% DEL AMO %' OR sp_p LIKE '% DELAMO %')")
+    assert crashes._name_cond("p", "CRENSHAW", False) == "sq_p LIKE '%CRENSHAW%'"
+    assert crashes._name_cond("s", "SR1", True) == "sq_s LIKE '%SR1%'"
+    import sqlite3
+    db = sqlite3.connect(":memory:")
+    sp = crashes._sp_sql("x")
+    for raw, want in (("NOT STATED", " NOT STATED "), ("1234 STATE ST.-SANTA  BARBARA", " 1234 STATE ST SANTA BARBARA "),
+                      ("O'NEIL  ST", " ONEIL ST ")):
+        assert db.execute(f"SELECT {sp} FROM (SELECT ? AS x)", (raw,)).fetchone()[0] == want
+        assert crashes._spaced(raw) == want

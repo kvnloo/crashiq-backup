@@ -194,7 +194,7 @@ def test_corridor_name_with_leading_direction_finds_no_gps_reports(osm_name, wri
     assert {"9200001", "9200002", "9200003"} <= ids
 
 
-@pytest.mark.xfail(strict=True, reason="#121: 'NOT STATED' contains STATE, so it counts as naming a 'State Street' corridor")
+# Regression test for #121 (fixed on main).
 def test_not_stated_does_not_name_a_state_street_corridor():
     # Statewide run 2 (#73), Santa Barbara, 'State Street': 6,136 no-GPS reports with SecondaryRoad 'NOT STATED' were
     # pulled from four counties (Riverside, San Diego, Santa Clara, Santa Barbara), e.g. '32456 HAUN ROAD | NOT STATED'
