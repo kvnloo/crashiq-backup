@@ -79,6 +79,7 @@ def freeze() -> None:
         if r.get("code_version") != code_version():
             continue
         out.setdefault("settings", r.get("settings"))
+        out.setdefault("osm_source", r.get("osm_source"))
         out["cities"].append({k: r.get(k) for k in ("city", "county", "osm_boundary", "corridor", "reason")})
     out["cities"].sort(key=lambda c: (c["county"], c["city"]))
     FROZEN.write_text(json.dumps(out, indent=1))

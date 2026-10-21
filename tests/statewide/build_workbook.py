@@ -34,12 +34,13 @@ from openpyxl.chart import LineChart  # noqa: E402
 
 DATA = ROOT / "data" / "statewide"
 TIMS_DIR = ROOT / "data" / "cache" / "statewide" / "tims"
-BUGS = {79: "Real CCRS injury codes all become U (no A/B/C, KSI = fatal only)",
-        80: "Hyphen in the OSM corridor name stops the no-GPS search (Alvarado-Niles Rd, Union City)",
-        81: "One crash filed under two Collision Ids is counted twice",
-        82: "'NOT STATED' cross street excluded as a side street",
-        83: "Crashes written by route number (SR-1) not found on state-highway corridors",
-        84: "Empty Overpass answer cached; corridor silently has no streets"}
+BUGS = {79: "Real CCRS injury codes all became U (no A/B/C, KSI = fatal only). Fixed on main by #76; in this run's code",
+        80: "Hyphen in the OSM corridor name stops the no-GPS search (Union City, Saratoga). Fixed on main by #89, after this run",
+        81: "One crash filed under two Collision Ids is counted twice. Fixed on main by #87, after this run",
+        82: "'NOT STATED' cross street excluded as a side street. Open",
+        83: "Crashes written by route number (SR-1) not found on state-highway corridors. Open",
+        84: "Empty Overpass answer cached; corridor silently has no streets. Fixed on main by #91, after this run",
+        111: "One wrong-county GPS crash in the box sends the no-GPS search to the wrong county (Marina). Open"}
 H1 = Font(bold=True, size=14)
 B = Font(bold=True)
 HEAD = PatternFill("solid", fgColor="1F3A5F")
@@ -201,7 +202,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         if c:
             groups[c].append(r)
     prows = []
-    link = {"Silent drop": "#80, #83", "App found no corridor": "#84", "No usable": "#82"}
+    link = {"Silent drop": "#80, #83, #111", "App found no corridor": "#84", "No usable": "#82"}
     for c, rs in sorted(groups.items(), key=lambda kv: -len(kv[1])):
         ex = sorted(rs, key=lambda r: -r.get("crashes_5y", 0))[:4]
         prows.append([c, f'=COUNTIF(Cities!AH:AH,"{c}")', "; ".join(
@@ -219,12 +220,12 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
     # ---------------- 1 Summary ----------------
     ws = wb.create_sheet("Summary", 0)
     ws["A1"], ws["A1"].font = "CrashIQ statewide data test: every California city through tabs 1-2", H1
-    meta = [("Test date", today), ("Code version (git commit)", git("rev-parse", "--short", "HEAD")),
+    meta = [("Test date", today), ("Test scripts (git commit)", git("rev-parse", "--short", "HEAD")),
             ("App code tested (commit / backend tree)", f"{basis.get('commit')} / {ver}"),
             ("Crash data", f"CCRS (CHP) on data.ca.gov, crash dates 2021-2025, mirror copied {basis.get('mirror_built')}"),
             ("Study settings", ", ".join(f"{k} {v}" for k, v in (basis.get("settings") or {}).items())),
             ("Comparison data", "TIMS SWITRS Summary (UC Berkeley SafeTREC), crashes as of Sep 15, 2026"),
-            ("Street data", "OpenStreetMap via Overpass (ODbL)")]
+            ("Street data", f"OpenStreetMap (ODbL): {basis.get('osm_source') or 'Overpass (live)'}")]
     for i, (k, v) in enumerate(meta, 3):
         ws.cell(i, 1, k).font = B
         ws.cell(i, 2, v)
@@ -465,7 +466,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
             wr.cell(i, 2, v).alignment = WRAP
         groups_ = [("Coverage %", ["located_pct_v1", "review_pct_v1", "unplaced_pct_v1"]),
                    ("City results", ["pass_v1", "warn_v1", "fail_v1"]),
-                   ("Mistakes found", ["silent_drops_v1", "double_counts_v1", "excluded_wrongly_v1"]),
+                   ("Mistakes found", ["silent_drops_v1", "double_counts_v1", "excluded_no_cross_street_v1"]),
                    ("TIMS counties within 2%", ["tims_counties_within_2pct_v1"])]
         for gi, (title, cols_) in enumerate(groups_):
             lc = LineChart()

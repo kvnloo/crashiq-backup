@@ -1,0 +1,2 @@
+run,date,app_commit,backend_tree,mirror_date,years,corridor_list,fixes_since_last,corridor_crashes_v1,located_pct_v1,review_pct_v1,unplaced_pct_v1,cities_tested_v1,pass_v1,warn_v1,fail_v1,pass_pct_v1,silent_drops_v1,double_counts_v1,excluded_no_cross_street_v1,tims_counties_within_2pct_v1,placement_accuracy_pct_v1
+1,2026-10-20,b590586,6f8d98257e56,2026-10-19T20:54,2021-2025,tests/statewide/corridors_frozen.json,baseline (first run),36195,96.39,2.06,1.54,468,403,39,26,86.1,61,166,2685,22,

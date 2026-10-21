@@ -40,8 +40,10 @@ MEASURES = {
                        "pulled (independent SQL on the mirror).",
     "double_counts_v1": "Extra crashes among those pulled: same agency + report number + both roads under 2+ "
                         "Collision Ids (each group counts n-1).",
-    "excluded_wrongly_v1": "Crashes excluded as a side street (#39 rule) whose cross street is blank / NOT STATED / "
-                           "PRIVATE PROPERTY: the report names no side street (#82).",
+    "excluded_no_cross_street_v1": "Corridor-street crashes the pull excluded under the side-street rule (#39) "
+                                   "although the report names no cross street (blank / NOT STATED / PRIVATE "
+                                   "PROPERTY, #82). They can lie anywhere along the street in the county, so this is "
+                                   "an upper bound on wrong exclusions, not a count of them.",
     "tims_counties_within_2pct_v1": "Counties whose CCRS fatal+injury crashes 2021-2024 (final years, by crash date) "
                                     "are within +/-2% of TIMS's.",
     "placement_accuracy_pct_v1": "Hidden-GPS test (#88): % of auto-placed crashes within the gate distance of their "
@@ -183,7 +185,7 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
            "pass_pct_v1": round(100 * n["pass"] / len(tested), 1) if tested else None,
            "silent_drops_v1": sum(r.get("silent_drops") or 0 for r in tested),
            "double_counts_v1": sum(cm[f"{r['city']}|{r['county']}"]["double_counts"] or 0 for r in tested),
-           "excluded_wrongly_v1": sum(cm[f"{r['city']}|{r['county']}"]["excluded_wrongly"] or 0 for r in tested),
+           "excluded_no_cross_street_v1": sum(cm[f"{r['city']}|{r['county']}"]["excluded_wrongly"] or 0 for r in tested),
            "tims_counties_within_2pct_v1": tims_within(tims_rows), "placement_accuracy_pct_v1": None}
     _append(HISTORY, [row], RUN_COLS + list(MEASURES))
     crow = []
@@ -192,6 +194,6 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
         crow.append({"run": row["run"], "city": r["city"], "county": r["county"], "result": r.get("result"),
                      "reason": r.get("result_reason"), "candidates_v1": m["candidates"], "located_v1": m["located"],
                      "silent_drops_v1": r.get("silent_drops"), "double_counts_v1": m["double_counts"],
-                     "excluded_wrongly_v1": m["excluded_wrongly"]})
+                     "excluded_no_cross_street_v1": m["excluded_wrongly"]})
     _append(CITY_HISTORY, crow, list(crow[0]) if crow else [])
     return row

@@ -151,7 +151,7 @@ def test_empty_overpass_answer_is_not_cached(db):
     assert db.one("SELECT 1 FROM http_cache WHERE source = 'overpass'") is None
 
 
-@pytest.mark.xfail(strict=True, reason="bug: one wrong-county GPS crash in the box sends the no-GPS search to the wrong county")
+@pytest.mark.xfail(strict=True, reason="#111: one wrong-county GPS crash in the box sends the no-GPS search to the wrong county")
 def test_wrong_county_gps_crash_does_not_redirect_the_no_gps_search():
     # Statewide run 2026-10-20 (#73), Marina (Monterey, county 27), Reservation Rd: in 2021 the only GPS crashes in
     # the corridor box are two Woodland PD reports (Yolo, county 57; ids 2796970, 2829517, ELM ST & COURT ST, a
