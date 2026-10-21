@@ -253,8 +253,12 @@ def test_T18_pcf_categories_match_the_testers_coverage(case):
         elif k not in xw:
             want["unlisted"] += 1
         else:
-            st = xw[k]["status"]
-            want[f"cat_{xw[k]['category']}" if st == "mapped" else st] += 1
+            st, cat = xw[k]["status"], xw[k]["category"]
+            if st == "split":           # user decision 2026-10-20: the 2024 category, every year
+                y24 = dict(p.split() for p in xw[k]["split_by_year"].split("; ")).get("2024")
+                if y24:
+                    st, cat = ("unknown", "00") if y24.startswith("00:") else ("mapped", y24.split(":")[0])
+            want[f"cat_{cat}" if st == "mapped" else st] += 1
     got = {k: v["crashes"] for k, v in table(p, "T18").items()}
     assert got == dict(want)
     assert sum(got.values()) == len(ids)
