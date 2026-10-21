@@ -88,3 +88,18 @@ def test_overpass_honours_retry_after_and_falls_back_to_an_old_map(db):
         raise urllib.error.HTTPError(url, 429, "Too Many Requests", {"Retry-After": "7"}, None)
     got = network.fetch_overpass(db, q, transport=busy, retries=1, sleep=waits.append)
     assert waits == [7.0] and got == {"elements": [1]}                         # stale map, after waiting as told
+
+
+def test_id_lookups_stay_under_the_url_limit():
+    # #113: 500 ids with the full column list made a URL too long for data.ca.gov (HTTP 414, Pasadena)
+    import urllib.parse
+    seen = []
+
+    class Rec:
+        def sql_page(self, sql):
+            seen.append(len(urllib.parse.quote(sql)))
+            return [], False
+    cols = {"collision_id": {"id": "CollisionId", "type": "numeric"},
+            **{f"c{i}": {"id": f"SomeLongColumnName{i}", "type": "text"} for i in range(25)}}
+    crashes._by_ids(Rec(), "rid-0000", cols, [str(4000000 + i) for i in range(1200)])
+    assert seen and max(seen) <= crashes.MAX_URL_SQL and len(seen) > 3
