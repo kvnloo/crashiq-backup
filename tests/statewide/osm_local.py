@@ -132,6 +132,33 @@ class LocalOSM:
         return {"elements": out}
 
 
+def network_in_area(local: "LocalOSM", area_id: int) -> dict:
+    """Overpass-shaped elements (ways with node ids + their nodes) for every named road way with a node inside the
+    boundary, for `crashiq.osm.Network`. The extract holds the app's corridor road classes only (no service roads,
+    footways or plazas, which osm.fetch also asks for)."""
+    row = local.db.execute("SELECT rings, minlat, minlon, maxlat, maxlon FROM areas WHERE id = ? "
+                           "ORDER BY CAST(admin_level AS INT) DESC LIMIT 1", (area_id,)).fetchone()
+    if not row:
+        return {"elements": []}
+    rings = [[tuple(p) for p in r] for r in json.loads(row[0])]
+    ways, nodes = [], {}
+    for wid, tags, nids, coords in local.db.execute(
+            "SELECT w.id, w.tags, w.nodes, w.coords FROM way_box b JOIN ways w ON w.id = b.id "
+            "WHERE b.maxlat >= ? AND b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ?",
+            (row[1], row[3], row[2], row[4])):
+        t = json.loads(tags)
+        if not (t.get("name") or t.get("ref")):
+            continue
+        cs = json.loads(coords)
+        if not any(_inside(c, rings) for c in cs):
+            continue
+        ids = json.loads(nids)
+        ways.append({"type": "way", "id": wid, "nodes": ids, "tags": t})
+        for nid, (la, lo) in zip(ids, cs):
+            nodes[nid] = {"type": "node", "id": nid, "lat": la, "lon": lo}
+    return {"elements": ways + list(nodes.values())}
+
+
 def _inside(p, rings) -> bool:
     """Point in any outer ring (ray casting; inner rings ignored: a road node in a hole is rare and harmless here)."""
     y, x = p

@@ -1,5 +1,14 @@
 # Lessons (newest first)
 
+- 2026-10-20 · Officer GPS is a weak answer key for offsets: it usually sits at the intersection even when the report
+  says hundreds of feet away (Concord: 92% of exact matches right at the intersection, 73% after the stated offset).
+  Score the matcher at the intersection, and only on GPS that agrees with the report's own streets (agencies run
+  68–90%; San Jose 0.2% because its GPS is DMS, #143). On that basis relaxed matches score like exact ones in most
+  agencies (median difference −0.05 points across 84 agencies), which is evidence for the gate decision, not a decision.
+- 2026-10-20 · A systematic GPS error shows up as a constant offset against a second source: San Jose's points were
+  a median 34 km off, then 80 m after reading them as degrees-minutes-seconds. Check digit patterns (minutes and
+  seconds < 60) per agency before trusting GPS.
+
 - 2026-10-20 · CHP's PCF category depends on the subsection, not just the section (21453(a) signals, (c) right of
   way, (d) pedestrian), and CHP extended its own table in 2024 (sections that were 00 "unknown" in 2021–23 got real
   categories). A crosswalk must key on section + subsection and be checked by year (#52, pcf_categories.csv).

@@ -213,3 +213,34 @@ def test_not_stated_does_not_name_a_state_street_corridor():
     ids = {c["crash_id"] for c in out["crashes"]}
     assert "9288887" in ids                    # control: the real State St report is found
     assert "9288888" not in ids
+
+
+def _to_dms(v: float) -> float:
+    """Decimal degrees written the way San Jose PD writes them in CCRS: DD.MMSSss (37.24077 -> 37.142677)."""
+    s, v = (-1 if v < 0 else 1), abs(v)
+    d = int(v)
+    m = (v - d) * 60
+    sec = (m - int(m)) * 60
+    return s * round(d + int(m) / 100 + sec / 10000, 6)
+
+
+@pytest.mark.xfail(strict=True, reason="#143: an agency's GPS written as degrees-minutes-seconds lands ~30 km away and the crash is lost")
+def test_gps_written_as_degrees_minutes_seconds_is_not_lost():
+    # Portal survey (#88), 2026-10-20: 85-88% of San Jose PD's CCRS GPS points 2021-24 carry the DMS digit signature
+    # (13% by chance); 2025: 56%. 491 SJPD 2024 crashes link by report number to San Jose's own open data (TCR
+    # 24-011-0126 = CCRS 2024-240110126): as written, CCRS GPS sits a median 34 km from the city's point; read as
+    # DMS, 80 m. The pull takes the point as real GPS: it falls outside the corridor box, and the no-GPS name search
+    # skips it because it has coordinates, so the crash disappears without a count.
+    d = _fixture()
+    gps_ids = set()
+    for rid, t in d["tables"].items():
+        if rid.startswith("cra-"):
+            for r in t["rows"]:
+                if r.get("Latitude") and r.get("Longitude"):
+                    gps_ids.add(str(r["Collision Id"]))
+                    r["Latitude"] = str(_to_dms(float(r["Latitude"])))
+                    r["Longitude"] = str(_to_dms(float(r["Longitude"])))
+    base = {c["crash_id"] for c in crashes.pull(STUDY, NET_X, Ckan(FakeCkan(_fixture())))["crashes"]} & gps_ids
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    found = {c["crash_id"] for c in out["crashes"]} & base
+    assert len(found) >= 0.9 * len(base)        # the corridor's GPS crashes are still found (converted or by name)
