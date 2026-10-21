@@ -246,6 +246,8 @@ describe('Crash profile screen', () => {
       expect(years[i].querySelector('.n').textContent).toBe(nf.format(r.values.crashes))
       expect(years[i].classList.contains('covid')).toBe(r.values.covid === 'Yes')         // docs/03: 2020 and 2021
       expect(Boolean(years[i].querySelector('.prelim'))).toBe(r.values.preliminary > 0)
+      const segs = [...years[i].querySelectorAll('.col i')].map((e) => e.className)          // the K/A/B/C/U/O ramp
+      expect(segs).toEqual(['k', 'a', 'b', 'c', 'u', 'o'].filter((k) => r.values[`sev_${k}`]).map((k) => `sev-${k}`))
     })
     expect(within(tr).getByText(/COVID-19 changed travel/)).toBeInTheDocument()
   })
@@ -259,7 +261,7 @@ describe('Crash profile screen', () => {
     const v = (k) => cell(profile, `T1/${k}/value`)
     expect(v('located_gps') + v('located_exact') + v('located_other') + (v('user_placed') || 0)).toBe(v('crashes'))
     expect(within(q).getByTestId('q-located_gps').textContent).toContain(nf.format(v('located_gps')))
-    const ex = within(q).getByRole('button', { name: new RegExp(`${nf.format(v('excluded'))} excluded`) })
+    const ex = within(q).getByRole('button', { name: new RegExp(`${nf.format(v('excluded'))} nearby, outside the corridor`) })
     fireEvent.click(ex)
     const rules = within(q).getByLabelText('Excluded, by rule')
     const sum = [...rules.querySelectorAll('li .mono')].reduce((t, e) => t + Number(e.textContent.replace(/,/g, '')), 0)

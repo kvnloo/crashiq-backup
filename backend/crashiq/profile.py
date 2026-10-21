@@ -111,10 +111,14 @@ def tables_for(crashes: list[dict], years: int, suffix: str = "", window: list[i
                          injury_crashes=sum(c["severity"] in INJURY for c in cy),
                          pdo_crashes=sum(c["severity"] == "O" for c in cy),
                          preliminary=sum(bool(c.get("preliminary")) for c in cy),
-                         covid="Yes" if y in study_mod.COVID_YEARS else "No"))
+                         covid="Yes" if y in study_mod.COVID_YEARS else "No",
+                         **{f"sev_{lvl.lower()}": sum(c["severity"] == lvl for c in cy) for lvl in "KABCUO"}))
     out.append(_table(f"T11{s}", "Crashes by year", [("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"),
                                                      ("injury_crashes", "Injury crashes"), ("pdo_crashes", "Property damage only"),
-                                                     ("preliminary", "Preliminary reports"), ("covid", "COVID year")],
+                                                     ("preliminary", "Preliminary reports"), ("covid", "COVID year"),
+                                                     ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"),
+                                                     ("sev_c", "Possible (C)"), ("sev_u", "Injury, level not stated"),
+                                                     ("sev_o", "Property damage (O)")],
                       rows, crashes))
     return out
 

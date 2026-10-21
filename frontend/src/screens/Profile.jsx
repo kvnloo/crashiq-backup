@@ -226,7 +226,7 @@ const RULE_LABEL = { outside_buffer: 'outside the corridor buffer', outside_stud
 // short labels so the line stays one line at the 400 px column; the T1 row labels (ⓘ, export) carry the full wording
 const QUALITY = [['located_gps', 'GPS', 'q-gps', "Located by the officer's GPS"], ['located_exact', 'exact', 'q-exact', 'Placed by exact street-name match'],
   ['located_other', 'other', 'q-other', 'Placed by other matching tiers'], ['user_placed', 'by you', 'q-user', 'Placed by you on the review list'],
-  ['unplaced', 'to review', 'q-review', 'Not placed yet: open the review list'], ['excluded', 'excluded', 'q-ex', 'Outside the study area: show the rules']]
+  ['unplaced', 'to review', 'q-review', 'Not placed yet: open the review list'], ['excluded', 'nearby, outside the corridor', 'q-ex', 'Nearby crashes outside the corridor: show the rules']]
 
 function Quality({ p, excluded, onReview }) {
   const v = (k) => cell(p, `T1/${k}/value`) || 0
@@ -269,15 +269,14 @@ function Trend({ p }) {
             <div key={r.key} className={`yr${r.values.covid === 'Yes' ? ' covid' : ''}`} data-testid="trend-year">
               <span className="mono n">{fmt(r.values.crashes)}</span>
               <span className="col" aria-hidden="true">
-                <i className="inj" style={{ height: `${(100 * r.values.injury_crashes) / max}%` }} />
-                <i className="pdo" style={{ height: `${(100 * r.values.pdo_crashes) / max}%` }} />
+                {SEV_PARTS.map(([k]) => (r.values[`sev_${k}`] ? <i key={k} className={`sev-${k}`} style={{ height: `${(100 * r.values[`sev_${k}`]) / max}%` }} /> : null))}
               </span>
               <span className="mono y">{r.label}{r.values.preliminary ? <b className="prelim" title={`${fmt(r.values.preliminary)} preliminary reports`}>prelim.</b> : null}</span>
             </div>
           ))}
         </div>
       ) : <TrendLine rows={rows} max={max} />}
-      <div className="legend small"><span><i style={{ background: 'var(--sev-i)' }} />Injury</span><span><i style={{ background: 'var(--sev-p)' }} />Property damage</span></div>
+      <div className="legend small">{SEV_PARTS.filter(([k]) => rows.some((r) => r.values[`sev_${k}`])).map(([k, l]) => <span key={k}><i className={`sev-${k}`} />{l}</span>)}</div>
       {anyCovid ? <p className="muted small-note">Shaded: 2020–2021, when COVID-19 changed travel and crash patterns.</p> : null}
       {anyPrelim ? <p className="muted small-note">prelim.: CCRS still marks some of that year&apos;s reports preliminary; counts may change.</p> : null}
       <details className="showtable"><summary>Show table</summary>

@@ -189,6 +189,7 @@ def test_t11_has_every_window_year_with_the_split_preliminary_and_covid():
         assert v["injury_crashes"] + v["pdo_crashes"] == v["crashes"]
         assert v["covid"] == ("Yes" if int(r["key"]) in (2020, 2021) else "No")
         assert 0 <= v["preliminary"] <= v["crashes"]
+        assert sum(v[f"sev_{k}"] for k in "kabcuo") == v["crashes"]          # #104 round 1: the trend stacks the ramp
     assert sum(r["values"]["crashes"] for r in t11["rows"]) == v_(p, "T1/crashes/value")
 
 
