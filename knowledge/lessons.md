@@ -1,5 +1,11 @@
 # Lessons (newest first)
 
+- 2026-10-20 · CHP's PCF category depends on the subsection, not just the section (21453(a) signals, (c) right of
+  way, (d) pedestrian), and CHP extended its own table in 2024 (sections that were 00 "unknown" in 2021–23 got real
+  categories). A crosswalk must key on section + subsection and be checked by year (#52, pcf_categories.csv).
+- 2026-10-20 · TIMS CASE_ID = 1 digit + CCRS Collision Id for 8-digit IDs; 7-digit IDs (LAPD, LASD, Long Beach) need
+  agency + time + roads (#88). The built-in browser doesn't save downloads, but the page can fetch and process them.
+
 - 2026-10-20 · A coverage % is only as good as its denominator. Run 1 counted GPS crashes the assignment later
   excluded (Canada Blvd beside a Verdugo Rd corridor) as "located", so it read 95.8%; on crashes that actually count
   for the corridor it was 91.3%, and 65.0% in run 2 once the fixes found 10,600 reports run 1 silently missed.
