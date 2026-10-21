@@ -17,6 +17,8 @@ import urllib.parse
 import urllib.request
 from pathlib import Path
 
+from .. import pcf
+
 API = "https://data.ca.gov/api/3/action/"
 PACKAGE = "ccrs"
 
@@ -383,6 +385,7 @@ def crash_record(raw: dict, cols: dict[str, dict]) -> dict:
         "surface": clean_coded(s(surface)),
         "pcf": clean_violation(g("pcf")),
         "pcf_category": s(g("pcf_category")),
+        "pcf_class": pcf.category(g("pcf")),         # SWITRS category code or why there is none (#52)
         "involved_with": clean_coded(s(g("involved_with"))),
         "ped_action": clean_coded(s(g("ped_action"))),
         "hit_run": clean_coded(s(g("hit_run"))),

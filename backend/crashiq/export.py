@@ -171,7 +171,10 @@ def methodology(d: dict) -> str:
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed" + (f" ({ncs} of them name the corridor but give no cross street, so where on the corridor "
                             "is unknown; they are on the review list for the engineer to place)" if ncs else "")
-            + ". Severity: each crash counted once at its most severe outcome (KABCO). Rates appear only where "
+            + ". Severity: each crash counted once at its most severe outcome (KABCO). Primary collision factor "
+            "categories are the 24 SWITRS categories, from CHP's own Vehicle Code section table rebuilt from SWITRS "
+            "records (a section is used only where 99% or more of its records agree); reports with no section, a "
+            "description in words, or a section CHP did not categorize are listed as such. Rates appear only where "
             "AADT was entered" + (f" (estimated from peak-hour counts with K = {s.get('k_factor', 0.1):.0%})"
                                   if s.get("volume_basis") == "peak_hour" else "") + " (intersections per million entering vehicles from two-way AADT, a T counting half the "
             "minor road; segments per 100 million vehicle-miles). Where 3 or more similar locations have AADT, each "
@@ -254,6 +257,7 @@ def to_pdf(d: dict) -> bytes:
                                   cols(W - 3.3 * inch, 3), (1, 2, 3)), src("T14")])]
     for tid, title, limit, label in (("T4", "Collision type", None, "Type"),
                                      ("T5", "Primary collision factor (top 10)", 10, "Factor"),
+                                     ("T18", "Primary collision factor category", None, "Category"),
                                      ("T6", "Lighting", None, "Lighting")):
         t = _t(p, tid)
         rows = t["rows"][:limit] if limit else t["rows"]

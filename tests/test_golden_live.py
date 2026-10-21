@@ -228,3 +228,30 @@ def test_T10_heavy_truck_is_three_axles_or_a_tractor(case):
         if {t.removeprefix("Hmw").removeprefix("Hm") for t in types} & REF_HEAVY:
             heavy.add(str(r["CollisionId"]))
     assert table(p, "T10")["heavy_truck"]["crashes"] == len(heavy & set(ids))
+
+
+def test_T18_pcf_categories_match_the_testers_coverage(case):
+    # #52 (1A): the Tester's own parser and crosswalk reading (tests/statewide/pcf_coverage.py) on the raw rows
+    # must give the same outcome per crash as the app's T18.
+    import csv
+    import sys
+    sys.path.insert(0, str(FIXTURES.parents[1] / "tests" / "statewide"))
+    import pcf_coverage as ref
+    _, _, _, p, ids, crash, _, _ = case
+    rows = list(csv.DictReader((FIXTURES.parents[1] / "data" / "reference" / "pcf_categories.csv").open()))
+    xw = {(r["section"], r["subsection"]): r for r in rows if r["key_type"] == "section"}
+    want = Counter()
+    for r in crash.values():
+        k = ref.parse(r.get("Primary Collision Factor Violation"))
+        if k == "blank":
+            want["blank"] += 1
+        elif k is None:
+            want["words"] += 1
+        elif k not in xw:
+            want["unlisted"] += 1
+        else:
+            st = xw[k]["status"]
+            want[f"cat_{xw[k]['category']}" if st == "mapped" else st] += 1
+    got = {k: v["crashes"] for k, v in table(p, "T18").items()}
+    assert got == dict(want)
+    assert sum(got.values()) == len(ids)

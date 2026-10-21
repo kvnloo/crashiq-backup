@@ -17,7 +17,7 @@ from collections import Counter
 
 from fastapi import APIRouter, Request
 
-from . import assign as assign_mod
+from . import pcf, assign as assign_mod
 from . import study as study_mod
 
 SEVERITY_LABELS = {"K": "Fatal (K)", "A": "Suspected serious injury (A)", "B": "Suspected minor injury (B)",
@@ -74,6 +74,20 @@ def _dist(tid, title, crashes, field, label_of=lambda v: v or "Not stated", orde
             for k in keys if cnt[k] or order]
     return _table(tid, title, [("crashes", "Crashes"), ("injury_crashes", "Injury crashes"),
                                ("ksi_crashes", "KSI crashes"), ("share_pct", "Share %")], rows, crashes)
+
+
+def _pcf_categories(tid: str, crashes: list[dict]) -> dict:
+    """T5 grouped into the 24 SWITRS categories via CHP's own section table (#52, 1A). Crashes the table can't
+    categorize keep their own rows after the categories (blank, words, CHP 00, split by year, not in the table)."""
+    cnt = Counter(c.get("pcf_class") or "blank" for c in crashes)
+    cats = sorted((k for k in cnt if k not in pcf.OTHER), key=lambda k: (-cnt[k], k))
+    order = cats + [k for k in pcf.OTHER if cnt[k]]
+    keyed = [{**c, "_pcf": c.get("pcf_class") or "blank"} for c in crashes]
+    t = _dist(tid, "Primary collision factor category", keyed, "_pcf",
+              lambda k: pcf.labels().get(k) or pcf.OTHER.get(k, k), order)
+    for r in t["rows"]:
+        r["key"] = f"cat_{r['key']}" if r["key"] not in pcf.OTHER else r["key"]
+    return t
 
 
 def _movement(m) -> str:
@@ -137,6 +151,7 @@ def tables_for(crashes: list[dict], years: int, suffix: str = "", window: list[i
     out.append(_dist(f"T4{s}", "Collision type", crashes, "collision_type", lambda v: (v or "Not stated").title()))
     out.append(_dist(f"T5{s}", "Primary collision factor", crashes, "pcf",
                      lambda v: v or "Not stated"))
+    out.append(_pcf_categories(f"T18{s}", crashes))
     out.append(_dist(f"T6{s}", "Lighting", crashes, "lighting", lambda v: (v or "Not stated").title()))
     out.append(_dist(f"T7{s}", "Weather", crashes, "weather", lambda v: (v or "Not stated").title()))
     out.append(_dist(f"T8{s}", "Road surface", crashes, "surface", lambda v: (v or "Not stated").title()))
