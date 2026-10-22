@@ -344,3 +344,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   only if the point as written does not fit the report's streets and the converted point does. Every converted crash
   is labelled `gps_dms_corrected`. Clear years (≥ 75%) are converted as decided above. As for clear years, a DMS-signed
   point that fits neither way is treated as having no GPS.
+- **Fatal crashes first (user direction, 2026-10-21, PM session):** fatal crashes get extra weight. Every fatal crash
+  should be placed, even when the CCRS report has no GPS or cross street, using other sources: FARS (NHTSA, public
+  domain) first, then a human-confirmed public-source lookup (e.g. news) for any remaining ones, always with the source
+  cited and confirmed by the user (AI never sets a location). First step is measurement only (#166); building waits for
+  the user's review of the numbers.
