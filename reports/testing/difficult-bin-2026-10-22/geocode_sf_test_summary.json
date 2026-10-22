@@ -1,0 +1,52 @@
+{
+ "normalizer": "ours",
+ "network": "osm",
+ "city": "San Francisco",
+ "agency": "3801",
+ "years": [
+  2023,
+  2024,
+  2025
+ ],
+ "split": "test",
+ "n": 4028,
+ "cleaning": {
+  "ccrs_rows_read": 12305,
+  "ccrs_deleted_dropped": 0,
+  "ccrs_feet_typed_as_miles_fixed": 5,
+  "truth_records": 8858,
+  "no_truth_record": 4206,
+  "dropped_truth_streets_unrelated": 18,
+  "dropped_duplicate_or_blank_report_number": 25,
+  "linked": 8056
+ },
+ "arms": {
+  "A  exact only (default gate)": {
+   "auto": 3635,
+   "coverage": 0.9024329692154915,
+   "accuracy": 0.9876203576341128,
+   "wilson_low": 0.9834761511373316
+  },
+  "A+ exact + unique_pair (#203)": {
+   "auto": 3639,
+   "coverage": 0.9034260178748759,
+   "accuracy": 0.9876339653751031,
+   "wilson_low": 0.9834942706010301
+  },
+  "B  exact + unique_pair + relaxed + near + fuzzy": {
+   "auto": 3762,
+   "coverage": 0.9339622641509434,
+   "accuracy": 0.9848484848484849,
+   "wilson_low": 0.9804211014901355
+  }
+ },
+ "unique_pair": {
+  "n": 4,
+  "accuracy": 1.0,
+  "wilson_low": 0.5100999795960008,
+  "coverage_gain": 0.0009930486593843098
+ },
+ "jev_vs_fuzzy": null,
+ "jev_spend": null,
+ "scored_at": "offset point"
+}

@@ -1,0 +1,298 @@
+{
+ "basis": "bin2.py on main e2f1633 (backend unchanged since); #199 per-crash file; mirror 2026-10-19; OSM 2026-10-18",
+ "base": {
+  "now_bin1_after_gps_check_fix": 16497,
+  "difficult_199": 285705,
+  "difficult_main": 285542,
+  "placed_by_main_already": 163
+ },
+ "recommended": [
+  {
+   "fix": "1. Auto-place unique_pair (#201/#203: the two streets, allowing only what the report leaves out, meet once)",
+   "gain": 106700,
+   "gain_fatal": 278,
+   "gain_ksi": 5863,
+   "hidden_gps": "92.4% (low 91.7%, n=7,422)",
+   "la_open_data": "97.0% (low 96.3%, n=2,878)",
+   "sf_open_data": "100.0% (low 51.0%, n=4)",
+   "effort": "config: add unique_pair to the gate (tier exists on main)",
+   "decision": "user: gate change (docs/03 98% bar)"
+  },
+  {
+   "fix": "2. Fix #212: expand leading abbreviations (AVE M = Avenue M; ST/MT/FT)",
+   "gain": null,
+   "gain_upper": 5018,
+   "gain_fatal": null,
+   "gain_ksi": null,
+   "hidden_gps": "measure after the fix (same tiers as today, on more names)",
+   "la_open_data": "-",
+   "sf_open_data": "-",
+   "effort": "normalizer bug fix (Engineering)",
+   "decision": "none (bug)"
+  },
+  {
+   "fix": "3. OSM + TIGER street-network union (#17)",
+   "gain": null,
+   "gain_audit_estimate": 18098,
+   "hidden_gps": "-",
+   "la_open_data": "placed 90.1% -> 93.0%, accuracy 83.7% -> 83.3% (all tiers, point)",
+   "sf_open_data": "placed 93.4% -> 94.4%, low 98.0% -> 97.9%",
+   "effort": "build the union for every county; TIGER download for the other 56 counties (user OK needed)",
+   "decision": "user: build it, and approve the downloads"
+  },
+  {
+   "fix": "4. Alias / spelling table learned from the audit (PROPOSAL only)",
+   "gain": null,
+   "gain_audit_estimate": 11140,
+   "hidden_gps": "-",
+   "la_open_data": "-",
+   "sf_open_data": "-",
+   "effort": "table + review UI; every entry approved by the user (CLAUDE.md)",
+   "decision": "user: approve the table"
+  }
+ ],
+ "yardstick": {
+  "fix": "(yardstick) exact tier, already auto-placed",
+  "gain": null,
+  "gain_fatal": null,
+  "gain_ksi": null,
+  "hidden_gps": "90.4% (low 90.0%, n=22,597)",
+  "la_open_data": "95.7% (low 94.7%, n=1,925)",
+  "sf_open_data": "99.2% (low 98.9%, n=3,627)",
+  "effort": "-",
+  "decision": "-"
+ },
+ "held": [
+  {
+   "fix": "Auto-place relaxed (suffix differs)",
+   "gain": 9977,
+   "gain_fatal": 23,
+   "gain_ksi": 455,
+   "hidden_gps": "91.2% (low 88.9%, n=697)",
+   "la_open_data": "94.4% (low 88.3%, n=107)",
+   "sf_open_data": "98.4% (low 91.7%, n=64)",
+   "effort": "config",
+   "decision": "below the bar on the low bound"
+  },
+  {
+   "fix": "Auto-place fuzzy (spelling)",
+   "gain": 8080,
+   "gain_fatal": 10,
+   "gain_ksi": 360,
+   "hidden_gps": "75.0% (low 71.8%, n=768)",
+   "la_open_data": "89.4% (low 77.4%, n=47)",
+   "sf_open_data": "82.8% (low 65.5%, n=29)",
+   "effort": "config",
+   "decision": "not recommended"
+  },
+  {
+   "fix": "Auto-place near (streets pass within 30 m)",
+   "gain": 13635,
+   "gain_fatal": 25,
+   "gain_ksi": 441,
+   "hidden_gps": "16.6% (low 16.0%, n=13,668)",
+   "la_open_data": "18.2% (low 8.6%, n=33)",
+   "sf_open_data": "46.7% (low 30.2%, n=30)",
+   "effort": "config",
+   "decision": "not recommended"
+  },
+  {
+   "fix": "Clue: offset direction picks one of several meeting points",
+   "gain": 1366,
+   "gain_fatal": 5,
+   "gain_ksi": 70,
+   "hidden_gps": "49.3% (low 42.5%, n=203)",
+   "la_open_data": "-",
+   "sf_open_data": "-",
+   "effort": "code",
+   "decision": "not recommended (about a coin toss)"
+  },
+  {
+   "fix": "Clue: jurisdiction (one candidate outside every city)",
+   "gain": 96,
+   "gain_fatal": 0,
+   "gain_ksi": 4,
+   "hidden_gps": "-",
+   "la_open_data": "-",
+   "sf_open_data": "-",
+   "effort": "code",
+   "decision": "negligible"
+  }
+ ],
+ "other": {
+  "gps_corroborates": {
+   "gain": 1241,
+   "note": "police-GPS-off crashes whose name-based answer (unique_pair / held tiers) lies within a quarter mile of the GPS; all are already in the rows above, so this adds confidence, not crashes"
+  },
+  "gps_off_sides": {
+   "far off (over 1 mile, or the roads aren't on the map)": 36564,
+   "near neither road, within 1 mile": 19296,
+   "": 2388,
+   "near one named road only": 1138,
+   "near both roads, far from where they meet": 256
+  },
+  "no_cross_street": {
+   "crashes": 25114,
+   "note": "no intersection to place at; FARS already places fatal ones; stays on review"
+  },
+  "freeway_or_ramp_in_dont_meet": 25952,
+  "audit": {
+   "dont_meet": {
+    "freeway or ramp": 25952,
+    "street missing from the map": 18098,
+    "street outside the city's map": 17860,
+    "house number in the name": 12354,
+    "streets don't intersect": 11716,
+    "streets nearly meet": 6616,
+    "misspelling or abbreviation": 5217,
+    "route number vs street name": 4987,
+    "leading abbreviation (#212)": 3569,
+    "private road or parking lot": 2550,
+    "travel direction in the name": 782,
+    "two streets in one field": 154
+   },
+   "gps_off": {
+    "freeway or ramp": 30494,
+    "streets nearly meet": 7125,
+    "street missing from the map": 6029,
+    "street outside the city's map": 4944,
+    "streets don't intersect": 4004,
+    "house number in the name": 2302,
+    "misspelling or abbreviation": 2078,
+    "private road or parking lot": 1590,
+    "leading abbreviation (#212)": 511,
+    "route number vs street name": 487,
+    "travel direction in the name": 78
+   },
+   "gps_side": {
+    "far off (over 1 mile, or the roads aren't on the map)": 36564,
+    "near neither road, within 1 mile": 19296,
+    "": 2388,
+    "near one named road only": 1138,
+    "near both roads, far from where they meet": 256
+   },
+   "sampled": {
+    "dont_meet": 306,
+    "gps_off": 255,
+    "moved_to_bin1": 90
+   }
+  }
+ },
+ "unique_pair_by_district": {
+  "District 1": {
+   "gain": 228,
+   "acc_n": 26,
+   "acc_k": 22
+  },
+  "District 10": {
+   "gain": 3174,
+   "acc_n": 670,
+   "acc_k": 615
+  },
+  "District 11": {
+   "gain": 4313,
+   "acc_n": 189,
+   "acc_k": 176
+  },
+  "District 12": {
+   "gain": 9801,
+   "acc_n": 599,
+   "acc_k": 532
+  },
+  "District 2": {
+   "gain": 155,
+   "acc_n": 44,
+   "acc_k": 37
+  },
+  "District 3": {
+   "gain": 465,
+   "acc_n": 97,
+   "acc_k": 87
+  },
+  "District 4": {
+   "gain": 4522,
+   "acc_n": 385,
+   "acc_k": 358
+  },
+  "District 5": {
+   "gain": 2535,
+   "acc_n": 291,
+   "acc_k": 248
+  },
+  "District 6": {
+   "gain": 8499,
+   "acc_n": 1225,
+   "acc_k": 1126
+  },
+  "District 7": {
+   "gain": 63061,
+   "acc_n": 3056,
+   "acc_k": 2858
+  },
+  "District 8": {
+   "gain": 9927,
+   "acc_n": 823,
+   "acc_k": 782
+  },
+  "District 9": {
+   "gain": 20,
+   "acc_n": 17,
+   "acc_k": 15
+  }
+ },
+ "exact_by_district": {
+  "District 7": {
+   "n": 4342,
+   "k": 3915
+  },
+  "District 4": {
+   "n": 5720,
+   "k": 5159
+  },
+  "District 8": {
+   "n": 3560,
+   "k": 3332
+  },
+  "District 12": {
+   "n": 804,
+   "k": 690
+  },
+  "District 10": {
+   "n": 1668,
+   "k": 1532
+  },
+  "District 11": {
+   "n": 441,
+   "k": 366
+  },
+  "District 5": {
+   "n": 1184,
+   "k": 1056
+  },
+  "District 6": {
+   "n": 1722,
+   "k": 1519
+  },
+  "District 3": {
+   "n": 2259,
+   "k": 2056
+  },
+  "District 9": {
+   "n": 113,
+   "k": 93
+  },
+  "District 1": {
+   "n": 467,
+   "k": 411
+  },
+  "District 2": {
+   "n": 317,
+   "k": 288
+  }
+ },
+ "unique_pair_sf": {
+  "k": 4,
+  "n": 4,
+  "low": 51.0
+ }
+}

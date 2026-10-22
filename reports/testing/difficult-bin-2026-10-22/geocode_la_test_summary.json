@@ -1,0 +1,50 @@
+{
+ "normalizer": "ours",
+ "network": "osm",
+ "city": "Los Angeles",
+ "agency": "1942",
+ "years": [
+  2024
+ ],
+ "split": "test",
+ "n": 5633,
+ "cleaning": {
+  "ccrs_rows_read": 12851,
+  "ccrs_deleted_dropped": 0,
+  "ccrs_feet_typed_as_miles_fixed": 5,
+  "truth_records": 16717,
+  "no_truth_record": 1305,
+  "dropped_truth_streets_unrelated": 129,
+  "dropped_duplicate_or_blank_report_number": 152,
+  "linked": 11265
+ },
+ "arms": {
+  "A  exact only (default gate)": {
+   "auto": 1992,
+   "coverage": 0.35363039233090715,
+   "accuracy": 0.8167670682730924,
+   "wilson_low": 0.7991739807969787
+  },
+  "A+ exact + unique_pair (#203)": {
+   "auto": 4882,
+   "coverage": 0.8666785016864903,
+   "accuracy": 0.8424825891028267,
+   "wilson_low": 0.8319949261531258
+  },
+  "B  exact + unique_pair + relaxed + near + fuzzy": {
+   "auto": 5077,
+   "coverage": 0.9012959346706906,
+   "accuracy": 0.8369115619460311,
+   "wilson_low": 0.8264948967815782
+  }
+ },
+ "unique_pair": {
+  "n": 2890,
+  "accuracy": 0.8602076124567474,
+  "wilson_low": 0.8470857707851788,
+  "coverage_gain": 0.5130481093555832
+ },
+ "jev_vs_fuzzy": null,
+ "jev_spend": null,
+ "scored_at": "intersection"
+}
