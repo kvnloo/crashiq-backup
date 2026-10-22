@@ -20,4 +20,7 @@ What a run does:
 
 Not covered yet: the fatal-first review list (#175, not merged yet). At phone widths the tests check no sideways
 scroll and that the key-number tiles stay on screen without overlapping; other overlaps are not checked.
+Live recording: `npm run test:live` runs the `Live:` tests on the real Crenshaw rows (tests/fixtures/live) with a
+second app on :3101 (the Tester's other port): the review list's place, exclude and undo flow.
+
 Results: `.e2e/results/<test>/trace.md` with a screenshot at any failure.
