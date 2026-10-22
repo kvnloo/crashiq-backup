@@ -142,3 +142,61 @@ def test_export_lists_the_decisions(client, sid):
     d = export.gather(client.app.state.db, sid)
     assert d["decisions"][0]["crash_id"] == "9200001" and d["decisions"][0]["reason"] == "Parking lot"
     assert "excluded by the engineer" in export.methodology(d)
+
+
+# -- #175 fatal crashes first ------------------------------------------------------------------------------
+@pytest.fixture
+def fsid(client):
+    """9200001 made fatal (no cross street, so it's on the review list), 9200005 stays non-fatal."""
+    d = _no_gps_fixture()
+    for rid, t in d["tables"].items():
+        if rid.startswith("cra-"):
+            for r in t["rows"]:
+                if str(r["Collision Id"]) == "9200001":
+                    r["NumberKilled"] = 1
+    client.app.state.overpass = lambda url, data, timeout: (FIXTURES / "overpass_crenshaw.json").read_bytes()
+    client.app.state.ckan = FakeCkan(d)
+    s = client.post("/api/studies", json={"name": "F", "mode": "profile"}).json()["id"]
+    client.put(f"/api/studies/{s}/corridor", json={"line": LINE})
+    client.post(f"/api/studies/{s}/crashes/pull")
+    return s
+
+
+def test_fatal_crashes_come_first_with_a_count_and_a_lookup_aid(client, fsid):
+    r = review(client, fsid)
+    assert r["fatal_open"] == 1 and [c["crash_id"] for c in r["fatal"]] == ["9200001"]
+    assert all(c["crash_id"] != "9200001" for g in r["groups"] for c in g["crashes"])     # not also in a group
+    assert r["open"] == t1(client, fsid, "unplaced") and t1(client, fsid, "fatal_unplaced") == 1
+    links = r["fatal"][0]["lookup"]
+    assert [x["label"] for x in links] == ["News search", "Web search"]
+    assert all(x["url"].startswith("https://") and "fatal+crash" in x["url"] for x in links)
+    assert "CRENSHAW" in links[0]["url"] and "NOT+STATED" not in links[0]["url"]     # placeholders aren't searched
+
+
+def test_placing_a_fatal_crash_needs_a_source_and_keeps_it(client, fsid):
+    it = review(client, fsid)["intersections"][0]
+    r = decide(client, fsid, crash_ids=["9200001"], action="place", method="intersection", location_id=it["id"])
+    assert r.status_code == 422 and "source" in r.json()["detail"]
+    r = decide(client, fsid, crash_ids=["9200001"], action="place", method="intersection", location_id=it["id"],
+               source="https://example.org/news/fatal-crash-crenshaw")
+    assert r.status_code == 200
+    d = next(c for c in r.json()["review"]["decided"] if c["crash_id"] == "9200001")
+    assert d["decision"]["source"] == "https://example.org/news/fatal-crash-crenshaw"
+    assert t1(client, fsid, "fatal_unplaced") == 0
+    # a non-fatal crash doesn't need one; a group with a fatal crash in it does
+    assert decide(client, fsid, crash_ids=["9200005"], action="place", method="intersection",
+                  location_id=it["id"]).status_code == 200
+
+
+def test_the_export_lists_a_hand_placed_fatal_crash_with_its_source(client, fsid):
+    import io
+    from openpyxl import load_workbook
+    it = review(client, fsid)["intersections"][0]
+    decide(client, fsid, crash_ids=["9200001"], action="place", method="intersection", location_id=it["id"],
+           source="LA Times, 2021-06-15")
+    wb = load_workbook(io.BytesIO(client.get(f"/api/studies/{fsid}/export.xlsx").content))
+    sh = wb["Review decisions"]
+    rows = [[c.value for c in r] for r in sh.iter_rows(min_row=3)]
+    row = next(r for r in rows if r[0] == "9200001")
+    head = [c.value for c in sh[2]]
+    assert row[head.index("Fatal")] == "yes" and row[head.index("Source (fatal: required)")] == "LA Times, 2021-06-15"

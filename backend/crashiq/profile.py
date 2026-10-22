@@ -349,6 +349,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("crashes_per_mi_yr", "Crashes per mile per year (all study crashes)",
              value=r2(tot["crashes"] / length_mi / years) if years and length_mi else None),
         _row("unplaced", "Crashes not yet placed (no coordinates)", value=len(unmatched)),
+        _row("fatal_unplaced", "Of these, fatal crashes without a location (review list, first)",
+             value=sum(1 for c in unmatched if c.get("severity") == "K" or (c.get("killed") or 0) > 0)),
         _row("user_placed", "Crashes placed by you (review list; included in Crashes)",
              value=sum(1 for c in placed if c.get("location_provenance") == "user")),
         # how the counted crashes were located (#104 data-quality strip): GPS + exact + other tiers + you = Crashes

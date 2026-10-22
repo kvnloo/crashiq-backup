@@ -239,3 +239,11 @@
 .vru-key-row { font-size: 11px; margin: 6px 0 2px; }
 @media (max-width: 900px) { .dg { grid-template-columns: 110px minmax(0, 1fr) 44px 64px; } }
 .ped-ctx .bar { grid-template-columns: minmax(150px, 260px) minmax(0, 1fr) 44px; }
+
+/* #175 fatal crashes first on the review list */
+.rv-fatal { border: 1px solid var(--sev-k); border-radius: var(--radius); padding: 10px 12px; margin: 10px 0 14px; }
+.rv-fatal-h { color: var(--sev-k); margin: 0 0 4px; display: flex; gap: 6px; align-items: baseline; }
+.rv-fatal .flag, .rv-fatal-item .flag { color: var(--sev-k); }
+.rv-lookup { display: flex; gap: 12px; flex-wrap: wrap; font-size: 12px; margin: 4px 0; }
+.rv-source { min-width: 280px; flex: 1; }
+.q-fatal { color: var(--sev-k); }

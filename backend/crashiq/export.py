@@ -55,6 +55,7 @@ def _decisions(db, sid: str, pull: dict, a: dict) -> list[dict]:
         k, loc = kind.get(cid, (None, None))
         out.append({"crash_id": cid, "roads": f"{c.get('primary_road') or ''} / {c.get('secondary_road') or ''}",
                     "date": c.get("date"), "action": d["action"], "method": d["method"], "reason": d["reason"],
+                    "fatal": c.get("severity") == "K" or (c.get("killed") or 0) > 0, "source": d.get("source"),
                     "assigned_to": loc or k, "applied": c.get("stale_decision") is None,
                     "decided_at": d["decided_at"]})
     return out
@@ -128,14 +129,14 @@ def to_xlsx(d: dict) -> bytes:
         sh.append(["Placed or excluded by the engineer on the review list (provenance 'user'). Every count is still "
                    "computed by code from these locations."])
         sh["A1"].font = Font(bold=True, size=12)
-        sh.append(["Collision Id", "Roads (as reported)", "Date", "Action", "How", "Reason", "Assigned to", "Applied",
-                   "Decided"])
+        sh.append(["Collision Id", "Roads (as reported)", "Date", "Fatal", "Action", "How", "Reason", "Source (fatal: required)",
+                   "Assigned to", "Applied", "Decided"])
         for cell in sh[2]:
             cell.font = Font(bold=True)
         for r in d["decisions"]:
-            sh.append([r["crash_id"], r["roads"], r["date"], r["action"], r["method"] or "", r["reason"] or "",
-                       r["assigned_to"] or "", "yes" if r["applied"] else "no (report revised; re-review)",
-                       r["decided_at"]])
+            sh.append([r["crash_id"], r["roads"], r["date"], "yes" if r["fatal"] else "", r["action"], r["method"] or "",
+                       r["reason"] or "", r["source"] or "", r["assigned_to"] or "",
+                       "yes" if r["applied"] else "no (report revised; re-review)", r["decided_at"]])
         sh.column_dimensions["B"].width = 44
     if d.get("fars"):
         sh = wb.create_sheet("FARS-placed fatal crashes")
