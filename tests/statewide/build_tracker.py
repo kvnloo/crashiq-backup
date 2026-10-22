@@ -9,6 +9,7 @@ results and the repo's bug issues, so the page only displays them:
   bugs.csv         every GitHub issue labelled bug, open or closed
   recon.csv        latest reconciliation (crash by crash, previous run -> latest)
   context.csv      one row of standing facts (agencies, TIMS, hidden-GPS accuracy, San Jose)
+  fatal.csv        fatal crashes first (#166): one row from data/statewide/fatal.json (tests/statewide/fatal.py)
   completeness.csv latest run, per corridor series: cities expected, cities with a result, the missing ones
 
 Run: python tests/statewide/build_tracker.py   (after build_workbook.py --record)
@@ -118,6 +119,20 @@ def completeness(ver: str, results: list[dict]) -> list[dict]:
     return out
 
 
+def fatal() -> list[dict]:
+    f = DATA / "fatal.json"
+    if not f.exists():
+        return []
+    fa = json.loads(f.read_text())
+    sn, co = fa["statewide_no_gps"], fa["corridor"]
+    fits = "FARS point fits the report's roads"
+    return [{"ccrs_fatal": fa["ccrs_fatal"], "fars_link_pct": fa["link"]["link_pct"], "no_gps": sn["count"],
+             "no_gps_pct": sn["pct_of_fatal"], "no_gps_fars_fits": sn["fars"].get(fits, 0),
+             "residue_2021_2024": fa["residue_in_fars_years"], "residue_2025": fa["residue_by_year"].get("2025", 0),
+             "corridor_fatal": co["fatal_kept"], "corridor_unplaced": co["unplaced"],
+             "corridor_unplaced_fars_fits": co["unplaced_fars"].get(fits, 0)}]
+
+
 def main() -> None:
     vs = bw.versions()
     ver, before = vs[-1], (vs[-2] if len(vs) > 1 else None)
@@ -130,6 +145,9 @@ def main() -> None:
     _write("recon.csv", list(rr[0]) if rr else ["bucket"], rr)
     cx = context(results)
     _write("context.csv", list(cx), [cx])
+    fa = fatal()
+    if fa:
+        _write("fatal.csv", list(fa[0]), fa)
     _write("completeness.csv", ["series", "expected", "got", "missing_count", "missing", "status"],
            completeness(ver, results))
     print(f"tracker data for {ver} -> {OUT}")

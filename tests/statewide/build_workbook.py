@@ -11,6 +11,7 @@ quote those cells, so no number is typed by hand (CLAUDE.md: code computes every
 from __future__ import annotations
 
 import datetime as dt
+import csv
 import json
 import re
 import subprocess
@@ -679,6 +680,55 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
               [[r["city"], int(r["county"])] + [r[b["bucket"]] for b in rc["buckets"]] for r in rc["per_city"]],
               {1: 22})
 
+    # ---------------- Fatal crashes (#166, measure only) ----------------
+    fat_file = DATA / "fatal.json"
+    if fat_file.exists():
+        fa = json.loads(fat_file.read_text())
+        wfa = wb.create_sheet("Fatal crashes")
+        wfa["A1"], wfa["A1"].font = "Fatal crashes first: which ones CrashIQ can't place, and whether FARS can (#166)", H1
+        wfa["A2"] = ("Measure only; nothing goes into the app. CCRS fatal crashes 2021-2025 (NumberKilled > 0). FARS: NHTSA "
+                     f"California accident files {fa['basis']['fars_years'][0]}-{fa['basis']['fars_years'][-1]} (2025 not "
+                     f"published). Link: county + date + time within {fa['basis']['link_minutes']} min + number killed, "
+                     "roads as the tie-break; a FARS case is year + ST_CASE. A FARS point is usable when it is a real point "
+                     f"(not an unknown code, not shared by 3+ crashes) and a road the report names runs within "
+                     f"{fa['basis']['gps_check_ft']:g} ft (+ the report's offset) of it (local OSM). tests/statewide/fatal.py.")
+        wfa["A2"].alignment = WRAP
+        wfa.merge_cells("A2:F2")
+        wfa.row_dimensions[2].height = 75
+        lk, sn, co = fa["link"], fa["statewide_no_gps"], fa["corridor"]
+        summary = [
+            ("CCRS fatal crashes 2021-2025", fa["ccrs_fatal"]),
+            ("  in FARS years (2021-2024)", lk["ccrs_fatal_in_fars_years"]),
+            ("  linked to one FARS crash", lk.get("linked", 0)),
+            ("  link rate %", lk["link_pct"]),
+            ("  ambiguous (2+ FARS candidates the roads can't split)", lk.get("ambiguous", 0)),
+            ("  not found in FARS", lk.get("unlinked", 0)),
+            ("  FARS crashes linked to 2+ CCRS crashes (CCRS refilings)", lk["fars_crashes_linked_twice"]),
+            ("Statewide: fatal crashes CCRS gives no GPS for", sn["count"]),
+            ("  share of all fatal crashes %", sn["pct_of_fatal"]),
+            ("  of those, no cross street either", sn["no_cross_street"]),
+            *[(f"  {k}", v) for k, v in sorted(sn["fars"].items(), key=lambda kv: -kv[1])],
+            ("Test corridors (latest run): fatal crashes kept", co["fatal_kept"]),
+            ("  placed", co["placed"]),
+            ("  unplaced", co["unplaced"]),
+            *[(f"  unplaced: {k}", v) for k, v in co["unplaced_by_reason"].items()],
+            *[(f"  unplaced, {k}", v) for k, v in co["unplaced_fars"].items()],
+            ("Residue: no point from CCRS or FARS (for a later human-confirmed lookup)", fa["residue_count"]),
+            ("  of which in 2021-2024 (FARS published)", fa["residue_in_fars_years"]),
+            ("  of which 2025 (FARS 2025 not yet published)", fa["residue_by_year"].get("2025", 0)),
+        ]
+        fe = table(wfa, "FatalSummary", ["Measure", "Crashes"], [list(x) for x in summary], {1: 70, 2: 14}, start_row=4)
+        ae = table(wfa, "FatalNoGpsByAgency", ["NCIC", "Agency", "Type", "Fatal crashes without GPS"],
+                   [[a["ncic"], a["agency"], a["type"], a["fatal_no_gps"]] for a in sn["by_agency"]],
+                   {1: 10, 2: 22}, start_row=fe + 3)
+        table(wfa, "FatalCorridorUnplaced", ["City (test corridor)", "Collision Id", "Why unplaced", "FARS"],
+              [[x["city"], x["crash_id"], x["reason"], x["fars"]] for x in co["unplaced_list"]], {1: 22, 3: 30, 4: 36},
+              start_row=ae + 3)
+        wre = wb.create_sheet("Fatal residue")
+        with open(DATA / "fatal_residue.csv") as f_:
+            rr = list(csv.reader(f_))
+        table(wre, "FatalResidue", rr[0], rr[1:], {2: 18, 3: 18, 7: 30, 8: 30, 10: 36})
+
     # ---------------- Accuracy by agency (#88, hidden-GPS test) ----------------
     acc_file = DATA / "accuracy_by_agency.json"
     if acc_file.exists():
@@ -861,7 +911,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
 
     order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "TIMS by county", "Problems", "Run history",
              "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
-             "Sources for unplaced", "Glossary"]
+             "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
     order[1:1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order] + [w for w in wb._sheets if w.title not in order]   # never drop a sheet
