@@ -56,7 +56,7 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
         if not (point_fits_streets(trial, net)
                 or fars.on_named_road(network_mod.roads_near(db, p[0], p[1], radius_m, overpass), c)):
             counts["point_not_on_named_road"] += 1
-            c["fars_hint"] = {"fars_case": fars.case_key(row["year"], row["st_case"]),
+            c["fars_hint"] = {"fars_case": fars.case_key(row["year"], row["st_case"]), "lat": p[0], "lon": p[1],
                               "miles_from_corridor": round(line.project(p[0], p[1]).offset_ft / 5280, 1)}
             continue
         c.update(lat=p[0], lon=p[1], location_source="fars", fars_case=fars.case_key(row["year"], row["st_case"]),
