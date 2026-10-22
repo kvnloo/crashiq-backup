@@ -107,3 +107,46 @@ severity ramp: fatal and serious stand out, and the colour-blind check (#108) is
 4. **Where the diagram shows:** per intersection in the location drill-down (#106 as written), and only for
    intersections with at least one crash.
 
+### N10 revision: DemandIQ's diagram conventions (Engineering, 2026-10-21, after the user's note)
+The user has drawn collision diagrams before and asked that CrashIQ follow the conventions already built for DemandIQ:
+`demandiq/backend/line_diagram.py`, the v26-approved WSP line-diagram engine, whose geometry, colours and arrow
+shapes are locked there, and `demandiq/frontend/src/components/MovementSvg.jsx`, the same arrows as SVG.
+What CrashIQ would reuse as-is:
+
+- **One square cell per intersection:**
+  - grey road arms for the legs that exist only
+  - a control symbol at the centre: signal = open circle; roundabout = ring with a filled centre; stop = dot plus a stop
+    sign on each stopped approach
+  - street names in bold along the arms, N–S rotated, wrapped at " / " and shrunk to fit
+  - a number badge top-left and an "A @ B" banner top-centre
+- **Arrows:** MUTCD-style right-angle polylines in one grey (`#969696`), arrowhead at the end. Four base movements:
+  straight (T), left (L), right (R) and U-turn (U, a loop back toward the driver's left).
+- **Approaches:** labelled by travel direction (NB, SB, EB, WB), which is exactly CCRS `DirectionOfTravel` (N/S/E/W).
+  Each approach's arrows sit in its own quadrant (NB lower right, SB upper left, EB lower left, WB upper right:
+  right-hand traffic), in lane order from the median outward: U, L, T, R.
+
+What changes for crashes: **the number at each arrow is a crash count, not a traffic volume**, e.g. "12 (2 KSI)".
+The counts come from a new table (approach × movement), recounted from raw rows in the golden tests.
+The diagram is drawn as SVG in the drill-down and in the PDF.
+
+Mapping CCRS movements onto the four DemandIQ arrows (Parties 2024, statewide):
+
+| CCRS movement | Arrow |
+|---|---|
+| PROCEEDING STRAIGHT (387,764), XING INTO OPPOSING LANE (2,947), TRAVELLING WRONG WAY (2,452) | T |
+| MAKING LEFT TURN (53,489) | L |
+| MAKING RIGHT TURN (23,389) | R |
+| MAKING U TURN (5,164) | U |
+| STOPPED, SLOWING/STOPPING, PARKED, CHANGING LANES, MERGING, PASSING, LANE SPLITTING, BACKING, PARKING MANEUVER, ENTERING TRAFFIC, RAN OFF ROAD, OTHER UNSAFE TURNING, OTHER, blank | no arrow: a one-line "other movements" count per approach under the cell, by code, exact numbers in the table |
+
+Revised questions for the user (they replace questions 1 and 3 above):
+1. **Which party is drawn?**
+   - Recommended: **the party at fault** (party 1 when none is marked). Then each crash is one arrow and the counts
+     add up to the intersection's crashes, like T16.
+   - The alternative, every party, makes counts add up to parties, not crashes.
+2. **Four arrows plus an "other movements" line, or extra glyphs** (stopped, backing, lane change) in the same grey
+   style? Recommended: the four DemandIQ arrows plus the line, since the engine is approved as it is.
+3. **Also a per-crash diagram**, the traditional style where each crash's vehicles' arrows meet at a conflict point
+   with a severity mark? Recommended: not now. The per-crash list is in the drill-down table; build it later if
+   reviewers ask.
+
