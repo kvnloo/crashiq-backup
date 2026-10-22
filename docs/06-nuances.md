@@ -150,3 +150,74 @@ Revised questions for the user (they replace questions 1 and 3 above):
    with a severity mark? Recommended: not now. The per-crash list is in the drill-down table; build it later if
    reviewers ask.
 
+### N10 revision 2: standard collision-diagram symbols on DemandIQ's layout (Engineering, 2026-10-21; not built)
+User direction (docs/03, 2026-10-21): DemandIQ for the **layout** only (the cell, approaches by direction of travel,
+lanes laid out so nothing overlaps). The **symbols** follow standard collision-diagram practice, not DemandIQ's volume
+arrows. This replaces the arrow mapping in the revision above. Mock-up on real Crenshaw data:
+`design/mockups/n10-collision-diagram.png` (generator `n10_collision_diagram.py`, data `n10_crenshaw_135th.json`).
+
+**What the references agree on.** Sources:
+- **HSM** 1st ed. Ch. 5, Exhibits 5-4 (example diagram) and 5-5 (legend), adapted from ITE. Read from the public 2009
+  pre-publication draft; the published figure numbering is not verified.
+- **NCDOT** TEAAS collision diagram instructions.
+- **Region of Peel** Appendix O collision diagrams.
+- **Seattle SDOT** collision diagram legend.
+
+They agree on:
+- One arrow per vehicle, pointing in its direction of travel, on the approach where it came from; a turn bends the tail.
+- Rear-end = two arrows in line; angle = two perpendicular arrows meeting; sideswipe = near-parallel arrows meeting.
+- Out of control = a wavy, zig-zag or looped line; fixed object = a bracket, box or dot at the arrowhead.
+- Severity marked at the impact point: **hollow circle = injury, filled circle = fatal** (NCDOT, Peel, HSM).
+- Each crash labelled with date and time, often with a road-surface/light letter code.
+- Not to scale; north arrow; study period.
+
+Where they differ:
+- **Property damage only:** a crossbar (Peel, PRLTAP), a hollow triangle (HSM draft), or no mark (NCDOT).
+- **Night:** a filled arrowhead (NCDOT) or a letter code (HSM, Peel).
+- **Pedestrian:** a dotted arrow (HSM), "P" (NCDOT, Peel), or a dashed tail with a circle (Seattle).
+- **Crash IDs:** numbered with identical crashes stacked (NCDOT), or labelled with date and time (HSM, Peel).
+
+**Proposed symbols (as in the mock-up):**
+
+| Crash (CCRS collision type, CA 2024 statewide; movement of the party at fault) | Symbol |
+|---|---|
+| REAR END (123,226) | two arrows in line, the follower behind the leader |
+| BROADSIDE (74,920), at-fault party not turning left | two perpendicular arrows meeting; the other party's arrow comes from its own direction of travel |
+| BROADSIDE, at-fault party MAKING LEFT TURN | the left-turn arrow (bent tail) meeting the opposing arrow (T17's left-turn split) |
+| HEAD-ON (18,651) | two opposed arrows meeting |
+| SIDE SWIPE (92,707), both parties the same direction | two arrows converging in a "V" |
+| SIDE SWIPE, opposite directions | two arrows meeting with opposed heads |
+| HIT OBJECT (73,082) | arrow ending in a bracket |
+| OVERTURNED (9,000) or movement RAN OFF ROAD | wavy (out of control) arrow |
+| VEHICLE/PEDESTRIAN (12,813), or any pedestrian party | vehicle arrow plus a dotted pedestrian arrow, letter "P" |
+| a bicyclist, e-bike or e-scooter party | vehicle arrow plus the rider's arrow, letter "B" |
+| movement BACKING | arrow with three heads (HSM "backing") |
+| hit a parked vehicle, no other moving vehicle | arrow into a box with an X (Seattle "parked") |
+| OTHER (11,492), not stated (1,280) | plain arrow with "?" |
+
+**Marks on every crash:**
+- **Severity at the impact point:**
+  - fatal = filled circle (in the fatal colour)
+  - injury = hollow circle whose ring takes the KABCO ramp colour (A orange, B yellow, C teal, U grey), so colour adds
+    detail but black-and-white print still reads
+  - property damage only = crossbar (Peel and PRLTAP; more legible than HSM's small triangle)
+- **Light:** arrowheads hollow by day and filled in the dark (NCDOT). The crash list also gives HSM's two-letter
+  surface + light code (C/W/S/O + D/N/L).
+- **Number:** a small number by each crash, keyed to a list beside the diagram (date, 24-hour time, approach, type,
+  severity, code). The numbers follow date order, as in NCDOT.
+
+**Layout (DemandIQ):**
+- The cell holds grey arms, the control symbol (signal circle, stop signs) and street names on the arms.
+- Each crash is drawn on the approach of the party at fault, in that approach's quadrant (NB lower right, SB upper
+  left, EB lower left, WB upper right).
+- Fixed slots fill outward from the centre, so no two crashes overlap.
+- The data comes from CCRS `DirectionOfTravel`, `MovementPrecCollDescription`, `IsAtFault` and the collision type,
+  all in the pull already.
+
+**Questions for the user:**
+1. **Property damage only:** a crossbar (proposed), HSM's hollow triangle, or no mark?
+2. **Night:** a filled arrowhead plus the code (proposed), or the code only?
+3. **Busy intersections** (40+ crashes): stack identical crashes as one symbol with a count, NCDOT style; or split
+   the diagram by period (e.g. last 3 years); or keep every crash and let the cell grow (the mock-up's 32 fit)?
+4. **Where it shows:** the location drill-down and the PDF, one diagram per study intersection (as #106).
+
