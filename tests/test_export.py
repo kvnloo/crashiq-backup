@@ -79,3 +79,25 @@ def test_study_reports_progress_for_the_rail(client):
     assert client.get(f"/api/studies/{sid}").json()["progress"] == {"corridor": True, "crashes": False}
     client.post(f"/api/studies/{sid}/crashes/pull")
     assert client.get(f"/api/studies/{sid}").json()["progress"] == {"corridor": True, "crashes": True}
+
+
+def test_pdf_and_drill_down_carry_one_collision_diagram_per_study_intersection(client):
+    # #106 (N10): the location drill-down returns the diagram and T21; the PDF draws the same steps
+    from pypdf import PdfReader
+    client.app.state.overpass = lambda url, data, timeout: (FIXTURES / "overpass_crenshaw.json").read_bytes()
+    client.app.state.ckan = FakeCkan(FIXTURES / "ckan_crenshaw.json")
+    sid = client.post("/api/studies", json={"name": "D", "mode": "tis"}).json()["id"]
+    client.put(f"/api/studies/{sid}/corridor", json={"line": [[33.8953, -118.32662], [33.9123, -118.32662]]})
+    client.post(f"/api/studies/{sid}/crashes/pull")
+    a = client.get(f"/api/studies/{sid}/assignment").json()
+    lid = next(x["location_id"] for x in a["assignments"] if x["kind"] == "intersection")
+    loc = client.get(f"/api/studies/{sid}/profile/locations/{lid}").json()
+    d = loc["diagram"]
+    t21 = next(t for t in loc["tables"] if t["id"] == f"T21@{lid}")
+    assert len(t21["rows"]) == len(d["crashes"]) == sum(x["location_id"] == lid for x in a["assignments"])
+    assert d["steps"] and d["legend"]["marks"]
+    seg = next((x["location_id"] for x in a["assignments"] if x["kind"] == "segment"), None)
+    if seg:
+        assert client.get(f"/api/studies/{sid}/profile/locations/{seg}").json()["diagram"] is None
+    text = "".join(pg.extract_text() for pg in PdfReader(io.BytesIO(client.get(f"/api/studies/{sid}/export.pdf").content)).pages)
+    assert "Collision diagrams" in text

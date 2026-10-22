@@ -16,6 +16,9 @@ from reportlab.lib import colors
 from reportlab.lib.pagesizes import letter
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.units import inch
+import math
+
+from reportlab.graphics.shapes import Circle, Drawing, Group, PolyLine, Polygon, Rect, String
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from . import profile as profile_mod
@@ -38,7 +41,7 @@ def gather(db, sid: str) -> dict:
             "assignment": {"counts": a["counts"], "excluded_by_rule": a["excluded_by_rule"],
                            "unmatched_by_rule": a.get("unmatched_by_rule", {})},
             "pulled_at": pull.get("pulled_at"),
-            "decisions": _decisions(db, sid, pull, a), "fars": _fars_placed(pull, a),
+            "decisions": _decisions(db, sid, pull, a), "diagrams": _diagrams(net, pull, a), "fars": _fars_placed(pull, a),
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
 
 
@@ -68,6 +71,71 @@ def _fars_placed(pull: dict, a: dict) -> list[dict]:
              "date": c.get("date"), "fars_case": c.get("fars_case"), "lat": c.get("lat"), "lon": c.get("lon"),
              "replaced_gps": c.get("gps_replaced"), "assigned_to": loc.get(c["crash_id"])}
             for c in pull["crashes"] if c.get("location_source") == "fars"]
+
+
+def _diagrams(net: dict, pull: dict, a: dict) -> list[dict]:
+    """One collision diagram per study intersection with crashes, in corridor order (#106, N10)."""
+    from . import diagram as diagram_mod
+    by_id = {c["crash_id"]: c for c in pull["crashes"]}
+    at: dict[str, list] = {}
+    for x in a["assignments"]:
+        if x["kind"] == "intersection":
+            at.setdefault(x["location_id"], []).append(by_id[x["crash_id"]])
+    return [{"name": it["name"], "diagram": diagram_mod.build(net, it, at[it["id"]])}
+            for it in sorted(net["intersections"], key=lambda i: i["station_ft"]) if it.get("is_study") and at.get(it["id"])]
+
+
+_DIAG_COLOR = {"ink": "#22282E", "arm": "#969696", "muted": "#57636F", "paper": "#FFFFFF",
+               **{f"sev_{k.lower()}": v for k, v in SEV_COLORS.items()}}
+
+
+def diagram_drawing(d: dict, size: float) -> Drawing:
+    """The diagram's drawing steps (the same the app draws as SVG) as a ReportLab drawing, size x size points."""
+    W, H = d["width"], d["height"]
+    k = size / W
+    col = lambda name: colors.HexColor(_DIAG_COLOR.get(name, name))      # noqa: E731
+    pt = lambda x, y: (x * k, (H - y) * k)                               # noqa: E731 - SVG is y-down, PDF y-up
+    g = Group()
+    for s in d["steps"]:
+        op = s["op"]
+        if op == "rect_cell":
+            g.add(Rect(0, 0, W * k, H * k, fillColor=col("paper"), strokeColor=col("ink"), strokeWidth=0.6))
+        elif op == "line":
+            pts = [c for p in s["pts"] for c in pt(*p)]
+            g.add(PolyLine(pts, strokeColor=col(s["color"]), strokeWidth=s["w"] * k, strokeLineCap=1, strokeLineJoin=1,
+                           strokeDashArray=[1.5 * s["w"] * k, 3 * s["w"] * k] if s["dash"] else None))
+        elif op == "head":
+            a, sz = math.radians(s["ang"]), s.get("size", 1)
+            tri = [(0, -4), (3.4, 3), (-3.4, 3)]
+            pts = [c for x, y in tri for c in pt(s["x"] + sz * (x * math.cos(a) - y * math.sin(a)),
+                                                  s["y"] + sz * (x * math.sin(a) + y * math.cos(a)))]
+            g.add(Polygon(pts, fillColor=col(s["color"]) if s["filled"] else col("paper"), strokeColor=col(s["color"]),
+                          strokeWidth=1.3 * k, strokeLineJoin=1))
+        elif op == "circle":
+            x, y = pt(s["x"], s["y"])
+            g.add(Circle(x, y, s["r"] * k, fillColor=col(s["fill"]), strokeColor=col(s["stroke"]), strokeWidth=s["w"] * k))
+        elif op == "poly":
+            g.add(Polygon([c for p in s["pts"] for c in pt(*p)], fillColor=col(s["fill"]), strokeColor=col(s["stroke"]),
+                          strokeWidth=s["w"] * k))
+        elif op == "text":
+            x, y = pt(s["x"], s["y"])
+            anchor = {"start": "start", "end": "end"}.get(s["anchor"], "middle")
+            t = String(0, 0, s["t"], fontSize=s["size"] * k, fillColor=col(s["color"]), textAnchor=anchor,
+                       fontName="Helvetica-Bold" if s.get("bold") else "Helvetica")
+            tg = Group(t)
+            tg.translate(x, y)
+            if s.get("rot"):
+                tg.rotate(-s["rot"])                      # SVG rotates clockwise on a y-down page
+            g.add(tg)
+        elif op == "north":
+            x, y = s["x"], s["y"]
+            g.add(Polygon([c for p in ((x, y - 18), (x + 7, y + 4), (x, y - 2), (x - 7, y + 4)) for c in pt(*p)],
+                          fillColor=col("ink"), strokeColor=col("ink"), strokeWidth=0.1))
+            tx, ty = pt(x, y + 18)
+            g.add(String(tx, ty, "N", fontSize=11 * k, textAnchor="middle", fillColor=col("ink"), fontName="Helvetica-Bold"))
+    dr = Drawing(size, size)
+    dr.add(g)
+    return dr
 
 
 def _t(p, tid):
@@ -300,6 +368,28 @@ def to_pdf(d: dict) -> bytes:
                                                               _fmt(r["values"]["injury_crashes"]), _fmt(r["values"]["ksi_crashes"]),
                                                               _fmt(r["values"]["share_pct"], 1)] for r in rows],
             cols(W - 3.6 * inch, 4), (1, 2, 3, 4)), src(tid)])]
+    if d.get("diagrams"):                      # G. one collision diagram per study intersection (#106, N10)
+        story += [Paragraph("Collision diagrams", h2),
+                  Paragraph("One per study intersection with crashes. Symbols after HSM Ch. 5 / ITE; filled circle = "
+                            "fatal, hollow circle = injury, crossbar = property damage only; hollow arrowhead = day, "
+                            "filled = dark; identical crashes stacked (NCDOT). Numbers key to the list under each "
+                            "diagram. Code = road surface + light (HSM): C dry, W wet, S snow/ice, O other; D daylight, "
+                            "N dark without street lights, L dark with street lights.", small)]
+        for x in d["diagrams"]:
+            dg = x["diagram"]
+            nd = sum((dg.get("not_drawn") or {}).values())
+            rows = [["#", "Date", "Time", "Appr.", "Type", "Sev.", "Code"]] + [
+                [r["n"], r["date"] or "", f"{r['hour']:02d}00" if r.get("hour") is not None else "—", r["approach"],
+                 Paragraph(escape(r["type_label"]), cellp), r["severity"], r["code"]] for r in dg["crashes"]]
+            lst = Table(rows, colWidths=[0.3 * inch, 0.8 * inch, 0.45 * inch, 0.45 * inch, 1.9 * inch, 0.35 * inch,
+                                         0.45 * inch], repeatRows=1)
+            lst.setStyle(TableStyle([("FONTSIZE", (0, 0), (-1, -1), 7.5), ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+                                     ("LINEBELOW", (0, 0), (-1, 0), 0.5, line), ("TOPPADDING", (0, 0), (-1, -1), 1),
+                                     ("BOTTOMPADDING", (0, 0), (-1, -1), 1)]))
+            story += [KeepTogether([Paragraph(escape(x["name"]), body), diagram_drawing(dg, 4.6 * inch)]),
+                      Paragraph(f"{len(dg['crashes'])} crashes" + (f"; {nd} not drawn (no direction of travel: no party "
+                                                                    "data for their year in this pull), listed" if nd else ""),
+                                small), lst, Spacer(1, 10)]
     story += [Paragraph("Method", h2), Paragraph(escape(methodology(d)), body)]
     story += [Paragraph("Caveats", h2)]
     story += [Paragraph("• " + c["text"], body) for c in p["caveats"]] or [Paragraph("None.", body)]

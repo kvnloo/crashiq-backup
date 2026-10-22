@@ -197,6 +197,29 @@ describe('Crash profile screen', () => {
       { crash_ids: ['7'], action: 'place', method: 'intersection', location_id: 'osm-1', source: 'Daily Breeze, May 29 2023' })
   })
 
+  it('drill-down: a study intersection shows its collision diagram, why some crashes are not drawn, and T21 (#106)', async () => {
+    const lid = location.location_id
+    const DIAG = { width: 820, height: 820, stacks: 1, not_drawn: { no_party_data: 1, no_direction: 0, no_room: 0 },
+      steps: [{ op: 'rect_cell', w: 820, h: 820 }, { op: 'line', pts: [[410, 20], [410, 800]], dash: false, w: 3, color: 'arm' },
+        { op: 'head', x: 400, y: 300, ang: 0, filled: true, color: 'ink' }, { op: 'circle', x: 400, y: 290, r: 4, fill: 'paper', stroke: 'sev_b', w: 2 },
+        { op: 'text', x: 380, y: 340, t: '1', size: 10, bold: true, anchor: 'start', color: 'muted' }],
+      legend: { symbols: [{ key: 'rear', label: 'Rear-end', steps: [] }], marks: [{ key: 'O', label: 'Property damage only (crossbar)', steps: [] }] },
+      crashes: [] }
+    const T21 = { id: `T21@${lid}`, title: 'Collision diagram crashes', provenance: {}, columns: [],
+      rows: [{ key: '1', label: '2023-01-02 0800', values: { crash_id: '9', approach: 'NB', type: 'Rear-end', severity: 'B', code: 'CN' } },
+        { key: '2', label: '2025-03-04 1700', values: { crash_id: '8', approach: '—', type: 'Not drawn (no direction of travel)', severity: 'O', code: 'CD' } }] }
+    mockApi({ ...routes, 'GET /studies/:id/profile/locations/:lid': { ...location, diagram: DIAG, tables: [...location.tables, T21] } })
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const label = table(profile, 'T2').rows.find((r) => r.key === lid).label
+    fireEvent.click(screen.getAllByRole('button', { name: label })[0])
+    const sec = await screen.findByLabelText('Collision diagram')
+    expect(within(sec).getByTestId('collision-diagram')).toBeInTheDocument()
+    expect(sec).toHaveTextContent('1 with no party data for their year in this pull')
+    expect(sec).toHaveTextContent('Rear-end')
+    expect(within(sec).getAllByRole('row')).toHaveLength(3)                    // header + T21's two crashes
+  })
+
   it('strip diagram: one dot per placed crash (= T1 crashes), hover, click to drill, color toggle (#102)', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')
