@@ -228,7 +228,8 @@ class Agg:
         return sorted(out, key=lambda r: -r["crashes"])
 
 
-def main(only_counties: set[int] | None = None) -> None:
+def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1), skip: int = 0,
+         part: str | None = None) -> None:
     local = osm_local.LocalOSM(ROOT / "data" / "osm" / "ca_osm.sqlite")
     bounds = corridors.local_boundaries(local)
     dist, cname = districts()
@@ -252,11 +253,13 @@ def main(only_counties: set[int] | None = None) -> None:
                 if not only_counties or int(cty or 0) in only_counties:
                     names[nm or ""] += k
     t0 = time.time()
-    out_csv = open(DATA / "coverage_crashes.csv", "w", newline="")
+    out_csv = open(DATA / (f"coverage_crashes_{part}.csv" if part else "coverage_crashes.csv"), "w", newline="")
     w = csv.writer(out_csv)
     w.writerow(["collision_id", "year", "county_code", "district", "city", "agency", "road_type", "killed", "ksi", "bin",
                 "outcome", "reason"])
     for i, (nm, n) in enumerate(names.most_common(), 1):
+        if i <= skip or (i - skip - 1) % shard[1] != shard[0]:
+            continue                          # another shard's city (a shard writes only its part file)
         b = bounds.get(corridors.norm_city(nm)) if nm else None
         cw._fuzzy_memo.clear()
         city = City(osm.Network(osm_local.network_in_area(local, b["rel"]))) if b else None
@@ -280,10 +283,45 @@ def main(only_counties: set[int] | None = None) -> None:
                         1 if out in BIN1 else 2, out, why or ""])
         print(f"[{i}/{len(names)} {time.time() - t0:.0f}s] {nm or '(blank)'}: {n} crashes "
               f"({'city map' if city else 'outside cities'})", flush=True)
-        if i % 25 == 0:
+        if i % 25 == 0 and not part:
             _save(agg, agencies, local, done=False)
     out_csv.close()
+    if not part:
+        _save(agg, agencies, local, done=True)
+    print("EXIT: finished", flush=True)
+
+
+def merge(parts: list[Path]) -> None:
+    """Roll-ups rebuilt from the per-crash part files (shards), exactly as a single run computes them."""
+    local = osm_local.LocalOSM(ROOT / "data" / "osm" / "ca_osm.sqlite")
+    dist, cname = districts()
+    agencies = {a["ncic"]: a for a in json.loads((DATA / "agencies.json").read_text())}
+    agg, seen, total = Agg(), set(), 0
+    with open(DATA / "coverage_crashes.csv", "w", newline="") as fo:
+        w = csv.writer(fo)
+        for k, p in enumerate(parts):
+            with open(p) as fi:
+                r = csv.reader(fi)
+                head = next(r)
+                if k == 0:
+                    w.writerow(head)
+                for row in r:
+                    rec = dict(zip(head, row))
+                    key = (rec["collision_id"], rec["city"])
+                    if key in seen:
+                        raise SystemExit(f"crash {key} is in two part files")
+                    seen.add(key)
+                    total += 1
+                    w.writerow(row)
+                    county = int(rec["county_code"] or 0)
+                    d = rec["district"]
+                    rt = rec["road_type"]
+                    keys = [("statewide", "California"), ("district", f"District {d}" if d else "unknown"),
+                            ("county", cname.get(county, "unknown")), ("city", rec["city"] or "(blank)"),
+                            ("agency", rec["agency"]), ("road_type", rt), ("district_road_type", f"District {d} · {rt}")]
+                    agg.add(keys, rec["outcome"], rec["reason"] or None, rec["killed"] == "1", rec["ksi"] == "1")
     _save(agg, agencies, local, done=True)
+    print(f"merged {total} crashes from {len(parts)} part files", flush=True)
 
 
 def _save(agg: Agg, agencies: dict, local, done: bool) -> None:
@@ -302,5 +340,13 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--counties", help="comma-separated CCRS county codes (a sample)")
+    ap.add_argument("--shard", default="0/1", help="k/n: this process's share of the cities")
+    ap.add_argument("--skip", type=int, default=0, help="skip the first N city groups (done in an earlier part)")
+    ap.add_argument("--part", help="write coverage_crashes_<part>.csv only (merge later)")
+    ap.add_argument("--merge", nargs="*", help="part files to merge into coverage.json and coverage_crashes.csv")
     a = ap.parse_args()
-    main({int(x) for x in a.counties.split(",")} if a.counties else None)
+    if a.merge:
+        merge([Path(x) for x in a.merge])
+    else:
+        k, n = (int(x) for x in a.shard.split("/"))
+        main({int(x) for x in a.counties.split(",")} if a.counties else None, (k, n), a.skip, a.part)
