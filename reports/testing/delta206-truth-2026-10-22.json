@@ -1,0 +1,182 @@
+{
+ "base": "tbase",
+ "new": "tmain",
+ "truth": "police GPS that fits the report's roads (#199 gps_usable), hidden; self-consistent with the report's streets as written, trailing direction included; right intersection = within 250 ft",
+ "total": {
+  "crashes": 10862,
+  "exact_before": 3687,
+  "exact_after": 4061,
+  "right_before": 3275,
+  "right_after": 3620
+ },
+ "changed": {
+  "gained": 382,
+  "gained_right_before": 0,
+  "gained_right_after": 331,
+  "moved": 31,
+  "moved_right_before": 17,
+  "moved_right_after": 31,
+  "lost": 8,
+  "lost_right_before": 0,
+  "lost_right_after": 0
+ },
+ "cities": [
+  {
+   "city": "Unincorporated",
+   "gained": 250,
+   "right_before": 2,
+   "right_after": 209,
+   "moved": 2
+  },
+  {
+   "city": "Temecula",
+   "gained": 65,
+   "right_before": 0,
+   "right_after": 65
+  },
+  {
+   "city": "Newport Beach",
+   "gained": 24,
+   "right_before": 0,
+   "right_after": 21
+  },
+  {
+   "city": "Riverside",
+   "moved": 13,
+   "right_before": 13,
+   "right_after": 13
+  },
+  {
+   "city": "Costa Mesa",
+   "gained": 13,
+   "right_before": 1,
+   "right_after": 11,
+   "moved": 1
+  },
+  {
+   "city": "Vallejo",
+   "gained": 6,
+   "right_before": 0,
+   "right_after": 13,
+   "moved": 7
+  },
+  {
+   "city": "Bakersfield",
+   "gained": 8,
+   "right_before": 0,
+   "right_after": 7
+  },
+  {
+   "city": "Dixon",
+   "moved": 3,
+   "right_before": 0,
+   "right_after": 3
+  },
+  {
+   "city": "Victorville",
+   "gained": 2,
+   "right_before": 0,
+   "right_after": 2,
+   "lost": 1
+  },
+  {
+   "city": "Cerritos",
+   "gained": 3,
+   "right_before": 0,
+   "right_after": 2
+  },
+  {
+   "city": "Palmdale",
+   "gained": 2,
+   "right_before": 0,
+   "right_after": 2
+  },
+  {
+   "city": "Lancaster",
+   "gained": 1,
+   "right_before": 0,
+   "right_after": 1,
+   "lost": 2
+  },
+  {
+   "city": "Long Beach",
+   "moved": 1,
+   "right_before": 0,
+   "right_after": 2,
+   "gained": 1
+  },
+  {
+   "city": "Fresno",
+   "gained": 1,
+   "right_before": 0,
+   "right_after": 2,
+   "moved": 1
+  },
+  {
+   "city": "Orange",
+   "lost": 3,
+   "right_before": 0,
+   "right_after": 0
+  },
+  {
+   "city": "Chula Vista",
+   "moved": 1,
+   "right_before": true,
+   "right_after": true
+  },
+  {
+   "city": "City of Industry",
+   "lost": 2,
+   "right_before": 0,
+   "right_after": 0
+  },
+  {
+   "city": "Sonoma",
+   "gained": 1,
+   "right_before": false,
+   "right_after": true
+  },
+  {
+   "city": "Irvine",
+   "gained": 1,
+   "right_before": false,
+   "right_after": true
+  },
+  {
+   "city": "Manteca",
+   "moved": 1,
+   "right_before": false,
+   "right_after": true
+  },
+  {
+   "city": "Cupertino",
+   "moved": 1,
+   "right_before": false,
+   "right_after": true
+  },
+  {
+   "city": "La Quinta",
+   "gained": 1,
+   "right_before": false,
+   "right_after": true
+  },
+  {
+   "city": "Hercules",
+   "gained": 1,
+   "right_before": false,
+   "right_after": true
+  },
+  {
+   "city": "Rancho Cucamonga",
+   "gained": 1,
+   "right_before": false,
+   "right_after": true
+  },
+  {
+   "city": "Ripon",
+   "gained": 1,
+   "right_before": false,
+   "right_after": true
+  }
+ ]
+}
