@@ -6,7 +6,6 @@ and it was re-checked on the latest run.** Code computes every number (CLAUDE.md
 test. Every entry says what it does **not** show. Updated by PM after each statewide run.
 
 
-> **ON HOLD (2026-10-22): C7, C8, C9.** Tester found a bug in its own coverage harness: the police-GPS check missed same-street name variants ("Foothill Boulevard" vs "West Foothill Boulevard"), so the 85.3% is understated by up to ~0.9 points. Don't use C7–C9 externally until the corrected #199 follow-up and reconciliation are merged.
 
 | # | Claim (allowed wording) | Number | Method and basis | Date / run | Does NOT show |
 |---|---|---|---|---|---|
@@ -17,7 +16,7 @@ test. Every entry says what it does **not** show. Updated by PM after each state
 | C5 | "Every number is traced to its source table." | n/a | Validator rejects any finding whose numbers aren't in a cited table; 0 rejections of valid findings statewide | Run 6 (#179 fixed) | — |
 | C6 | "Works where police record little GPS." (example) | Fremont PD: GPS on 1.6% of reports; 97% of the test road's crashes located | Statewide test, Cities sheet | Run 5 | Citywide figure; #199 will measure it for every city |
 
-| C7 | "85% of California's crashes in the state record are on the map, including 95% of fatal crashes." | 85.3% of 2,057,508 CCRS crashes 2021–25; fatal 94.5%; fatal + serious 85.5% | Every CCRS crash in one bin: police GPS checked against the report's streets, CrashIQ exact placement, FARS (`tests/statewide/coverage.py`, PR #207) | 2026-10-22, code 5f54c02 (#204/#206 net +127) | % of crashes in the state record, not of all crashes that happened (the record itself is incomplete in places: pain points) |
+| C7 | "86% of California's crashes in the state record are on the map, including 95% of fatal crashes." | 86.1% of 2,057,508 CCRS crashes 2021–25; fatal 95.2%; fatal + serious 86.1% (corrected 2026-10-22, PR #215) | Every CCRS crash in one bin: police GPS checked against the report's streets, CrashIQ exact placement, FARS (`tests/statewide/coverage.py`, PR #207) | 2026-10-22, code 5f54c02 (#204/#206 net +127) | % of crashes in the state record, not of all crashes that happened (the record itself is incomplete in places: pain points) |
 | C8 | "On city streets, CrashIQ places nearly a third of crashes the police left without usable GPS." | City streets: 75.0% on the map, 29.4% placed by CrashIQ | Same as C7, by road type | 2026-10-22 | — |
 | C9 | "Placed at the right intersection 92% of the time across 144 police departments." | 92.1% (24,831/26,961; W95 91.8%) | Hidden police GPS, only GPS consistent with its own report's streets; exact tier; city streets | 2026-10-22, PR #207 | Freeways, state highways and county roads (CHP GPS, can't verify independently); point accuracy on all GPS is 72.1% (lower bound) |
 ## Candidate claims (not yet usable: need a measurement or a decision)
