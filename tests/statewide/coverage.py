@@ -25,6 +25,7 @@ from __future__ import annotations
 
 import csv
 import json
+import math
 import sqlite3
 import subprocess
 import time
@@ -67,43 +68,45 @@ class Outside:
     """Roads outside any city street map: the GPS check from the OSM roads around the point (fatal.fits), and a small
     network of just the roads a report names for the few crashes there without GPS."""
 
-    CELL = 0.005          # ~500 m; roads cached per cell, read with a margin wider than any tolerance used
-    MARGIN = 0.007        # ~700 m: GPS_CHECK_FT (400 ft) + offsets up to ~1,800 ft
-    MAX_CELLS = 20000
+    MAX_WAYS = 300000     # parsed roads kept in memory (crash points cluster on the same roads)
 
     def __init__(self, local: osm_local.LocalOSM, county_box: dict[int, tuple]):
         self.local, self.box = local, county_box
-        self.cells: dict[tuple[int, int], list] = {}
+        self.ways: dict[int, tuple] = {}
 
-    def _roads(self, lat: float, lon: float) -> list:
-        """(names, segments) of every road way near a point, cached per cell (crash points cluster on roads)."""
-        key = (int(lat // self.CELL), int(lon // self.CELL))
-        hit = self.cells.get(key)
-        if hit is None:
-            la0, lo0, m = key[0] * self.CELL, key[1] * self.CELL, self.MARGIN
-            hit = []
-            for tags, coords in self.local.db.execute(
-                    "SELECT w.tags, w.coords FROM way_box b JOIN ways w ON w.id = b.id WHERE b.maxlat >= ? AND "
-                    "b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ?",
-                    (la0 - m, la0 + self.CELL + m, lo0 - m, lo0 + self.CELL + m)):
-                t = json.loads(tags)
-                names = [t.get(k) for k in ("name", "ref") if t.get(k)]
-                if names and t.get("highway") in fatal_mod.ROAD_CLASSES:
-                    cs = json.loads(coords)
-                    hit.append((names, list(zip(cs, cs[1:])) or [(cs[0], cs[0])]))
-            if len(self.cells) >= self.MAX_CELLS:
-                self.cells.clear()
-            self.cells[key] = hit
-        return hit
+    def _way(self, wid: int, tags: str | None = None, coords: str | None = None):
+        w = self.ways.get(wid)
+        if w is None:
+            if tags is None:
+                tags, coords = self.local.db.execute("SELECT tags, coords FROM ways WHERE id = ?", (wid,)).fetchone()
+            t = json.loads(tags)
+            names = [t.get(k) for k in ("name", "ref") if t.get(k)]
+            if names and t.get("highway") in fatal_mod.ROAD_CLASSES:
+                cs = json.loads(coords)
+                w = (names, list(zip(cs, cs[1:])) or [(cs[0], cs[0])])
+            else:
+                w = ((), ())
+            if len(self.ways) >= self.MAX_WAYS:
+                self.ways.clear()
+            self.ways[wid] = w
+        return w
 
     def fits(self, lat: float, lon: float, c: dict) -> bool:
         """The same rule as fatal.fits: a road the report names runs within GPS_CHECK_FT + the report's offset of
-        the point; only the road lookup is cached."""
+        the point. Roads come from the extract's spatial index for a box of that size; parsed roads are cached."""
         tol = cw.GPS_CHECK_FT + (c.get("offset_ft") or 0.0)
         roads = [x for x in (c.get("primary_road"), c.get("secondary_road")) if x and
                  fatal_mod.checks.indep_core(x) not in fatal_mod.UNUSABLE]
-        for names, segs in self._roads(lat, lon):
-            if fatal_mod.road_match(roads, names) and any(cw._seg_ft((lat, lon), a, b) <= tol for a, b in segs):
+        if not roads:
+            return False
+        dlat = tol / 364000.0
+        dlon = dlat / max(0.2, math.cos(math.radians(lat)))
+        ids = [r[0] for r in self.local.db.execute(
+            "SELECT id FROM way_box WHERE maxlat >= ? AND minlat <= ? AND maxlon >= ? AND minlon <= ?",
+            (lat - dlat, lat + dlat, lon - dlon, lon + dlon))]
+        for wid in ids:
+            names, segs = self._way(wid)
+            if names and fatal_mod.road_match(roads, names) and any(cw._seg_ft((lat, lon), a, b) <= tol for a, b in segs):
                 return True
         return False
 
