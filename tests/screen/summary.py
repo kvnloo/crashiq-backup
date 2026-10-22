@@ -16,7 +16,7 @@ def main() -> None:
     runs = [json.loads(f.read_text())["run"] for f in (HERE / ".e2e" / "report.json", HERE / ".e2e" / "report-live.json")
             if f.exists()]
     rows = []
-    for run, r in ((run, r) for run in runs for r in run["results"]):
+    for run, r in ((run, r) for run in runs for r in run["results"] if r.get("selected", True)):
         title = r["titlePath"][-1]
         screen, _, check = title.partition(": ")
         rows.append({"test": title, "screen": screen, "check": check, "result": r["status"],
