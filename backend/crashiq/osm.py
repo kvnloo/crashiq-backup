@@ -9,7 +9,7 @@ import urllib.request
 from collections import defaultdict
 from pathlib import Path
 
-from .names import StreetKey, street_key
+from .names import StreetKey, directions, street_key
 
 OVERPASS = "https://overpass-api.de/api/interpreter"
 HIGHWAYS = ("motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|service|"
@@ -93,18 +93,22 @@ class Network:
         self.keys_at: dict[int, set[StreetKey]] = defaultdict(set)   # node -> street keys through it
         self.label: dict[StreetKey, str] = {}                          # key -> a readable OSM name
         self.neighbors: dict[tuple[int, StreetKey], set[int]] = defaultdict(set)
+        # trailing direction of the ways of a key through a node ("20th Street West" -> W; None when not written).
+        # The key drops it, so 20th St East and West share one; the unique-pair tier tells them apart (#203)
+        self.trail_at: dict[tuple[int, StreetKey], set[str | None]] = defaultdict(set)
         for w in ways:
             names = []
             for t in NAME_TAGS:
                 for v in str(w.get("tags", {}).get(t, "")).split(";"):
                     k = street_key(v)
                     if k:
-                        names.append(k)
+                        names.append((k, directions(v)[1]))
                         self.label.setdefault(k, v.strip())
             nodes = w["nodes"]
             for i, n in enumerate(nodes):
-                for k in names:
+                for k, trail in names:
                     self.keys_at[n].add(k)
+                    self.trail_at[(n, k)].add(trail)
                     if i > 0:
                         self.neighbors[(n, k)].add(nodes[i - 1])
                     if i < len(nodes) - 1:

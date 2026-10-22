@@ -121,6 +121,23 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     return StreetKey(core, suffix) if core else None
 
 
+def directions(raw: str | None, aliases: dict[str, str] | None = None) -> tuple[str | None, str | None]:
+    """(leading, trailing) direction as written: N, S, E, W or None. street_key keeps a leading one in the core and
+    drops a trailing one ("20TH ST W" and "20th Street East" share a key), so the unique-pair tier reads them here
+    (#203)."""
+    if not raw:
+        return None, None
+    s = re.sub(r"\s+", " ", re.sub(r"[.,#'\"]", " ", raw.upper())).strip()
+    if aliases and s in aliases:
+        s = aliases[s]
+    if ROUTE.match(s):
+        return None, None
+    toks = re.sub(r"\(.*?\)", " ", s).replace("&", " ").split()
+    if len(toks) < 2:
+        return None, None
+    return DIRECTIONAL.get(toks[0]), (DIRECTIONAL.get(toks[-1]) if len(toks) > 2 or toks[0] not in DIRECTIONAL else None)
+
+
 def _flat(core: str) -> str:
     """Core for comparison: spaces ignored (BAY SHORE == BAYSHORE), and an inner OF / OF THE too (AVENUE OF FLAGS ==
     AVENUE FLAGS, #154)."""

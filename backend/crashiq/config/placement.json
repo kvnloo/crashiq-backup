@@ -1,0 +1,4 @@
+{
+  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only after it meets the 98% bar (Wilson 95% lower bound) on hidden-truth tests and the user confirms (docs/03). unique_pair (#203): pending the Tester's #201 measurement.",
+  "auto_tiers": ["exact"]
+}

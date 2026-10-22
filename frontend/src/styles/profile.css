@@ -176,7 +176,7 @@
 .quality .qline > * { display: inline-flex; align-items: center; gap: 5px; }
 .quality .qline i { width: 8px; height: 8px; border-radius: 2px; display: inline-block; }
 .quality .linkbtn { padding: 0; font: 11px var(--font-mono); }
-.q-gps { background: var(--fg); } .q-fars { background: color-mix(in srgb, var(--fg) 75%, var(--muted)); } .q-exact { background: var(--muted); } .q-other { background: color-mix(in srgb, var(--muted) 55%, transparent); }
+.q-gps { background: var(--fg); } .q-fars { background: color-mix(in srgb, var(--fg) 75%, var(--muted)); } .q-exact { background: var(--muted); } .q-pair { background: color-mix(in srgb, var(--muted) 75%, transparent); } .q-other { background: color-mix(in srgb, var(--muted) 55%, transparent); }
 .q-user { background: var(--info); } .q-review { background: var(--amber); } .q-ex { background: var(--surface-2); box-shadow: inset 0 0 0 1px var(--line); }
 .qrules { margin-top: 6px; }
 /* D. year trend (#104) */

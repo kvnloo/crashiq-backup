@@ -37,7 +37,7 @@ CITIES = {
 # from the intersection vs 92 m from the offset point, n=472). There, score the chosen intersection, not the offset.
 SCORE_AT_INTERSECTION = {"la"}
 COUNTY_FIPS = {"sf": "06075", "la": "06037", "lb": "06037", "riv": "06065"}  # for the TIGER network option
-CODE_TIERS = ("address", "exact", "relaxed", "near", "fuzzy")
+CODE_TIERS = ("address", "exact", "unique_pair", "relaxed", "near", "fuzzy")
 
 
 def wilson_low(k, n, z=1.96):
@@ -160,7 +160,7 @@ def run_scored(a, net, sample, other, aliases):
     base, recs = [], []
     for c in sample:
         b = locate.place(net, c, aliases=aliases)
-        auto_b = b.tier in ("exact", "relaxed", "near", "fuzzy")
+        auto_b = b.tier in ("exact", "unique_pair", "relaxed", "near", "fuzzy")
         base.append((auto_b, auto_b and (score(net, b, c, a.city) or 1e9) <= TOL_M))
         ranked = clues.score(net, c, None, aliases)          # names only; beat added below (it's independent)
         if not ranked:
@@ -221,7 +221,7 @@ def run_scored(a, net, sample, other, aliases):
 
 def run_both(a, osm_net, tiger_net, sample, addresses, aliases):
     """Two maps. Union: OSM, and TIGER where OSM can't place. Consensus: auto only when both place within 250 ft."""
-    auto = ("exact", "relaxed", "near", "fuzzy")
+    auto = ("exact", "unique_pair", "relaxed", "near", "fuzzy")
     res = Counter()
     n = len(sample)
     for c in sample:
@@ -387,6 +387,12 @@ def main():
             print(f"  {t:16s} {len(rs):7d} {k/len(rs):10.1%} {wilson_low(k, len(rs)):10.1%}   | "
                   + (f"{ik/len(iv):.1%} (low {wilson_low(ik, len(iv)):.1%}, n={len(iv)})" if iv else "n/a"))
     print(f"  {'review':16s} {sum(r['tier'] == 'review' for r in rows):7d}")
+    up = [r for r in rows if r["tier"] == "unique_pair"]       # #203: the gate decision's numbers, also in the summary
+    up_k = sum(r["ok"] for r in up)
+    unique_pair = {"n": len(up), "accuracy": up_k / max(1, len(up)), "wilson_low": wilson_low(up_k, len(up)) if up else 0.0,
+                   "coverage_gain": len(up) / max(1, len(rows))}
+    print(f"unique_pair (#203): n={unique_pair['n']}, accuracy {unique_pair['accuracy']:.1%}, "
+          f"Wilson 95% low {unique_pair['wilson_low']:.1%}, coverage gain {unique_pair['coverage_gain']:.2%}")
     if a.direction_tier:
         direction_report(net, sample, rows, aliases)
 
@@ -395,7 +401,9 @@ def main():
     jr = lambda r: dict(r, ok=r["jev"]["ok"]) if J(r) else r
     arms = {
         "A  exact only (default gate)": (rows, lambda r: r["tier"] == "exact"),
-        "B  exact + relaxed + near + fuzzy": (rows, lambda r: r["tier"] in ("exact", "relaxed", "near", "fuzzy")),
+        "A+ exact + unique_pair (#203)": (rows, lambda r: r["tier"] in ("exact", "unique_pair")),
+        "B  exact + unique_pair + relaxed + near + fuzzy": (rows, lambda r: r["tier"] in ("exact", "unique_pair", "relaxed",
+                                                                                           "near", "fuzzy")),
     }
     if a.jev:
         arms["C  exact + Jev on all leftovers"] = ([jr(r) for r in rows], lambda r: r["tier"] == "exact" or J(r))
@@ -426,7 +434,7 @@ def main():
     (out / f"{stem}_rows.json").write_text(json.dumps(rows))
     (out / f"{stem}_summary.json").write_text(json.dumps(
         {"normalizer": a.normalizer, "network": a.network, "city": cname, "agency": ncic, "years": years, "split": a.split, "n": len(rows), "cleaning": cleaning,
-         "arms": arm_stats, "jev_vs_fuzzy": head2head, "jev_spend": spend,
+         "arms": arm_stats, "unique_pair": unique_pair, "jev_vs_fuzzy": head2head, "jev_spend": spend,
          "scored_at": "intersection" if a.city in SCORE_AT_INTERSECTION else "offset point"}, indent=1))
     print(f"\nwrote {out / (stem + '_summary.json')}")
 
