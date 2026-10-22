@@ -383,3 +383,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   will be intersecting with some other street... there's not going to be two"), place it there even if a name differs only
   by direction or suffix. It's built as its own tier (`unique_pair`), and it auto-places only if it meets the existing 98%
   bar (Wilson 95% lower bound) on the hidden-truth tests (#201); until then it goes to review with that suggestion.
+- **GPS vs the report's own description DECIDED (user, 2026-10-22, PM session):** (1) **Snapped GPS:** when the police
+  GPS sits at the named intersection but the report states a distance and direction from it ("200 ft north"), the
+  report's description is right: place the crash at the named intersection plus the stated offset, along the named
+  road (provenance `gps_offset_applied`). This refines the #53/#74 rule (GPS far from the stated intersection is still
+  flagged and counted where it is). (2) **Default or dispatch-center points** (many crashes sharing one point, or a
+  point far from the report's streets) aren't the crash location: treat them as no GPS and place by street names.
+  (3) Wrong-format (DMS) GPS is corrected (#143). The user notes that GPS consistency varies by county and city; a
+  per-agency GPS quality profile is measured.
