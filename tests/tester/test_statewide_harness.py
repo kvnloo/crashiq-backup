@@ -131,3 +131,37 @@ def test_recording_an_incomplete_run_fails(tmp_path):
     with pytest.raises(run_history.IncompleteRun, match="B \\(2\\)"):
         run_history.require_complete("frozen list v1", [{"city": "A", "county": "1"}, {"city": "B", "county": "2"}],
                                      [{"city": "A", "county": "1"}])
+
+
+# ---- fatal crashes first (#166): CCRS fatal crash -> FARS link ----
+def test_ccrs_county_code_maps_to_fars_fips():
+    import fatal
+    assert fatal.fips(1) == 1 and fatal.fips(19) == 37 and fatal.fips(35) == 69    # Alameda, Los Angeles, San Benito
+
+
+def test_link_takes_the_one_fars_crash_with_same_day_time_and_deaths():
+    import fatal
+    ccrs = {"county": 19, "dt": "2024-01-08T08:45:00", "killed": 1, "roads": ["SR-118 W/B", "CANOGA AVE"]}
+    fars = [{"ST_CASE": "1", "COUNTY": "37", "YEAR": "2024", "MONTH": "1", "DAY": "8", "HOUR": "8", "MINUTE": "50",
+             "FATALS": "1", "TWAY_ID": "SR-118", "TWAY_ID2": ""},
+            {"ST_CASE": "2", "COUNTY": "37", "YEAR": "2024", "MONTH": "1", "DAY": "8", "HOUR": "17", "MINUTE": "10",
+             "FATALS": "1", "TWAY_ID": "I-5", "TWAY_ID2": ""}]
+    idx = fatal.index(fars)
+    assert fatal.link(ccrs, idx) == ("linked", "2024-1")
+
+
+def test_link_uses_roads_to_break_a_tie_and_reports_ambiguity():
+    import fatal
+    base = {"COUNTY": "37", "YEAR": "2024", "MONTH": "1", "DAY": "8", "HOUR": "99", "MINUTE": "99", "FATALS": "1"}
+    fars = [{**base, "ST_CASE": "1", "TWAY_ID": "SR-118", "TWAY_ID2": ""},
+            {**base, "ST_CASE": "2", "TWAY_ID": "VAN NUYS BLVD", "TWAY_ID2": ""}]
+    idx = fatal.index(fars)
+    c = {"county": 19, "dt": "2024-01-08T08:45:00", "killed": 1}
+    assert fatal.link({**c, "roads": ["SR-118 W/B (RONALD REAGAN FWY.)", "CANOGA AVE"]}, idx) == ("linked", "2024-1")
+    assert fatal.link({**c, "roads": ["MAIN ST", "1ST ST"]}, idx)[0] == "ambiguous"
+    assert fatal.link({**c, "county": 1, "roads": ["MAIN ST"]}, idx) == ("unlinked", None)
+
+
+def test_fars_cases_are_keyed_by_year_because_st_case_restarts():
+    import fatal
+    assert fatal.case_key({"YEAR": "2021", "ST_CASE": "60011"}) != fatal.case_key({"YEAR": "2024", "ST_CASE": "60011"})
