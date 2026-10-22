@@ -378,3 +378,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   keeps only the needed columns, caches it by resource and modified date, refreshes weekly, and serves study lookups
   from it; provenance noted in the pull log, and the #189 caveat clears for that year. The user also reports the load
   failure to data.ca.gov support.
+- **"Unique pair" placement DECIDED in principle (user, 2026-10-22, PM session):** when a report's two streets can meet
+  at only one place on the city network (e.g. `AVENUE J & 20TH ST W` → West Avenue J & 20th Street West; the user: "Avenue J
+  will be intersecting with some other street... there's not going to be two"), place it there even if a name differs only
+  by direction or suffix. It's built as its own tier (`unique_pair`), and it auto-places only if it meets the existing 98%
+  bar (Wilson 95% lower bound) on the hidden-truth tests (#201); until then it goes to review with that suggestion.
