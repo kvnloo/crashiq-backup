@@ -83,3 +83,24 @@ def test_gate_on_places_it_with_its_provenance(monkeypatch):
     c = r["crashes"][0]
     assert c["location_source"] == "unique_pair" and (c["lat"], c["lon"]) == NET.coord[2]
     assert counts["placed"] == {"unique_pair": 1}
+
+
+def test_exact_never_lands_on_the_opposite_stated_direction():
+    # #205: the exact key drops a trailing direction, so 20TH ST W matched 20th Street East at East Avenue J
+    p = locate.place(NET, crash("E AVENUE J", "20TH ST W"))
+    assert p.node != 4
+    assert p.tier == "review"            # East Ave J never meets 20th St West: a person decides
+    assert locate.place(NET, crash("E AVENUE J", "20TH ST")).node == 4               # no direction stated: as before
+    assert locate.place(NET, crash("E AVENUE J", "20TH ST E")).tier == "exact"
+
+
+def test_near_tier_still_works_with_a_stated_direction():
+    # 20th Street West stops 20 m short of West Avenue J (no shared node): near picks Avenue J's closest node, which
+    # 20th Street West doesn't pass through, so its stated W can't be checked there and mustn't block it
+    net = Network({"elements": [
+        {"type": "node", "id": 1, "lat": 34.6900, "lon": -118.1700}, {"type": "node", "id": 2, "lat": 34.6900, "lon": -118.1650},
+        {"type": "node", "id": 3, "lat": 34.6950, "lon": -118.1650}, {"type": "node", "id": 4, "lat": 34.6902, "lon": -118.1650},
+        {"type": "way", "id": 10, "nodes": [1, 2], "tags": {"name": "West Avenue J"}},
+        {"type": "way", "id": 12, "nodes": [3, 4], "tags": {"name": "20th Street West"}}]})
+    p = locate.place(net, crash("WEST AVENUE J", "20TH ST W"))
+    assert p.tier == "near" and p.node == 2

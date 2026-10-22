@@ -126,7 +126,8 @@ def _trail_fits(net: Network, node: int, keys: list[StreetKey], trail: str | Non
     """A trailing direction the report writes (20TH ST W) must be on a way through the node, or the way has none."""
     if trail is None:
         return True
-    return any(net.trail_at.get((node, s), set()) & {trail, None} for s in keys)
+    ways = [net.trail_at[(node, s)] for s in keys if (node, s) in net.trail_at]
+    return not ways or any(w & {trail, None} for w in ways)      # near tier: the street may only pass close by
 
 
 def _unique_pair(net: Network, crash: dict, kp: StreetKey, ks: StreetKey, aliases) -> Placement | None:
@@ -220,6 +221,7 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
         keep_suffix = [s for s in _same_core_keys(net, k) if k.suffix is None or s.suffix is None or s.suffix == k.suffix]
         return keep_suffix or _same_core_keys(net, k)
     fuzzy = lambda k: _keys_matching(net, k) or relaxed(k) or _fuzzy(net, k, fuzzy_min, fuzzy_margin)
+    tp, ts = directions(crash.get("primary_road"), aliases)[1], directions(crash.get("secondary_road"), aliases)[1]
     for tier, find, meet in (("exact", lambda k: _keys_matching(net, k), _shared_nodes),
                              ("relaxed", relaxed, _shared_nodes),
                              ("near", relaxed, _near_nodes),
@@ -232,6 +234,8 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
                 return up
             continue
         nodes = meet(net, a, b)
+        # the key drops a trailing direction: 20TH ST W must never land on 20th Street East, in any tier (#205)
+        nodes = [n for n in nodes if _trail_fits(net, n, a, tp) and _trail_fits(net, n, b, ts)]
         node = _one_intersection(net, nodes)
         if node is None:
             up = _unique_pair(net, crash, kp, ks, aliases) if tier == "exact" else None
