@@ -97,7 +97,9 @@ class City:
         k = street_key(raw)
         if not k:
             return []
-        return locate._keys_matching(self.net, k) or locate._same_core_keys(self.net, k)
+        # every map street the name can be: exact keys AND same-core ones (a stretch mapped "West Foothill Boulevard"
+        # next to one mapped "Foothill Boulevard"). Exact-only-when-any-exist missed GPS 6 m from the road (#211 audit)
+        return list(dict.fromkeys(locate._keys_matching(self.net, k) + locate._same_core_keys(self.net, k)))
 
     def fits(self, lat: float, lon: float, c: dict) -> bool:
         tol = GPS_CHECK_FT + (c.get("offset_ft") or 0.0)
