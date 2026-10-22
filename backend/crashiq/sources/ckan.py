@@ -46,8 +46,9 @@ _META_CACHE: dict[tuple, tuple[float, dict]] = {}
 
 class Ckan:
     def __init__(self, transport: Transport | None = None, retries: int = 3, backoff_s: float = 3.0,
-                 sleep: Callable[[float], None] = time.sleep):
+                 sleep: Callable[[float], None] = time.sleep, files=None):
         self.transport = transport or http_transport
+        self.files = files      # ccrs_files.FileCache: tables published as a file but not in the datastore (#196)
         self.retries, self.backoff_s, self.sleep = retries, backoff_s, sleep
         self.calls = 0
 

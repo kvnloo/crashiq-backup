@@ -20,6 +20,7 @@ import re
 import unicodedata
 from collections import Counter
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
@@ -30,6 +31,7 @@ from .db import Database
 from .geo import LocalProjection, Polyline
 from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
 from .sources import ca_ccrs as cc
+from .sources import ccrs_files
 from .sources.ckan import Ckan, CkanError
 
 PAGE = 5000
@@ -270,6 +272,27 @@ def _area_by_street_names(ckan: Ckan, rid: str, cols: dict, area_col: str, bad_x
     if not rows:
         return []
     return [x for x, n in rows if n >= 2] or [rows[0][0]]
+
+
+def _table_source(ckan: Ckan, table: str, y: int, rid: str | None, files: tuple, wanted: dict, log: dict):
+    """(columns, missing columns, rows-for-ids) for one year's Parties or IWP table, or None when it can't be read.
+    The datastore when the table is there; otherwise CHP's file, once the server has a copy (#196)."""
+    if rid:
+        cols, miss = cc.resolve_columns(ckan.fields(rid), wanted)
+        log[f"{table}_source"][str(y)] = "datastore"
+        return cols, miss, lambda ids: _by_ids(ckan, rid, cols, ids)
+    cache, inactive = files
+    fres = inactive[table].get(y)
+    if cache is None or not fres:
+        return None
+    m = cache.ready(fres, wanted)       # starts the download (or a due refresh) in the background; never raises
+    if m is None:
+        log["files_pending"][f"{table}_{y}"] = str(cache.path(fres["id"]))
+        if cache.error(fres["id"]):
+            log["file_errors"][f"{table}_{y}"] = cache.error(fres["id"])
+        return None
+    log[f"{table}_source"][str(y)] = f"file_cache ({m['downloaded_at'][:10]})"
+    return cache.columns(m), m["missing"], lambda ids: cache.lookup(fres["id"], ids)
 
 
 def _by_ids(ckan: Ckan, rid: str, cols: dict[str, dict], ids: list[str]) -> list[dict]:
@@ -515,12 +538,15 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
     if not net.get("line"):
         raise PullError("Draw the corridor first.")
     years = list(range(study["from_year"], study["to_year"] + 1))
-    res = cc.table_resources(ckan.get("package_show", id=cc.PACKAGE))
+    package = ckan.get("package_show", id=cc.PACKAGE)
+    res = cc.table_resources(package)
+    files = (getattr(ckan, "files", None), ccrs_files.inactive_resources(package))
     log = {"rows_read": 0, "outside_window_dropped": 0, "deleted_dropped": 0, "duplicate_versions_dropped": 0,
            "no_coords_read": 0, "no_coords_other_city": 0, "no_coords_not_corridor_street": 0, "no_coords_off_study_stretch": 0,
            "no_coords_grade_separated": 0, "gps_beyond_margin_dropped": 0,
            "implausible_coords": 0, "bad_dates_dropped": 0, "duplicate_parties_dropped": 0, "version_ties_first_kept": 0, "preliminary_kept": 0,
            "feet_typed_as_miles_fixed": 0, "years_missing": [], "parties_missing_years": [], "iwp_missing_years": [],
+           "parties_source": {}, "iwp_source": {}, "files_pending": {}, "file_errors": {},
            "missing_fields": {}, "unknown_injury_values": [], "cities": [], "area_rejected": [],
            "gps_dms_corrected": 0, "gps_dms_unconfirmed": 0, "gps_dms_agencies": []}
     margin = margin_ft(study)
@@ -744,15 +770,15 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
     extents: dict[str, list[str]] = {}
     for yi, (y, ids) in enumerate(sorted(by_year.items())):
         tell(f"Parties and injuries {y}", yi, len(by_year))
-        prid, irid = res["parties"].get(y), res["iwp"].get(y)
-        if prid:
-            pcols, pmiss = cc.resolve_columns(ckan.fields(prid), cc.PARTY_COLS)
+        psrc = _table_source(ckan, "parties", y, res["parties"].get(y), files, cc.PARTY_COLS, log)
+        if psrc:
+            pcols, pmiss, prows = psrc
             if "collision_id" in pmiss:
                 raise PullError(f"CCRS Parties {y} has no Collision Id column.")
             if pmiss:
                 log["missing_fields"][f"parties_{y}"] = pmiss
             seen_party = set()
-            for r in _by_ids(ckan, prid, pcols, ids):
+            for r in prows(ids):
                 pr_ = cc.party_record(r, pcols)
                 cid_ = str(r[pcols["collision_id"]["id"]])
                 if pr_["party_number"] is not None:       # one row per party, even when versions repeat it
@@ -763,11 +789,12 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                 parties.setdefault(cid_, []).append(pr_)
         else:
             log["parties_missing_years"].append(y)
-        if irid:
-            icols, imiss = cc.resolve_columns(ckan.fields(irid), cc.IWP_COLS)
+        isrc = _table_source(ckan, "iwp", y, res["iwp"].get(y), files, cc.IWP_COLS, log)
+        if isrc:
+            icols, imiss, irows = isrc
             if "collision_id" in imiss or "extent" in imiss:
                 raise PullError(f"CCRS InjuredWitnessPassengers {y} lacks Collision Id or ExtentOfInjury.")
-            for r in _by_ids(ckan, irid, icols, ids):
+            for r in irows(ids):
                 if "witness_only" in icols and cc._truthy(r.get(icols["witness_only"]["id"])):
                     continue
                 extents.setdefault(str(r[icols["collision_id"]["id"]]), []).append(r.get(icols["extent"]["id"]))
@@ -831,6 +858,8 @@ def stale(cached: dict, study: dict, now: datetime | None = None) -> bool:
     if pulled.tzinfo is None:
         pulled = pulled.replace(tzinfo=timezone.utc)
     cl = cached.get("cleaning") or {}
+    if any(Path(p).exists() for p in (cl.get("files_pending") or {}).values()):
+        return True                    # CHP's file for a missing year finished downloading after this pull (#196)
     if cl.get("parties_missing_years") or cl.get("iwp_missing_years") or cl.get("years_missing"):
         return (now - pulled).days >= MISSING_TTL_DAYS       # CHP publishes late: look again daily (#188)
     return (now - pulled).days >= RECENT_TTL_DAYS
@@ -887,7 +916,22 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
 
 def ckan_for(request: Request) -> Ckan:
     st = request.app.state
-    return Ckan(getattr(st, "ckan", None), retries=getattr(st, "ckan_retries", 3))
+    return Ckan(getattr(st, "ckan", None), retries=getattr(st, "ckan_retries", 3), files=files_for(st))
+
+
+_FILE_CACHES: dict[str, ccrs_files.FileCache] = {}
+
+
+def files_for(st) -> ccrs_files.FileCache | None:
+    """The CCRS file cache (#196). Live data.ca.gov only, unless a test or harness sets `app.state.ccrs_files`:
+    a fake or recorded CKAN never starts a real 200 MB download."""
+    if getattr(st, "ccrs_files", None) is not None:
+        return st.ccrs_files
+    if getattr(st, "ckan", None) is not None:
+        return None
+    folder = str(st.settings.ccrs_files_dir)
+    with _LOCKS_GUARD:
+        return _FILE_CACHES.setdefault(folder, ccrs_files.FileCache(folder))
 
 
 router = APIRouter()
