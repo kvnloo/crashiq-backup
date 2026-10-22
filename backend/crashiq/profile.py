@@ -24,7 +24,8 @@ SEVERITY_LABELS = {"K": "Fatal (K)", "A": "Suspected serious injury (A)", "B": "
                    "C": "Possible injury (C)", "U": "Injury, level not reported", "O": "Property damage only (O)"}
 INJURY = set("KABCU")
 DOW = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
-MODES = [("ped", "Pedestrian involved"), ("bike", "Bicyclist involved"), ("motorcycle", "Motorcycle involved"),
+MODES = [("ped", "Pedestrian involved"), ("bike", "Bicyclist involved"), ("ebike", "E-bike involved"),
+         ("escooter", "E-scooter involved"), ("motorcycle", "Motorcycle involved"),
          ("heavy_truck", "Heavy truck involved")]
 UNPLACED_LIMIT = 0.10      # Q10: report flags a data limitation above this share of unplaced crashes
 
@@ -91,8 +92,9 @@ def _pcf_categories(tid: str, crashes: list[dict]) -> dict:
 
 
 def is_vru(c) -> bool:
-    """A pedestrian or a bicyclist involved (#136). Motorcyclists are shown alongside, not counted in."""
-    return bool(c.get("ped") or c.get("bike"))
+    """A pedestrian, bicyclist, e-bike or e-scooter rider involved (#136; e-bikes and e-scooters N9, #169).
+    Motorcyclists are shown alongside, not counted in."""
+    return bool(c.get("ped") or c.get("bike") or c.get("ebike") or c.get("escooter"))
 
 
 def light_group(c) -> str:
@@ -118,7 +120,9 @@ def _vru_tables(crashes: list[dict], s: str) -> list[dict]:
     ksi_all = sum(c["severity"] in "KA" for c in crashes)
     groups = [("ped", "Pedestrian crashes", lambda c: bool(c.get("ped"))),
               ("bike", "Bicycle crashes", lambda c: bool(c.get("bike"))),
-              ("ped_or_bike", "Pedestrian or bicycle crashes", is_vru),
+              ("ebike", "E-bike crashes", lambda c: bool(c.get("ebike"))),
+              ("escooter", "E-scooter crashes", lambda c: bool(c.get("escooter"))),
+              ("ped_or_bike", "Pedestrian, bicycle, e-bike or e-scooter crashes", is_vru),
               ("motorcycle", "Motorcycle crashes", lambda c: bool(c.get("motorcycle"))),
               ("other", "All other crashes (no pedestrian or bicyclist)", lambda c: not is_vru(c)),
               ("all", "All crashes", lambda c: True)]
@@ -275,6 +279,8 @@ def _counts(crashes):
             "killed": sum(c.get("killed", 0) for c in crashes), "injured": sum(c.get("injured", 0) for c in crashes),
             "dark_crashes": sum(is_dark(c) for c in crashes), "ped_crashes": sum(bool(c.get("ped")) for c in crashes),
             "bike_crashes": sum(bool(c.get("bike")) for c in crashes),
+            "ebike_crashes": sum(bool(c.get("ebike")) for c in crashes),
+            "escooter_crashes": sum(bool(c.get("escooter")) for c in crashes),
             "moto_crashes": sum(bool(c.get("motorcycle")) for c in crashes),
             "vru_crashes": sum(is_vru(c) for c in crashes),
             "vru_ksi_crashes": sum(is_vru(c) and c["severity"] in "KA" for c in crashes)}
@@ -386,8 +392,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         k = _counts(cs)
         sev = Counter(c["severity"] for c in cs)
         vals = {"kind": kind, **{x: k[x] for x in ("crashes", "ksi_crashes", "fatal_crashes", "injury_crashes",
-                                                   "dark_crashes", "ped_crashes", "bike_crashes", "moto_crashes",
-                                                   "vru_crashes", "vru_ksi_crashes")},
+                                                   "dark_crashes", "ped_crashes", "bike_crashes", "ebike_crashes",
+                                                   "escooter_crashes", "moto_crashes", "vru_crashes", "vru_ksi_crashes")},
                 **{f"sev_{lvl.lower()}": sev[lvl] for lvl in "KABCUO"},   # the ranking's severity bar (#103)
                 "crashes_per_year": r2(k["crashes"] / years) if years else None}
         if kind == "segment":
@@ -429,8 +435,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         r["values"].setdefault("rate_to_critical", None)
     tables.append(_table("T2", "Locations (corridor order)", [
         ("crashes", "Crashes"), ("crashes_per_year", "Per year"), ("ksi_crashes", "KSI"), ("fatal_crashes", "Fatal"),
-        ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"), ("moto_crashes", "Motorcycle"),
-        ("vru_crashes", "Ped + bike"), ("vru_ksi_crashes", "Ped + bike KSI"),
+        ("injury_crashes", "Injury"), ("dark_crashes", "Dark"), ("ped_crashes", "Ped"), ("bike_crashes", "Bike"), ("ebike_crashes", "E-bike"),
+        ("escooter_crashes", "E-scooter"), ("moto_crashes", "Motorcycle"),
+        ("vru_crashes", "Ped, bike, e-bike, e-scooter"), ("vru_ksi_crashes", "Of these, KSI"),
         ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate"),
         ("reference_rate", "Average rate, similar sites"), ("critical_rate", "Critical rate (95%)"),
         ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),

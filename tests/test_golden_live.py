@@ -153,14 +153,11 @@ def test_T9_day_and_hour(case):
 
 
 def test_T10_road_users(case):
-    _, _, _, p, _, crash, sev, types = case
+    name, _, _, p, _, crash, sev, _ = case
     t10 = table(p, "T10")
-    ped = {cid for cid, r in crash.items() if "Pedestrian" in types[cid]
-           or "PEDESTRIAN" in str(r.get("MotorVehicleInvolvedWithDesc") or "")
-           or "PEDESTR" in str(r.get("Collision Type Description") or "")}
-    bike = {cid for cid, r in crash.items() if "Bicyclist" in types[cid]
-            or "BICYCLE" in str(r.get("MotorVehicleInvolvedWithDesc") or "")}
-    assert (t10["ped"]["crashes"], t10["bike"]["crashes"]) == (len(ped), len(bike))
+    ped, bike, ebike, escooter = _ref_road_users(name, crash)
+    got = tuple(t10[k]["crashes"] for k in ("ped", "bike", "ebike", "escooter"))
+    assert got == (len(ped), len(bike), len(ebike), len(escooter))
     assert t10["ped"]["ksi_crashes"] == sum(sev[c] in "KA" for c in ped)
 
 
@@ -264,25 +261,39 @@ def test_T18_pcf_categories_match_the_testers_coverage(case):
     assert sum(got.values()) == len(ids)
 
 
-def _ref_ped_bike(crash, types):
-    ped = {cid for cid, r in crash.items() if "Pedestrian" in types[cid]
-           or "PEDESTRIAN" in str(r.get("MotorVehicleInvolvedWithDesc") or "")
-           or "PEDESTR" in str(r.get("Collision Type Description") or "")}
-    bike = {cid for cid, r in crash.items() if "Bicyclist" in types[cid]
-            or "BICYCLE" in str(r.get("MotorVehicleInvolvedWithDesc") or "")}
-    return ped, bike
+# The reference's own reading of road users (N9, #169): e-bikes and e-scooters by the party's vehicle type; an e-bike
+# rider typed Bicyclist is an e-bike, not a bicycle.
+REF_EBIKE = {"ElectricBicycles"}
+REF_ESCOOTER = {"GoPedZipElectricScooterAndMotorboard", "ElectricallyMotorizedBoards"}
+
+
+def _ref_road_users(name, crash):
+    raw = raw_tables(name)
+    parties = defaultdict(list)
+    for r in raw["Parties"]:
+        parties[str(r["CollisionId"])].append((str(r.get("PartyType")), str(r.get("Vehicle1TypeDesc"))))
+    iw = lambda r: str(r.get("MotorVehicleInvolvedWithDesc") or "")
+    ped = {cid for cid, r in crash.items() if any(t == "Pedestrian" for t, _ in parties[cid])
+           or "PEDESTRIAN" in iw(r) or "PEDESTR" in str(r.get("Collision Type Description") or "")}
+    ebike = {cid for cid in crash if any(v in REF_EBIKE for _, v in parties[cid])}
+    escooter = {cid for cid in crash if any(v in REF_ESCOOTER for _, v in parties[cid])}
+    bike = {cid for cid, r in crash.items()
+            if any(t == "Bicyclist" and v not in REF_EBIKE | REF_ESCOOTER for t, v in parties[cid])
+            or ("BICYCLE" in iw(r) and cid not in ebike)}
+    return ped, bike, ebike, escooter
 
 
 def test_T19_how_dangerous_matches_raw_rows(case):
     # #136: KSI share of pedestrian, bicycle and all other crashes, and the ped+bike share of all KSI crashes
-    _, _, _, p, ids, crash, sev, types = case
-    ped, bike = _ref_ped_bike(crash, types)
-    vru = ped | bike
+    name, _, _, p, ids, crash, sev, _ = case
+    ped, bike, ebike, escooter = _ref_road_users(name, crash)
+    vru = ped | bike | ebike | escooter
     other = set(crash) - vru
     ksi = {c for c in crash if sev[c] in "KA"}
     pct = lambda a, b: round(100 * a / b, 1) if b else 0.0
     t = table(p, "T19")
-    for key, grp in (("ped", ped), ("bike", bike), ("ped_or_bike", vru), ("other", other), ("all", set(crash))):
+    for key, grp in (("ped", ped), ("bike", bike), ("ebike", ebike), ("escooter", escooter), ("ped_or_bike", vru),
+                     ("other", other), ("all", set(crash))):
         assert t[key]["crashes"] == len(grp), key
         assert t[key]["ksi_crashes"] == len(grp & ksi), key
         assert t[key]["ksi_pct"] == (pct(len(grp & ksi), len(grp)) if grp else None), key   # no crashes: no %
@@ -291,8 +302,8 @@ def test_T19_how_dangerous_matches_raw_rows(case):
 
 
 def test_T20_pedestrian_lighting_matches_raw_rows(case):
-    _, _, _, p, _, crash, _, types = case
-    ped, _ = _ref_ped_bike(crash, types)
+    name, _, _, p, _, crash, _, _ = case
+    ped, *_ = _ref_road_users(name, crash)
 
     def group(t):
         t = (t or "").upper()
@@ -307,11 +318,14 @@ def test_T20_pedestrian_lighting_matches_raw_rows(case):
 
 
 def test_T2_ped_bike_column_adds_up(case):
-    _, _, _, p, _, crash, sev, types = case
-    ped, bike = _ref_ped_bike(crash, types)
+    name, _, _, p, _, crash, sev, _ = case
+    ped, bike, ebike, escooter = _ref_road_users(name, crash)
+    vru = ped | bike | ebike | escooter
     t2 = table(p, "T2")
-    assert sum(v["vru_crashes"] for v in t2.values()) == len(ped | bike)
-    assert sum(v["vru_ksi_crashes"] for v in t2.values()) == sum(sev[c] in "KA" for c in ped | bike)
+    assert sum(v["vru_crashes"] for v in t2.values()) == len(vru)
+    assert sum(v["vru_ksi_crashes"] for v in t2.values()) == sum(sev[c] in "KA" for c in vru)
+    assert sum(v["ebike_crashes"] for v in t2.values()) == len(ebike)
+    assert sum(v["escooter_crashes"] for v in t2.values()) == len(escooter)
 
 
 def test_a_corridor_crossing_into_the_next_city_keeps_both_cities(monkeypatch):

@@ -299,7 +299,7 @@ describe('Crash profile screen', () => {
     expect(screen.getByLabelText('Data quality').nextElementSibling).toBe(v)
     const t19 = table(profile, 'T19')
     const val = (k) => t19.rows.find((x) => x.key === k).values
-    for (const k of ['ped', 'bike', 'motorcycle']) {
+    for (const k of ['ped', 'bike', 'ebike', 'escooter', 'motorcycle']) {
       const li = within(v).getByTestId(`vru-${k}`)
       expect(li.querySelector('.n').textContent).toBe(nf.format(val(k).crashes))
       expect(li.querySelector('.ksi').textContent).toBe(`${nf.format(val(k).ksi_crashes)} KSI`)
@@ -344,8 +344,8 @@ describe('Crash profile screen', () => {
     await screen.findByLabelText('Key numbers')
     const strip = screen.getByLabelText('Crashes along the corridor')
     const placed = new Set(assignment.assignments.filter((a) => a.kind === 'intersection' || a.kind === 'segment').map((a) => a.crash_id))
-    const vru = crashes.crashes.filter((c) => placed.has(c.crash_id) && (c.ped || c.bike))
+    const vru = crashes.crashes.filter((c) => placed.has(c.crash_id) && (c.ped || c.bike || c.ebike || c.escooter))
     expect(strip.querySelectorAll('[data-testid="strip-vru"]').length).toBe(vru.length)
-    if (vru.length) expect(within(strip).getByText('Ring: pedestrian or bicyclist involved')).toBeTruthy()
+    if (vru.length) expect(within(strip).getByText('Ring: pedestrian, bicyclist, e-bike or e-scooter involved')).toBeTruthy()
   })
 })

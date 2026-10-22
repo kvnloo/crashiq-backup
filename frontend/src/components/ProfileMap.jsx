@@ -3,6 +3,7 @@ import 'maplibre-gl/dist/maplibre-gl.css'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DIMENSIONS, categories, catOf, columns, corridorAzimuth, topLocations, visible } from '../lib/mapcats'
 import { HOLLOW } from '../lib/severity'
+import { RING_LEGEND, isVru, vruWho } from '../lib/vru'
 import { TILE_MAX_NATIVE_ZOOM, TILE_URL } from '../lib/tiles'
 
 const TILE_ATTR_HTML = 'Tiles © Esri — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -145,7 +146,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
     map.getSource('crashes').setData({ type: 'FeatureCollection', features: shown.filter((c) => c.lat != null && c.lon != null).map((c) => ({
       type: 'Feature', geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
       properties: { color: colorOf.get(catOf(dim, c)) || '#6B7682', dim: Boolean(highlight && !highlight.has(c.crash_id)),
-        hollow: dim === 'severity' && HOLLOW.has(catOf(dim, c)), vru: Boolean(c.ped || c.bike), road: [c.ped && 'pedestrian', c.bike && 'bicyclist'].filter(Boolean).join(' and '), big: c.severity === 'K' || c.severity === 'A', type: (c.collision_type || 'Crash').toLowerCase(), date: c.date || '',
+        hollow: dim === 'severity' && HOLLOW.has(catOf(dim, c)), vru: isVru(c), road: vruWho(c), big: c.severity === 'K' || c.severity === 'A', type: (c.collision_type || 'Crash').toLowerCase(), date: c.date || '',
         hour: c.hour != null ? `${String(c.hour).padStart(2, '0')}:00` : '', sev: c.severity },
     })) })
     map.getSource('columns').setData(is3d ? columns(locations, shown, dim, cats, scale.h, scale.r) : EMPTY)
@@ -228,7 +229,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
             )
           })}
         </div>
-        {crashes.some((c) => c.ped || c.bike) ? <div className="vru-key-row"><i className="vru-key" />Ring: pedestrian or bicyclist involved</div> : null}
+        {crashes.some(isVru) ? <div className="vru-key-row"><i className="vru-key" />{RING_LEGEND}</div> : null}
         <div className="foot mono">
           <span>Showing {shown.length} of {crashes.length} crashes{is3d ? ' · column height = crashes at the location' : ''}</span>
           {nFilters ? <button type="button" className="link" onClick={() => setHidden({})}>Clear {nFilters} filter{nFilters > 1 ? 's' : ''}</button> : null}
