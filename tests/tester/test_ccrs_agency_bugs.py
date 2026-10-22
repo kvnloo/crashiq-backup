@@ -284,3 +284,28 @@ def test_numbered_corridor_with_direction_matches_abbreviated_direction():
     r["PrimaryRoad"] = "E 4TH ST"
     out = crashes.pull(STUDY, {**NET_X, "corridor_name": "East 4th Street"}, Ckan(FakeCkan(d)))
     assert "9200001" in {c["crash_id"] for c in out["crashes"]}
+
+
+@pytest.mark.xfail(strict=True, reason="#179: a route number in a location's name makes the validator reject the screen's own finding")
+def test_route_number_in_location_name_does_not_reject_the_finding():
+    # Statewide Findings run (#176) on run 5: 19 code findings in 14 cities rejected, every one for the route number
+    # in the location's OSM name, e.g. Atascadero "Rear End crashes are over-represented at Mercedes Avenue / CA 41:
+    # 9 of 26 crashes here (34.6%) vs 19.1% ..." -> "number 41 in the text is not backed by a cited table cell".
+    # Bishop (US 395 / US 6), El Segundo and San Francisco (CA 1), Gilroy (SR 152), Fontana (Route 66). The finding
+    # is written by code from T12 and every figure is cited; the rejected finding never reaches the user.
+    from crashiq import findings, profile
+    row = profile._row("L1~type_rear_end", "Mercedes Avenue / CA 41 · rear end crashes", target_crashes=9,
+                       location_crashes=26, share_pct=34.6, reference_share_pct=19.1)
+    tables = [{"id": "T12", "rows": [row]}]
+    crashes_ = [{"crash_id": str(i), "location_id": "L1", "collision_type": "REAR END", "year": 2023} for i in range(9)]
+    f = findings.Finding(
+        id="c7-l1_type_rear_end", location_id="L1",
+        text=("Rear End crashes are over-represented at Mercedes Avenue / CA 41: 9 of 26 crashes here (34.6%) vs "
+              "19.1% across the corridor intersections."),
+        title="Rear End crashes over-represented at Mercedes Avenue / CA 41",
+        numbers=[findings.Number(value=v, table_id="T12", cell=f"L1~type_rear_end/{k}") for k, v in
+                 (("target_crashes", 9), ("location_crashes", 26), ("share_pct", 34.6), ("reference_share_pct", 19.1))],
+        evidence_refs=findings.Evidence(tables=["T12"], records=findings.RecordFilter(location_id="L1",
+                                                                                      collision_type=["REAR END"])),
+        source="screen")
+    assert findings.validate(f, tables, crashes_, (2021, 2025)) == []

@@ -680,6 +680,38 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
               [[r["city"], int(r["county"])] + [r[b["bucket"]] for b in rc["buckets"]] for r in rc["per_city"]],
               {1: 22})
 
+    # ---------------- Findings (#176, statewide Findings run on this run's code) ----------------
+    fnd_file = DATA / f"findings_{ver}.json"
+    if fnd_file.exists():
+        fd = json.loads(fnd_file.read_text())
+        sm = fd["summary"]
+        wfd = wb.create_sheet("Findings")
+        wfd["A1"], wfd["A1"].font = "Findings (tab 4): the code findings on every test corridor (#176)", H1
+        wfd["A2"] = ("Each corridor's over-representation screen (T12, HSM excess-proportion test; binomial fallback "
+                     "when no valid beta prior) and the findings code writes from it, run on this run's own backend "
+                     "code and stored pulls. Every finding passes the app's validator or is rejected; a code finding "
+                     "should never be rejected (its numbers all come from T12). tests/statewide/findings_run.py; the "
+                     "T12 arithmetic itself is checked against raw rows in tests/tester/test_golden_t12.py.")
+        wfd["A2"].alignment = WRAP
+        wfd.merge_cells("A2:J2")
+        wfd.row_dimensions[2].height = 60
+        se = table(wfd, "FindingsSummary", ["Measure", "Value"], [
+            ["Corridors screened", sm["cities"]], ["Locations screened", sm["locations_screened"]],
+            ["T12 rows (location x crash type flagged)", sm["t12_rows"]],
+            ["  of which binomial fallback (labelled a confidence, not a probability)", sm["t12_binomial"]],
+            ["Corridors with at least one finding", sm["with_findings"]], ["Findings shown", sm["findings"]],
+            ["Findings the validator rejected (expected 0; bug #179)", sm["rejected"]],
+            ["Errors", sm["errors"]]], {1: 66, 2: 12}, start_row=4)
+        cols_ = ["city", "county", "result", "locations_screened", "t12_rows", "t12_binomial", "t12_strong",
+                 "findings_shown", "findings_rejected", "rejected_reasons"]
+        table(wfd, "FindingsByCity", ["City", "County code", "Result", "Locations screened", "T12 rows",
+                                      "Binomial fallback", "Strong", "Findings shown", "Rejected", "Why rejected"],
+              [[x.get("city"), x.get("county"), x.get("result"), *[x.get(k) for k in cols_[3:9]],
+                "; ".join(r for rs in x.get("rejected_reasons") or [] for r in rs) or None]
+               for x in sorted(fd["cities"], key=lambda x: (-(x.get("findings_rejected") or 0),
+                                                           -(x.get("findings_shown") or 0), x["city"]))],
+              {1: 22, 10: 60}, start_row=se + 3)
+
     # ---------------- Fatal crashes (#166, measure only) ----------------
     fat_file = DATA / "fatal.json"
     if fat_file.exists():
@@ -911,7 +943,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
 
     order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "TIMS by county", "Problems", "Run history",
              "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
-             "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
+             "Findings", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
     order[1:1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order] + [w for w in wb._sheets if w.title not in order]   # never drop a sheet
