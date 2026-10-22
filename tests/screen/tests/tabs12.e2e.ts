@@ -116,7 +116,7 @@ test('Review list: placing a crash takes it off the list and into the counts', a
   const review = await api(app.baseUrl, `/studies/${id}/review`);
   const group = review.groups[0];
   await screen.getByRole('button', { name: new RegExp(group.label ?? group.key), expanded: false }).first().tap();
-  await screen.getByRole('button', 'At an intersection').first().tap();
+  await screen.getByRole('button', 'At an intersection').last().tap();   // fatal crashes come first (#175)
   const target = review.intersections[0];
   await screen.getByRole('combobox', /^Intersection for /).first().selectOption({ label: target.name });
   await screen.getByRole('button', /^Place/).first().tap();
@@ -128,4 +128,76 @@ test('Review list: placing a crash takes it off the list and into the counts', a
   await expect(q).toContainText(`${fmt(after.user_placed)} by you`);
   if (after.unplaced) await expect(q).toContainText(`${fmt(after.unplaced)} to review`);
   else await expect(q).not.toContainText('to review');
+});
+
+// ---- fatal crashes first on the review list (#175, #177) ----
+import { inflateRawSync } from 'node:zlib';
+
+/** Every file's text in an .xlsx (a zip), read with Node's own zlib: enough to find a cell's text. */
+function xlsxText(buf: Buffer): string {
+  let out = '', i = 0;
+  while (i + 30 <= buf.length && buf.readUInt32LE(i) === 0x04034b50) {
+    const method = buf.readUInt16LE(i + 8), size = buf.readUInt32LE(i + 18);
+    const nameLen = buf.readUInt16LE(i + 26), extraLen = buf.readUInt16LE(i + 28);
+    const start = i + 30 + nameLen + extraLen, data = buf.subarray(start, start + size);
+    out += (method === 8 ? inflateRawSync(data) : data).toString('utf8');
+    i = start + size;
+  }
+  return out;
+}
+
+test('Review list: a fatal crash comes first, red, with searches, and needs a source to be placed', async ({ app, screen, browser }) => {
+  const { id } = await studyWithCorridor(app.baseUrl, 'Screen test: fatal first');
+  await app.open(`/s/${id}/profile`);
+  await expect(screen.getByRole('region', 'Data quality')).toBeVisible({ timeout: 60000 });
+  const review = await api(app.baseUrl, `/studies/${id}/review`);
+  expect(review.fatal_open).toBe(1);                         // the screen-test fixture makes one review crash fatal
+  const fatal = review.fatal[0];
+  await screen.getByRole('button', /to review/).tap();
+  // first on the list, flagged red
+  const section = screen.getByRole('region', 'Fatal crashes without a location');
+  await expect(section).toBeVisible();
+  await expect(section.getByTestId('fatal-header')).toContainText('1 fatal crash needs a location');
+  const order = await browser.evaluate(() => {
+    const f = document.querySelector('.rv-fatal'), g = document.querySelector('.rv-groups');
+    return !g || Boolean(f && (f.compareDocumentPosition(g) & Node.DOCUMENT_POSITION_FOLLOWING));
+  });
+  expect(order).toBe(true);
+  const colors = await browser.evaluate(() => {
+    const css = getComputedStyle(document.documentElement).getPropertyValue('--sev-k').trim();
+    const probe = document.createElement('span'); probe.style.color = css; document.body.append(probe);
+    const want = getComputedStyle(probe).color; probe.remove();
+    return [getComputedStyle(document.querySelector('.rv-fatal-h')!).color,
+            getComputedStyle(document.querySelector('.rv-fatal')!).borderTopColor, want];
+  });
+  expect(colors[0]).toBe(colors[2]);
+  expect(colors[1]).toBe(colors[2]);
+  // the lookup searches: news and web, prefilled with the report's road and the words "fatal crash"
+  for (const label of ['News search', 'Web search']) {
+    const href = (await section.getByRole('link', label).getAttribute('href'))!;
+    const q = new URL(href).searchParams.get('q')!;
+    expect(q, label).toContain('fatal crash');
+    expect(q, label).toContain(fatal.primary_road.trim());
+    expect(fatal.lookup.map((l: any) => l.url), label).toContain(href);
+  }
+  // placing is refused without a source: on screen (buttons off) and by the API (422)
+  const label = `fatal crash ${fatal.crash_id}`;
+  await expect(section.getByRole('button', 'At an intersection')).toBeDisabled();
+  await expect(section.getByRole('button', 'On the map')).toBeDisabled();
+  const target = review.intersections[0];
+  const res = await fetch(new URL(`/api/studies/${id}/review/decisions`, app.baseUrl), {
+    method: 'POST', headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({ crash_ids: [fatal.crash_id], action: 'place', method: 'intersection', location_id: target.id }) });
+  expect(res.status).toBe(422);
+  // with a source it's placed, and the source is in the export
+  const source = 'https://example.org/news/crenshaw-fatal-crash (screen test)';
+  await section.getByLabel(`Source for ${label}`).fill(source);
+  await section.getByRole('button', 'At an intersection').tap();
+  await section.getByRole('combobox', `Intersection for ${label}`).selectOption({ label: target.name });
+  await section.getByRole('button', 'Place').tap();
+  await expect.poll(async () => (await api(app.baseUrl, `/studies/${id}/review`)).fatal_open).toBe(0);
+  const decided = (await api(app.baseUrl, `/studies/${id}/review`)).decided.find((x: any) => x.crash_id === fatal.crash_id);
+  expect(decided.decision).toMatchObject({ action: 'place', source });
+  const xlsx = Buffer.from(await (await fetch(new URL(`/api/studies/${id}/export.xlsx`, app.baseUrl))).arrayBuffer());
+  expect(xlsxText(xlsx)).toContain(source.replace(/&/g, '&amp;'));
 });
