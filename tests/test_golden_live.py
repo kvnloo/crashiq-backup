@@ -367,3 +367,27 @@ def test_fars_link_agrees_with_the_testers_rule(case, tmp_path):
         assert (mine[0], fars.case_key(mine[1]["year"], mine[1]["st_case"]) if mine[1] else None) == theirs, r["Collision Id"]
         checked += 1
     assert checked or name == "unioncity"
+
+
+def test_collision_diagram_accounts_for_every_crash_at_each_intersection(case):
+    # #106: T21 numbers every crash counted at the intersection once, in date order; drawn + not drawn = all
+    from crashiq import diagram
+    name, pull, a, p, ids, crash, sev, _ = case
+    by = {c["crash_id"]: c for c in pull["crashes"]}
+    at = {}
+    for x in a["assignments"]:
+        if x["kind"] == "intersection":
+            at.setdefault(x["location_id"], []).append(by[x["crash_id"]])
+    line = [tuple(q) for q in json.loads((LIVE / f"line_{name}.json").read_text())]
+    nett = {"line": line, "corridor_name": name}
+    for lid, cs in at.items():
+        d = diagram.build(nett, {"id": lid, "name": lid, "control": "signal"}, cs)
+        assert sorted(r["crash_id"] for r in d["crashes"]) == sorted(c["crash_id"] for c in cs)
+        assert [r["n"] for r in d["crashes"]] == list(range(1, len(cs) + 1))
+        keys = [(r["date"] or "", r["hour"] if r["hour"] is not None else -1) for r in d["crashes"]]
+        assert keys == sorted(keys)
+        drawn = sum(int(n) for s in d["steps"] if s["op"] == "text" and s["color"] == "muted" and s["t"][0].isdigit()
+                    for n in [len(s["t"].split(", "))])
+        assert drawn + sum(d["not_drawn"].values()) == len(cs)
+        # severity in the list is the crash's own, as recounted from raw rows
+        assert all(r["severity"] == sev[r["crash_id"]] for r in d["crashes"])

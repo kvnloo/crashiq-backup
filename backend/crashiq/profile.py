@@ -548,6 +548,16 @@ def get_profile(sid: str, request: Request, exclude: str = "") -> dict:
     return build(study, net, pull, a, {e for e in exclude.split(",") if e})
 
 
+def diagram_table(lid: str, diagram: dict, crashes: list[dict]) -> dict:
+    """T21: the crashes of the collision diagram, numbered in date order (the numbers on the diagram)."""
+    rows = [_row(r["n"], f"{r['date']} {r['hour']:02d}00" if r.get("hour") is not None else str(r["date"]),
+                 crash_id=r["crash_id"], approach=r["approach"], type=r["type_label"], severity=r["severity"],
+                 code=r["code"]) for r in diagram["crashes"]]
+    return _table(f"T21@{lid}", "Collision diagram crashes (number on the diagram; code = road surface + light, HSM)",
+                  [("crash_id", "Collision Id"), ("approach", "Approach"), ("type", "Type"), ("severity", "Severity"),
+                   ("code", "Code")], rows, crashes)
+
+
 @router.get("/studies/{sid}/profile/locations/{lid}")
 def get_location_profile(sid: str, lid: str, request: Request) -> dict:
     study, net, pull, a = assign_mod.for_study(request.app.state.db, sid)
@@ -555,7 +565,14 @@ def get_location_profile(sid: str, lid: str, request: Request) -> dict:
     placed = [{**by_id[x["crash_id"]], "location_id": x["location_id"], "location_provenance": x["location_provenance"]}
               for x in a["assignments"] if x["location_id"] == lid]
     years = len(pull["years"]) - len(pull["cleaning"].get("years_missing", []))
-    return {"location_id": lid, "tables": tables_for(placed, years, suffix=f"@{lid}"),
+    tables = tables_for(placed, years, suffix=f"@{lid}")
+    it = next((i for i in net["intersections"] if i["id"] == lid and i.get("is_study")), None)
+    diagram = None
+    if it is not None and placed:                 # one collision diagram per study intersection (#106, N10)
+        from . import diagram as diagram_mod
+        diagram = diagram_mod.build(net, it, placed)
+        tables.append(diagram_table(lid, diagram, placed))
+    return {"location_id": lid, "tables": tables, "diagram": diagram,
             "crashes": [{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
                                                "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",
                                                "location_provenance")} for c in placed]}
