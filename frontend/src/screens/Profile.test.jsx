@@ -260,7 +260,7 @@ describe('Crash profile screen', () => {
     const q = screen.getByLabelText('Data quality')
     expect(within(q).getByText('Can I trust these numbers?')).toBeInTheDocument()
     const v = (k) => cell(profile, `T1/${k}/value`)
-    expect(v('located_gps') + v('located_exact') + v('located_other') + (v('user_placed') || 0)).toBe(v('crashes'))
+    expect(v('located_gps') + (v('located_fars') || 0) + v('located_exact') + v('located_other') + (v('user_placed') || 0)).toBe(v('crashes'))
     expect(within(q).getByTestId('q-located_gps').textContent).toContain(nf.format(v('located_gps')))
     const ex = within(q).getByRole('button', { name: new RegExp(`${nf.format(v('excluded'))} nearby, outside the corridor`) })
     fireEvent.click(ex)

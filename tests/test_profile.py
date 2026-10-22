@@ -200,7 +200,7 @@ def v_(p, addr):
 def test_t1_location_sources_add_up_to_crashes():
     # #104 data-quality strip: every counted crash is in exactly one "how located" row
     p = P()
-    parts = ("located_gps", "located_exact", "located_other", "user_placed")
+    parts = ("located_gps", "located_fars", "located_exact", "located_other", "user_placed")
     assert sum(v_(p, f"T1/{k}/value") for k in parts) == v_(p, "T1/crashes/value")
 
 

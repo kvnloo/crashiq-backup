@@ -164,6 +164,32 @@ MIGRATIONS: list[str] = [
         created_at  TEXT NOT NULL DEFAULT (datetime('now'))
     );
     """,
+    # 13 — #174 FARS reference store (NHTSA, public domain): California accident rows, and where they came from
+    """
+    CREATE TABLE fars_accident (
+        year      INTEGER NOT NULL,
+        st_case   INTEGER NOT NULL,
+        county    INTEGER NOT NULL,
+        city      INTEGER,
+        month     INTEGER NOT NULL,
+        day       INTEGER NOT NULL,
+        hour      INTEGER,
+        minute    INTEGER,
+        fatals    INTEGER NOT NULL,
+        latitude  REAL,
+        longitude REAL,
+        tway_id   TEXT,
+        tway_id2  TEXT,
+        PRIMARY KEY (year, st_case)
+    );
+    CREATE INDEX ix_fars_day ON fars_accident (county, year, month, day);
+    CREATE TABLE fars_source (
+        year      INTEGER PRIMARY KEY,
+        file      TEXT NOT NULL,
+        rows      INTEGER NOT NULL,
+        loaded_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    """,
 ]
 
 

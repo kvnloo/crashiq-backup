@@ -10,7 +10,8 @@ import { vruHeadline } from '../lib/vru'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
 
-const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from the report, converted from degrees-minutes-seconds', exact: 'Matched by street names', fuzzy: 'Fuzzy name match',
+const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from the report, converted from degrees-minutes-seconds',
+  fars: 'FARS (NHTSA) point, checked against the report\'s streets', exact: 'Matched by street names', fuzzy: 'Fuzzy name match',
   user: 'Placed by you', unmatched: 'Not placed yet (no coordinates)' }
 const provLabel = (k) => PROV_LABEL[k] || (k.startsWith('jev') ? `Jev suggestion ${k.slice(3)}` : k)
 
@@ -228,7 +229,8 @@ const RULE_LABEL = { outside_buffer: 'outside the corridor buffer', outside_stud
   private_property: 'on private property', user_excluded: 'excluded by you', no_segment: 'not on a study segment',
   not_on_freeway: 'not on the freeway', ramp: 'on a freeway ramp' }
 // short labels so the line stays one line at the 400 px column; the T1 row labels (ⓘ, export) carry the full wording
-const QUALITY = [['located_gps', 'GPS', 'q-gps', "Located by the officer's GPS"], ['located_exact', 'exact', 'q-exact', 'Placed by exact street-name match'],
+const QUALITY = [['located_gps', 'GPS', 'q-gps', "Located by the officer's GPS"],
+  ['located_fars', 'FARS', 'q-fars', 'Fatal crashes placed at their FARS point (NHTSA), checked against the streets the report names'], ['located_exact', 'exact', 'q-exact', 'Placed by exact street-name match'],
   ['located_other', 'other', 'q-other', 'Placed by other matching tiers'], ['user_placed', 'by you', 'q-user', 'Placed by you on the review list'],
   ['unplaced', 'to review', 'q-review', 'Not placed yet: open the review list'], ['excluded', 'nearby, outside the corridor', 'q-ex', 'Nearby crashes outside the corridor: show the rules']]
 

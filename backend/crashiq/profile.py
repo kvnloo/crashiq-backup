@@ -357,10 +357,12 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         # of which written as degrees-minutes-seconds and converted (#143); already in located_gps
         _row("located_gps_dms", "Of these, GPS converted from degrees-minutes-seconds",
              value=sum(1 for c in placed if c.get("location_provenance") == "gps_dms_corrected")),
+        _row("located_fars", "Fatal crashes placed at their FARS point (NHTSA)",
+             value=sum(1 for c in placed if c.get("location_provenance") == "fars")),
         _row("located_exact", "Placed by exact street-name match",
              value=sum(1 for c in placed if c.get("location_provenance") == "exact")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
-             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "exact", "user"))),
+             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "fars", "exact", "user"))),
         _row("excluded", "Crashes outside the study area", value=excluded_n),
     ]
     if exclude:
