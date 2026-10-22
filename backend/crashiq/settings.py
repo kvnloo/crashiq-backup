@@ -30,6 +30,9 @@ class Settings:
     # Never set in production. Used for screenshots in the build sandbox, which can't reach those hosts.
     fixtures_dir: Path | None = field(default_factory=lambda: Path(os.environ["CRASHIQ_FIXTURES_DIR"])
                                       if os.getenv("CRASHIQ_FIXTURES_DIR") else None)
+    # CHP files for CCRS tables not in the data.ca.gov datastore (#196): ~50 MB each, never committed
+    ccrs_files_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_FILES_DIR",
+                                                                        ROOT / "data" / "cache" / "ccrs_files")))
     # Frontend build served by the same process in production (single service, DemandIQ pattern).
     dist_dir: Path = field(default_factory=lambda: ROOT / "frontend" / "dist")
 

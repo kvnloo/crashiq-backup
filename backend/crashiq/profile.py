@@ -542,24 +542,29 @@ def missing_detail(pull: dict, crashes: list[dict]) -> dict:
     """{"parties": (years, crashes in those years), "iwp": (...)} for the years whose Parties / IWP table the pull
     didn't have (CHP publishes them later than the Crashes table: Parties 2025 came out on 2026-10-22)."""
     out = {}
+    cl = pull.get("cleaning", {})
     for key, field in (("parties", "parties_missing_years"), ("iwp", "iwp_missing_years")):
-        ys = sorted(set(pull.get("cleaning", {}).get(field) or []))
+        ys = sorted(set(cl.get(field) or []))
         if ys:
             out[key] = (ys, sum(1 for c in crashes if c.get("year") in ys))
+    # CHP published the file but it isn't in the datastore: the server is downloading it (#196)
+    out["downloading"] = {k.split("_")[0] for k in cl.get("files_pending") or {}}
     return out
 
 
 def missing_notes(missing: dict) -> dict:
     notes = {}
+    soon = " CHP has published the file; CrashIQ is downloading it and adds these details on the next refresh."
     if "parties" in missing:
         ys, n = missing["parties"]
         notes["parties"] = (f"No CCRS party details for {', '.join(map(str, ys))} in this pull: road users, heavy trucks, "
-                            f"movements and the collision diagram leave out those years' {n} crash{'es' if n != 1 else ''}.")
+                            f"movements and the collision diagram leave out those years' {n} crash{'es' if n != 1 else ''}."
+                            + (soon if "parties" in missing.get("downloading", ()) else ""))
     if "iwp" in missing:
         ys, n = missing["iwp"]
         notes["iwp"] = (f"No CCRS injury details for {', '.join(map(str, ys))} in this pull: those years' {n} "
                         f"crash{'es' if n != 1 else ''} with injuries count as 'injury, level not stated' (U), so KSI "
-                        "is undercounted.")
+                        "is undercounted." + (soon if "iwp" in missing.get("downloading", ()) else ""))
     return notes
 
 
