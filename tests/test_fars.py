@@ -160,3 +160,45 @@ def test_fars_never_places_a_crash_nobody_died_in(tmp_path):
     counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm())
     assert counts["tried"] == sum((c.get("killed") or 0) > 0 and not c.get("exclude_rule") for c in out["crashes"])
     assert not any(c["location_source"] == "fars" and not c.get("killed") for c in out["crashes"])
+
+
+# -- #191: FARS is for fatal crashes with no usable location only ------------------------------------------
+def _far_row(year=2021, month=6, day=15):
+    return {"ST_CASE": 60099, "COUNTY": 37, "YEAR": year, "MONTH": month, "DAY": day, "FATALS": 1, "HOUR": 1,
+            "MINUTE": 7, "LATITUDE": 33.95, "LONGITUD": -118.33}              # ~2.5 mi up Crenshaw from the stretch
+
+
+def test_fatal_crash_the_locator_places_exactly_keeps_that_place(tmp_path, monkeypatch):
+    # Dana Point, Fontana, Palm Desert, Twentynine Palms (run 6, #191): run 5 placed them exactly at the intersection
+    # the report names; the FARS step ran first and moved them to FARS points off the corridor.
+    from crashiq import network as network_mod
+    osm = json.loads((FIXTURES / "overpass_crenshaw.json").read_text())
+    monkeypatch.setattr(network_mod, "fetch_overpass", lambda db, q, **kw: osm)
+    db = _db(tmp_path, [_far_row()])
+    c = {"crash_id": "a", "primary_road": "CRENSHAW BL", "secondary_road": "MARINE AV", "lat": None, "lon": None,
+         "location_source": "unmatched", "killed": 1, "severity": "K", "county_code": "19",
+         "reported_at": "2021-06-15T01:07:00"}
+    result = {"cleaning": {}, "crashes": [c]}
+    placement.place_unmatched(db, {"line": [(33.8953, -118.32662), (33.9040, -118.32662), (33.9123, -118.32662)]}, result)
+    assert c["location_source"] == "exact" and not c.get("fars_case")
+
+
+def test_fatal_crash_whose_gps_the_assignment_accepts_keeps_its_gps(tmp_path):
+    # Atwater (run 6, #191): GPS 34 ft from a study intersection, accepted by the assignment (the report names that
+    # cross street), but the report doesn't name the corridor, so the stricter FARS check called it unusable and FARS
+    # moved the crash 610 ft off the corridor.
+    from crashiq import assign, network
+    osm = json.loads((FIXTURES / "overpass_crenshaw.json").read_text())
+    line = [(33.8953, -118.32662), (33.9040, -118.32662), (33.9123, -118.32662)]
+    found = network.detect(osm, line)
+    ints = [{**i, "is_study": True} for i in found["intersections"]]
+    net = {"line": line, **found, "intersections": ints, "segments": network.segments(ints, found["length_ft"]),
+           "radius_ft": 250, "buffer_ft": 100}
+    it = next(i for i in ints if "144" in i["name"])
+    c = {"crash_id": "g", "primary_road": "W 144TH ST", "secondary_road": "SOME DRIVEWAY", "lat": it["lat"] + 0.00005,
+         "lon": it["lon"], "location_source": "gps", "killed": 1, "severity": "K", "county_code": "19",
+         "reported_at": "2021-06-15T01:07:00"}
+    assert assign.assign([c], net, 250, 100)["assignments"][0]["kind"] == "intersection"   # the GPS is usable
+    db = _db(tmp_path, [_far_row()])
+    placement.place_fatal_from_fars(db, net, {"cleaning": {}, "crashes": [c]}, overpass=_osm("West 144th Street"))
+    assert c["location_source"] == "gps" and not c.get("fars_case")

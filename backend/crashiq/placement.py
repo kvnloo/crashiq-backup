@@ -14,9 +14,22 @@ from . import network as network_mod
 from .db import Database
 
 
+def _gps_usable(c: dict, net: dict) -> bool:
+    """The GPS check the assignment itself applies (#191, Atwater): GPS is unusable only when the assignment would drop
+    it as on another street (`not_on_corridor_street`) or flag it far from the intersection the report names. A
+    stricter test (the report must name the corridor) moved GPS that the assignment accepts."""
+    from .assign import assign
+    if not net.get("intersections") and not net.get("segments"):
+        from .crashes import point_fits_streets
+        return point_fits_streets(c, net)
+    x = assign([c], net, net.get("radius_ft", 250), net.get("buffer_ft", 100))["assignments"][0]
+    return x.get("rule") != "not_on_corridor_street" and not x.get("gps_check")
+
+
 def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass=None) -> dict:
-    """Fatal crashes first (#174, user decision 2026-10-21): a fatal crash with no usable location (no GPS, or GPS that
-    fails the street check) takes its linked FARS point like GPS when the point lies on a road the report names
+    """Fatal crashes first (#174, user decision 2026-10-21): a fatal crash with no usable location (no GPS and no
+    placement by the street-name locator, or GPS the assignment rejects or flags) takes its linked FARS point like GPS
+    when the point lies on a road the report names
     (within the GPS-check distance + the report's offset); assignment then decides: on the study stretch it's
     placed, elsewhere it's excluded and listed as `fars_off_corridor` with its distance (PM review of #182). A point on
     none of the report's roads isn't used; the crash keeps its place on the review list with a `fars_hint`."""
@@ -39,8 +52,8 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
             continue
         src = c.get("location_source")
         if src not in ("unmatched", "gps", "gps_dms_corrected"):
-            continue
-        if src != "unmatched" and (c.get("lat") is None or point_fits_streets(c, net)):
+            continue                       # placed by the locator (exact) or by hand: a usable location (#191)
+        if src != "unmatched" and (c.get("lat") is None or _gps_usable(c, net)):
             continue                                       # its own GPS checks out
         counts["tried"] += 1
         status, row = fars.link(db, c)
@@ -68,7 +81,6 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
 
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None) -> dict:
     gate = gate or locate.Gate()
-    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass)
     # no cross street (#94): nothing for the locator to work with; the engineer places it from the review list
     todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")
             and not c.get("review_reason")]
@@ -86,5 +98,7 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
                 c["suggestion"] = {"tier": pl.tier, "lat": pl.lat, "lon": pl.lon}
                 counts["suggested"] += 1
             counts["still_unplaced"] += 1
+    # FARS only after the locator: a fatal crash it placed exactly has a usable location (#191)
+    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass)
     result["cleaning"]["placement"] = counts
     return counts
