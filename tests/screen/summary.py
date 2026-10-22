@@ -19,6 +19,7 @@ def main() -> None:
     for run, r in ((run, r) for run in runs for r in run["results"] if r.get("selected", True)):
         title = r["titlePath"][-1]
         screen, _, check = title.partition(": ")
+        screen = "Review list (live Crenshaw data)" if screen == "Live" else screen
         rows.append({"test": title, "screen": screen, "check": check, "result": r["status"],
                      "target": r["targetId"], "run_at": run["startedAt"][:10]})
     OUT.parent.mkdir(parents=True, exist_ok=True)
