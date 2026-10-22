@@ -56,7 +56,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 16    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169)
+PULL_FORMAT = 17    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -431,9 +431,16 @@ def _dms_share(ckan: Ckan, rid: str, cols: dict, agency: str, cache: dict) -> fl
     return cache[key]
 
 
+def point_fits_streets(c: dict, net: dict) -> bool:
+    """The street check for a point from another source (DMS-converted GPS #143, FARS #174): see `_dms_check`."""
+    line = Polyline([tuple(p) for p in net["line"]])
+    studies = [i for i in net.get("intersections", []) if i.get("is_study") and i.get("lat") is not None]
+    return _dms_check(c, line, studies, grade.corridor_keys(net))
+
+
 def _dms_check(c: dict, line: Polyline, studies: list[dict], corridor_keys) -> bool:
-    """A converted point is kept only near the streets the report names: within the GPS-check distance (plus the
-    reported offset) of the study intersection it names, or of the corridor line when it names the corridor."""
+    """A point is kept only near the streets the report names: within the GPS-check distance (plus the reported
+    offset) of the study intersection it names, or of the corridor line when it names the corridor."""
     from .assign import GPS_CHECK_FT, _stated_intersection
     tol = GPS_CHECK_FT + (c.get("offset_ft") or 0.0)
     st = _stated_intersection(c, studies, corridor_keys)
@@ -860,7 +867,7 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
                 net = {**net, "cities": network_mod.corridor_cities(db, net["line"], study["buffer_ft"], overpass)}
             result = pull(study, net, ckan, progress)
             from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
-            place_unmatched(db, net, result)
+            place_unmatched(db, net, result, overpass=overpass)
             now = study_mod.require(db, sid)
             now_net = network_mod.network(db, sid)
             if (cache_key(now, now_net) if now_net.get("line") else None) == key:

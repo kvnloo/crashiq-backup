@@ -23,7 +23,8 @@ from .severity import COLORS as SEV_COLORS
 from .assign import for_study
 
 CREDITS = ("Crash data: CCRS, California Highway Patrol (data.ca.gov, public domain). "
-           "Map data © OpenStreetMap contributors (ODbL).")
+           "Map data © OpenStreetMap contributors (ODbL). Fatal crash locations marked 'fars': FARS, NHTSA "
+           "(public domain).")
 NO_AI = ("This report has no AI narrative. Findings are written by code from the over-representation screen (table T12, HSM excess-proportion test) and appear only after you accept them.")
 
 
@@ -37,7 +38,7 @@ def gather(db, sid: str) -> dict:
             "assignment": {"counts": a["counts"], "excluded_by_rule": a["excluded_by_rule"],
                            "unmatched_by_rule": a.get("unmatched_by_rule", {})},
             "pulled_at": pull.get("pulled_at"),
-            "decisions": _decisions(db, sid, pull, a),
+            "decisions": _decisions(db, sid, pull, a), "fars": _fars_placed(pull, a),
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
 
 
@@ -57,6 +58,15 @@ def _decisions(db, sid: str, pull: dict, a: dict) -> list[dict]:
                     "assigned_to": loc or k, "applied": c.get("stale_decision") is None,
                     "decided_at": d["decided_at"]})
     return out
+
+
+def _fars_placed(pull: dict, a: dict) -> list[dict]:
+    """Fatal crashes located by their linked FARS point (#174), with the FARS case, for the export."""
+    loc = {x["crash_id"]: x["location_id"] or x["kind"] for x in a["assignments"]}
+    return [{"crash_id": c["crash_id"], "roads": f"{c.get('primary_road') or ''} / {c.get('secondary_road') or ''}",
+             "date": c.get("date"), "fars_case": c.get("fars_case"), "lat": c.get("lat"), "lon": c.get("lon"),
+             "replaced_gps": c.get("gps_replaced"), "assigned_to": loc.get(c["crash_id"])}
+            for c in pull["crashes"] if c.get("location_source") == "fars"]
 
 
 def _t(p, tid):
@@ -127,6 +137,19 @@ def to_xlsx(d: dict) -> bytes:
                        r["assigned_to"] or "", "yes" if r["applied"] else "no (report revised; re-review)",
                        r["decided_at"]])
         sh.column_dimensions["B"].width = 44
+    if d.get("fars"):
+        sh = wb.create_sheet("FARS-placed fatal crashes")
+        sh.append(["Fatal crashes with no usable location in CCRS, placed at their linked FARS point (NHTSA, public "
+                   "domain) because it fits the streets the report names (provenance 'fars'). FARS case = year-ST_CASE."])
+        sh["A1"].font = Font(bold=True, size=12)
+        sh.append(["Collision Id", "Roads (as reported)", "Date", "FARS case", "Latitude", "Longitude",
+                   "CCRS GPS replaced", "Assigned to"])
+        for cell in sh[2]:
+            cell.font = Font(bold=True)
+        for r in d["fars"]:
+            sh.append([r["crash_id"], r["roads"], r["date"], r["fars_case"], r["lat"], r["lon"],
+                       ", ".join(str(v) for v in r["replaced_gps"]) if r["replaced_gps"] else "", r["assigned_to"] or ""])
+        sh.column_dimensions["B"].width = 44
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
@@ -142,6 +165,7 @@ def _fmt(v, d=None):
 
 
 RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_limits": "beyond the study limits",
+             "fars_off_corridor": "fatal crashes FARS places elsewhere on the report's roads, off the study corridor",
              "freeway": "on a freeway or ramp (CHP IsFreeway)", "no_segment": "not on a study segment",
              "cross_street_not_on_corridor": "at a cross street that is not one of the corridor's intersections",
              "grade_separated_crossing": "on a road passing over or under the corridor",

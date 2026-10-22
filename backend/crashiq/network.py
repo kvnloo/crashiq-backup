@@ -113,6 +113,18 @@ def corridor_cities(db: Database, line: list[tuple[float, float]], buffer_ft: fl
     return {"cities": sorted(cities), "outside": outside, "counties": sorted(counties)}
 
 
+def roads_near(db: Database, lat: float, lon: float, radius_m: float, transport: Transport | None = None) -> list[dict]:
+    """Tags of the roads within radius_m of a point (#174: is a FARS point on a road the report names?). Same query
+    shape and cache as the corridor's; an empty or failed answer = no roads known."""
+    q = (f'[out:json][timeout:60];way(around:{radius_m:.0f},{lat:.6f},{lon:.6f},{lat:.6f},{lon:.6f})'
+         f'["highway"~"^({ROAD_CLASSES})$"];out body;>;out body qt;')
+    try:
+        raw = fetch_overpass(db, q, transport=transport, retries=1, backoff_s=1.0)
+    except NetworkError:
+        return []
+    return [e.get("tags") or {} for e in raw.get("elements", []) if e.get("type") == "way"]
+
+
 def _http_post(url: str, data: bytes, timeout: float) -> bytes:
     req = urllib.request.Request(url, data=data, headers={"User-Agent": "CrashIQ/0.1 (+crash safety analysis)"})
     with urllib.request.urlopen(req, timeout=timeout) as r:

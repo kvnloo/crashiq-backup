@@ -337,3 +337,33 @@ def test_a_corridor_crossing_into_the_next_city_keeps_both_cities(monkeypatch):
     _, pull, a, _ = run("unioncity", monkeypatch, {"cities": ["Union City"], "outside": False, "counties": []})
     assert pull["cleaning"]["other_cities"].get("Fremont", 0) > 0
     assert all(c.get("city") != "Fremont" or c["location_source"] == "gps" for c in pull["crashes"])
+
+
+def test_fars_link_agrees_with_the_testers_rule(case, tmp_path):
+    # #174: the app's FARS link (backend/crashiq/fars.py) must give the same answer as the Tester's independent
+    # implementation (tests/statewide/fatal.py, verified on 16,278 crashes in #166) for every fatal crash in the raw
+    # rows, on the real FARS rows of those days (tests/fixtures/live/fars_fatal_days.csv, public domain).
+    import csv
+    import sys
+    sys.path.insert(0, str(FIXTURES.parents[1] / "tests" / "statewide"))
+    import fatal as ref
+    from crashiq import fars
+    from crashiq.db import Database
+    name = case[0]
+    path = LIVE / "fars_fatal_days.csv"
+    db = Database(tmp_path / f"fars_{name}.sqlite")
+    fars.load_csv(db, path)
+    idx = ref.index(list(csv.DictReader(path.open())))
+    raw = raw_tables(name)
+    checked = 0
+    for r in raw["Crashes"]:
+        if int(r.get("NumberKilled") or 0) <= 0 or int(r["Crash Date Time"][:4]) not in ref.FARS_YEARS:
+            continue
+        mine = fars.link(db, {"reported_at": r["Crash Date Time"], "county_code": r["County Code"],
+                              "killed": r["NumberKilled"], "primary_road": r["PrimaryRoad"],
+                              "secondary_road": r["SecondaryRoad"]})
+        theirs = ref.link({"dt": r["Crash Date Time"], "county": r["County Code"], "killed": r["NumberKilled"],
+                           "roads": [r["PrimaryRoad"], r["SecondaryRoad"]]}, idx)
+        assert (mine[0], fars.case_key(mine[1]["year"], mine[1]["st_case"]) if mine[1] else None) == theirs, r["Collision Id"]
+        checked += 1
+    assert checked or name == "unioncity"
