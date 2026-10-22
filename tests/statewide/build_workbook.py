@@ -13,6 +13,7 @@ from __future__ import annotations
 import datetime as dt
 import csv
 import json
+import math
 import re
 import subprocess
 import sys
@@ -712,6 +713,39 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                                                            -(x.get("findings_shown") or 0), x["city"]))],
               {1: 22, 10: 60}, start_row=se + 3)
 
+    # ---------------- Fatal crashes before/after FARS (#178): this run vs the one before, same basis ----------------
+    fo_now, fo_before = DATA / f"fatal_outcomes_{ver}.json", DATA / f"fatal_outcomes_{before}.json"
+    if fo_now.exists() and fo_before.exists():
+        fn, fb = json.loads(fo_now.read_text()), json.loads(fo_before.read_text())
+        wfo = wb.create_sheet("Fatal before-after")
+        wfo["A1"], wfo["A1"].font = f"Fatal crashes on the test corridors: {before} -> {ver} (#178, FARS #174)", H1
+        wfo["A2"] = ("Every fatal crash the pull kept for a frozen-v1 corridor, by where each run's own code put it "
+                     "(tests/statewide/fatal_outcomes.py). FARS points are treated like GPS (#174): within the "
+                     "intersection radius or the corridor buffer they count; elsewhere on the report's roads they are "
+                     "excluded as fars_off_corridor.")
+        wfo["A2"].alignment = WRAP
+        wfo.merge_cells("A2:F2")
+        wfo.row_dimensions[2].height = 45
+        keys = sorted(set(fn["fatal_outcomes"]) | set(fb["fatal_outcomes"]),
+                      key=lambda k: (not k.startswith("placed"), k.startswith("unplaced"), k))
+        oe = table(wfo, "FatalOutcomes", ["Outcome", f"Before ({before})", f"After ({ver})", "Change"],
+                   [[k, fb["fatal_outcomes"].get(k, 0), fn["fatal_outcomes"].get(k, 0),
+                     fn["fatal_outcomes"].get(k, 0) - fb["fatal_outcomes"].get(k, 0)] for k in keys],
+                   {1: 40, 2: 16, 3: 16}, start_row=4)
+        a_ = {(c["test_city"], c["crash_id"]): c for c in fb["crashes"]}
+        b_ = {(c["test_city"], c["crash_id"]): c for c in fn["crashes"]}
+        moves = Counter((a_[k]["outcome"] if k in a_ else "absent", b_[k]["outcome"] if k in b_ else "absent")
+                        for k in set(a_) | set(b_))
+        te = table(wfo, "FatalTransitions", ["Before", "After", "Fatal crashes"],
+                   [[x, y, n] for (x, y), n in moves.most_common() if x != y], {1: 34, 2: 34}, start_row=oe + 3)
+        ft_ = lambda p, q: round(math.hypot((p[0] - q[0]) * 364000, (p[1] - q[1]) * 364000 * math.cos(math.radians(p[0]))))
+        table(wfo, "FatalLeftCorridor", ["City", "Collision Id", "Roads (report)", "Before", "FARS point vs before, ft",
+                                         "After: off the corridor by, ft", "FARS case"],
+              [[k[0], k[1], " / ".join(r or "" for r in a_[k]["roads"]), a_[k]["outcome"],
+                ft_((a_[k]["lat"], a_[k]["lon"]), (b_[k]["lat"], b_[k]["lon"])), b_[k]["distance_ft"], b_[k]["fars_case"]]
+               for k in sorted(a_) if a_[k]["outcome"].startswith("placed")
+               and b_.get(k, {}).get("outcome") == "excluded_fars_off_corridor"], {1: 18, 3: 40, 4: 16}, start_row=te + 3)
+
     # ---------------- Fatal crashes (#166, measure only) ----------------
     fat_file = DATA / "fatal.json"
     if fat_file.exists():
@@ -943,7 +977,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
 
     order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "TIMS by county", "Problems", "Run history",
              "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
-             "Findings", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
+             "Findings", "Fatal before-after", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
     order[1:1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order] + [w for w in wb._sheets if w.title not in order]   # never drop a sheet

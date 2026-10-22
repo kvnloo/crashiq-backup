@@ -447,6 +447,46 @@ def prefetch() -> None:
             print(c["city"], e, flush=True)
 
 
+class _Watch:
+    """Worker heartbeat and exit reason (PM, after run 6: two workers stopped silently near the end, twice).
+    Every HEARTBEAT_S a line with the city in progress, the elapsed time and the peak memory; on any exit a line
+    saying why: finished, a signal (SIGTERM/SIGHUP/SIGINT), or an exception with its traceback. A worker that stops
+    with no exit line was killed by SIGKILL or lost its machine (sleep, power): the last heartbeat says when."""
+    HEARTBEAT_S = 60
+
+    def __init__(self, tag: str):
+        import atexit
+        import signal
+        import threading
+        self.tag, self.city, self.n, self.total, self.t0, self.done = tag, "-", 0, 0, time.time(), False
+        for sig in (signal.SIGTERM, signal.SIGHUP, signal.SIGINT):
+            signal.signal(sig, self._on_signal)
+        atexit.register(self._on_exit)
+        threading.Thread(target=self._beat, daemon=True).start()
+        self.log("started")
+
+    def log(self, what: str) -> None:
+        import resource
+        rss = resource.getrusage(resource.RUSAGE_SELF).ru_maxrss / (1024 * 1024)      # macOS: bytes -> MB
+        print(f"[worker {self.tag}] {time.strftime('%H:%M:%S')} {what} · city {self.n}/{self.total} {self.city} · "
+              f"{time.time() - self.t0:.0f}s · peak {rss:.0f} MB", flush=True)
+
+    def _beat(self) -> None:
+        while True:
+            time.sleep(self.HEARTBEAT_S)
+            self.log("heartbeat")
+
+    def _on_signal(self, signum, _frame) -> None:
+        import signal
+        self.log(f"EXIT: stopped by signal {signal.Signals(signum).name}")
+        self.done = True
+        os._exit(128 + signum)
+
+    def _on_exit(self) -> None:
+        if not self.done:
+            self.log("EXIT: finished" if self.n >= self.total else "EXIT: ended before its last city")
+
+
 def main(limit: int | None = None, only: str | None = None, shard: tuple[int, int] = (0, 1),
          series: str = "v1") -> None:
     """series v1: the frozen v1 list into results/<tree>/. series v2: only the re-picked corridors of the v2 list,
@@ -490,8 +530,23 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     todo = [c for i, c in enumerate(city_list) if (not only or c["city"] == only) and i % shard[1] == shard[0]
             and (series == "v1" or (c["city"], c["county"]) in frozen)][:limit]
     t0 = time.time()
+    watch = _Watch(f"{shard[0]}/{shard[1]} {series}")
+    watch.total = len(todo)
+    try:
+        _loop(app, todo, out_dir, frozen, earlier, bounds, mirror, ver, osm_source, series, watch, t0)
+    except BaseException:
+        watch.log("EXIT: exception\n" + traceback.format_exc())
+        watch.done = True
+        raise
+    watch.log("EXIT: finished")
+    watch.done = True
+    db.close()
+
+
+def _loop(app, todo, out_dir, frozen, earlier, bounds, mirror, ver, osm_source, series, watch, t0) -> None:
     with TestClient(app) as client:
         for n, c in enumerate(todo, 1):
+            watch.n, watch.city = n, c["city"]
             out = out_dir / f"{corridors.norm_city(c['city'])}_{c['county']}.json"
             fz = frozen.get((c["city"], c["county"])) or earlier.get((c["city"], c["county"]))
             if fz and not (fz.get("corridor") or {}).get("line") and series == "v1":
@@ -546,7 +601,6 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
             out.write_text(json.dumps(row, indent=1, default=str))
             print(f"[{n}/{len(todo)} {time.time() - t0:.0f}s] {c['city']}: {row['result']} - {row['result_reason']}",
                   flush=True)
-    db.close()
 
 
 if __name__ == "__main__":
