@@ -357,3 +357,15 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   intersection cell, approaches by direction of travel, lanes laid out so arrows never overlap). The *symbols* follow
   standard collision-diagram practice, not DemandIQ's volume arrows: reference HSM Part B, Ch. 5 collision diagram
   (Figure 5-4) and agency legends (Seattle SDOT, NCDOT, Peel Region). The proposal is to be revised accordingly.
+- **N10 collision diagram DECIDED (user, 2026-10-21, confirmed in the PM session):** DemandIQ layout (cell,
+  approaches by direction of travel, no overlapping marks) with standard collision-diagram symbols (HSM Part B Ch. 5;
+  NCDOT; Peel; Seattle) per docs/06 N10 revision 2. Property damage only = crossbar; night = filled arrowhead plus the
+  HSM surface/light code; busy intersections = NCDOT stacking (identical crashes: same type, approach, at-fault party,
+  road and light conditions share one symbol with a row of crash numbers); one diagram per study intersection, in the
+  location drill-down and the PDF; each crash drawn on the at-fault party's approach. Build: #106.
+- **Fatal crashes: FARS as a source DECIDED (user, 2026-10-21, PM session):** for a fatal crash with no usable location,
+  use the linked FARS (NHTSA, public domain) point when it is street-consistent (same check as other GPS);
+  provenance `fars`. Fatal crashes are listed first and red-flagged on the review list. For fatal crashes FARS can't
+  place, the review list offers a lookup aid (prefilled public-source search by city, date, roads; no AI, no runtime
+  API cost); the user places the crash and records the source link; provenance `user` with the source. Evidence: #166 /
+  PR #172 (FARS street-consistent for 3,379 of 4,381 no-GPS fatal crashes, 2021–25).
