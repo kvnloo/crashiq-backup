@@ -5,6 +5,9 @@ used on the website. **Rule: a number goes on the website only if it's in this t
 and it was re-checked on the latest run.** Code computes every number (CLAUDE.md); no rounding up, no claims beyond the
 test. Every entry says what it does **not** show. Updated by PM after each statewide run.
 
+
+> **ON HOLD (2026-10-22): C7, C8, C9.** Tester found a bug in its own coverage harness: the police-GPS check missed same-street name variants ("Foothill Boulevard" vs "West Foothill Boulevard"), so the 85.3% is understated by up to ~0.9 points. Don't use C7–C9 externally until the corrected #199 follow-up and reconciliation are merged.
+
 | # | Claim (allowed wording) | Number | Method and basis | Date / run | Does NOT show |
 |---|---|---|---|---|---|
 | C1 | "CrashIQ places crashes without GPS at the right intersection 98.8% of the time (San Francisco test)." | 98.8% (95% low bound 98.3%), 3,632 crashes | Hidden-truth test: SFPD reports in CCRS matched to San Francisco's own geocoded crash records by case number; exact-match tier only; held-out test half (`validate_geocode.py --city sf --split test`) | 2026-10-22, main | Accuracy in other cities (police GPS elsewhere is too noisy to grade to this standard; see #144) |
