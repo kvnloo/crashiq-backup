@@ -57,7 +57,7 @@ FROZEN = HERE / "corridors_frozen.json"
 FROZEN_V2 = HERE / "corridors_frozen_v2.json"
 RESULTS_V2 = DATA / "results_corridors_v2"
 V2_BELOW_PCT = 50.0          # "mostly outside": under half the v1 corridor's vertices inside its own city
-HARNESS = "6"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check, 5: v4, 6: DMS counts)
+HARNESS = "7"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check, 5: v4, 6: DMS counts, 7: fatal outcomes)
 # Known open bugs that affect a city's result, shown on the Cities sheet (PM, run 3).
 KNOWN_ISSUES: dict = {}   # run 3-4: San Jose "affected by #143"; fixed in #159 (run 5)
 
@@ -305,7 +305,23 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
     dropped3 = checks.silent_drops_v3(expected3, got, log.get("same_crash_refiled") or [])
     v4 = silent_drops_v4(mirror, corr["line"], core2, [indep_core(x) for x in cross], dropped3,
                          max(checks.V4_TOLERANCE_FT, float(settings.get("radius_ft") or 0)))
+    # fatal crashes first (#174/#178): every fatal crash the pull kept, by what happened to it
+    akind = {str(x["crash_id"]): x for x in asg.get("assignments", [])}
+    fatal_out = Counter()
+    for x in crashes:
+        if (x.get("killed") or 0) <= 0 or x.get("exclude_rule"):
+            continue
+        a_ = akind.get(str(x["crash_id"]), {})
+        if a_.get("kind") in ("intersection", "segment"):
+            fatal_out[f"placed_{x.get('location_source')}"] += 1
+        elif a_.get("kind") == "excluded":
+            fatal_out[f"excluded_{a_.get('rule')}"] += 1
+        elif x.get("location_source") == "unmatched":
+            fatal_out["unplaced_with_fars_hint" if x.get("fars_hint") else "unplaced"] += 1
+        else:
+            fatal_out[f"other_{a_.get('kind')}"] += 1
     return {
+        "fatal_outcomes": dict(fatal_out), "fars_placement": log.get("fars"),
         "stage": "done", "study_id": sid, "settings": settings, "overpass_empty_retries": empty_retries, "corridor_name": net.get("corridor_name"),
         "ends": [inters[0]["name"], inters[-1]["name"]] if inters else [None, None],
         "intersections": len(inters), "length_ft": net.get("length_ft"),
