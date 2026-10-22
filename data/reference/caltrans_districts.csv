@@ -1,0 +1,59 @@
+ccrs_county_code,county,fips,caltrans_district
+1,Alameda,06001,4
+2,Alpine,06003,10
+3,Amador,06005,10
+4,Butte,06007,3
+5,Calaveras,06009,10
+6,Colusa,06011,3
+7,Contra Costa,06013,4
+8,Del Norte,06015,1
+9,El Dorado,06017,3
+10,Fresno,06019,6
+11,Glenn,06021,3
+12,Humboldt,06023,1
+13,Imperial,06025,11
+14,Inyo,06027,9
+15,Kern,06029,6
+16,Kings,06031,6
+17,Lake,06033,1
+18,Lassen,06035,2
+19,Los Angeles,06037,7
+20,Madera,06039,6
+21,Marin,06041,4
+22,Mariposa,06043,10
+23,Mendocino,06045,1
+24,Merced,06047,10
+25,Modoc,06049,2
+26,Mono,06051,9
+27,Monterey,06053,5
+28,Napa,06055,4
+29,Nevada,06057,3
+30,Orange,06059,12
+31,Placer,06061,3
+32,Plumas,06063,2
+33,Riverside,06065,8
+34,Sacramento,06067,3
+35,San Benito,06069,5
+36,San Bernardino,06071,8
+37,San Diego,06073,11
+38,San Francisco,06075,4
+39,San Joaquin,06077,10
+40,San Luis Obispo,06079,5
+41,San Mateo,06081,4
+42,Santa Barbara,06083,5
+43,Santa Clara,06085,4
+44,Santa Cruz,06087,5
+45,Shasta,06089,2
+46,Sierra,06091,3
+47,Siskiyou,06093,2
+48,Solano,06095,4
+49,Sonoma,06097,4
+50,Stanislaus,06099,10
+51,Sutter,06101,3
+52,Tehama,06103,2
+53,Trinity,06105,2
+54,Tulare,06107,6
+55,Tuolumne,06109,10
+56,Ventura,06111,7
+57,Yolo,06113,3
+58,Yuba,06115,3
