@@ -170,6 +170,33 @@ describe('Crash profile screen', () => {
       .toEqual({ crash_ids: ['9'], action: 'place', method: 'intersection', location_id: 'osm-1' })
   })
 
+  it('fatal crashes come first, red-flagged, with a lookup aid; placing one needs a source (#175)', async () => {
+    const F = { crash_id: '7', date: '2023-05-28', hour: 23, severity: 'K', killed: 1, fatal: true, city: 'Hawthorne',
+      collision_type: 'VEHICLE/PEDESTRIAN', primary_road: 'CRENSHAW BL', secondary_road: 'NOT STATED', reason: 'no_cross_street',
+      fars_hint: { fars_case: '2023-60012', miles_from_corridor: 3.4, lat: 33.9, lon: -118.3 },
+      lookup: [{ label: 'News search', url: 'https://news.google.com/search?q=x' }, { label: 'Web search', url: 'https://www.bing.com/search?q=x' }] }
+    const REVIEW = { open: 1, fatal_open: 1, fatal: [F], can_undo: false, decided: [], groups: [],
+      intersections: [{ id: 'osm-1', name: 'Marine Avenue', lat: 1, lon: 2 }] }
+    const calls = mockApi({ ...routes, 'GET /studies/:id/review': REVIEW,
+      'POST /studies/:id/review/decisions': () => ({ decided: 1, review: { ...REVIEW, open: 0, fatal_open: 0, fatal: [], can_undo: true } }) })
+    renderAt('/s/s1/profile')
+    fireEvent.click(await screen.findByRole('button', { name: /to review/ }))
+    expect(await screen.findByTestId('fatal-header')).toHaveTextContent('1 fatal crash needs a location')
+    const item = screen.getByTestId('fatal-item')
+    expect(within(item).getByTestId('fars-hint')).toHaveTextContent('FARS puts this crash 3.4 mi from the corridor')
+    const link = within(item).getByRole('link', { name: 'News search' })
+    expect(link).toHaveAttribute('target', '_blank')
+    expect(link).toHaveAttribute('rel', 'noopener noreferrer')
+    expect(within(item).getByRole('button', { name: 'At an intersection' })).toBeDisabled()   // no source yet
+    fireEvent.change(within(item).getByLabelText(/Source for fatal crash 7/), { target: { value: 'Daily Breeze, May 29 2023' } })
+    fireEvent.click(within(item).getByRole('button', { name: 'At an intersection' }))
+    fireEvent.change(screen.getByLabelText(/Intersection for fatal crash 7/), { target: { value: 'osm-1' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Place' }))
+    await screen.findByText('Nothing left to review.')
+    expect(calls.find((c) => c.path.endsWith('/review/decisions')).body).toEqual(
+      { crash_ids: ['7'], action: 'place', method: 'intersection', location_id: 'osm-1', source: 'Daily Breeze, May 29 2023' })
+  })
+
   it('strip diagram: one dot per placed crash (= T1 crashes), hover, click to drill, color toggle (#102)', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')

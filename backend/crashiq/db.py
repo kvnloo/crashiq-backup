@@ -190,6 +190,10 @@ MIGRATIONS: list[str] = [
         loaded_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     """,
+    # 14 — #175 the source the engineer cites when placing a fatal crash by hand (required for K)
+    """
+    ALTER TABLE crash_decision ADD COLUMN source TEXT;
+    """,
 ]
 
 

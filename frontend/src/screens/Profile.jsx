@@ -253,6 +253,8 @@ function Quality({ p, excluded, onReview }) {
             <i className={c} />{fmt(v(k))} {label}{dms ? <small className="muted"> ({fmt(dms)} converted)</small> : null}</span>
         })}
       </p>
+      {v('fatal_unplaced') ? <p className="qline"><button type="button" className="linkbtn q-fatal" onClick={onReview} data-testid="q-fatal">
+        ⚑ {fmt(v('fatal_unplaced'))} fatal crash{v('fatal_unplaced') === 1 ? '' : 'es'} without a location</button></p> : null}
       {open ? (
         <ul className="kv qrules" aria-label="Excluded, by rule">
           {Object.entries(excluded).sort((a, b) => b[1] - a[1]).map(([r, n]) => <li key={r}><span>{RULE_LABEL[r] || r}</span><span className="mono">{fmt(n)}</span></li>)}

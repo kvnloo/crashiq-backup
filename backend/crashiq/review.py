@@ -17,6 +17,8 @@ from collections import Counter
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+import urllib.parse
+
 from . import study as study_mod
 from .db import Database
 from .names import street_key
@@ -31,7 +33,7 @@ def decisions(db: Database, sid: str) -> dict[str, dict]:
 
 def signature(decs: dict[str, dict]) -> str:
     """Changes whenever a decision does: part of the assignment memo key."""
-    raw = json.dumps(sorted((k, v["action"], v["lat"], v["lon"], v["reason"], v["report_version"])
+    raw = json.dumps(sorted((k, v["action"], v["lat"], v["lon"], v["reason"], v["report_version"], v.get("source"))
                             for k, v in decs.items()), default=str)
     return hashlib.sha1(raw.encode()).hexdigest()
 
@@ -45,13 +47,13 @@ def overlay(crashes: list[dict], decs: dict[str, dict]) -> list[dict]:
     out = []
     for c in crashes:
         d = decs.get(c["crash_id"])
-        if d is None or c.get("location_source") in ("gps", "gps_dms_corrected"):
+        if d is None or c.get("location_source") in ("gps", "gps_dms_corrected", "fars"):
             out.append(c)
         elif d["report_version"] is not None and d["report_version"] != c.get("report_version"):
             out.append({**c, "review_reason": "report_changed", "stale_decision": d["action"]})
         elif d["action"] == "place":
             out.append({**c, "lat": d["lat"], "lon": d["lon"], "location_source": "user", "review_reason": None,
-                        "user_method": d["method"]})
+                        "user_method": d["method"], "user_source": d.get("source")})
         else:
             out.append({**c, "exclude_rule": "user_excluded", "user_reason": d["reason"]})
     return out
@@ -70,15 +72,42 @@ def _pair(c: dict, corridor: str, corridor_keys) -> tuple[str, str]:
     return norm(c.get("primary_road")), norm(c.get("secondary_road"))
 
 
+def lookup_links(c: dict) -> list[dict]:
+    """Fatal crashes first (#175, user decision 2026-10-21): prefilled public-source searches the engineer opens in
+    their own browser to find where a fatal crash happened (news reports usually name the place). Plain links: no AI,
+    no API calls, nothing fetched by the app. The engineer places the crash and cites the source."""
+    roads = " ".join(f'"{r.strip()}"' for r in (c.get("primary_road"), c.get("secondary_road"))
+                     if r and r.strip() and r.strip().upper() not in ("NOT STATED", "UNKNOWN"))
+    city = (c.get("city") or "").strip()
+    city = "" if city.upper() in ("", "UNINCORPORATED") else f'"{city}"'
+    when = ""
+    if c.get("date"):
+        import datetime as dt
+        d = dt.date.fromisoformat(c["date"])
+        when = f'"{d.strftime("%B")} {d.day}, {d.year}"'
+    q = " ".join(x for x in (city, roads, when, "fatal crash") if x)
+    links = [{"label": "News search", "url": "https://news.google.com/search?" + urllib.parse.urlencode({"q": q})},
+             {"label": "Web search", "url": "https://www.bing.com/search?" + urllib.parse.urlencode({"q": q})}]
+    h = c.get("fars_hint")
+    if h and h.get("lat") is not None:
+        links.append({"label": f"FARS point (case {h['fars_case']})",
+                      "url": f"https://www.openstreetmap.org/?mlat={h['lat']:.6f}&mlon={h['lon']:.6f}#map=17/"
+                             f"{h['lat']:.6f}/{h['lon']:.6f}"})
+    return links
+
+
 def _item(c: dict, a: dict | None, d: dict | None) -> dict:
+    fatal = c.get("severity") == "K" or (c.get("killed") or 0) > 0
     return {"crash_id": c["crash_id"], "primary_road": c.get("primary_road"), "secondary_road": c.get("secondary_road"),
+            "fatal": fatal, "killed": c.get("killed") or 0, "city": c.get("city"), "fars_hint": c.get("fars_hint"),
+            "lookup": lookup_links(c) if fatal else [],
             "offset_ft": c.get("offset_ft"), "offset_dir": c.get("offset_dir"), "date": c.get("date"),
             "hour": c.get("hour"), "severity": c.get("severity"), "collision_type": c.get("collision_type"),
             "report_version": c.get("report_version"),
             "reason": c.get("review_reason") or (a or {}).get("rule") or "no_coordinates",
             "suggestion": c.get("suggestion"),
-            "decision": None if d is None else {k: d[k] for k in ("action", "method", "lat", "lon", "location_id",
-                                                                   "reason", "decided_at")}}
+            "decision": None if d is None else {k: d.get(k) for k in ("action", "method", "lat", "lon", "location_id",
+                                                                       "reason", "source", "decided_at")}}
 
 
 def review_list(db: Database, sid: str) -> dict:
@@ -92,10 +121,16 @@ def review_list(db: Database, sid: str) -> dict:
     corridor = str(net.get("corridor_name") or "").upper()
     ck = grade.corridor_keys(net)
     groups: dict[tuple, list] = {}
+    fatal = []                        # fatal crashes first, on their own, each with a lookup aid (#175)
     for x in a["assignments"]:
         if x["kind"] == "unmatched":
             c = by_id[x["crash_id"]]
-            groups.setdefault(_pair(c, corridor, ck), []).append(_item(c, x, decs.get(c["crash_id"])))
+            item = _item(c, x, decs.get(c["crash_id"]))
+            if item["fatal"]:
+                fatal.append(item)
+            else:
+                groups.setdefault(_pair(c, corridor, ck), []).append(item)
+    fatal.sort(key=lambda i: (i["date"] or "", i["crash_id"]))
     out = []
     for (p, s), items in sorted(groups.items(), key=lambda kv: (-len(kv[1]), kv[0])):
         items.sort(key=lambda i: (i["date"] or "", i["crash_id"]))
@@ -109,7 +144,8 @@ def review_list(db: Database, sid: str) -> dict:
         return {"kind": x.get("kind"), "rule": x.get("rule"), "location": names.get(x.get("location_id"))}
     decided = [_item(by_id[k], rows.get(k), d) | {"outcome": outcome(k)} for k, d in decs.items() if k in by_id]
     decided.sort(key=lambda i: i["decision"]["decided_at"] or "", reverse=True)
-    return {"open": sum(g["count"] for g in out), "groups": out, "decided": decided,
+    return {"open": sum(g["count"] for g in out) + len(fatal), "fatal_open": len(fatal), "fatal": fatal,
+            "groups": out, "decided": decided,
             "can_undo": bool(db.one("SELECT 1 FROM decision_batch WHERE study_id = ? AND undone = 0", (sid,))),
             "intersections": [{"id": i["id"], "name": i["name"], "lat": i["lat"], "lon": i["lon"]}
                               for i in net["intersections"] if i["is_study"]]}
@@ -123,6 +159,7 @@ class DecisionIn(BaseModel):
     lat: float | None = Field(default=None, ge=32.4, le=42.1)      # method=map (inside California)
     lon: float | None = Field(default=None, ge=-124.6, le=-114.0)
     reason: str | None = Field(default=None, max_length=200)       # action=exclude
+    source: str | None = Field(default=None, max_length=500)       # where the location comes from; required for K
 
 
 def decide(db: Database, sid: str, body: DecisionIn) -> dict:
@@ -136,6 +173,11 @@ def decide(db: Database, sid: str, body: DecisionIn) -> dict:
     if unknown:
         raise HTTPException(404, f"Not crashes of this study: {', '.join(unknown[:5])}")
     rows = []
+    source = (body.source or "").strip() or None
+    if body.action == "place" and not source and any(
+            by_id[cid].get("severity") == "K" or (by_id[cid].get("killed") or 0) > 0 for cid in body.crash_ids):
+        raise HTTPException(422, "A fatal crash needs a source for its location: a link or a note (e.g. the news "
+                                 "report that names the place).")
     for cid in body.crash_ids:
         c = by_id[cid]
         lat = lon = loc = None
@@ -159,7 +201,7 @@ def decide(db: Database, sid: str, body: DecisionIn) -> dict:
         elif not (body.reason or "").strip():
             raise HTTPException(422, "Say why the crash is excluded.")
         rows.append((cid, body.action, body.method if body.action == "place" else None, lat, lon, loc,
-                     (body.reason or "").strip() or None, c.get("report_version")))
+                     (body.reason or "").strip() or None, c.get("report_version"), source))
     if not rows:
         raise HTTPException(422, "None of these crashes has a suggestion to place it at.")
     before = decisions(db, sid)
@@ -169,7 +211,7 @@ def decide(db: Database, sid: str, body: DecisionIn) -> dict:
         bid = cur.lastrowid
         for r in rows:
             conn.execute("INSERT OR REPLACE INTO crash_decision (study_id, crash_id, action, method, lat, lon, "
-                         "location_id, reason, report_version, batch_id) VALUES (?,?,?,?,?,?,?,?,?,?)",
+                         "location_id, reason, report_version, source, batch_id) VALUES (?,?,?,?,?,?,?,?,?,?,?)",
                          (sid, *r, bid))
     return {"batch_id": bid, "decided": len(rows), "skipped": len(body.crash_ids) - len(rows)}
 
@@ -180,14 +222,14 @@ def undo(db: Database, sid: str) -> dict:
     if b is None:
         raise HTTPException(409, "Nothing to undo.")
     before = json.loads(b["before_json"])
-    cols = ("crash_id", "action", "method", "lat", "lon", "location_id", "reason", "report_version", "batch_id",
+    cols = ("crash_id", "action", "method", "lat", "lon", "location_id", "reason", "report_version", "source", "batch_id",
             "decided_at")
     with db.transaction() as conn:
         for cid, prev in before.items():
             conn.execute("DELETE FROM crash_decision WHERE study_id = ? AND crash_id = ?", (sid, cid))
             if prev:
                 conn.execute(f"INSERT INTO crash_decision (study_id, {', '.join(cols)}) VALUES (?{', ?' * len(cols)})",
-                             (sid, *[prev[k] for k in cols]))
+                             (sid, *[prev.get(k) for k in cols]))
         conn.execute("UPDATE decision_batch SET undone = 1 WHERE id = ?", (b["id"],))
     return {"undone": b["id"], "crashes": len(before)}
 
