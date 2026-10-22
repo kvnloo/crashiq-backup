@@ -123,6 +123,12 @@ def link(db: Database, c: dict) -> tuple[str, dict | None]:
     return ("linked", cands[0]) if cands else ("unlinked", None)
 
 
+def on_named_road(road_tags: list[dict], c: dict) -> bool:
+    """One of the roads at the point (OSM name or ref) is a road the report names."""
+    ways = [t.get(k) for t in road_tags for k in ("name", "ref", "alt_name", "old_ref") if t.get(k)]
+    return _names_road([c.get("primary_road"), c.get("secondary_road")], ways)
+
+
 def _parse(s) -> dt.datetime | None:
     try:
         return dt.datetime.fromisoformat(str(s)[:19])

@@ -14,12 +14,16 @@ from . import network as network_mod
 from .db import Database
 
 
-def place_fatal_from_fars(db: Database | None, net: dict, result: dict) -> dict:
+def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass=None) -> dict:
     """Fatal crashes first (#174, user decision 2026-10-21): a fatal crash with no usable location (no GPS, or GPS that
-    fails the street check) takes its linked FARS point when that point fits the report's streets; provenance `fars`.
-    Anything else stays as it was (review list, or its own GPS)."""
+    fails the street check) takes its linked FARS point like GPS when the point lies on a road the report names
+    (within the GPS-check distance + the report's offset); assignment then decides: on the study stretch it's
+    placed, elsewhere it's excluded and listed as `fars_off_corridor` with its distance (PM review of #182). A point on
+    none of the report's roads isn't used; the crash keeps its place on the review list with a `fars_hint`."""
+    from .assign import GPS_CHECK_FT
     from .crashes import point_fits_streets
-    counts = {"tried": 0, "placed": 0, "linked_point_off_streets": 0, "no_point": 0, "ambiguous": 0, "unlinked": 0,
+    from .geo import Polyline
+    counts = {"tried": 0, "placed": 0, "point_not_on_named_road": 0, "no_point": 0, "ambiguous": 0, "unlinked": 0,
               "no_fars_year": 0}
     if db is None or not net.get("line"):
         return counts
@@ -29,6 +33,7 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict) -> dict:
         loaded = []
     if not loaded:
         return counts
+    line = Polyline([tuple(p) for p in net["line"]])
     for c in result["crashes"]:
         if (c.get("killed") or 0) <= 0 or c.get("exclude_rule"):
             continue
@@ -47,8 +52,12 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict) -> dict:
             counts["no_point"] += 1
             continue
         trial = {**c, "lat": p[0], "lon": p[1]}
-        if not point_fits_streets(trial, net):
-            counts["linked_point_off_streets"] += 1
+        radius_m = (GPS_CHECK_FT + (c.get("offset_ft") or 0.0)) / 3.28084
+        if not (point_fits_streets(trial, net)
+                or fars.on_named_road(network_mod.roads_near(db, p[0], p[1], radius_m, overpass), c)):
+            counts["point_not_on_named_road"] += 1
+            c["fars_hint"] = {"fars_case": fars.case_key(row["year"], row["st_case"]),
+                              "miles_from_corridor": round(line.project(p[0], p[1]).offset_ft / 5280, 1)}
             continue
         c.update(lat=p[0], lon=p[1], location_source="fars", fars_case=fars.case_key(row["year"], row["st_case"]),
                  review_reason=None, suggestion=None,
@@ -57,9 +66,9 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict) -> dict:
     return counts
 
 
-def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None) -> dict:
+def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None) -> dict:
     gate = gate or locate.Gate()
-    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result)
+    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass)
     # no cross street (#94): nothing for the locator to work with; the engineer places it from the review list
     todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")
             and not c.get("review_reason")]

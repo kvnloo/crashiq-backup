@@ -867,7 +867,7 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
                 net = {**net, "cities": network_mod.corridor_cities(db, net["line"], study["buffer_ft"], overpass)}
             result = pull(study, net, ckan, progress)
             from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
-            place_unmatched(db, net, result)
+            place_unmatched(db, net, result, overpass=overpass)
             now = study_mod.require(db, sid)
             now_net = network_mod.network(db, sid)
             if (cache_key(now, now_net) if now_net.get("line") else None) == key:

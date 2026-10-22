@@ -100,25 +100,52 @@ def _crash(out):
     return next(c for c in out["crashes"] if c["crash_id"] == "9200001")
 
 
-def test_fatal_crash_without_gps_takes_its_fars_point_when_it_fits(tmp_path):
-    out, (la, lo) = _fatal_no_gps_pull()
-    c = _crash(out)
-    t = c["reported_at"]
-    db = _db(tmp_path, [{"ST_CASE": 60077, "COUNTY": 37, "YEAR": int(t[:4]), "MONTH": int(t[5:7]), "DAY": int(t[8:10]),
-                         "FATALS": 1, "LATITUDE": la + 0.0002, "LONGITUD": lo}])     # ~70 ft from its corner
-    counts = placement.place_fatal_from_fars(db, NET_X, out)
-    assert counts["placed"] == 1
-    assert c["location_source"] == "fars" and c["fars_case"] == f"{t[:4]}-60077"
+def _osm(*names):
+    """A fake Overpass: the roads at any point are these names (no network in tests)."""
+    def transport(url, data, timeout):
+        return json.dumps({"elements": [{"type": "way", "id": i + 1, "nodes": [], "tags": {"highway": "primary", "name": n}}
+                                        for i, n in enumerate(names)] or [{"type": "node", "id": 1}]}).encode()
+    return transport
 
 
-def test_fars_point_off_the_reports_streets_is_not_used(tmp_path):
+def _fars_row(c, lat, lon):
+    t = c["reported_at"]
+    return {"ST_CASE": 60077, "COUNTY": 37, "YEAR": int(t[:4]), "MONTH": int(t[5:7]), "DAY": int(t[8:10]), "FATALS": 1,
+            "LATITUDE": lat, "LONGITUD": lon}
+
+
+def test_fars_point_on_the_study_stretch_is_placed(tmp_path):
+    from crashiq import assign
     out, (la, lo) = _fatal_no_gps_pull()
     c = _crash(out)
-    t = c["reported_at"]
-    db = _db(tmp_path, [{"ST_CASE": 60077, "COUNTY": 37, "YEAR": int(t[:4]), "MONTH": int(t[5:7]), "DAY": int(t[8:10]),
-                         "FATALS": 1, "LATITUDE": la + 0.02, "LONGITUD": lo + 0.02}])  # ~2 km away
-    counts = placement.place_fatal_from_fars(db, NET_X, out)
-    assert counts["linked_point_off_streets"] == 1 and c["location_source"] == "unmatched"
+    db = _db(tmp_path, [_fars_row(c, la + 0.0002, lo)])                     # ~70 ft from its corner
+    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm())
+    assert counts["placed"] == 1 and c["location_source"] == "fars" and c["fars_case"].endswith("-60077")
+    net = {**NET_X, "intersections": [], "segments": [{"id": "s1", "from_station_ft": 0, "to_station_ft": 1e9,
+                                                       "name": "x"}]}
+    a = next(x for x in assign.assign([c], net, 250, 100)["assignments"])
+    assert a["kind"] == "segment" and a["location_provenance"] == "fars"
+
+
+def test_fars_point_elsewhere_on_the_reports_roads_is_excluded_with_its_distance(tmp_path):
+    # Chico, RT 32 & STEWART AV: FARS puts the crash 7 miles out on SR 32: it happened, just not on this corridor
+    from crashiq import assign
+    out, (la, lo) = _fatal_no_gps_pull()
+    c = _crash(out)
+    db = _db(tmp_path, [_fars_row(c, la + 0.02, lo + 0.02)])                # ~1.8 mi away
+    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm("Crenshaw Boulevard"))
+    assert counts["placed"] == 1 and c["location_source"] == "fars"
+    a = assign.assign([c], {**NET_X, "intersections": [], "segments": []}, 250, 100)["assignments"][0]
+    assert a["kind"] == "excluded" and a["rule"] == "fars_off_corridor" and a["distance_ft"] > 5000
+
+
+def test_fars_point_on_none_of_the_reports_roads_is_not_used(tmp_path):
+    out, (la, lo) = _fatal_no_gps_pull()
+    c = _crash(out)
+    db = _db(tmp_path, [_fars_row(c, la + 0.02, lo + 0.02)])
+    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm("Some Other Road"))
+    assert counts["point_not_on_named_road"] == 1 and c["location_source"] == "unmatched"
+    assert c["fars_hint"]["fars_case"].endswith("-60077") and c["fars_hint"]["miles_from_corridor"] > 1
 
 
 def test_fars_never_places_a_crash_nobody_died_in(tmp_path):
@@ -130,6 +157,6 @@ def test_fars_never_places_a_crash_nobody_died_in(tmp_path):
     out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
     db = _db(tmp_path, [{"ST_CASE": 1, "COUNTY": 37, "YEAR": 2021, "MONTH": 6, "DAY": 15, "FATALS": 0,
                          "LATITUDE": 33.9, "LONGITUD": -118.33}])
-    counts = placement.place_fatal_from_fars(db, NET_X, out)
+    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm())
     assert counts["tried"] == sum((c.get("killed") or 0) > 0 and not c.get("exclude_rule") for c in out["crashes"])
     assert not any(c["location_source"] == "fars" and not c.get("killed") for c in out["crashes"])

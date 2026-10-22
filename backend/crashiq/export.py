@@ -165,6 +165,7 @@ def _fmt(v, d=None):
 
 
 RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_limits": "beyond the study limits",
+             "fars_off_corridor": "fatal crashes FARS places elsewhere on the report's roads, off the study corridor",
              "freeway": "on a freeway or ramp (CHP IsFreeway)", "no_segment": "not on a study segment",
              "cross_street_not_on_corridor": "at a cross street that is not one of the corridor's intersections",
              "grade_separated_crossing": "on a road passing over or under the corridor",

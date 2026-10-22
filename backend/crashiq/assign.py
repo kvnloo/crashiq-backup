@@ -111,13 +111,14 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
                         "station_ft": it["station_ft"]})       # where along A->B (the strip diagram, #102)
             continue
         p = line.project_xy(x, y)
+        off_rule = "fars_off_corridor" if base["location_provenance"] == "fars" else None   # elsewhere on its roads (#174)
         if p.station_ext < 0 or p.station_ext > line.length_ft:
             out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": round(p.offset_ft, 1),
-                        "rule": "outside_study_limits"})
+                        "rule": off_rule or "outside_study_limits"})
             continue
         if p.offset_ft > buffer_ft:
             out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": round(p.offset_ft, 1),
-                        "rule": "outside_buffer"})
+                        "rule": off_rule or "outside_buffer"})
             continue
         seg = next((s for s in segs if s["from_station_ft"] <= p.station_ft <= s["to_station_ft"]), None)
         if seg is None:   # station falls in a stub the network dropped (within 50 ft of a terminus intersection)

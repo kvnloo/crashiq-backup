@@ -224,6 +224,7 @@ function Severity({ p }) {
 // H. Can I trust these numbers? (#104) One line: how the crashes were located, plus the review list and the
 // exclusions, all from T1; the segments add up to every crash the pull read (T1 conservation).
 const RULE_LABEL = { outside_buffer: 'outside the corridor buffer', outside_study_limits: 'beyond the study limits',
+  fars_off_corridor: 'fatal, FARS places it elsewhere on its roads',
   cross_street_not_on_corridor: 'at a cross street off the corridor', freeway: 'on a freeway or ramp',
   grade_separated_crossing: 'on a road over or under the corridor', not_on_corridor_street: 'on another street',
   private_property: 'on private property', user_excluded: 'excluded by you', no_segment: 'not on a study segment',
