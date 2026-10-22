@@ -127,3 +127,30 @@ def test_api_submit_shows_valid_and_logs_rejected(client):
     assert client.patch(f"/api/studies/{sid}/findings/f1?status=accepted").json()["status"] == "accepted"
     assert client.patch(f"/api/studies/{sid}/findings/f2?status=accepted").status_code == 404   # rejected: not reachable
     assert "audit" in client.get("/api/findings/schema").json()["properties"]
+
+
+def test_route_number_in_a_cited_location_name_is_not_a_figure_but_other_numbers_still_are():
+    findings = F
+    # #179: "Mercedes Avenue / CA 41" is a name from the cited T12 row; 41 isn't a claim. Any other number still needs
+    # a cited cell: 41 written as a figure elsewhere, or 12 out of nowhere, is rejected.
+    from crashiq import profile
+    row = profile._row("L1~type_rear_end", "Mercedes Avenue / CA 41 · rear end crashes", target_crashes=9,
+                       location_crashes=26, share_pct=34.6, reference_share_pct=19.1)
+    tables = [{"id": "T12", "rows": [row]}]
+    crashes_ = [{"crash_id": str(i), "location_id": "L1", "collision_type": "REAR END", "year": 2023} for i in range(9)]
+
+    def f(text):
+        return findings.Finding(
+            id="x", location_id="L1", text=text, title="t",
+            numbers=[findings.Number(value=v, table_id="T12", cell=f"L1~type_rear_end/{k}") for k, v in
+                     (("target_crashes", 9), ("location_crashes", 26), ("share_pct", 34.6), ("reference_share_pct", 19.1))],
+            evidence_refs=findings.Evidence(tables=["T12"], records=findings.RecordFilter(location_id="L1",
+                                                                                          collision_type=["REAR END"])),
+            source="screen")
+    ok = "Rear End crashes are over-represented at Mercedes Avenue / CA 41: 9 of 26 crashes here (34.6%) vs 19.1%."
+    assert findings.validate(f(ok), tables, crashes_, (2021, 2025)) == []
+    assert findings.validate(f("At CA 41: 9 of 26 crashes (34.6% vs 19.1%)."), tables, crashes_, (2021, 2025)) == []
+    bad = findings.validate(f(ok + " That is 41 more than expected."), tables, crashes_, (2021, 2025))
+    assert bad == ["number 41 in the text is not backed by a cited table cell"]
+    bad = findings.validate(f(ok + " 12 were at night."), tables, crashes_, (2021, 2025))
+    assert bad == ["number 12 in the text is not backed by a cited table cell"]
