@@ -58,7 +58,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 19    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195)
+PULL_FORMAT = 20    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -345,8 +345,12 @@ def _names_street(raw: str | None, keys) -> bool:
 
 def _search_words(core: str) -> list[tuple[str, bool]]:
     """(word, is a route spelling) for one corridor core. Route spellings stay squeezed (SR-1 = SR 1 = SR1)."""
-    words = _like_words(core)
-    return [(w, words != [core]) for w in words]
+    route = bool(re.match(r"^(I|US|SR) (\d+)$", core))
+    return [(w, route) for w in _like_words(core)]
+
+
+LEAD_SPELLINGS = {"AVENUE": ("AVE", "AV"), "SAINT": ("ST",), "MOUNT": ("MT",), "FORT": ("FT",),
+                  "BOULEVARD": ("BL", "BLVD")}
 
 
 def _like_words(core: str) -> list[str]:
@@ -354,7 +358,9 @@ def _like_words(core: str) -> list[str]:
     HWY1, ROUTE1, STATEROUTE1, CA1). Over-matches (RT10) are dropped in code by `_names_street`."""
     m = re.match(r"^(I|US|SR) (\d+)$", core)
     if not m:
-        return [core]
+        # CHP abbreviates a leading AVENUE / SAINT / MOUNT / FORT / BOULEVARD (AVE J for Avenue J, #212)
+        first, _, rest = core.partition(" ")
+        return [core] + ([f"{a} {rest}" for a in LEAD_SPELLINGS.get(first, ())] if rest else [])
     return [p + m.group(2) for p in ROUTE_SPELLINGS[m.group(1)]]
 
 
