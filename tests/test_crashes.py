@@ -432,3 +432,18 @@ def test_mixed_dms_year_converts_only_points_that_check_out():
     found = {i for i in enc & base if by.get(i, {}).get("location_source") in ("gps_dms_corrected", "unmatched")}
     assert len(found) >= 0.9 * len(enc & base)
     assert out["cleaning"]["gps_dms_unconfirmed"] > 0                         # some fit neither way: no GPS, not lost
+
+
+def test_ebike_and_escooter_are_their_own_road_users():
+    # N9 (user, 2026-10-21): by the party's vehicle type; an e-bike rider typed Bicyclist is an e-bike, not a bicycle
+    f = lambda *ps, iw=None: cc.mode_flags({"involved_with": iw, "collision_type": None},
+                                           [{"party_type": t, "vehicle_type": v} for t, v in ps])
+    m = f(("Driver", "PassengerCarStationWagonJeep"), ("Bicyclist", "ElectricBicycles"), iw="BICYCLE")
+    assert m["ebike"] and not m["bike"] and not m["escooter"]
+    m = f(("Driver", "SportUtilityVehicle"), ("Driver", "GoPedZipElectricScooterAndMotorboard"))
+    assert m["escooter"] and not m["bike"] and not m["ebike"]
+    assert f(("Other", "ElectricallyMotorizedBoards"))["escooter"]
+    m = f(("Driver", "PickupsAndPanels"), ("Bicyclist", "Bicycle"))
+    assert m["bike"] and not m["ebike"]
+    assert f(("Driver", "MiniVan"), iw="BICYCLE")["bike"]                   # no party coded: CHP's involved-with
+    assert not f(("Driver", "MotorizedBicycle"))["ebike"]                     # still open in N9: unchanged

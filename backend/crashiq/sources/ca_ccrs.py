@@ -439,14 +439,30 @@ def heavy_truck(party: dict) -> bool:
     return v1 in HEAVY_TRUCK_TYPES or v1 in HEAVY_TRAILER_TYPES or v2 in HEAVY_TRUCK_TYPES
 
 
+# E-bikes and e-scooters are their own road users (user decision N9, 2026-10-21, docs/03), by the party's vehicle
+# type. An e-bike rider CHP typed as a Bicyclist (913 of 999 in 2024) counts as an e-bike, not a bicycle.
+EBIKE_TYPES = frozenset({"ELECTRICBICYCLES"})
+ESCOOTER_TYPES = frozenset({"GOPEDZIPELECTRICSCOOTERANDMOTORBOARD", "ELECTRICALLYMOTORIZEDBOARDS"})
+
+
+def _vtype(p: dict) -> str:
+    return "".join(ch for ch in str(p.get("vehicle_type") or "").upper() if ch.isalnum())
+
+
 def mode_flags(crash: dict, parties: list[dict]) -> dict:
     types = {p["party_type"] for p in parties if p["party_type"]}
     vehicles = " | ".join((p["vehicle_type"] or "").upper() for p in parties)
     iw = (crash.get("involved_with") or "").upper()
     ct = (crash.get("collision_type") or "").upper()
+    ebike = any(_vtype(p) in EBIKE_TYPES for p in parties)
+    escooter = any(_vtype(p) in ESCOOTER_TYPES for p in parties)
+    pedal = any((p["party_type"] or "").upper() == "BICYCLIST" and _vtype(p) not in EBIKE_TYPES | ESCOOTER_TYPES
+                for p in parties)
     return {
         "ped": "PEDESTRIAN" in types or "PEDESTRIAN" in iw or "PEDESTR" in ct,
-        "bike": "BICYCLIST" in types or "BICYCLE" in iw,
+        "bike": pedal or ("BICYCLE" in iw and not ebike),
+        "ebike": ebike,
+        "escooter": escooter,
         "motorcycle": any(w in vehicles for w in MOTORCYCLE_WORDS),
         "heavy_truck": any(heavy_truck(p) for p in parties),
     }

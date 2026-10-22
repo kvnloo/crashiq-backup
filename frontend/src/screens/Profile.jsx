@@ -373,8 +373,10 @@ function Grid({ p, onOpen }) {
 // F. Pedestrians and bicyclists first (#136, user decision 2026-10-20): right under the trust strip. Headline and the
 // "how dangerous" comparison from T19; the locations with the most of each from T2; pedestrian action (T15) and the
 // lighting split (T20). Motorcyclists are shown alongside. Every number is a table cell; this only draws them.
-const ROAD_USERS = [['ped', 'Pedestrians', 'ped_crashes'], ['bike', 'Bicyclists', 'bike_crashes'], ['motorcycle', 'Motorcyclists', 'moto_crashes']]
-const DANGER = [['ped', 'Pedestrian crashes'], ['bike', 'Bicycle crashes'], ['motorcycle', 'Motorcycle crashes'],
+const ROAD_USERS = [['ped', 'Pedestrians', 'ped_crashes'], ['bike', 'Bicyclists', 'bike_crashes'], ['ebike', 'E-bikes', 'ebike_crashes'],
+  ['escooter', 'E-scooters', 'escooter_crashes'], ['motorcycle', 'Motorcyclists', 'moto_crashes']]
+const DANGER = [['ped', 'Pedestrian crashes'], ['bike', 'Bicycle crashes'], ['ebike', 'E-bike crashes'],
+  ['escooter', 'E-scooter crashes'], ['motorcycle', 'Motorcycle crashes'],
   ['other', 'All other crashes']]
 
 function Vru({ p, onMap, mapMode }) {
