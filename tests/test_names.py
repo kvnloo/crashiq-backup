@@ -62,3 +62,22 @@ def test_avenue_of_keeps_of_and_matches_chp_spellings():
     assert street_key("AV OF THE STARS").core == street_key("Avenue of the Stars").core == "AVENUE OF STARS"
     assert street_key("AVENUE OF THE FLAGS") == street_key("AVENUE OF FLAGS")          # CHP adds THE now and then
     assert street_key("100 FT NORTH OF THE BRIDGE").core == "FT NORTH BRIDGE"     # OF elsewhere is still noise
+
+
+def test_leading_abbreviation_only_when_a_name_follows():
+    # #212: AVE M = Avenue M, ST TROPEZ = Saint Tropez; but these keep their meaning
+    assert street_key("W ST") == street_key("West Street")                         # ST last: Street
+    assert street_key("N AVE") == street_key("North Avenue")
+    assert street_key("W AVE J") == street_key("West Avenue J")
+    assert street_key("100 FT NORTH OF THE BRIDGE").core == "FT NORTH BRIDGE"     # feet, not Fort
+    assert street_key("ST HWY 1").core == "ST HWY 1"                                # not Saint Highway
+    assert street_key("ST JOHNS AVE") == street_key("Saint Johns Avenue")
+
+
+def test_pull_searches_chp_abbreviations_of_a_leading_word():
+    from crashiq.crashes import _like_words, _search_words
+    assert _like_words("AVENUE J") == ["AVENUE J", "AVE J", "AV J"]                 # CHP writes AVE J (#212)
+    assert _like_words("SAINT TROPEZ") == ["SAINT TROPEZ", "ST TROPEZ"]
+    assert _like_words("CRENSHAW") == ["CRENSHAW"]
+    assert all(not route for _, route in _search_words("AVENUE J"))                 # not route spellings
+    assert all(route for _, route in _search_words("SR 1"))

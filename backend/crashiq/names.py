@@ -31,6 +31,9 @@ ORDINAL_WORDS = {
     "EIGHTH": 8, "NINTH": 9, "TENTH": 10, "ELEVENTH": 11, "TWELFTH": 12,
 }
 # Travel-direction and descriptive noise that never belongs to the street name.
+# Abbreviations that start a name (#212); the spelled-out word is the key
+LEADING = {"AVE": "AVENUE", "AV": "AVENUE", "AVN": "AVENUE", "BL": "BOULEVARD", "BLVD": "BOULEVARD",
+           "ST": "SAINT", "MT": "MOUNT", "FT": "FORT"}
 NOISE = re.compile(
     r"\b(N/?B|S/?B|E/?B|W/?B|NORTHBOUND|SOUTHBOUND|EASTBOUND|WESTBOUND|BLOCK|BLK|"
     r"OFF[- ]?RAMP|ON[- ]?RAMP|RAMP|UNDERCROSSING|OVERCROSSING|U/C|O/C|OVERPASS|UNDERPASS|"
@@ -97,6 +100,7 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     if route:
         kind = {"INTERSTATE": "I", "STATE ROUTE": "SR", "CA": "SR", "HWY": "SR", "HIGHWAY": "SR", "ROUTE": "SR", "RT": "SR", "RTE": "SR"}.get(route.group(1), route.group(1))
         return StreetKey(f"{kind} {int(route.group(2))}", None)
+    numbered = bool(re.match(r"^\d+\s+(?=[A-Z])", s))
     s = re.sub(r"^\d+\s+(?=[A-Z])", "", s)       # house number "3144 W 147TH ST"
     # "Avenue of Flags", "Avenue of the Stars": OF belongs to the name here. CHP writes AVE OF, AV OF, and adds or drops
     # THE (Buellton: AVENUE OF FLAGS and AVENUE OF THE FLAGS), so THE is left out of the key (#154)
@@ -108,6 +112,15 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
         return None
     if len(toks) > 1 and toks[0] in DIRECTIONAL:  # keep it ("SOUTH VAN NESS" is its own street), spelled out
         toks[0] = {"N": "NORTH", "S": "SOUTH", "E": "EAST", "W": "WEST"}[DIRECTIONAL[toks[0]]]
+    # a street type or title written first is the start of the name, not a suffix: AVE M = Avenue M, ST TROPEZ CT =
+    # Saint Tropez Court, MT VERNON AVE = Mount Vernon Avenue (#212). Only when a name follows it: "W ST" is West
+    # Street, and ST HWY is a highway
+    i = 1 if len(toks) > 2 and toks[0] in ("NORTH", "SOUTH", "EAST", "WEST") else 0
+    rest = toks[i + 1:]
+    if (toks[i] in LEADING and rest and not (len(rest) == 1 and rest[0] in SUFFIX)
+            and not (toks[i] == "ST" and rest[0] in ("HWY", "HIGHWAY", "RTE", "ROUTE", "RT"))
+            and not (toks[i] == "FT" and (numbered or rest[0] in DIRECTIONAL))):   # 100 FT NORTH OF: feet
+        toks[i] = LEADING[toks[i]]
     toks = [str(int(t[:-2])) + t[-2:] if re.fullmatch(r"0\d+(ST|ND|RD|TH)", t) else t for t in toks]  # 07TH -> 7TH
     toks = [_ordinal(ORDINAL_WORDS[t]) if t in ORDINAL_WORDS else t for t in toks]
     suffix = None

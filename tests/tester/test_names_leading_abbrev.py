@@ -9,7 +9,6 @@ PAIRS = [("AVE M", "Avenue M"), ("AV J", "Avenue J"), ("AVE Q-8", "Avenue Q-8"),
          ("BL DE ORO", "Boulevard de Oro")]
 
 
-@pytest.mark.xfail(strict=True, reason="#212: leading abbreviations are not expanded")
 @pytest.mark.parametrize("report,osm_name", PAIRS)
 def test_leading_abbreviation_matches_spelled_out_name(report, osm_name):
     assert same_core(street_key(report), street_key(osm_name))
