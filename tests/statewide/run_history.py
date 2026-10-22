@@ -88,7 +88,7 @@ MEASURES = {
     "placement_accuracy_pct_v1": "Hidden-GPS test (#88): % of auto-placed crashes within the gate distance of their "
                                  "own GPS. Blank until #88 exists.",
 }
-RUN_COLS = ["run", "date", "app_commit", "backend_tree", "mirror_date", "years", "corridor_list", "fixes_since_last",
+RUN_COLS = ["run", "date", "app_commit", "backend_tree", "mirror_date", "data_basis", "years", "corridor_list", "fixes_since_last",
             "note"]
 
 
@@ -278,9 +278,10 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
            history: Path = HISTORY, city_history: Path = CITY_HISTORY) -> dict:
     """Append this run (once) to both history files of its series; returns its row."""
     tree = next((r.get("code_version") for r in results if r.get("code_version")), "")
+    basis = next((r.get("data_basis") for r in results if r.get("data_basis")), "CCRS mirror 2026-10-19")
     _, runs = _read(history)
     for row in runs:
-        if row.get("backend_tree") == tree:
+        if row.get("backend_tree") == tree and (row.get("data_basis") or "CCRS mirror 2026-10-19") == basis:
             return row                                         # already recorded: never rewritten
     cm = city_measures(results, dbs, mirror_db)
     tested = [r for r in results if r.get("result_v1", r.get("result")) in ("pass", "warn", "fail")]
@@ -298,8 +299,10 @@ def record(results: list[dict], tims_rows: list[dict], dbs: list[Path], mirror_d
     first = next((r for r in results if r.get("commit")), {})
     row = {"run": len(runs) + 1, "date": dt.date.today().isoformat(),
            "app_commit": first.get("commit"), "backend_tree": tree, "mirror_date": first.get("mirror_built"),
-           "years": "2021-2025", "corridor_list": corridor_list,
-           "fixes_since_last": _fixes(runs[-1]["app_commit"] if runs else None, first.get("commit") or "HEAD"),
+           "data_basis": basis, "years": "2021-2025", "corridor_list": corridor_list,
+           "fixes_since_last": (_fixes(runs[-1]["app_commit"] if runs else None, first.get("commit") or "HEAD")
+                                if not runs or runs[-1]["app_commit"] != first.get("commit") else
+                                f"none: same code, data basis changed to '{basis}'"),
            "corridor_crashes_v1": cand, "located_pct_v1": pct("located"), "review_pct_v1": pct("review"),
            "unplaced_pct_v1": pct("unplaced"), "cities_tested_v1": len(tested),
            "pass_v1": n["pass"], "warn_v1": n["warn"], "fail_v1": n["fail"],
