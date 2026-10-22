@@ -1,0 +1,29 @@
+{
+ "results": {
+  "osm": {
+   "coverage": 0.9339622641509434,
+   "accuracy": 0.9848484848484849,
+   "wilson_low": 0.9804211014901355
+  },
+  "tiger": {
+   "coverage": 0.9257696127110229,
+   "accuracy": 0.9868597479216948,
+   "wilson_low": 0.9826713668919549
+  },
+  "union": {
+   "coverage": 0.9441410129096326,
+   "accuracy": 0.9834341309492506,
+   "wilson_low": 0.9788623893365624
+  },
+  "consensus": {
+   "coverage": 0.9128599801390268,
+   "accuracy": 0.9893935273320642,
+   "wilson_low": 0.9855341517155713
+  }
+ },
+ "disagree": {
+  "disagree_n": 11,
+  "disagree_osm_k": 2,
+  "disagree_tiger_k": 7
+ }
+}

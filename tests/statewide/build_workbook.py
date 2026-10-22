@@ -755,7 +755,9 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                      "one place, no cross street, or streets that don't meet on the map; the reason is kept per crash. "
                      f"Basis: CCRS mirror {b_['mirror']}, OSM {b_['osm']}, app code {b_['commit']}. On the map % is a share "
                      "of what CCRS holds, not of all crashes that happened: CCRS itself is incomplete (pain points 26-30; "
-                     "Source completeness column). tests/statewide/coverage.py.")
+                     "Source completeness column). tests/statewide/coverage.py. Corrected 2026-10-22: the police-GPS "
+                     "check inside cities now matches every map street the name can be (coverage_gpsfix.py; 16,659 "
+                     "crashes re-classified, reports/testing/coverage-correction-2026-10-22.md).")
         wsc["A2"].alignment = WRAP
         wsc.merge_cells("A2:N2")
         wsc.row_dimensions[2].height = 90
@@ -816,6 +818,59 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                   _acc_basis(r["name"])] for r in cv["agency"]],
               {2: 22, 16: 50, 17: 46}, start_row=last + 3)
 
+    # ---------------- Difficult bin (#211, step 2): what's in it, why, and what each fix would gain ----------------
+    pa_file, rk_file = DATA / "bin2_partA.json", DATA / "bin2_rank.json"
+    if pa_file.exists() and rk_file.exists():
+        pa, rk = json.loads(pa_file.read_text()), json.loads(rk_file.read_text())
+        wdb = wb.create_sheet("Difficult bin")
+        wdb["A1"], wdb["A1"].font = (f"Difficult bin: {pa['difficult']:,} of {pa['crashes']:,} crashes, why, and which "
+                                     "fixes would gain most at what accuracy (#211)"), H1
+        wdb["A2"] = (f"Basis: {pa['basis']}. Part A recomputes each difficult crash's reason from main's locator "
+                     "(tests/statewide/bin2.py, bin2_report.py). Part C: gains on those crashes, accuracy = right "
+                     "intersection on hidden police GPS where the GPS agrees with the report as written (bin2_whatif.py), "
+                     "plus the agencies' open data (validate_geocode.py on main: LAPD 2024, DataSF 2023-25, test halves). "
+                     "Part B: root causes on weighted stratified samples (bin2_audit.py). Measure only: the user picks.")
+        wdb["A2"].alignment = WRAP
+        wdb.merge_cells("A2:H2")
+        wdb.row_dimensions[2].height = 75
+        keys = ["unique_pair", "relaxed", "dont_meet", "no_cross", "near_fuzzy", "multi", "no_map"]
+        last = table(wdb, "DifficultReasons", ["Reason", "Crashes", "With police GPS off the roads"],
+                     [[r["reason"], r["crashes"], r["with_police_gps_off"]] for r in pa["reasons"]],
+                     {1: 60, 2: 14, 3: 18}, start_row=4)
+        hdr = ["Unique pair", "Relaxed", "Don't meet", "No cross street", "Near/fuzzy", "Meet twice+", "No map", "GPS off"]
+        for key, title, nm in (("district", "Caltrans district", "DifficultDistrict"), ("road_type", "Road type", "DifficultRoad"),
+                               ("severity", "Severity", "DifficultSeverity"), ("city_top25", "City (top 25)", "DifficultCity"),
+                               ("agency_top25", "Agency (top 25)", "DifficultAgency")):
+            rows_ = pa[key]
+            if key == "district":
+                rows_ = sorted(rows_, key=lambda r: int(r["name"].split()[-1]) if r["name"].split()[-1].isdigit() else 99)
+            last = table(wdb, nm, [title, "Difficult"] + hdr,
+                         [[r["name"], r["difficult"]] + [r.get(k, 0) for k in keys] + [r.get("gps_off")] for r in rows_],
+                         {1: 34}, start_row=last + 3)
+        fixrows = []
+        for r in [rk["yardstick"]] + rk["recommended"] + rk["held"]:
+            g = r.get("gain")
+            g = g if g is not None else (f"up to {r['gain_upper']:,}" if r.get("gain_upper") else
+                                         f"~{r['gain_audit_estimate']:,} (audit estimate)" if r.get("gain_audit_estimate")
+                                         is not None else None)
+            fixrows.append([r["fix"], g, r.get("gain_fatal"), r.get("gain_ksi"), r["hidden_gps"], r["la_open_data"],
+                            r["sf_open_data"], r["effort"], r["decision"]])
+        last = table(wdb, "FixRanking", ["Fix (ranked)", "Crashes gained", "Fatal", "KSI", "Hidden police GPS",
+                                         "LAPD open data", "SF open data", "Effort", "Decision"], fixrows,
+                     {1: 60, 5: 30, 6: 30, 7: 30, 8: 40, 9: 30}, start_row=last + 3)
+        up = rk.get("unique_pair_by_district", {})
+        last = table(wdb, "UniquePairDistrict", ["District", "unique_pair crashes gained", "unique_pair right / n",
+                                                 "exact right / n (same truth)"],
+                     [[d, v["gain"], f"{v.get('acc_k', 0)}/{v.get('acc_n', 0)}",
+                       "{k}/{n}".format(**{"k": "", "n": "", **(rk.get("exact_by_district") or {}).get(d, {})})] for d, v in
+                      sorted(up.items(), key=lambda kv: int(kv[0].split()[-1]))], {1: 16}, start_row=last + 3)
+        au = rk["other"]["audit"]
+        aud = [["named streets don't meet", c, v] for c, v in au["dont_meet"].items()] + \
+              [["police GPS off the roads", c, v] for c, v in au["gps_off"].items()] + \
+              [["police GPS off: where the GPS is", c, v] for c, v in au["gps_side"].items() if c]
+        table(wdb, "DifficultAudit", ["Sample", "Root cause", "Estimated crashes (weighted)"], aud, {1: 32, 2: 46},
+              start_row=last + 3)
+
     # ---------------- Citywide coverage (#199): every non-freeway crash of every agency ----------------
     cw_file = DATA / "citywide.json"
     if cw_file.exists():
@@ -830,7 +885,9 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                      f"+ CrashIQ's own placement on the city's street map under its gate ({bs['gate']}), with FARS for "
                      "fatal crashes. Review = a likely match the gate holds, or streets that meet in more than one place. "
                      "Can't place = no cross street, or the named streets don't meet on the city's map. CHP areas and "
-                     "agencies without an OSM city boundary: police GPS only. tests/statewide/citywide.py.")
+                     "agencies without an OSM city boundary: police GPS only. tests/statewide/citywide.py. "
+                     "PRE-CORRECTION: measured before the 2026-10-22 GPS-check fix; the Statewide coverage sheet "
+                     "supersedes it.")
         wcw["A2"].alignment = WRAP
         wcw.merge_cells("A2:N2")
         wcw.row_dimensions[2].height = 75
@@ -1124,7 +1181,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
              "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
              "Findings", "Citywide coverage", "Fatal before-after", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
-    order[0:0] = [n for n in ("Statewide coverage",) if n in wb.sheetnames]          # #199: first sheet
+    order[0:0] = [n for n in ("Statewide coverage", "Difficult bin") if n in wb.sheetnames]   # #199, #211 first
     order[order.index("Summary") + 1:order.index("Summary") + 1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order] + [w for w in wb._sheets if w.title not in order]   # never drop a sheet
     out_dir.mkdir(parents=True, exist_ok=True)
