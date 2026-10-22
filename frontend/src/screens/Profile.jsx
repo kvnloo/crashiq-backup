@@ -16,9 +16,11 @@ const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from th
   user: 'Placed by you', unmatched: 'Not placed yet (no coordinates)' }
 const provLabel = (k) => PROV_LABEL[k] || (k.startsWith('jev') ? `Jev suggestion ${k.slice(3)}` : k)
 
-function Src({ tid, n }) {
-  return <span className="src" tabIndex={0} role="note" aria-label={`Source: table ${tid}`}
-    title={`Table ${tid} · computed from ${fmt(n)} CCRS crash records`}>ⓘ</span>
+// ⓘ citation; a table built from a CCRS table missing a year in this pull carries its note, and the mark turns red (#188)
+function Src({ tid, n, p }) {
+  const note = p?.tables?.find((t) => t.id === tid)?.note
+  return <span className={`src${note ? ' src-note' : ''}`} tabIndex={0} role="note" aria-label={`Source: table ${tid}${note ? `. ${note}` : ''}`}
+    title={`Table ${tid} · computed from ${fmt(n)} CCRS crash records${note ? `\n${note}` : ''}`}>ⓘ</span>
 }
 
 function Kpis({ p }) {
@@ -33,7 +35,7 @@ function Kpis({ p }) {
     <div className="sf-kpis" aria-label="Key numbers">
       {items.map(([label, value, sub]) => (
         <div className="sf-kpi" key={label}>
-          <div className="sf-kpi__label">{label} <Src tid="T1" n={n} /></div>
+          <div className="sf-kpi__label">{label} <Src tid="T1" n={n} p={p} /></div>
           <div className="sf-kpi__value">{fmt(value)}{sub ? <small>{sub}</small> : null}</div>
         </div>
       ))}
@@ -168,7 +170,7 @@ function Ranking({ p, onOpen }) {
   for (const r of t.rows) maxBy[r.values.kind] = Math.max(maxBy[r.values.kind] || 0, r.values.rate || 0, r.values.critical_rate || 0)
   return (
     <section aria-label="Location ranking">
-      <div className="sect-h"><h2 className="h3">Which locations need attention first?</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="sect-h"><h2 className="h3">Which locations need attention first?</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       <div className="seg strip-dim" role="radiogroup" aria-label="Rank by">
         {SORTS.filter(([k]) => k !== 'rate' || hasCrit).map(([k, label]) => (
           <button key={k} type="button" role="radio" aria-checked={sort === k} className={sort === k ? 'on' : ''} onClick={() => setSort(k)}>{label}</button>
@@ -203,7 +205,7 @@ function Severity({ p }) {
   const max = Math.max(1, ...rows.map((r) => r.values.crashes))
   return (
     <section aria-label="Severity">
-      <div className="sect-h"><h2 className="h3">How bad, not just how many?</h2><Src tid="T3" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="sect-h"><h2 className="h3">How bad, not just how many?</h2><Src tid="T3" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       <p className="ksi-call"><b className="mono">{fmt(cell(p, 'T1/ksi_crashes/value'))}</b> crashes killed or seriously injured someone (KSI).</p>
       <div className="bars sevsum">
         {rows.map((r) => (
@@ -242,7 +244,7 @@ function Quality({ p, excluded, onReview }) {
   const width = QUALITY.reduce((t, [k]) => t + v(k), 0) || 1   // drawing scale only: the bar spans every crash read
   return (
     <section className="quality" aria-label="Data quality">
-      <div className="sect-h"><h2 className="h3">Can I trust these numbers?</h2><Src tid="T1" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="sect-h"><h2 className="h3">Can I trust these numbers?</h2><Src tid="T1" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       <div className="qbar" aria-hidden="true">{QUALITY.map(([k, , c]) => (v(k) ? <i key={k} className={c} style={{ width: `${(100 * v(k)) / width}%` }} /> : null))}</div>
       <p className="qline">
         {QUALITY.map(([k, label, c, full]) => {
@@ -274,7 +276,7 @@ function Trend({ p }) {
   const anyPrelim = rows.some((r) => r.values.preliminary)
   return (
     <section aria-label="Crashes by year">
-      <div className="sect-h"><h2 className="h3">Getting better or worse?</h2><Src tid="T11" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="sect-h"><h2 className="h3">Getting better or worse?</h2><Src tid="T11" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       {rows.length <= 5 ? (
         <div className="trend">
           {rows.map((r) => (
@@ -352,7 +354,7 @@ function Grid({ p, onOpen }) {
   const max = Math.max(1, ...rows.flatMap((r) => cols.map((c) => r.values[c.key] || 0)))
   return (
     <section aria-label="Collision type by location">
-      <div className="sect-h"><h2 className="h3">Is there a pattern?</h2><Src tid="T13" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="sect-h"><h2 className="h3">Is there a pattern?</h2><Src tid="T13" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       <div className="gridwrap" ref={wrap}>
         <table className="grid13">
           <thead><tr><th>Location</th>{cols.map((c) => <th key={c.key} className="sf-num" scope="col" title={c.label}>{TYPE_SHORT[c.key.toLowerCase()] || c.label}</th>)}</tr></thead>
@@ -393,7 +395,7 @@ function Vru({ p, onMap, mapMode }) {
   const n = cell(p, 'T1/crashes/value')
   return (
     <section className="vru-sect" aria-label="Pedestrians and bicyclists">
-      <div className="sect-h"><h2 className="h3">Pedestrians and bicyclists</h2><Src tid="T19" n={n} /></div>
+      <div className="sect-h"><h2 className="h3">Pedestrians and bicyclists</h2><Src tid="T19" n={n} p={p} /></div>
       <p className="vru-head" data-testid="vru-headline">{h.lead}{h.pct != null ? <b className="mono">{fmt(h.pct)}%</b> : null}{h.rest}</p>
       {rows.length > 1 ? (
         <>
@@ -428,11 +430,11 @@ function Vru({ p, onMap, mapMode }) {
       {v('ped').crashes ? (
         <div className="ped-ctx">
           <div>
-            <div className="sect-h"><h3 className="h4">What the pedestrian was doing</h3><Src tid="T15" n={n} /></div>
+            <div className="sect-h"><h3 className="h4">What the pedestrian was doing</h3><Src tid="T15" n={n} p={p} /></div>
             <Bars t={t15} />
           </div>
           <div>
-            <div className="sect-h"><h3 className="h4">Day or night</h3><Src tid="T20" n={n} /></div>
+            <div className="sect-h"><h3 className="h4">Day or night</h3><Src tid="T20" n={n} p={p} /></div>
             <Bars t={{ ...t20, rows: t20.rows.filter((r) => r.values.crashes) }} />
           </div>
         </div>
@@ -517,7 +519,7 @@ function Drill({ row, data, onClose }) {
       <button type="button" className="linkbtn" onClick={onClose}>← All locations</button>
       <h2 className="h2">{row.label}</h2>
       <div className="muted mono">{fmt(row.values.crashes)} crashes · {fmt(row.values.ksi_crashes)} KSI · {fmt(row.values.crashes_per_year)} per year <Src tid="T2" n={row.values.crashes} /></div>
-      <section><div className="sect-h"><h3 className="h3">Severity</h3><Src tid={sev.id} n={row.values.crashes} /></div>
+      <section><div className="sect-h"><h3 className="h3">Severity</h3><Src tid={sev.id} n={row.values.crashes} p={data} /></div>
         <ul className="kv">{sev.rows.filter((r) => r.values.crashes).map((r) => <li key={r.key}><span>{r.label}</span><span className="mono">{fmt(r.values.crashes)}</span></li>)}</ul></section>
       <section><div className="sect-h"><h3 className="h3">Collision type</h3><Src tid={types.id} n={row.values.crashes} /></div><Bars t={types} /></section>
       <section><div className="sect-h"><h3 className="h3">Lighting</h3><Src tid={light.id} n={row.values.crashes} /></div>
@@ -550,7 +552,7 @@ function Strip({ p, net, crashes, onOpen }) {
   const off = cell(p, 'T1/unplaced/value'), ex = cell(p, 'T1/excluded/value')
   return (
     <section aria-label="Crashes along the corridor">
-      <div className="sect-h"><h2 className="h3">Where along the corridor crashes bunch up</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} /></div>
+      <div className="sect-h"><h2 className="h3">Where along the corridor crashes bunch up</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       <StripDiagram crashes={crashes} intersections={(net.intersections || []).filter((i) => i.is_study !== false)}
         lengthFt={net.length_ft} onOpen={(id) => { const row = t2.rows.find((r) => r.key === id); if (row) onOpen(row) }} />
       {off || ex ? <p className="muted small-note">Not drawn: {fmt(off)} not placed yet (review list), {fmt(ex)} outside the study area.</p> : null}
