@@ -226,7 +226,7 @@ def main(only: set[str] | None = None) -> None:
     con = sqlite3.connect(DATA / "ccrs_mirror.sqlite")
     fars_db = Database(ROOT / "data" / "tester.sqlite")
     out, t0 = [], time.time()
-    todo = [a for a in agencies if not only or a["ncic"] in only]
+    todo = sorted((a for a in agencies if not only or a["ncic"] in only), key=lambda a: -a["crashes"])  # biggest first
     for i, a in enumerate(todo, 1):
         city = None
         b = bounds.get(corridors.norm_city(a["city"] or "")) if a["type"] == "local" else None
@@ -235,13 +235,18 @@ def main(only: set[str] | None = None) -> None:
             city = City(osm.Network(osm_local.network_in_area(local, b["rel"])))
         row = agency_row(a, con, city, fars_db, acc.get(a["ncic"]))
         out.append(row)
+        if i % 20 == 0 or i == len(todo):                     # partial results land as the run goes
+            _save(local, out, only, done=i == len(todo))
         print(f"[{i}/{len(todo)} {time.time() - t0:.0f}s] {a['ncic']} {a['city']}: {row['crashes']} crashes, on the map "
               f"{row['on_map_pct']}%, review {row['review_pct']}%, can't place {row['cant_place_pct']}%", flush=True)
+
+
+def _save(local, out: list[dict], only, done: bool) -> None:
     commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], capture_output=True,
                             text=True).stdout.strip()
     res = {"basis": {"commit": commit, "mirror": "2026-10-19", "osm": local.meta.get("timestamp"),
                      "gate": "exact tier only (locate.Gate default)", "gps_check_ft": GPS_CHECK_FT},
-           "agencies": out}
+           "complete": done, "agencies": out}
     (DATA / ("citywide.json" if not only else "citywide_sample.json")).write_text(json.dumps(res, indent=1))
 
 
