@@ -127,7 +127,7 @@ def fatal() -> list[dict]:
     fa = json.loads(f.read_text())
     sn, co = fa["statewide_no_gps"], fa["corridor"]
     vs = bw.versions()
-    now = DATA / f"fatal_outcomes_{vs[-1]}.json"
+    now = DATA / f"fatal_outcomes_{bw.code_tree(vs[-1])}.json"
     run = json.loads(now.read_text())["fatal_outcomes"] if now.exists() else {}
     fits = "FARS point fits the report's roads"
     return [{"ccrs_fatal": fa["ccrs_fatal"], "fars_link_pct": fa["link"]["link_pct"], "no_gps": sn["count"],
@@ -142,7 +142,7 @@ def fatal() -> list[dict]:
 
 
 def findings(ver: str) -> list[dict]:
-    f = DATA / f"findings_{ver}.json"
+    f = DATA / f"findings_{bw.code_tree(ver)}.json"
     if not f.exists():
         return []
     sm = json.loads(f.read_text())["summary"]

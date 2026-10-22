@@ -81,6 +81,20 @@ def versions() -> list[str]:
     return [d.name for d in sorted(ds, key=lambda d: min(f.stat().st_mtime for f in d.glob("*.json")))]
 
 
+def code_tree(v: str | None) -> str | None:
+    """A result folder's code tree: '<tree>-pfile' is the same code on another data basis (run 7b)."""
+    return v.split("-")[0] if v else v
+
+
+def code_before(ver: str) -> str | None:
+    """The run before this one on different code, from the run history (statewide runs on the frozen list only, not
+    partial re-checks): code-dependent files compare code, not data basis."""
+    with open(HERE / "run_history.csv") as f:
+        trees = [r["backend_tree"] for r in csv.DictReader(f)]
+    prior = trees[:trees.index(code_tree(ver))] if code_tree(ver) in trees else []
+    return next((v for v in reversed(prior) if v != code_tree(ver)), None)
+
+
 def _oncor(r: dict) -> tuple:
     a = r.get("assignment") or {}
     return (a.get("intersection", 0) + a.get("segment", 0), a.get("unmatched", 0)) if a else (None, None)
@@ -682,7 +696,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
               {1: 22})
 
     # ---------------- Findings (#176, statewide Findings run on this run's code) ----------------
-    fnd_file = DATA / f"findings_{ver}.json"
+    fnd_file = DATA / f"findings_{code_tree(ver)}.json"
     if fnd_file.exists():
         fd = json.loads(fnd_file.read_text())
         sm = fd["summary"]
@@ -713,12 +727,143 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                                                            -(x.get("findings_shown") or 0), x["city"]))],
               {1: 22, 10: 60}, start_row=se + 3)
 
+    # ---------------- Statewide coverage (#199, user direction 2026-10-22): every CCRS crash in one of two bins --------
+    cov_file = DATA / "coverage.json"
+    if cov_file.exists():
+        import coverage_out
+        cv = json.loads(cov_file.read_text())
+        ag_by_ = {a["ncic"]: a for a in agencies}
+        hidden_ok = {a_["ncic"]: a_["exact_intersection_acc_pct"] for a_ in
+                     json.loads((DATA / "accuracy_by_agency.json").read_text())
+                     if (a_.get("gps_self_consistent_pct") or 0) >= 50 and a_.get("exact_intersection_acc_pct") is not None}
+
+        def _acc_basis(ncic):
+            if ncic == "3801":
+                return "98.8% exact at the right intersection (San Francisco open data, claim C1)"
+            if ncic in hidden_ok:
+                return f"{hidden_ok[ncic]}% exact at the right intersection vs its own police GPS (#88, a lower bound)"
+            return "can't verify (no truth source)"
+        wsc = wb.create_sheet("Statewide coverage")
+        b_ = cv["basis"]
+        st_ = cv["statewide"][0]
+        wsc["A1"], wsc["A1"].font = ("Statewide coverage: every CCRS crash 2021-2025, in one of two bins"
+                                     + ("" if cv.get("complete") else " - PARTIAL, run still going")), H1
+        wsc["A2"] = ("Bin 1 'on the map': police GPS that fits the report's roads (within "
+                     f"{b_['gps_check_ft']:g} ft + the report's offset; degrees-minutes-seconds converted where the agency "
+                     f"writes it), CrashIQ's placement from street names under its gate ({b_['gate']}), or the FARS point "
+                     "for a fatal crash. Bin 2 'difficult': a likely match the gate holds, streets that meet in more than "
+                     "one place, no cross street, or streets that don't meet on the map; the reason is kept per crash. "
+                     f"Basis: CCRS mirror {b_['mirror']}, OSM {b_['osm']}, app code {b_['commit']}. On the map % is a share "
+                     "of what CCRS holds, not of all crashes that happened: CCRS itself is incomplete (pain points 26-30; "
+                     "Source completeness column). tests/statewide/coverage.py.")
+        wsc["A2"].alignment = WRAP
+        wsc.merge_cells("A2:N2")
+        wsc.row_dimensions[2].height = 90
+        he = table(wsc, "CoverageHeadline", ["Crashes", "In CCRS 2021-2025", "Bin 1: on the map %", "Bin 2: difficult %"],
+                   [["All crashes", st_["crashes"], st_["on_map_pct"], st_["difficult_pct"]],
+                    ["Fatal crashes", st_["fatal"], st_["fatal_on_map_pct"],
+                     round(100 - st_["fatal_on_map_pct"], 1) if st_["fatal_on_map_pct"] is not None else None],
+                    ["Fatal + serious injury (KSI)", st_["ksi"], st_["ksi_on_map_pct"],
+                     round(100 - st_["ksi_on_map_pct"], 1) if st_["ksi_on_map_pct"] is not None else None]],
+                   {1: 30, 2: 16, 3: 18, 4: 18}, start_row=4)
+        acc_lines = [
+            "Accuracy, by basis:",
+            "- CrashIQ's exact street-name placement: 98.8% at the right intersection (95% low bound 98.3%, 3,632 crashes) "
+            "on San Francisco's own geocoded records (claim C1, knowledge/claims.md).",
+            "- Elsewhere, against hidden police GPS (#88), exact tier, pooled over "
+            f"{st_.get('accuracy_agencies', 'the')} tested agencies: at the right intersection on self-consistent GPS "
+            f"{st_.get('accuracy', 'n/a')} (headline); final point on all police GPS {st_.get('accuracy_point_all_gps', 'n/a')}"
+            " (noisy truth, a lower bound). By district in the Caltrans district table, by agency in the Accuracy by agency "
+            "sheet. This covers city streets; freeways, state highways and county roads: can't verify.",
+            "- Police GPS in bin 1 is checked for consistency with the report's roads, not graded for accuracy.",
+            "- Every other agency: can't verify (no truth source).",
+        ]
+        for i_, t_ in enumerate(acc_lines, he + 2):
+            wsc.cell(i_, 1, t_).alignment = WRAP
+            wsc.merge_cells(start_row=i_, start_column=1, end_row=i_, end_column=10)
+        r0_ = he + 2 + len(acc_lines) + 1
+        src_rows = [["Police GPS, checked", st_["counts"].get("gps_usable", 0)],
+                    ["Police GPS, converted from degrees-minutes-seconds", st_["counts"].get("gps_usable_dms", 0)],
+                    ["CrashIQ from street names (exact, gate)", st_["counts"].get("placed_exact", 0)],
+                    ["FARS point (fatal)", st_["counts"].get("placed_fars", 0)],
+                    ["Review", st_["counts"].get("review", 0)], ["Can't place", st_["counts"].get("cant_place", 0)]]
+        se_ = table(wsc, "CoverageSources", ["Where each crash's location comes from", "Crashes"], src_rows,
+                    {1: 50, 2: 14}, start_row=r0_)
+        re_ = table(wsc, "CoverageReasons", ["Bin 2 reason", "Crashes"],
+                    [[k, v] for k, v in sorted(st_["difficult_by_reason"].items(), key=lambda kv: -kv[1])],
+                    {1: 60, 2: 14}, start_row=se_ + 3)
+        rcols = ["Crashes", "On the map %", "Difficult %", "Police GPS %", "CrashIQ placed %", "FARS %", "Review %",
+                 "Can't place %", "Fatal", "Fatal on the map %", "KSI", "KSI on the map %"]
+        rkeys = ["crashes", "on_map_pct", "difficult_pct", "police_gps_pct", "crashiq_placed_pct", "fars_pct",
+                 "review_pct", "cant_place_pct", "fatal", "fatal_on_map_pct", "ksi", "ksi_on_map_pct"]
+        last = re_
+        for g_, title_, nm_ in (("district", "Caltrans district", "CoverageDistricts"),
+                                ("road_type", "Road type", "CoverageRoadTypes"),
+                                ("district_road_type", "District x road type", "CoverageDistrictRoad"),
+                                ("county", "County", "CoverageCounties"), ("city", "City (CCRS city name)", "CoverageCities")):
+            rows__ = cv[g_]
+            if g_ == "district":
+                rows__ = sorted(rows__, key=lambda r: int(r["name"].split()[-1]) if r["name"].split()[-1].isdigit() else 99)
+            acc_ = g_ in ("district", "road_type")
+            last = table(wsc, nm_, [title_] + rcols + (["Accuracy: right intersection, self-consistent GPS",
+                                                         "Lower bound: final point, all police GPS"] if acc_ else []),
+                         [[r["name"]] + [r[k] for k in rkeys]
+                          + ([r.get("accuracy"), r.get("accuracy_point_all_gps")] if acc_ else []) for r in rows__],
+                         {1: 32, 14: 40, 15: 40} if acc_ else {1: 32}, start_row=last + 3)
+        table(wsc, "CoverageAgencies", ["NCIC", "Agency", "Type"] + rcols + ["Source completeness", "Accuracy"],
+              [[r["name"], r.get("agency_name"), r.get("agency_type")] + [r[k] for k in rkeys]
+               + [coverage_out.completeness_note(r["name"], ag_by_.get(r["name"])),
+                  _acc_basis(r["name"])] for r in cv["agency"]],
+              {2: 22, 16: 50, 17: 46}, start_row=last + 3)
+
+    # ---------------- Citywide coverage (#199): every non-freeway crash of every agency ----------------
+    cw_file = DATA / "citywide.json"
+    if cw_file.exists():
+        cw = json.loads(cw_file.read_text())
+        wcw = wb.create_sheet("Citywide coverage")
+        bs = cw["basis"]
+        wcw["A1"], wcw["A1"].font = ("Citywide coverage: of all crashes each police agency filed, how many reach the map "
+                                     "(#199)" + ("" if cw.get("complete") else " - PARTIAL, run still going")), H1
+        wcw["A2"] = (f"All non-freeway CCRS crashes 2021-2025 per agency (mirror {bs['mirror']}, OSM {bs['osm']}, app code "
+                     f"{bs['commit']}). On the map = police GPS that fits the report's streets (within "
+                     f"{bs['gps_check_ft']:g} ft + offset; degrees-minutes-seconds converted where the agency writes it) "
+                     f"+ CrashIQ's own placement on the city's street map under its gate ({bs['gate']}), with FARS for "
+                     "fatal crashes. Review = a likely match the gate holds, or streets that meet in more than one place. "
+                     "Can't place = no cross street, or the named streets don't meet on the city's map. CHP areas and "
+                     "agencies without an OSM city boundary: police GPS only. tests/statewide/citywide.py.")
+        wcw["A2"].alignment = WRAP
+        wcw.merge_cells("A2:N2")
+        wcw.row_dimensions[2].height = 75
+        hdr = ["NCIC", "Agency", "Type", "County code", "Crashes (non-freeway)", "Police GPS usable %",
+               "CrashIQ placed %", "On the map %", "Review %", "Can't place %", "Not run %", "Fatal crashes",
+               "Fatal on the map", "Accuracy", "Review reasons", "Can't-place reasons"]
+        rows_ = [[a["ncic"], a["agency"], a["type"], a["county"], a["crashes"], a["police_gps_pct"],
+                  a["crashiq_placed_pct"], a["on_map_pct"], a["review_pct"], a["cant_place_pct"], a["not_run_pct"],
+                  (a.get("fatal") or {}).get("crashes", 0), (a.get("fatal") or {}).get("on_map", 0), a["accuracy"],
+                  "; ".join(f"{k} {v}" for k, v in sorted(a["review_by_reason"].items(), key=lambda kv: -kv[1])),
+                  "; ".join(f"{k} {v}" for k, v in sorted(a["cant_place_by_reason"].items(), key=lambda kv: -kv[1]))]
+                 for a in sorted(cw["agencies"], key=lambda a: -a["crashes"])]
+        ce = table(wcw, "CitywideCoverage", hdr, rows_, {2: 22, 14: 44, 15: 50, 16: 50}, start_row=4)
+        local_ = [a for a in cw["agencies"] if a["type"] == "local" and a["crashes"] >= 200 and a["on_map_pct"] is not None
+                  and not a.get("not_run_pct")]
+        worst = sorted(local_, key=lambda a: a["on_map_pct"])[:25]
+        we = table(wcw, "CitywideWorst25", ["Agency", "Crashes", "On the map %", "Police GPS %", "Review %",
+                                            "Can't place %"],
+                   [[a["agency"], a["crashes"], a["on_map_pct"], a["police_gps_pct"], a["review_pct"],
+                     a["cant_place_pct"]] for a in worst], {1: 22}, start_row=ce + 3)
+        value = sorted((a for a in local_ if (a["police_gps_pct"] or 0) < 20), key=lambda a: -a["on_map_pct"])[:25]
+        table(wcw, "CitywideValueAdded", ["Agency (police GPS under 20%)", "Crashes", "Police GPS %",
+                                          "CrashIQ placed %", "On the map %"],
+              [[a["agency"], a["crashes"], a["police_gps_pct"], a["crashiq_placed_pct"], a["on_map_pct"]]
+               for a in value], {1: 30}, start_row=we + 3)
+
     # ---------------- Fatal crashes before/after FARS (#178): this run vs the one before, same basis ----------------
-    fo_now, fo_before = DATA / f"fatal_outcomes_{ver}.json", DATA / f"fatal_outcomes_{before}.json"
+    fo_ver, fo_prev = code_tree(ver), code_before(ver)
+    fo_now, fo_before = DATA / f"fatal_outcomes_{fo_ver}.json", DATA / f"fatal_outcomes_{fo_prev}.json"
     if fo_now.exists() and fo_before.exists():
         fn, fb = json.loads(fo_now.read_text()), json.loads(fo_before.read_text())
         wfo = wb.create_sheet("Fatal before-after")
-        wfo["A1"], wfo["A1"].font = f"Fatal crashes on the test corridors: {before} -> {ver} (#178, FARS #174)", H1
+        wfo["A1"], wfo["A1"].font = f"Fatal crashes on the test corridors: {fo_prev} -> {fo_ver} (#178, FARS #174)", H1
         wfo["A2"] = ("Every fatal crash the pull kept for a frozen-v1 corridor, by where each run's own code put it "
                      "(tests/statewide/fatal_outcomes.py). FARS points are treated like GPS (#174): within the "
                      "intersection radius or the corridor buffer they count; elsewhere on the report's roads they are "
@@ -728,7 +873,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         wfo.row_dimensions[2].height = 45
         keys = sorted(set(fn["fatal_outcomes"]) | set(fb["fatal_outcomes"]),
                       key=lambda k: (not k.startswith("placed"), k.startswith("unplaced"), k))
-        oe = table(wfo, "FatalOutcomes", ["Outcome", f"Before ({before})", f"After ({ver})", "Change"],
+        oe = table(wfo, "FatalOutcomes", ["Outcome", f"Before ({fo_prev})", f"After ({fo_ver})", "Change"],
                    [[k, fb["fatal_outcomes"].get(k, 0), fn["fatal_outcomes"].get(k, 0),
                      fn["fatal_outcomes"].get(k, 0) - fb["fatal_outcomes"].get(k, 0)] for k in keys],
                    {1: 40, 2: 16, 3: 16}, start_row=4)
@@ -977,9 +1122,10 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
 
     order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "TIMS by county", "Problems", "Run history",
              "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
-             "Findings", "Fatal before-after", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
+             "Findings", "Citywide coverage", "Fatal before-after", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
-    order[1:1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
+    order[0:0] = [n for n in ("Statewide coverage",) if n in wb.sheetnames]          # #199: first sheet
+    order[order.index("Summary") + 1:order.index("Summary") + 1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order] + [w for w in wb._sheets if w.title not in order]   # never drop a sheet
     out_dir.mkdir(parents=True, exist_ok=True)
     out = out_dir / f"CrashIQ-statewide-test-{today}.xlsx"
