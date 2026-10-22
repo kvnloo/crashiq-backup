@@ -126,12 +126,19 @@ def fatal() -> list[dict]:
         return []
     fa = json.loads(f.read_text())
     sn, co = fa["statewide_no_gps"], fa["corridor"]
+    vs = bw.versions()
+    now = DATA / f"fatal_outcomes_{vs[-1]}.json"
+    run = json.loads(now.read_text())["fatal_outcomes"] if now.exists() else {}
     fits = "FARS point fits the report's roads"
     return [{"ccrs_fatal": fa["ccrs_fatal"], "fars_link_pct": fa["link"]["link_pct"], "no_gps": sn["count"],
              "no_gps_pct": sn["pct_of_fatal"], "no_gps_fars_fits": sn["fars"].get(fits, 0),
              "residue_2021_2024": fa["residue_in_fars_years"], "residue_2025": fa["residue_by_year"].get("2025", 0),
              "corridor_fatal": co["fatal_kept"], "corridor_unplaced": co["unplaced"],
-             "corridor_unplaced_fars_fits": co["unplaced_fars"].get(fits, 0)}]
+             "corridor_unplaced_fars_fits": co["unplaced_fars"].get(fits, 0),
+             "run_fatal_kept": sum(run.values()) if run else None,
+             "run_placed": sum(v for k, v in run.items() if k.startswith("placed")) if run else None,
+             "run_placed_fars": run.get("placed_fars"), "run_off_corridor": run.get("excluded_fars_off_corridor"),
+             "run_unplaced": (run.get("unplaced", 0) + run.get("unplaced_with_fars_hint", 0)) if run else None}]
 
 
 def findings(ver: str) -> list[dict]:
