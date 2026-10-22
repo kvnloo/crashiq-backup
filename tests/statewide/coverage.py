@@ -229,7 +229,8 @@ class Agg:
 
 
 def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1), skip: int = 0,
-         part: str | None = None) -> None:
+         part: str | None = None, exclude: set[str] = frozenset(), only_city: str | None = None,
+         split: tuple[int, int] = (0, 1)) -> None:
     local = osm_local.LocalOSM(ROOT / "data" / "osm" / "ca_osm.sqlite")
     bounds = corridors.local_boundaries(local)
     dist, cname = districts()
@@ -258,13 +259,18 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
     w.writerow(["collision_id", "year", "county_code", "district", "city", "agency", "road_type", "killed", "ksi", "bin",
                 "outcome", "reason"])
     for i, (nm, n) in enumerate(names.most_common(), 1):
-        if i <= skip or (i - skip - 1) % shard[1] != shard[0]:
+        if only_city is not None:
+            if nm != only_city:
+                continue
+        elif i <= skip or (i - skip - 1) % shard[1] != shard[0] or nm in exclude:
             continue                          # another shard's city (a shard writes only its part file)
         b = bounds.get(corridors.norm_city(nm)) if nm else None
         cw._fuzzy_memo.clear()
         city = City(osm.Network(osm_local.network_in_area(local, b["rel"]))) if b else None
         for c in cw.mirror_rows(con, "City Name", nm):
             county = int(c.get("county_code") or 0)
+            if split[1] > 1 and int(c["crash_id"]) % split[1] != split[0]:
+                continue                      # one city split across processes by Collision Id
             if only_counties and county not in only_counties:
                 continue
             ag = str(c.get("agency") or "")
@@ -343,10 +349,15 @@ if __name__ == "__main__":
     ap.add_argument("--shard", default="0/1", help="k/n: this process's share of the cities")
     ap.add_argument("--skip", type=int, default=0, help="skip the first N city groups (done in an earlier part)")
     ap.add_argument("--part", help="write coverage_crashes_<part>.csv only (merge later)")
+    ap.add_argument("--exclude", default="", help="comma-separated city names to leave out (run on their own)")
+    ap.add_argument("--only-city", help="run just this CCRS city name (with --split)")
+    ap.add_argument("--split", default="0/1", help="j/m: this process's share of one city's crashes, by Collision Id")
     ap.add_argument("--merge", nargs="*", help="part files to merge into coverage.json and coverage_crashes.csv")
     a = ap.parse_args()
     if a.merge:
         merge([Path(x) for x in a.merge])
     else:
         k, n = (int(x) for x in a.shard.split("/"))
-        main({int(x) for x in a.counties.split(",")} if a.counties else None, (k, n), a.skip, a.part)
+        j, m = (int(x) for x in a.split.split("/"))
+        main({int(x) for x in a.counties.split(",")} if a.counties else None, (k, n), a.skip, a.part,
+             {x for x in a.exclude.split(",") if x}, a.only_city, (j, m))
