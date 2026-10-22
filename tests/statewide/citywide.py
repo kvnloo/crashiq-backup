@@ -117,7 +117,8 @@ def mirror_rows(con: sqlite3.Connection, col: str, value: str):
             continue
         fields = [{"id": r[1], "type": "text"} for r in con.execute(f'PRAGMA table_info("{rid}")')]
         cols, _ = cc.resolve_columns(fields, cc.CRASH_COLS)
-        cur = con.execute(f'SELECT * FROM "{rid}" WHERE "{col}" = ? AND COALESCE("IsDeleted", \'\') <> \'True\'',
+        match = f'("{col}" = ? OR "{col}" IS NULL)' if value == "" else f'"{col}" = ?'   # blank = also NULL
+        cur = con.execute(f'SELECT * FROM "{rid}" WHERE {match} AND COALESCE("IsDeleted", \'\') <> \'True\'',
                           (value,))
         names = [d[0] for d in cur.description]
         for row in cur:

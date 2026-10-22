@@ -41,14 +41,26 @@ def _dp(pts, tol):
     return _dp(pts[:idx + 1], tol)[:-1] + _dp(pts[idx:], tol)
 
 
+def _ring(r: list) -> list:
+    """Simplify a closed ring as two open halves (Douglas-Peucker needs distinct end points)."""
+    pts = [tuple(p) for p in r]
+    if len(pts) < 8:
+        return pts
+    h = len(pts) // 2
+    return _dp(pts[:h + 1], SIMPLIFY_DEG)[:-1] + _dp(pts[h:], SIMPLIFY_DEG)
+
+
 def counties(db: Path) -> list[dict]:
     con = sqlite3.connect(db)
     out = []
+    ca = {r["county"] for r in csv.DictReader(open(Path(__file__).resolve().parents[2] / "data" / "reference" /
+                                                  "caltrans_districts.csv"))}
     for name, rings, minlat, maxlon in con.execute("SELECT name, rings, minlat, maxlon FROM areas WHERE admin_level = '6'"):
-        if not name or not name.endswith("County") or minlat < 32.4 or maxlon > -114.0:
+        base = (name or "").removeprefix("City and County of ").removesuffix(" County")
+        if base not in ca or minlat < 32.4 or maxlon > -114.0:
             continue
-        simple = [[[round(p[0], 4), round(p[1], 4)] for p in _dp([tuple(p) for p in r], SIMPLIFY_DEG)]
-                  for r in json.loads(rings)]
+        name = f"{base} County"
+        simple = [[[round(p[0], 4), round(p[1], 4)] for p in _ring(r)] for r in json.loads(rings)]
         out.append({"name": name, "rings": [r for r in simple if len(r) >= 4]})
     return out
 
