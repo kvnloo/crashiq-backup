@@ -17,7 +17,10 @@ Per agency (local police: its city's own OSM street network; CHP areas: police G
 On the map % = (police GPS usable + CrashIQ placed) / crashes.
 
 Same basis: the frozen CCRS mirror (2026-10-19), the 2026-10-18 OSM extract, the app's code at the checkout's commit.
-Run: python tests/statewide/citywide.py [--agencies 1942,3801]   (writes data/statewide/citywide.json)
+Each city is run on its own street map with every agency's crashes there (a sheriff or CHP serves many cities), then
+totalled per city and per agency.
+
+Run: python tests/statewide/citywide.py [--cities Fremont,Lancaster]   (writes data/statewide/citywide.json)
 """
 
 from __future__ import annotations
@@ -28,7 +31,7 @@ import sqlite3
 import subprocess
 import sys
 import time
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
@@ -107,19 +110,18 @@ class City:
         return False
 
 
-def mirror_rows(con: sqlite3.Connection, ncic: str):
-    """Every non-deleted CCRS crash row of one agency, 2021-2025, as the app's crash records."""
+def mirror_rows(con: sqlite3.Connection, col: str, value: str):
+    """Every non-deleted CCRS crash row 2021-2025 with `col` = value, as the app's crash records."""
     for rid, year in con.execute("SELECT rid, year FROM _meta WHERE tbl = 'crashes'"):
         if year not in YEARS:
             continue
         fields = [{"id": r[1], "type": "text"} for r in con.execute(f'PRAGMA table_info("{rid}")')]
         cols, _ = cc.resolve_columns(fields, cc.CRASH_COLS)
-        cur = con.execute(f'SELECT * FROM "{rid}" WHERE "NCIC Code" = ? AND COALESCE("IsDeleted", \'\') <> \'True\'',
-                          (ncic,))
+        cur = con.execute(f'SELECT * FROM "{rid}" WHERE "{col}" = ? AND COALESCE("IsDeleted", \'\') <> \'True\'',
+                          (value,))
         names = [d[0] for d in cur.description]
         for row in cur:
-            raw = dict(zip(names, row))
-            c = cc.crash_record(raw, cols)
+            c = cc.crash_record(dict(zip(names, row)), cols)
             c["year"] = year
             yield c
 
@@ -133,6 +135,7 @@ def dms_years(con: sqlite3.Connection, ncic: str) -> set[int]:
             continue
         pts = con.execute(f'SELECT "Latitude", "Longitude" FROM "{rid}" WHERE "NCIC Code" = ? AND "Latitude" IS NOT NULL '
                           f'AND "Latitude" <> \'\' LIMIT 2000', (ncic,)).fetchall()
+
         def sig(v):
             try:
                 f = abs(float(v))
@@ -145,114 +148,130 @@ def dms_years(con: sqlite3.Connection, ncic: str) -> set[int]:
     return out
 
 
-def agency_row(a: dict, con, city: City | None, fars_db: Database | None, acc: dict | None) -> dict:
-    gate = locate.Gate()
-    n, ctr, review_why, cant_why = 0, Counter(), Counter(), Counter()
-    fatal = Counter()
-    dms = dms_years(con, a["ncic"])
-    for c in mirror_rows(con, a["ncic"]):
-        if c.get("is_freeway"):
-            continue
-        n += 1
-        killed = (c.get("killed") or 0) > 0
-        if killed:
-            fatal["crashes"] += 1
-        # 1. police GPS
-        if c.get("lat") is not None and c.get("lon") is not None:
-            if city is None or city.fits(c["lat"], c["lon"], c):
-                ctr["gps_usable"] += 1
-                fatal["on_map"] += killed
-                continue
-            if c["year"] in dms and city is not None:
-                la, lo = dms_decode(c["lat"]), dms_decode(c["lon"])
-                if la is not None and lo is not None and city.fits(la, lo, c):
-                    ctr["gps_usable_dms"] += 1
-                    fatal["on_map"] += killed
-                    continue
-            ctr["gps_off_streets"] += 1       # GPS that doesn't fit the report: treated as no GPS below
-        if city is None:
-            ctr["not_run_no_city_network"] += 1
-            continue
-        # 2. the app's locator under its gate
-        pl = locate.place(city.net, c)
-        if gate.auto(pl):
-            ctr["placed_exact"] += 1
-            fatal["on_map"] += killed
-            continue
-        if killed and fars_db is not None:
-            status, row = fars.link(fars_db, c)
-            p = fars.point(fars_db, row) if status == "linked" else None
-            if p is not None and city.fits(p[0], p[1], c):
-                ctr["placed_fars"] += 1
-                fatal["on_map"] += killed
-                fatal["fars"] += 1
-                continue
-        # 3./4. review or can't place
-        no_cross = not street_key(c.get("secondary_road")) or not street_key(c.get("primary_road"))
-        if no_cross:
-            ctr["cant_place"] += 1
-            cant_why["no cross street"] += 1
-        elif pl.tier in ("relaxed", "near", "fuzzy"):
-            ctr["review"] += 1
-            review_why[f"{pl.tier} match held by the gate"] += 1
-        elif "more than one place" in (pl.note or ""):
-            ctr["review"] += 1
-            review_why["streets meet in more than one place"] += 1
-        else:
-            ctr["cant_place"] += 1
-            cant_why["named streets don't meet on the city's map"] += 1
-        fatal["unplaced"] += killed
-    on_map = ctr["gps_usable"] + ctr["gps_usable_dms"] + ctr["placed_exact"] + ctr["placed_fars"]
-    pct = lambda k: round(100 * k / n, 1) if n else None
+def outcome(c: dict, city: City | None, dms: set[int], fars_db: Database | None, gate) -> tuple[str, str | None]:
+    """(outcome, reason) for one non-freeway crash: gps_usable, gps_usable_dms, placed_exact, placed_fars, review,
+    cant_place, or not_run (no city street map: CHP-only and unincorporated areas)."""
+    if c.get("lat") is not None and c.get("lon") is not None:
+        if city is None or city.fits(c["lat"], c["lon"], c):
+            return "gps_usable", None
+        if c["year"] in dms:
+            la, lo = dms_decode(c["lat"]), dms_decode(c["lon"])
+            if la is not None and lo is not None and city.fits(la, lo, c):
+                return "gps_usable_dms", None
+    if city is None:
+        return "not_run", None
+    pl = locate.place(city.net, c)
+    if gate.auto(pl):
+        return "placed_exact", None
+    if (c.get("killed") or 0) > 0 and fars_db is not None:
+        status, row = fars.link(fars_db, c)
+        p = fars.point(fars_db, row) if status == "linked" else None
+        if p is not None and city.fits(p[0], p[1], c):
+            return "placed_fars", None
+    if not street_key(c.get("secondary_road")) or not street_key(c.get("primary_road")):
+        return "cant_place", "no cross street"
+    if pl.tier in ("relaxed", "near", "fuzzy"):
+        return "review", f"{pl.tier} match held by the gate"
+    if "more than one place" in (pl.note or ""):
+        return "review", "streets meet in more than one place"
+    return "cant_place", "named streets don't meet on the city's map"
+
+
+class Tally:
+    def __init__(self):
+        self.n, self.ctr, self.review, self.cant, self.fatal = 0, Counter(), Counter(), Counter(), Counter()
+
+    def add(self, c: dict, out: str, why: str | None) -> None:
+        self.n += 1
+        self.ctr[out] += 1
+        if out == "review":
+            self.review[why] += 1
+        elif out == "cant_place":
+            self.cant[why] += 1
+        if (c.get("killed") or 0) > 0:
+            self.fatal["crashes"] += 1
+            if out in ON_MAP:
+                self.fatal["on_map"] += 1
+                self.fatal["fars"] += out == "placed_fars"
+
+    def row(self) -> dict:
+        n, k = self.n, self.ctr
+        pct = lambda v: round(100 * v / n, 1) if n else None        # noqa: E731
+        return {"crashes": n, "police_gps_pct": pct(k["gps_usable"] + k["gps_usable_dms"]),
+                "crashiq_placed_pct": pct(k["placed_exact"] + k["placed_fars"]),
+                "on_map_pct": pct(sum(k[x] for x in ON_MAP)), "review_pct": pct(k["review"]),
+                "cant_place_pct": pct(k["cant_place"]), "not_run_pct": pct(k["not_run"]), "counts": dict(k),
+                "review_by_reason": dict(self.review), "cant_place_by_reason": dict(self.cant), "fatal": dict(self.fatal)}
+
+
+ON_MAP = ("gps_usable", "gps_usable_dms", "placed_exact", "placed_fars")
+
+
+def _accuracy(acc: dict | None) -> str:
     if acc and acc.get("exact_intersection_acc_pct") is not None and (acc.get("gps_self_consistent_pct") or 0) >= 50:
-        accuracy = (f"{acc['exact_intersection_acc_pct']}% of exact matches at the right intersection "
-                    f"(hidden police GPS, n={acc.get('exact_n')})")
-    else:
-        accuracy = "can't verify (no usable truth for this agency)"
-    return {"ncic": a["ncic"], "agency": a["city"], "type": a["type"], "county": a["county"], "crashes": n,
-            "police_gps_pct": pct(ctr["gps_usable"] + ctr["gps_usable_dms"]), "crashiq_placed_pct":
-            pct(ctr["placed_exact"] + ctr["placed_fars"]), "on_map_pct": pct(on_map), "review_pct": pct(ctr["review"]),
-            "cant_place_pct": pct(ctr["cant_place"]), "not_run_pct": pct(ctr["not_run_no_city_network"]),
-            "counts": dict(ctr), "review_by_reason": dict(review_why), "cant_place_by_reason": dict(cant_why),
-            "fatal": dict(fatal), "dms_years": sorted(dms), "accuracy": accuracy,
-            "network": "city OSM network" if city else "none (CHP area or no OSM city boundary)"}
+        return (f"{acc['exact_intersection_acc_pct']}% of exact matches at the right intersection "
+                f"(hidden police GPS, n={acc.get('exact_n')})")
+    return "can't verify (no usable truth for this agency)"
 
 
 def main(only: set[str] | None = None) -> None:
     local = osm_local.LocalOSM(ROOT / "data" / "osm" / "ca_osm.sqlite")
     bounds = corridors.local_boundaries(local)
-    agencies = json.loads((DATA / "agencies.json").read_text())
+    agencies = {a["ncic"]: a for a in json.loads((DATA / "agencies.json").read_text())}
     acc = {x["ncic"]: x for x in json.loads((DATA / "accuracy_by_agency.json").read_text())}
+    city_agency = {}                     # each city's own police agency: the local agency with most crashes there
+    for a in sorted(agencies.values(), key=lambda a: a["crashes"]):
+        if a["type"] == "local":
+            city_agency[corridors.norm_city(a["city"] or "")] = a["ncic"]
     con = sqlite3.connect(DATA / "ccrs_mirror.sqlite")
     fars_db = Database(ROOT / "data" / "tester.sqlite")
-    out, t0 = [], time.time()
-    todo = sorted((a for a in agencies if not only or a["ncic"] in only), key=lambda a: -a["crashes"])  # biggest first
-    for i, a in enumerate(todo, 1):
-        city = None
-        b = bounds.get(corridors.norm_city(a["city"] or "")) if a["type"] == "local" else None
+    gate = locate.Gate()
+    names = Counter()
+    for rid, year in con.execute("SELECT rid, year FROM _meta WHERE tbl = 'crashes'").fetchall():
+        if year in YEARS:
+            for name, k in con.execute(f'SELECT "City Name", COUNT(*) FROM "{rid}" GROUP BY 1'):
+                names[name or ""] += k
+    todo = [c for c, _ in names.most_common() if not only or c in only]
+    by_city, by_agency, dms_cache, t0 = {}, defaultdict(Tally), {}, time.time()
+    for i, cname in enumerate(todo, 1):
         _fuzzy_memo.clear()
-        if b:
-            city = City(osm.Network(osm_local.network_in_area(local, b["rel"])))
-        row = agency_row(a, con, city, fars_db, acc.get(a["ncic"]))
-        out.append(row)
-        if i % 20 == 0 or i == len(todo):                     # partial results land as the run goes
-            _save(local, out, only, done=i == len(todo))
-        print(f"[{i}/{len(todo)} {time.time() - t0:.0f}s] {a['ncic']} {a['city']}: {row['crashes']} crashes, on the map "
-              f"{row['on_map_pct']}%, review {row['review_pct']}%, can't place {row['cant_place_pct']}%", flush=True)
+        b = bounds.get(corridors.norm_city(cname))
+        city = City(osm.Network(osm_local.network_in_area(local, b["rel"]))) if b else None
+        t = Tally()
+        for c in mirror_rows(con, "City Name", cname):
+            if c.get("is_freeway"):
+                continue
+            ag = str(c.get("agency") or "")
+            if ag not in dms_cache:
+                dms_cache[ag] = dms_years(con, ag)
+            out, why = outcome(c, city, dms_cache[ag], fars_db, gate)
+            t.add(c, out, why)
+            by_agency[ag].add(c, out, why)
+        own = city_agency.get(corridors.norm_city(cname))
+        by_city[cname] = {"city": cname, "network": "city OSM network" if city else "none (no OSM city boundary)",
+                          "police_agency": own, "accuracy": _accuracy(acc.get(own)), **t.row()}
+        print(f"[{i}/{len(todo)} {time.time() - t0:.0f}s] {cname or '(blank)'}: {t.n} crashes, on the map "
+              f"{by_city[cname]['on_map_pct']}%, review {by_city[cname]['review_pct']}%, can't place "
+              f"{by_city[cname]['cant_place_pct']}%", flush=True)
+        if i % 25 == 0 or i == len(todo):
+            _save(local, by_city, by_agency, agencies, acc, only, done=i == len(todo))
 
 
-def _save(local, out: list[dict], only, done: bool) -> None:
+def _save(local, by_city, by_agency, agencies, acc, only, done: bool) -> None:
     commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "HEAD"], capture_output=True,
                             text=True).stdout.strip()
+    ag_rows = [{"ncic": k, "agency": (agencies.get(k) or {}).get("city"), "type": (agencies.get(k) or {}).get("type"),
+                "county": (agencies.get(k) or {}).get("county"), "accuracy": _accuracy(acc.get(k)), **t.row()}
+               for k, t in sorted(by_agency.items(), key=lambda kv: -kv[1].n)]
     res = {"basis": {"commit": commit, "mirror": "2026-10-19", "osm": local.meta.get("timestamp"),
                      "gate": "exact tier only (locate.Gate default)", "gps_check_ft": GPS_CHECK_FT},
-           "complete": done, "agencies": out}
+           "complete": done, "cities": sorted(by_city.values(), key=lambda r: -r["crashes"]), "agencies": ag_rows}
     (DATA / ("citywide.json" if not only else "citywide_sample.json")).write_text(json.dumps(res, indent=1))
 
 
 if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
-    ap.add_argument("--agencies", help="comma-separated NCIC codes (a sample); default every agency")
+    ap.add_argument("--cities", help="comma-separated CCRS city names (a sample); default every city")
     a = ap.parse_args()
-    main(set(a.agencies.split(",")) if a.agencies else None)
+    main(set(a.cities.split(",")) if a.cities else None)

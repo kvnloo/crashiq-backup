@@ -713,6 +713,47 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
                                                            -(x.get("findings_shown") or 0), x["city"]))],
               {1: 22, 10: 60}, start_row=se + 3)
 
+    # ---------------- Citywide coverage (#199): every non-freeway crash of every agency ----------------
+    cw_file = DATA / "citywide.json"
+    if cw_file.exists():
+        cw = json.loads(cw_file.read_text())
+        wcw = wb.create_sheet("Citywide coverage")
+        bs = cw["basis"]
+        wcw["A1"], wcw["A1"].font = ("Citywide coverage: of all crashes each police agency filed, how many reach the map "
+                                     "(#199)" + ("" if cw.get("complete") else " - PARTIAL, run still going")), H1
+        wcw["A2"] = (f"All non-freeway CCRS crashes 2021-2025 per agency (mirror {bs['mirror']}, OSM {bs['osm']}, app code "
+                     f"{bs['commit']}). On the map = police GPS that fits the report's streets (within "
+                     f"{bs['gps_check_ft']:g} ft + offset; degrees-minutes-seconds converted where the agency writes it) "
+                     f"+ CrashIQ's own placement on the city's street map under its gate ({bs['gate']}), with FARS for "
+                     "fatal crashes. Review = a likely match the gate holds, or streets that meet in more than one place. "
+                     "Can't place = no cross street, or the named streets don't meet on the city's map. CHP areas and "
+                     "agencies without an OSM city boundary: police GPS only. tests/statewide/citywide.py.")
+        wcw["A2"].alignment = WRAP
+        wcw.merge_cells("A2:N2")
+        wcw.row_dimensions[2].height = 75
+        hdr = ["NCIC", "Agency", "Type", "County code", "Crashes (non-freeway)", "Police GPS usable %",
+               "CrashIQ placed %", "On the map %", "Review %", "Can't place %", "Not run %", "Fatal crashes",
+               "Fatal on the map", "Accuracy", "Review reasons", "Can't-place reasons"]
+        rows_ = [[a["ncic"], a["agency"], a["type"], a["county"], a["crashes"], a["police_gps_pct"],
+                  a["crashiq_placed_pct"], a["on_map_pct"], a["review_pct"], a["cant_place_pct"], a["not_run_pct"],
+                  (a.get("fatal") or {}).get("crashes", 0), (a.get("fatal") or {}).get("on_map", 0), a["accuracy"],
+                  "; ".join(f"{k} {v}" for k, v in sorted(a["review_by_reason"].items(), key=lambda kv: -kv[1])),
+                  "; ".join(f"{k} {v}" for k, v in sorted(a["cant_place_by_reason"].items(), key=lambda kv: -kv[1]))]
+                 for a in sorted(cw["agencies"], key=lambda a: -a["crashes"])]
+        ce = table(wcw, "CitywideCoverage", hdr, rows_, {2: 22, 14: 44, 15: 50, 16: 50}, start_row=4)
+        local_ = [a for a in cw["agencies"] if a["type"] == "local" and a["crashes"] >= 200 and a["on_map_pct"] is not None
+                  and not a.get("not_run_pct")]
+        worst = sorted(local_, key=lambda a: a["on_map_pct"])[:25]
+        we = table(wcw, "CitywideWorst25", ["Agency", "Crashes", "On the map %", "Police GPS %", "Review %",
+                                            "Can't place %"],
+                   [[a["agency"], a["crashes"], a["on_map_pct"], a["police_gps_pct"], a["review_pct"],
+                     a["cant_place_pct"]] for a in worst], {1: 22}, start_row=ce + 3)
+        value = sorted((a for a in local_ if (a["police_gps_pct"] or 0) < 20), key=lambda a: -a["on_map_pct"])[:25]
+        table(wcw, "CitywideValueAdded", ["Agency (police GPS under 20%)", "Crashes", "Police GPS %",
+                                          "CrashIQ placed %", "On the map %"],
+              [[a["agency"], a["crashes"], a["police_gps_pct"], a["crashiq_placed_pct"], a["on_map_pct"]]
+               for a in value], {1: 30}, start_row=we + 3)
+
     # ---------------- Fatal crashes before/after FARS (#178): this run vs the one before, same basis ----------------
     fo_now, fo_before = DATA / f"fatal_outcomes_{ver}.json", DATA / f"fatal_outcomes_{before}.json"
     if fo_now.exists() and fo_before.exists():
@@ -977,7 +1018,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
 
     order = ["Summary", "Method", "Cities", "Agencies", "Fields", "TIMS vs CCRS", "TIMS by county", "Problems", "Run history",
              "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
-             "Findings", "Fatal before-after", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
+             "Findings", "Citywide coverage", "Fatal before-after", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
     order[1:1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order] + [w for w in wb._sheets if w.title not in order]   # never drop a sheet
