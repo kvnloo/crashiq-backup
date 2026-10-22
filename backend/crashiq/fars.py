@@ -123,10 +123,18 @@ def link(db: Database, c: dict) -> tuple[str, dict | None]:
     return ("linked", cands[0]) if cands else ("unlinked", None)
 
 
-def on_named_road(road_tags: list[dict], c: dict) -> bool:
-    """One of the roads at the point (OSM name or ref) is a road the report names."""
+def named_roads(c: dict) -> list[str]:
+    """The roads the report names: placeholders (NOT STATED, UNKNOWN, blank) aren't roads."""
+    from .crashes import _placeholder
+    return [r for r in (c.get("primary_road"), c.get("secondary_road")) if r and not _placeholder(r)]
+
+
+def on_named_roads(road_tags: list[dict], c: dict) -> bool:
+    """Every road the report names runs at the point (OSM name or ref): both when it names two, the one when it names
+    one (user decision 2026-10-22, docs/03; Palm Desert, #191: one long road matched a point 7.4 mi away)."""
     ways = [t.get(k) for t in road_tags for k in ("name", "ref", "alt_name", "old_ref") if t.get(k)]
-    return _names_road([c.get("primary_road"), c.get("secondary_road")], ways)
+    named = named_roads(c)
+    return bool(named) and all(_names_road([r], ways) for r in named)
 
 
 def _parse(s) -> dt.datetime | None:

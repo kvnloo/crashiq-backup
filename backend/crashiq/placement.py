@@ -9,9 +9,25 @@ any change to the gate is the user's decision (docs/03, PR #16 decision 2).
 
 from __future__ import annotations
 
-from . import fars, locate, osm
+from . import fars, grade, locate, osm
 from . import network as network_mod
 from .db import Database
+
+
+def _at_named_intersection(c: dict, net: dict) -> bool:
+    """The point is within the GPS-check distance (+ offset) of the study intersection the report names: there both of
+    its roads meet, so it fits both (#195)."""
+    import math
+
+    from .assign import GPS_CHECK_FT, _stated_intersection
+    from .geo import Polyline
+    studies = [i for i in net.get("intersections", []) if i.get("is_study") and i.get("lat") is not None]
+    st = _stated_intersection(c, studies, grade.corridor_keys(net)) if studies else None
+    if st is None:
+        return False
+    line = Polyline([tuple(q) for q in net["line"]])
+    (x, y), (sx, sy) = line.proj.to_xy(c["lat"], c["lon"]), line.proj.to_xy(st["lat"], st["lon"])
+    return math.hypot(x - sx, y - sy) <= GPS_CHECK_FT + (c.get("offset_ft") or 0.0)
 
 
 def _gps_usable(c: dict, net: dict) -> bool:
@@ -34,7 +50,6 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
     placed, elsewhere it's excluded and listed as `fars_off_corridor` with its distance (PM review of #182). A point on
     none of the report's roads isn't used; the crash keeps its place on the review list with a `fars_hint`."""
     from .assign import GPS_CHECK_FT
-    from .crashes import point_fits_streets
     from .geo import Polyline
     counts = {"tried": 0, "placed": 0, "point_not_on_named_road": 0, "no_point": 0, "ambiguous": 0, "unlinked": 0,
               "no_fars_year": 0}
@@ -66,8 +81,8 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
             continue
         trial = {**c, "lat": p[0], "lon": p[1]}
         radius_m = (GPS_CHECK_FT + (c.get("offset_ft") or 0.0)) / 3.28084
-        if not (point_fits_streets(trial, net)
-                or fars.on_named_road(network_mod.roads_near(db, p[0], p[1], radius_m, overpass), c)):
+        if not (_at_named_intersection(trial, net)
+                or fars.on_named_roads(network_mod.roads_near(db, p[0], p[1], radius_m, overpass), c)):
             counts["point_not_on_named_road"] += 1
             c["fars_hint"] = {"fars_case": fars.case_key(row["year"], row["st_case"]), "lat": p[0], "lon": p[1],
                               "miles_from_corridor": round(line.project(p[0], p[1]).offset_ft / 5280, 1)}

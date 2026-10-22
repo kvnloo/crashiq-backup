@@ -119,7 +119,7 @@ def test_fars_point_on_the_study_stretch_is_placed(tmp_path):
     out, (la, lo) = _fatal_no_gps_pull()
     c = _crash(out)
     db = _db(tmp_path, [_fars_row(c, la + 0.0002, lo)])                     # ~70 ft from its corner
-    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm())
+    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm("Crenshaw Boulevard", "West 144th Street"))
     assert counts["placed"] == 1 and c["location_source"] == "fars" and c["fars_case"].endswith("-60077")
     net = {**NET_X, "intersections": [], "segments": [{"id": "s1", "from_station_ft": 0, "to_station_ft": 1e9,
                                                        "name": "x"}]}
@@ -133,7 +133,7 @@ def test_fars_point_elsewhere_on_the_reports_roads_is_excluded_with_its_distance
     out, (la, lo) = _fatal_no_gps_pull()
     c = _crash(out)
     db = _db(tmp_path, [_fars_row(c, la + 0.02, lo + 0.02)])                # ~1.8 mi away
-    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm("Crenshaw Boulevard"))
+    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm("Crenshaw Boulevard", "West 144th Street"))
     assert counts["placed"] == 1 and c["location_source"] == "fars"
     a = assign.assign([c], {**NET_X, "intersections": [], "segments": []}, 250, 100)["assignments"][0]
     assert a["kind"] == "excluded" and a["rule"] == "fars_off_corridor" and a["distance_ft"] > 5000
@@ -202,3 +202,37 @@ def test_fatal_crash_whose_gps_the_assignment_accepts_keeps_its_gps(tmp_path):
     db = _db(tmp_path, [_far_row()])
     placement.place_fatal_from_fars(db, net, {"cleaning": {}, "crashes": [c]}, overpass=_osm("West 144th Street"))
     assert c["location_source"] == "gps" and not c.get("fars_case")
+
+
+
+# -- #195: two named roads -> the FARS point must fit both ----------------------------------------------------
+def _two_road_crash(out):
+    c = _crash(out)
+    c["secondary_road"] = "EL DORADO DR"                                     # the report names two roads
+    return c
+
+
+def test_two_named_roads_and_the_point_on_only_one_is_not_used(tmp_path):
+    # Palm Desert (#191): COUNTRY CLUB DR & EL DORADO DR; FARS 7.4 mi east on Country Club Dr, nowhere near El Dorado
+    out, (la, lo) = _fatal_no_gps_pull()
+    c = _two_road_crash(out)
+    db = _db(tmp_path, [_fars_row(c, la + 0.02, lo + 0.02)])
+    counts = placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm("Crenshaw Boulevard"))
+    assert counts["point_not_on_named_road"] == 1 and c["location_source"] == "unmatched" and c["fars_hint"]
+
+
+def test_two_named_roads_and_the_point_on_both_is_used(tmp_path):
+    out, (la, lo) = _fatal_no_gps_pull()
+    c = _two_road_crash(out)
+    db = _db(tmp_path, [_fars_row(c, la + 0.02, lo + 0.02)])
+    placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm("Crenshaw Boulevard", "El Dorado Drive"))
+    assert c["location_source"] == "fars"
+
+
+def test_one_named_road_is_enough_when_the_report_names_one(tmp_path):
+    out, (la, lo) = _fatal_no_gps_pull()
+    c = _crash(out)
+    c["secondary_road"] = "NOT STATED"                                       # no cross street: one named road
+    db = _db(tmp_path, [_fars_row(c, la + 0.02, lo + 0.02)])
+    placement.place_fatal_from_fars(db, NET_X, out, overpass=_osm("Crenshaw Boulevard"))
+    assert c["location_source"] == "fars"

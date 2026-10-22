@@ -115,7 +115,7 @@ export default function ReviewList({ studyId, review, onChanged, onClose, pickin
               <li key={c.crash_id} className="rv-fatal-item" data-testid="fatal-item">
                 <div className="mono"><span className="flag" aria-hidden="true">⚑</span> {c.date}{c.hour != null ? ` ${String(c.hour).padStart(2, '0')}h` : ''} · Fatal{c.killed > 1 ? ` (${c.killed} killed)` : ''} · {c.collision_type || 'Crash'}{c.city ? ` · ${c.city}` : ''}</div>
                 <div className="muted">{where(c)} · {REASON[c.reason] || c.reason}{c.suggestion ? ` · suggested: ${c.suggestion.tier}` : ''}</div>
-                {c.fars_hint ? <div className="muted" data-testid="fars-hint">FARS puts this crash {fmt(c.fars_hint.miles_from_corridor)} mi from the corridor, not on any road the report names (case {c.fars_hint.fars_case}).</div> : null}
+                {c.fars_hint ? <div className="muted" data-testid="fars-hint">FARS puts this crash {fmt(c.fars_hint.miles_from_corridor)} mi from the corridor (case {c.fars_hint.fars_case}), but the map doesn't show both roads the report names there. Check it before placing.</div> : null}
                 <div className="rv-lookup">Look up: {c.lookup.map((l) => <a key={l.url} href={l.url} target="_blank" rel="noopener noreferrer">{l.label}</a>)}</div>
                 <Actions ids={[c.crash_id]} review={review} suggestable={c.suggestion ? 1 : 0} onDecide={decide} onPick={pick} label={`fatal crash ${c.crash_id}`} needSource />
               </li>
