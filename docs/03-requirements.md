@@ -349,3 +349,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   domain) first, then a human-confirmed public-source lookup (e.g. news) for any remaining ones, always with the source
   cited and confirmed by the user (AI never sets a location). First step is measurement only (#166); building waits for
   the user's review of the numbers.
+- **N9 e-bikes and e-scooters DECIDED (user, 2026-10-21, confirmed in the PM session):** e-bikes and e-scooters get
+  their own road-user rows (own row in the road-user table, ranking column and map/strip marker), next to pedestrians,
+  bicyclists and motorcyclists. Still open: whether motorized bicycles and ≤15 hp motor-driven cycles count with
+  motorcycles.
+- **N10 collision diagram direction (user, 2026-10-21, PM session):** use DemandIQ's *layout* conventions (the
+  intersection cell, approaches by direction of travel, lanes laid out so arrows never overlap). The *symbols* follow
+  standard collision-diagram practice, not DemandIQ's volume arrows: reference HSM Part B, Ch. 5 collision diagram
+  (Figure 5-4) and agency legends (Seattle SDOT, NCDOT, Peel Region). The proposal is to be revised accordingly.
