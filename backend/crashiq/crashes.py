@@ -817,6 +817,9 @@ RECENT_TTL_DAYS = 30   # a pull whose window reaches last year or this year is r
                        # preliminary reports, #54); older windows are final and never expire
 
 
+MISSING_TTL_DAYS = 1     # a pull missing a year's Parties / IWP / Crashes table is refreshed daily until CHP publishes it
+
+
 def stale(cached: dict, study: dict, now: datetime | None = None) -> bool:
     now = now or datetime.now(timezone.utc)
     if study["to_year"] < now.year - 1:
@@ -827,6 +830,9 @@ def stale(cached: dict, study: dict, now: datetime | None = None) -> bool:
         return True
     if pulled.tzinfo is None:
         pulled = pulled.replace(tzinfo=timezone.utc)
+    cl = cached.get("cleaning") or {}
+    if cl.get("parties_missing_years") or cl.get("iwp_missing_years") or cl.get("years_missing"):
+        return (now - pulled).days >= MISSING_TTL_DAYS       # CHP publishes late: look again daily (#188)
     return (now - pulled).days >= RECENT_TTL_DAYS
 
 

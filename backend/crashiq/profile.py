@@ -489,6 +489,11 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if u:
         caveats.append({"key": "injury_level_unknown", "count": u,
                         "text": f"{u} injury crash{'es have' if u != 1 else ' has'} no reported injury level, so KSI may be undercounted."})
+    notes = missing_notes(missing_detail(pull, placed + unmatched))
+    for k in ("parties", "iwp"):
+        if k in notes:
+            caveats.append({"key": f"{k}_missing", "text": notes[k], "limitation": True})
+    annotate(tables, notes)
     if years_missing:
         caveats.append({"key": "years_missing", "years": years_missing,
                         "text": f"CCRS has no queryable data for {', '.join(map(str, years_missing))}; those years are not in the profile."})
@@ -525,6 +530,46 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                      "injury_crashes": "T1/injury_crashes/value", "crashes_per_mi_yr": "T1/crashes_per_mi_yr/value"},
             "tables": tables, "signals": scr["signals"], "screen_tests": scr["tests_run"], "caveats": caveats, "location_provenance": dict(sorted(prov.items())),
             "source": pull["source"], "pulled_at": pull["pulled_at"], "excluded_provenance": sorted(exclude)}
+
+
+# Tables built from CCRS Parties (road users, trucks, movement, the diagram) or InjuredWitnessPassengers (injury level):
+# a year missing from the pull undercounts them silently unless every one of them says so (#188).
+PARTY_TABLES = ("T2", "T10", "T16", "T17", "T19", "T20", "T21")
+IWP_TABLES = ("T1", "T2", "T3", "T11", "T19")
+
+
+def missing_detail(pull: dict, crashes: list[dict]) -> dict:
+    """{"parties": (years, crashes in those years), "iwp": (...)} for the years whose Parties / IWP table the pull
+    didn't have (CHP publishes them later than the Crashes table: Parties 2025 came out on 2026-10-22)."""
+    out = {}
+    for key, field in (("parties", "parties_missing_years"), ("iwp", "iwp_missing_years")):
+        ys = sorted(set(pull.get("cleaning", {}).get(field) or []))
+        if ys:
+            out[key] = (ys, sum(1 for c in crashes if c.get("year") in ys))
+    return out
+
+
+def missing_notes(missing: dict) -> dict:
+    notes = {}
+    if "parties" in missing:
+        ys, n = missing["parties"]
+        notes["parties"] = (f"No CCRS party details for {', '.join(map(str, ys))} in this pull: road users, heavy trucks, "
+                            f"movements and the collision diagram leave out those years' {n} crash{'es' if n != 1 else ''}.")
+    if "iwp" in missing:
+        ys, n = missing["iwp"]
+        notes["iwp"] = (f"No CCRS injury details for {', '.join(map(str, ys))} in this pull: those years' {n} "
+                        f"crash{'es' if n != 1 else ''} with injuries count as 'injury, level not stated' (U), so KSI "
+                        "is undercounted.")
+    return notes
+
+
+def annotate(tables: list[dict], notes: dict) -> None:
+    """Put the missing-year note on every table that depends on the missing CCRS table (#188)."""
+    for t in tables:
+        base = t["id"].split("@")[0]
+        parts = [notes[k] for k, ids in (("parties", PARTY_TABLES), ("iwp", IWP_TABLES)) if k in notes and base in ids]
+        if parts:
+            t["note"] = " ".join(parts)
 
 
 def location_profile(profile_crashes: list[dict], lid: str, years: int) -> list[dict]:
@@ -572,6 +617,7 @@ def get_location_profile(sid: str, lid: str, request: Request) -> dict:
         from . import diagram as diagram_mod
         diagram = diagram_mod.build(net, it, placed)
         tables.append(diagram_table(lid, diagram, placed))
+    annotate(tables, missing_notes(missing_detail(pull, placed)))
     return {"location_id": lid, "tables": tables, "diagram": diagram,
             "crashes": [{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
                                                "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",

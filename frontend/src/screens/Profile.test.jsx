@@ -220,6 +220,19 @@ describe('Crash profile screen', () => {
     expect(within(sec).getAllByRole('row')).toHaveLength(3)                    // header + T21's two crashes
   })
 
+  it('a table missing a year of CCRS party data carries its note on the ⓘ (#188)', async () => {
+    const note = 'No CCRS party details for 2025 in this pull: road users, heavy trucks, movements and the collision diagram leave out those years\' 12 crashes.'
+    const p2 = { ...profile, tables: profile.tables.map((t) => (t.id === 'T19' ? { ...t, note } : t)),
+      caveats: [...profile.caveats, { key: 'parties_missing', text: note, limitation: true }] }
+    mockApi({ ...routes, 'GET /studies/:id/profile': p2 })
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const src = within(screen.getByLabelText('Pedestrians and bicyclists')).getAllByRole('note')[0]          // the section's T19 mark
+    expect(src).toHaveAttribute('title', expect.stringContaining('No CCRS party details for 2025'))
+    expect(src.className).toContain('src-note')
+    expect(screen.getByLabelText('Caveats')).toHaveTextContent('No CCRS party details for 2025')
+  })
+
   it('strip diagram: one dot per placed crash (= T1 crashes), hover, click to drill, color toggle (#102)', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')

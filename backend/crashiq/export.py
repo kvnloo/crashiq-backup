@@ -184,6 +184,9 @@ def to_xlsx(d: dict) -> bytes:
                 sh.cell(row=sh.max_row, column=1).fill = PatternFill("solid", fgColor=SEV_COLORS[r["key"]].lstrip("#"))
         sh.append([])
         sh.append(["Location sources"] + [f"{k}: {v}" for k, v in t["provenance"].items()])
+        if t.get("note"):                       # a missing CCRS Parties / IWP year (#188)
+            sh.append(["Note", t["note"]])
+            sh.cell(row=sh.max_row, column=1).font = Font(bold=True, color="C4261B")
         sh.column_dimensions["A"].width = 22
         sh.column_dimensions["B"].width = 44
         for i in range(3, len(t["columns"]) + 3):
@@ -306,8 +309,12 @@ def to_pdf(d: dict) -> bytes:
         t.setStyle(TableStyle(st))
         return t
 
+    notes = {t["id"]: t.get("note") for t in p["tables"]}
+
     def src(tid):
-        return Paragraph(f"Source: table {tid}, computed from the CCRS records listed in the appendix workbook.", small)
+        note = f" Note: {escape(notes[tid])}" if notes.get(tid) else ""     # a missing CCRS Parties / IWP year (#188)
+        return Paragraph(f"Source: table {tid}, computed from the CCRS records listed in the appendix workbook.{note}",
+                         small)
 
     v = lambda a: profile_mod.cell(p["tables"], a)
     story = [Paragraph(f"{s['name']}: crash profile", h1),
