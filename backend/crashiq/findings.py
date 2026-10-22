@@ -99,9 +99,14 @@ def matches(written: str, cell_value) -> bool:
     return round_half_up(float(cell_value), d) == w
 
 
-def extract_numbers(text: str, quoted_ok: set[str]) -> list[str]:
-    """Numbers a reader would take as claims, as written (e.g. '38', '2.5', '1,204')."""
+def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = None) -> list[str]:
+    """Numbers a reader would take as claims, as written (e.g. '38', '2.5', '1,204'). `names` are the cited
+    locations' own names from the tables: digits inside them ("Mercedes Avenue / CA 41", "US 395") are part of a road
+    name, not a figure (#179)."""
     masked = text
+    for name in sorted(names or (), key=len, reverse=True):          # longest first: "A / CA 41" before "CA 41"
+        if any(ch.isdigit() for ch in name):
+            masked = masked.replace(name, " " * len(name))
     for m in _QUOTED.finditer(text):
         if m.group(1).strip().lower() in quoted_ok:
             masked = masked.replace(m.group(0), " " * len(m.group(0)))
@@ -173,7 +178,7 @@ def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: 
         reasons.append("evidence filter selects zero crash records")
     quoted_ok = {str(c.get(k)).strip().lower() for c in evidence for k in _TEXT_FIELDS if c.get(k)}
     lo, hi = window
-    for w in extract_numbers(finding.text, quoted_ok):
+    for w in extract_numbers(finding.text, quoted_ok, _location_names(finding, tables)):
         plain = w.replace(",", "")
         if "." not in plain and lo <= int(plain) <= hi:
             continue                                   # a year inside the study window
@@ -189,6 +194,22 @@ def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: 
         if not ok:
             reasons.append(f"number {w} in the text is not backed by a cited table cell")
     return reasons
+
+
+def _location_names(finding: Finding, tables: list[dict]) -> set[str]:
+    """The names of the locations this finding cites, as the app's own tables write them: the label of each cited row
+    (the part before " · "), the T2 label of the finding's location, and each street of a corner ("A / B")."""
+    keys = {n.cell.split("/")[0] for n in finding.numbers}
+    out = set()
+    for t in tables:
+        for r in t.get("rows", []):
+            if (t["id"] in {n.table_id for n in finding.numbers} and r["key"] in keys) or \
+                    (t["id"] == "T2" and r["key"] == finding.location_id):
+                name = str(r.get("label") or "").split(" · ")[0].strip()
+                if name:
+                    out.add(name)
+                    out.update(part.strip() for part in name.split(" / ") if part.strip())
+    return out
 
 
 def _fmt(v: float) -> str:

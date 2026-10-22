@@ -286,7 +286,7 @@ def test_numbered_corridor_with_direction_matches_abbreviated_direction():
     assert "9200001" in {c["crash_id"] for c in out["crashes"]}
 
 
-@pytest.mark.xfail(strict=True, reason="#179: a route number in a location's name makes the validator reject the screen's own finding")
+# Regression test for #179 (fixed on main).
 def test_route_number_in_location_name_does_not_reject_the_finding():
     # Statewide Findings run (#176) on run 5: 19 code findings in 14 cities rejected, every one for the route number
     # in the location's OSM name, e.g. Atascadero "Rear End crashes are over-represented at Mercedes Avenue / CA 41:
