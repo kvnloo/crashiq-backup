@@ -391,3 +391,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   point far from the report's streets) aren't the crash location: treat them as no GPS and place by street names.
   (3) Wrong-format (DMS) GPS is corrected (#143). The user notes that GPS consistency varies by county and city; a
   per-agency GPS quality profile is measured.
+- **unique_pair auto-placement ON statewide DECIDED (user, 2026-10-22, PM session):** "Turn it on everywhere."
+  Evidence (#211, PR #215): +106,700 crashes (coverage ~86% → ~91%); accuracy 92.4% vs exact 90.4% on hidden police
+  GPS, and 97.0% (low 96.3%) vs exact 95.7% on LAPD open data; at or above exact in D4, D6, D7, D8, D10, D11, D12, lower
+  in D5 (85.2% vs 89.2%), D1/D2 too small to judge. This supersedes the "behind the 98% bar" condition for this tier only;
+  street pairs that meet in more than one place still go to review. Watch D5 in the next runs.
