@@ -369,3 +369,12 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   place, the review list offers a lookup aid (prefilled public-source search by city, date, roads; no AI, no runtime
   API cost); the user places the crash and records the source link; provenance `user` with the source. Evidence: #166 /
   PR #172 (FARS street-consistent for 3,379 of 4,381 no-GPS fatal crashes, 2021–25).
+- **FARS point must fit both named roads DECIDED (user, 2026-10-22, PM session):** when the CCRS report names two roads
+  (corridor + cross street), a FARS point is used only if it fits both (within the GPS-check distance + offset of each);
+  when the report names one road (no cross street), fitting that road is enough. Case: Palm Desert, FARS geocode 7.4 mi
+  away on a long road (#191).
+- **Parties fallback DECIDED (user, 2026-10-22, PM session):** when a CCRS Parties (or IWP) year isn't queryable in the
+  data.ca.gov datastore but its file is downloadable (Parties_2025 since 2026-09-30), the server downloads the file once,
+  keeps only the needed columns, caches it by resource and modified date, refreshes weekly, and serves study lookups
+  from it; provenance noted in the pull log, and the #189 caveat clears for that year. The user also reports the load
+  failure to data.ca.gov support.
