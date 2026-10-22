@@ -9,6 +9,7 @@ results and the repo's bug issues, so the page only displays them:
   bugs.csv         every GitHub issue labelled bug, open or closed
   recon.csv        latest reconciliation (crash by crash, previous run -> latest)
   context.csv      one row of standing facts (agencies, TIMS, hidden-GPS accuracy, San Jose)
+  findings.csv     statewide Findings run (#176): one row from data/statewide/findings_<tree>.json
   fatal.csv        fatal crashes first (#166): one row from data/statewide/fatal.json (tests/statewide/fatal.py)
   completeness.csv latest run, per corridor series: cities expected, cities with a result, the missing ones
 
@@ -133,6 +134,16 @@ def fatal() -> list[dict]:
              "corridor_unplaced_fars_fits": co["unplaced_fars"].get(fits, 0)}]
 
 
+def findings(ver: str) -> list[dict]:
+    f = DATA / f"findings_{ver}.json"
+    if not f.exists():
+        return []
+    sm = json.loads(f.read_text())["summary"]
+    return [{"corridors": sm["cities"], "with_findings": sm["with_findings"], "findings": sm["findings"],
+             "rejected": sm["rejected"], "t12_rows": sm["t12_rows"], "t12_binomial": sm["t12_binomial"],
+             "locations_screened": sm["locations_screened"]}]
+
+
 def main() -> None:
     vs = bw.versions()
     ver, before = vs[-1], (vs[-2] if len(vs) > 1 else None)
@@ -145,6 +156,9 @@ def main() -> None:
     _write("recon.csv", list(rr[0]) if rr else ["bucket"], rr)
     cx = context(results)
     _write("context.csv", list(cx), [cx])
+    fd = findings(ver)
+    if fd:
+        _write("findings.csv", list(fd[0]), fd)
     fa = fatal()
     if fa:
         _write("fatal.csv", list(fa[0]), fa)
