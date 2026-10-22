@@ -756,8 +756,10 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
             "Accuracy, by basis:",
             "- CrashIQ's exact street-name placement: 98.8% at the right intersection (95% low bound 98.3%, 3,632 crashes) "
             "on San Francisco's own geocoded records (claim C1, knowledge/claims.md).",
-            "- Elsewhere, against an agency's own police GPS where that GPS is usable as truth (#88): Accuracy by agency "
-            "sheet. Police GPS is noisy, so these are lower bounds.",
+            "- Elsewhere, against an agency's own police GPS where that GPS is usable as truth (#88): pooled over those "
+            f"agencies, {st_.get('accuracy', 'n/a')}; by district in the Caltrans district table, by agency in the "
+            "Accuracy by agency sheet. Police GPS is noisy, so these are lower bounds. This covers city streets; freeways, "
+            "state highways and county roads: can't verify.",
             "- Police GPS in bin 1 is checked for consistency with the report's roads, not graded for accuracy.",
             "- Every other agency: can't verify (no truth source).",
         ]
@@ -787,8 +789,10 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
             rows__ = cv[g_]
             if g_ == "district":
                 rows__ = sorted(rows__, key=lambda r: int(r["name"].split()[-1]) if r["name"].split()[-1].isdigit() else 99)
-            last = table(wsc, nm_, [title_] + rcols, [[r["name"]] + [r[k] for k in rkeys] for r in rows__],
-                         {1: 32}, start_row=last + 3)
+            acc_ = g_ in ("district", "road_type")
+            last = table(wsc, nm_, [title_] + rcols + (["Accuracy (hidden police GPS, #88)"] if acc_ else []),
+                         [[r["name"]] + [r[k] for k in rkeys] + ([r.get("accuracy")] if acc_ else []) for r in rows__],
+                         {1: 32, 14: 52} if acc_ else {1: 32}, start_row=last + 3)
         table(wsc, "CoverageAgencies", ["NCIC", "Agency", "Type"] + rcols + ["Source completeness", "Accuracy"],
               [[r["name"], r.get("agency_name"), r.get("agency_type")] + [r[k] for k in rkeys]
                + [coverage_out.completeness_note(r["name"], ag_by_.get(r["name"])),

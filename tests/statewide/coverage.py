@@ -153,6 +153,15 @@ class Outside:
         return osm.Network({"elements": ways + list(nodes.values())})
 
 
+NO_CROSS = "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)"
+
+
+def usable(road) -> bool:
+    """A road name the locator can use: not blank and not a placeholder (the app's street_key keeps 'NOT STATED')."""
+    core = fatal_mod.checks.indep_core(road)
+    return bool(street_key(road)) and core not in fatal_mod.UNUSABLE and len(core) > 2
+
+
 def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db, gate) -> tuple[str, str | None]:
     fits = city.fits if city else outside.fits
     gps_note = None
@@ -174,8 +183,8 @@ def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db
         if p is not None and fits(p[0], p[1], c):
             return "placed_fars", None
     pre = gps_note or ""
-    if not street_key(c.get("secondary_road")) or not street_key(c.get("primary_road")):
-        return "cant_place", pre + "no cross street"
+    if not usable(c.get("secondary_road")) or not usable(c.get("primary_road")):
+        return "cant_place", pre + NO_CROSS
     if pl.tier in ("relaxed", "near", "fuzzy"):
         return "review", pre + f"{pl.tier} match held by the gate"
     if "more than one place" in (pl.note or ""):
@@ -303,6 +312,8 @@ def merge(parts: list[Path]) -> None:
     dist, cname = districts()
     agencies = {a["ncic"]: a for a in json.loads((DATA / "agencies.json").read_text())}
     agg, seen, total = Agg(), set(), 0
+    fix = _placeholder_ids(parts)            # bin-2 crashes whose road names are placeholders (first run's reasons)
+    relabelled = 0
     with open(DATA / "coverage_crashes.csv", "w", newline="") as fo:
         w = csv.writer(fo)
         for k, p in enumerate(parts):
@@ -318,6 +329,14 @@ def merge(parts: list[Path]) -> None:
                         raise SystemExit(f"crash {key} is in two part files")
                     seen.add(key)
                     total += 1
+                    if rec["reason"].endswith("no cross street"):           # the first run's shorter label
+                        rec["reason"] = rec["reason"][: -len("no cross street")] + NO_CROSS
+                        row = [rec[h] for h in head]
+                    if rec["bin"] == "2" and rec["collision_id"] in fix and "named streets don't meet" in rec["reason"]:
+                        rec["reason"] = rec["reason"].replace("named streets don't meet on the map", NO_CROSS)
+                        rec["outcome"] = "cant_place"
+                        row = [rec[h] for h in head]
+                        relabelled += 1
                     w.writerow(row)
                     county = int(rec["county_code"] or 0)
                     d = rec["district"]
@@ -327,7 +346,71 @@ def merge(parts: list[Path]) -> None:
                             ("agency", rec["agency"]), ("road_type", rt), ("district_road_type", f"District {d} · {rt}")]
                     agg.add(keys, rec["outcome"], rec["reason"] or None, rec["killed"] == "1", rec["ksi"] == "1")
     _save(agg, agencies, local, done=True)
-    print(f"merged {total} crashes from {len(parts)} part files", flush=True)
+    print(f"merged {total} crashes from {len(parts)} part files; {relabelled} reasons relabelled 'no cross street'",
+          flush=True)
+
+
+def _placeholder_ids(parts: list[Path]) -> set[str]:
+    """Collision Ids of bin-2 crashes whose primary or secondary road is a placeholder (read from the mirror)."""
+    want = set()
+    for p in parts:
+        with open(p) as fi:
+            for rec in csv.DictReader(fi):
+                if rec["bin"] == "2" and "named streets don't meet" in rec["reason"]:
+                    want.add(rec["collision_id"])
+    con = sqlite3.connect(DATA / "ccrs_mirror.sqlite")
+    out, ids = set(), sorted(want, key=int)
+    for (rid,) in con.execute("SELECT rid FROM _meta WHERE tbl = 'crashes'").fetchall():
+        for i in range(0, len(ids), 900):
+            chunk = ids[i:i + 900]
+            for cid, pr, sr in con.execute(f'SELECT "Collision Id", "PrimaryRoad", "SecondaryRoad" FROM "{rid}" '
+                                           f'WHERE "Collision Id" IN ({",".join("?" * len(chunk))})', chunk):
+                if not usable(pr) or not usable(sr):
+                    out.add(str(int(cid)))
+    return out
+
+
+def _wilson_low(k: int, n: int, z: float = 1.96) -> float | None:
+    if not n:
+        return None
+    p = k / n
+    d = 1 + z * z / n
+    return round(100 * (p + z * z / (2 * n) - z * ((p * (1 - p) + z * z / (4 * n)) / n) ** 0.5) / d, 1)
+
+
+def add_accuracy(res: dict, agencies: dict) -> None:
+    """Accuracy beside coverage, with its basis (#199): the hidden-GPS test (#88) pooled over the agencies whose own
+    GPS is usable as truth (self-consistent >= 50%): exact matches at the right intersection, k of n, Wilson 95% low
+    bound. It covers street crashes placed by the exact tier, so it applies to city streets; freeways, county roads and
+    police GPS itself can't be verified this way. San Francisco's open-data test (claim C1) is cited separately."""
+    acc = json.loads((DATA / "accuracy_by_agency.json").read_text())
+    dist, _ = districts()
+    pool: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    for a in acc:
+        if (a.get("gps_self_consistent_pct") or 0) < 50 or a.get("exact_intersection_acc_pct") is None:
+            continue
+        n = int(a.get("exact_n") or 0)
+        k = round(n * a["exact_intersection_acc_pct"] / 100)
+        ag = agencies.get(a["ncic"]) or {}
+        d = dist.get(int(ag.get("county") or 0))
+        for key in ("California", f"District {d}"):
+            pool[key][0] += k
+            pool[key][1] += n
+    basis = "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+
+    def note(key):
+        k, n = pool.get(key, [0, 0])
+        if not n:
+            return {"accuracy": "can't verify (no agency here with GPS usable as truth)"}
+        return {"accuracy": f"{round(100 * k / n, 1)}% ({k} of {n}; 95% low {_wilson_low(k, n)}%)", "accuracy_basis": basis}
+    for r in res["statewide"]:
+        r.update(note("California"))
+        r["accuracy_open_data"] = "San Francisco: 98.8% exact at the right intersection (claim C1, open data)"
+    for r in res["district"]:
+        r.update(note(r["name"]))
+    for r in res["road_type"]:
+        r.update(note("California") if r["name"] == "city street" else
+                 {"accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)"})
 
 
 def _save(agg: Agg, agencies: dict, local, done: bool) -> None:
@@ -339,6 +422,7 @@ def _save(agg: Agg, agencies: dict, local, done: bool) -> None:
     for r in res["agency"]:
         a = agencies.get(r["name"]) or {}
         r["agency_name"], r["agency_type"] = a.get("city"), a.get("type")
+    add_accuracy(res, agencies)
     (DATA / "coverage.json").write_text(json.dumps(res, indent=1))
 
 
