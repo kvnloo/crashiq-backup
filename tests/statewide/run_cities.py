@@ -488,7 +488,7 @@ class _Watch:
 
 
 def main(limit: int | None = None, only: str | None = None, shard: tuple[int, int] = (0, 1),
-         series: str = "v1") -> None:
+         series: str = "v1", only_list: set[str] | None = None) -> None:
     """series v1: the frozen v1 list into results/<tree>/. series v2: only the re-picked corridors of the v2 list,
     into results_corridors_v2/<tree>/ (the v2 series' other corridors are the v1 lines, whose results are v1's)."""
     mirror = ccrs_mirror.Mirror(DATA / "ccrs_mirror.sqlite", CACHE)
@@ -528,6 +528,7 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     # harness: street data source (Method sheet): the local extract when built, else the Overpass server list
     app.state.overpass = LOCAL.transport if LOCAL else corridors.app_transport
     todo = [c for i, c in enumerate(city_list) if (not only or c["city"] == only) and i % shard[1] == shard[0]
+            and (not only_list or c["city"] in only_list)
             and (series == "v1" or (c["city"], c["county"]) in frozen)][:limit]
     t0 = time.time()
     watch = _Watch(f"{shard[0]}/{shard[1]} {series}")
@@ -613,7 +614,9 @@ if __name__ == "__main__":
     ap.add_argument("--freeze", action="store_true", help="write corridors_frozen.json from this code version's run")
     ap.add_argument("--freeze-v2", metavar="TREE", help="write corridors_frozen_v2.json from results/TREE")
     ap.add_argument("--corridors", choices=("v1", "v2"), default="v1", help="corridor list series to run")
+    ap.add_argument("--cities-file", help="only the cities named in this file, one per line (a re-check, not a run)")
     a = ap.parse_args()
     i, n = (int(x) for x in a.shard.split("/"))
     (prefetch() if a.prefetch else freeze() if a.freeze else freeze_v2(a.freeze_v2) if a.freeze_v2
-     else main(a.limit, a.city, (i, n), a.corridors))
+     else main(a.limit, a.city, (i, n), a.corridors,
+               set(Path(a.cities_file).read_text().split("\n")) - {""} if a.cities_file else None))
