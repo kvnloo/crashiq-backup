@@ -110,18 +110,37 @@ class Outside:
                 return True
         return False
 
+    def _names(self, county: int) -> dict[str, list[int]]:
+        """Street core -> way ids for one county's box, built once per county."""
+        idx = getattr(self, "_idx", None)
+        if idx is None:
+            idx = self._idx = {}
+        if county not in idx:
+            box = self.box.get(county)
+            m: dict[str, list[int]] = defaultdict(list)
+            if box:
+                for wid, tags in self.local.db.execute(
+                        "SELECT w.id, w.tags FROM way_box b JOIN ways w ON w.id = b.id WHERE b.maxlat >= ? AND "
+                        "b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ?", (box[0], box[2], box[1], box[3])):
+                    t = json.loads(tags)
+                    for tag in ("name", "ref"):
+                        for v in str(t.get(tag) or "").split(";"):
+                            k = street_key(v)
+                            if k:
+                                m[k.core.replace(" ", "")].append(wid)
+            idx[county] = m               # every county kept: crashes come in no county order (~150 MB in all)
+        return idx[county]
+
     def network(self, c: dict) -> osm.Network | None:
-        box = self.box.get(int(c.get("county_code") or 0))
-        words = [w for w in (street_key(c.get(f)) for f in ("primary_road", "secondary_road")) if w]
-        if not box or len(words) < 2:
+        """A small network of just the roads the report names, in its county (no county-wide network in memory)."""
+        county = int(c.get("county_code") or 0)
+        keys = [k for k in (street_key(c.get(f)) for f in ("primary_road", "secondary_road")) if k]
+        if county not in self.box or len(keys) < 2:
             return None
+        names = self._names(county)
         ids = set()
-        for k in words:
-            core = k.core.split()[-1] if k.core.split() else k.core
-            ids |= {r[0] for r in self.local.db.execute(
-                "SELECT w.id FROM way_box b JOIN ways w ON w.id = b.id WHERE b.maxlat >= ? AND b.minlat <= ? "
-                "AND b.maxlon >= ? AND b.minlon <= ? AND (w.name LIKE ? OR w.tags LIKE ?)",
-                (box[0], box[2], box[1], box[3], f"%{core}%", f"%{core}%"))}
+        for k in keys:
+            ids |= set(names.get(k.core.replace(" ", ""), ()))
         if not ids:
             return None
         ways, nodes = [], {}
