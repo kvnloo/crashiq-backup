@@ -114,4 +114,5 @@ def test_relaxed_keeps_suffix_before_dropping_it():
         {"type": "way", "id": 2, "nodes": [1, 3], "tags": {"name": "North Atlantic Place"}},
         {"type": "way", "id": 3, "nodes": [4, 5], "tags": {"name": "45th Street"}}]})
     p = locate.place(net, crash("ATLANTIC AV", "ATLANTIC PL"))
-    assert p.tier == "relaxed" and p.node == 1
+    assert p.node == 1
+    assert p.tier == "unique_pair"      # only the left-out "North" differs, and they meet once (#203; was relaxed)

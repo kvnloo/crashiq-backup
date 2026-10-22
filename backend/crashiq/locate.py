@@ -2,6 +2,9 @@
 
 Tiers, cheapest first (each crash records which one placed it):
   exact  – both streets match an OSM street key exactly (after normalization)
+  unique_pair – the two streets, allowing only what the report leaves out (a leading or trailing direction, a
+           suffix), meet at exactly one intersection: AVENUE J & 20TH ST W can only be West Avenue J & 20th Street
+           West in Lancaster (#203; auto-places only when the gate allows it)
   fuzzy  – best-scoring key per street, above a threshold and clearly ahead of the runner-up
   jev    – leftovers only: Jev picks one of the top code-generated candidates, or "none"
   review – nothing confident; a person decides
@@ -12,9 +15,11 @@ from __future__ import annotations
 
 import re
 
-from dataclasses import dataclass
+import json
+from dataclasses import dataclass, field
+from pathlib import Path
 
-from .names import StreetKey, same_core, same_street, similarity, street_key
+from .names import StreetKey, _flat, directions, drop_directional, same_core, same_street, similarity, street_key
 from .osm import Network, bearing, metres, move
 
 FT = 0.3048
@@ -25,7 +30,7 @@ NEAR_M = 30.0     # streets that never share a node (ramps, medians, plazas) but
 
 @dataclass
 class Placement:
-    tier: str                      # address | exact | relaxed | near | fuzzy | jev | review
+    tier: str                      # address | exact | unique_pair | relaxed | near | fuzzy | jev | review
     lat: float | None = None
     lon: float | None = None
     node: int | None = None
@@ -98,6 +103,44 @@ def _one_intersection(net: Network, nodes: list[int]) -> int | None:
     lat = sum(p[0] for p in pts) / len(pts)
     lon = sum(p[1] for p in pts) / len(pts)
     return min(nodes, key=lambda n: metres(net.coord[n], (lat, lon)))
+
+
+def _variants(net: Network, k: StreetKey) -> list[StreetKey]:
+    """The streets a report's name can be when only what it leaves out may differ: a leading direction or a suffix
+    it doesn't write is free; one it writes must match, or be absent on the map (#203)."""
+    lead = k.core.split(" ", 1)[0] if drop_directional(k) != k else None
+    out = []
+    for s in _same_core_keys(net, k):
+        if _flat(drop_directional(s).core) != _flat(drop_directional(k).core):
+            continue
+        s_lead = s.core.split(" ", 1)[0] if drop_directional(s) != s else None
+        if lead and s_lead and s_lead != lead:
+            continue
+        if k.suffix and s.suffix and k.suffix != s.suffix:
+            continue
+        out.append(s)
+    return out
+
+
+def _trail_fits(net: Network, node: int, keys: list[StreetKey], trail: str | None) -> bool:
+    """A trailing direction the report writes (20TH ST W) must be on a way through the node, or the way has none."""
+    if trail is None:
+        return True
+    return any(net.trail_at.get((node, s), set()) & {trail, None} for s in keys)
+
+
+def _unique_pair(net: Network, crash: dict, kp: StreetKey, ks: StreetKey, aliases) -> Placement | None:
+    a, b = _variants(net, kp), _variants(net, ks)
+    b = [s for s in b if s not in a]
+    if not a or not b:
+        return None
+    tp, ts = directions(crash.get("primary_road"), aliases)[1], directions(crash.get("secondary_road"), aliases)[1]
+    nodes = [n for n in _shared_nodes(net, a, b) if _trail_fits(net, n, a, tp) and _trail_fits(net, n, b, ts)]
+    node = _one_intersection(net, nodes)       # two or more places: not unique, the later tiers decide as before
+    if node is None:
+        return None
+    lat, lon = offset(net, node, a, crash.get("offset_ft"), crash.get("offset_dir"))
+    return Placement("unique_pair", lat, lon, node)
 
 
 def offset(net: Network, node: int, primary: list[StreetKey], dist_ft: float | None, direction: str | None) -> tuple[float, float]:
@@ -184,10 +227,16 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
         a, b = find(kp), find(ks)
         b = [s for s in b if s not in a]   # the two streets of a crash are never the same street
         if not a or not b:
+            up = _unique_pair(net, crash, kp, ks, aliases) if tier == "exact" else None
+            if up:
+                return up
             continue
         nodes = meet(net, a, b)
         node = _one_intersection(net, nodes)
         if node is None:
+            up = _unique_pair(net, crash, kp, ks, aliases) if tier == "exact" else None
+            if up:
+                return up
             if nodes:
                 return Placement("review", note=f"{tier}: streets meet in more than one place")
             continue
@@ -241,11 +290,20 @@ def place_with_jev(net: Network, crash: dict, picker, city: str, k: int = 5,
     return Placement("jev", lat, lon, node, note=choice, p=p, p2=p2)
 
 
+CONFIG = Path(__file__).parent / "config" / "placement.json"
+
+
+def configured_tiers() -> frozenset:
+    return frozenset(json.loads(CONFIG.read_text())["auto_tiers"])
+
+
 @dataclass
 class Gate:
     """Seam 1 (docs/04 §2): which placements may auto-place. Thresholds are user decisions, kept as config.
-    Default = only tiers proven >=98% (95% Wilson lower bound) on held-out data, and Jev never auto-places."""
-    auto_tiers: frozenset = frozenset({"exact"})
+    Default = only tiers proven >=98% (95% Wilson lower bound) on held-out data, and Jev never auto-places.
+    The tiers come from config/placement.json: `unique_pair` joins only after the Tester's #201 measurement clears
+    the bar and the user confirms (docs/03, 2026-10-22); until then it is a one-click suggestion on the review list."""
+    auto_tiers: frozenset = field(default_factory=lambda: configured_tiers())
     jev_tau: float | None = None     # Jev pick probability needed to auto-place; None = never
     jev_margin: float = 0.0          # and its lead over the runner-up
 
