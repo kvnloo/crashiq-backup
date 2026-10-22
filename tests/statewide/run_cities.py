@@ -52,12 +52,13 @@ YEARS = [2021, 2022, 2023, 2024, 2025]
 
 
 FROZEN = HERE / "corridors_frozen.json"
+DATA_BASIS = "CCRS mirror 2026-10-19"
 # Corridor list v2 (PM, PR #148): a second, separately labelled series from run 4. v1 stays the like-for-like series;
 # v2 = v1 with the corridors that lie mostly outside their own city re-picked inside it. Never mixed with v1.
 FROZEN_V2 = HERE / "corridors_frozen_v2.json"
 RESULTS_V2 = DATA / "results_corridors_v2"
 V2_BELOW_PCT = 50.0          # "mostly outside": under half the v1 corridor's vertices inside its own city
-HARNESS = "7"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check, 5: v4, 6: DMS counts, 7: fatal outcomes)
+HARNESS = "9"   # bump when the harness's own checks or rules change, so cached cities are rerun (4: v3 check, 5: v4, 6: DMS counts, 7: fatal outcomes, 8: 2025 party data, 9: parties read from the stored pull)
 # Known open bugs that affect a city's result, shown on the Cities sheet (PM, run 3).
 KNOWN_ISSUES: dict = {}   # run 3-4: San Jose "affected by #143"; fixed in #159 (run 5)
 
@@ -320,7 +321,18 @@ def run_city(client: TestClient, mirror, c: dict, corr: dict) -> dict:
             fatal_out["unplaced_with_fars_hint" if x.get("fars_hint") else "unplaced"] += 1
         else:
             fatal_out[f"other_{a_.get('kind')}"] += 1
+    # 2025 party data (run 7, #196): what the Parties_2025 file adds, among the crashes kept for the corridor
+    stored = client.app.state.db.one("SELECT payload FROM crash_pull WHERE study_id = ?", (sid,))
+    full = {str(x["crash_id"]): x for x in (json.loads(stored["payload"])["crashes"] if stored else [])}
+    y25 = [full.get(str(x["crash_id"]), x) for x in candidates
+           if str(x.get("year") or (x.get("date") or "")[:4]) == "2025"]   # stored pull: has each crash's parties
+    party25 = {"crashes": len(y25), "with_parties": sum(1 for x in y25 if x.get("parties")),
+               "with_movement": sum(1 for x in y25 if any(q.get("movement") for q in x.get("parties") or [])),
+               **{k: sum(1 for x in y25 if x.get(k)) for k in ("ped", "bike", "ebike", "escooter", "motorcycle",
+                                                                  "heavy_truck")}}
     return {
+        "party_2025": party25, "parties_source": log.get("parties_source"),
+        "file_errors": log.get("file_errors"),
         "fatal_outcomes": dict(fatal_out), "fars_placement": log.get("fars"),
         "stage": "done", "study_id": sid, "settings": settings, "overpass_empty_retries": empty_retries, "corridor_name": net.get("corridor_name"),
         "ends": [inters[0]["name"], inters[-1]["name"]] if inters else [None, None],
@@ -488,12 +500,15 @@ class _Watch:
 
 
 def main(limit: int | None = None, only: str | None = None, shard: tuple[int, int] = (0, 1),
-         series: str = "v1", only_list: set[str] | None = None) -> None:
+         series: str = "v1", only_list: set[str] | None = None, parties_file: bool = False) -> None:
     """series v1: the frozen v1 list into results/<tree>/. series v2: only the re-picked corridors of the v2 list,
     into results_corridors_v2/<tree>/ (the v2 series' other corridors are the v1 lines, whose results are v1's)."""
     mirror = ccrs_mirror.Mirror(DATA / "ccrs_mirror.sqlite", CACHE)
     ver = code_version()
-    out_dir = (RESULTS_V2 if series == "v2" else RESULTS) / ver
+    # Data basis (run 7, mirror-refresh method): the frozen mirror alone, or plus CHP's Parties_2025 file through the
+    # app's own file cache (#196). A different basis is a different results folder and a different history row.
+    basis = DATA_BASIS + (" + Parties_2025 file" if parties_file else "")
+    out_dir = (RESULTS_V2 if series == "v2" else RESULTS) / (ver + ("-pfile" if parties_file else ""))
     out_dir.mkdir(parents=True, exist_ok=True)
     flist = FROZEN_V2 if series == "v2" else FROZEN
     frozen = {(c["city"], c["county"]): c for c in json.loads(flist.read_text())["cities"]} if flist.exists() else {}
@@ -525,6 +540,9 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     db = Database(settings.db_path)
     app = create_app(settings, db)
     app.state.ckan = mirror
+    if parties_file:          # downloads once, in this thread (no background), into the Tester's own cache folder
+        from crashiq.sources.ccrs_files import FileCache
+        app.state.ccrs_files = FileCache(ROOT / "data" / "cache" / "ccrs_files", background=False)
     # harness: street data source (Method sheet): the local extract when built, else the Overpass server list
     app.state.overpass = LOCAL.transport if LOCAL else corridors.app_transport
     todo = [c for i, c in enumerate(city_list) if (not only or c["city"] == only) and i % shard[1] == shard[0]
@@ -534,7 +552,7 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     watch = _Watch(f"{shard[0]}/{shard[1]} {series}")
     watch.total = len(todo)
     try:
-        _loop(app, todo, out_dir, frozen, earlier, bounds, mirror, ver, osm_source, series, watch, t0)
+        _loop(app, todo, out_dir, frozen, earlier, bounds, mirror, ver, osm_source, series, watch, t0, basis)
     except BaseException:
         watch.log("EXIT: exception\n" + traceback.format_exc())
         watch.done = True
@@ -544,7 +562,7 @@ def main(limit: int | None = None, only: str | None = None, shard: tuple[int, in
     db.close()
 
 
-def _loop(app, todo, out_dir, frozen, earlier, bounds, mirror, ver, osm_source, series, watch, t0) -> None:
+def _loop(app, todo, out_dir, frozen, earlier, bounds, mirror, ver, osm_source, series, watch, t0, basis) -> None:
     with TestClient(app) as client:
         for n, c in enumerate(todo, 1):
             watch.n, watch.city = n, c["city"]
@@ -573,10 +591,10 @@ def _loop(app, todo, out_dir, frozen, earlier, bounds, mirror, ver, osm_source, 
                     continue                          # not saved: the next pass tries again
                 except Exception as e:  # noqa: BLE001 - recorded per city, never skipped silently
                     corr = {"reason": f"OSM error: {e}"}
-            key = hashlib.sha1(json.dumps([ver, corr, osm_source, HARNESS], sort_keys=True).encode()).hexdigest()[:12]
+            key = hashlib.sha1(json.dumps([ver, corr, osm_source, HARNESS, basis], sort_keys=True).encode()).hexdigest()[:12]
             if out.exists() and json.loads(out.read_text()).get("key") == key:
                 continue
-            row = {**c, "key": key, "harness": HARNESS, "corridor_list": series, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
+            row = {**c, "key": key, "harness": HARNESS, "corridor_list": series, "data_basis": basis, "code_version": ver, "commit": commit(), "mirror_built": mirror_built(),
                    "osm_boundary": (b or {}).get("name"), "osm_source": osm_source,
                    "corridor_source": ("frozen list v2 (re-picked inside the city)" if series == "v2" else
                                        "frozen list" if fz and (c["city"], c["county"]) in frozen else
@@ -614,9 +632,11 @@ if __name__ == "__main__":
     ap.add_argument("--freeze", action="store_true", help="write corridors_frozen.json from this code version's run")
     ap.add_argument("--freeze-v2", metavar="TREE", help="write corridors_frozen_v2.json from results/TREE")
     ap.add_argument("--corridors", choices=("v1", "v2"), default="v1", help="corridor list series to run")
+    ap.add_argument("--parties-file", action="store_true", help="add CHP's Parties_2025 file via the app's file cache "
+                    "(#196): a data-basis change, results in <tree>-pfile/")
     ap.add_argument("--cities-file", help="only the cities named in this file, one per line (a re-check, not a run)")
     a = ap.parse_args()
     i, n = (int(x) for x in a.shard.split("/"))
     (prefetch() if a.prefetch else freeze() if a.freeze else freeze_v2(a.freeze_v2) if a.freeze_v2
      else main(a.limit, a.city, (i, n), a.corridors,
-               set(Path(a.cities_file).read_text().split("\n")) - {""} if a.cities_file else None))
+               set(Path(a.cities_file).read_text().split("\n")) - {""} if a.cities_file else None, a.parties_file))

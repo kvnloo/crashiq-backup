@@ -160,6 +160,8 @@ def main() -> None:
     _write("causes.csv", ["cause", "corridors"], causes(results))
     _write("bugs.csv", ["issue", "number", "title", "state", "opened", "closed"], bugs())
     rr = recon(before, ver) if before else []
+    if not rr and bw.code_tree(before) == bw.code_tree(ver):    # data-basis step changed nothing: show the code step
+        rr = recon(bw.code_before(ver), bw.code_tree(ver))
     _write("recon.csv", list(rr[0]) if rr else ["bucket"], rr)
     cx = context(results)
     _write("context.csv", list(cx), [cx])
