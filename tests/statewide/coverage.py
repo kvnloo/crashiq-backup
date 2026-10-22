@@ -379,30 +379,38 @@ def _wilson_low(k: int, n: int, z: float = 1.96) -> float | None:
 
 
 def add_accuracy(res: dict, agencies: dict) -> None:
-    """Accuracy beside coverage, with its basis (#199): the hidden-GPS test (#88) pooled over the agencies whose own
-    GPS is usable as truth (self-consistent >= 50%): exact matches at the right intersection, k of n, Wilson 95% low
-    bound. It covers street crashes placed by the exact tier, so it applies to city streets; freeways, county roads and
-    police GPS itself can't be verified this way. San Francisco's open-data test (claim C1) is cited separately."""
+    """Accuracy beside coverage, with its basis (#199): the hidden-GPS test (#88) on CrashIQ's exact tier (the tier the
+    gate auto-places), pooled over every tested agency (raw counts, accuracy_by_agency.py). Two measures, side by side:
+    - headline: at the right intersection (chosen intersection within 250 ft of the police GPS), on self-consistent
+      truth only (GPS within 400 ft of an intersection of the two streets the report names);
+    - lower bound: the final point (after the officer's stated distance and direction) within 250 ft of the police GPS,
+      on all police GPS, noisy GPS included.
+    k of n with the Wilson 95% low bound. It covers city streets (where the test samples); freeways, state highways
+    and county roads can't be verified this way. San Francisco's open-data test (claim C1) is cited separately."""
     acc = json.loads((DATA / "accuracy_by_agency.json").read_text())
     dist, _ = districts()
-    pool: dict[str, list[int]] = defaultdict(lambda: [0, 0])
+    pool: dict[str, Counter] = defaultdict(Counter)
     for a in acc:
-        if (a.get("gps_self_consistent_pct") or 0) < 50 or a.get("exact_intersection_acc_pct") is None:
+        c = a.get("exact_counts")
+        if not c:
             continue
-        n = int(a.get("exact_n") or 0)
-        k = round(n * a["exact_intersection_acc_pct"] / 100)
         ag = agencies.get(a["ncic"]) or {}
-        d = dist.get(int(ag.get("county") or 0))
+        d = dist.get(int(ag.get("county") or a.get("county") or 0))
         for key in ("California", f"District {d}"):
-            pool[key][0] += k
-            pool[key][1] += n
-    basis = "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+            pool[key].update({"agencies": 1, **c})
+    head = ("right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS "
+            "test #88, pooled over tested agencies")
+    low = "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
+
+    def fmt(k, n):
+        return f"{round(100 * k / n, 1)}% ({k} of {n}; 95% low {_wilson_low(k, n)}%)"
 
     def note(key):
-        k, n = pool.get(key, [0, 0])
-        if not n:
-            return {"accuracy": "can't verify (no agency here with GPS usable as truth)"}
-        return {"accuracy": f"{round(100 * k / n, 1)}% ({k} of {n}; 95% low {_wilson_low(k, n)}%)", "accuracy_basis": basis}
+        p = pool.get(key)
+        if not p or not p["n"]:
+            return {"accuracy": "can't verify (no tested agency here)", "accuracy_point_all_gps": "can't verify"}
+        return {"accuracy": fmt(p["ok_consistent"], p["n_consistent"]), "accuracy_point_all_gps": fmt(p["ok_point"], p["n"]),
+                "accuracy_agencies": p["agencies"], "accuracy_basis": head, "accuracy_point_basis": low}
     for r in res["statewide"]:
         r.update(note("California"))
         r["accuracy_open_data"] = "San Francisco: 98.8% exact at the right intersection (claim C1, open data)"
@@ -410,7 +418,8 @@ def add_accuracy(res: dict, agencies: dict) -> None:
         r.update(note(r["name"]))
     for r in res["road_type"]:
         r.update(note("California") if r["name"] == "city street" else
-                 {"accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)"})
+                 {"accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)",
+                  "accuracy_point_all_gps": "can't verify"})
 
 
 def _save(agg: Agg, agencies: dict, local, done: bool) -> None:

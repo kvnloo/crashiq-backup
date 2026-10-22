@@ -49,8 +49,11 @@
     "no street map for this place": 786,
     "police GPS off the report's roads; fuzzy match held by the gate": 587
    },
-   "accuracy": "79.5% (23862 of 29998; 95% low 79.1%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth",
+   "accuracy": "92.1% (24831 of 26961; 95% low 91.8%)",
+   "accuracy_point_all_gps": "72.1% (23067 of 32013; 95% low 71.6%)",
+   "accuracy_agencies": 144,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88",
    "accuracy_open_data": "San Francisco: 98.8% exact at the right intersection (claim C1, open data)"
   }
  ],
@@ -95,8 +98,11 @@
     "police GPS off the report's roads; no street map for this place": 142,
     "no street map for this place": 16
    },
-   "accuracy": "86.9% (2910 of 3350; 95% low 85.7%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "94.5% (3030 of 3208; 95% low 93.6%)",
+   "accuracy_point_all_gps": "80.7% (2870 of 3557; 95% low 79.4%)",
+   "accuracy_agencies": 24,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 4",
@@ -138,8 +144,11 @@
     "police GPS off the report's roads; fuzzy match held by the gate": 147,
     "police GPS off the report's roads; no street map for this place": 80
    },
-   "accuracy": "79.1% (8484 of 10730; 95% low 78.3%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "91.5% (8604 of 9402; 95% low 90.9%)",
+   "accuracy_point_all_gps": "71.6% (8069 of 11268; 95% low 70.8%)",
+   "accuracy_agencies": 40,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 8",
@@ -181,8 +190,11 @@
     "police GPS off the report's roads; streets meet in more than one place": 111,
     "no street map for this place": 2
    },
-   "accuracy": "82.9% (2190 of 2642; 95% low 81.4%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "94.0% (2190 of 2331; 95% low 92.9%)",
+   "accuracy_point_all_gps": "67.4% (1780 of 2642; 95% low 65.6%)",
+   "accuracy_agencies": 13,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 3",
@@ -224,8 +236,11 @@
     "police GPS off the report's roads; fuzzy match held by the gate": 48,
     "no street map for this place": 38
    },
-   "accuracy": "80.8% (3716 of 4598; 95% low 79.7%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "93.2% (3842 of 4121; 95% low 92.4%)",
+   "accuracy_point_all_gps": "71.8% (3483 of 4850; 95% low 70.5%)",
+   "accuracy_agencies": 17,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 6",
@@ -267,8 +282,11 @@
     "police GPS off the report's roads; fuzzy match held by the gate": 35,
     "no street map for this place": 2
    },
-   "accuracy": "72.7% (1838 of 2527; 95% low 71.0%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "90.6% (2042 of 2253; 95% low 89.4%)",
+   "accuracy_point_all_gps": "70.4% (2012 of 2856; 95% low 68.7%)",
+   "accuracy_agencies": 17,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 12",
@@ -310,8 +328,11 @@
     "police GPS off the report's roads; no street map for this place": 20,
     "no street map for this place": 2
    },
-   "accuracy": "75.9% (913 of 1203; 95% low 73.4%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "90.2% (1076 of 1193; 95% low 88.4%)",
+   "accuracy_point_all_gps": "68.9% (1054 of 1529; 95% low 66.6%)",
+   "accuracy_agencies": 6,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 11",
@@ -353,8 +374,11 @@
     "no street map for this place": 36,
     "police GPS off the report's roads; fuzzy match held by the gate": 3
    },
-   "accuracy": "67.5% (262 of 388; 95% low 62.7%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "86.5% (262 of 303; 95% low 82.2%)",
+   "accuracy_point_all_gps": "68.8% (267 of 388; 95% low 64.0%)",
+   "accuracy_agencies": 3,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 10",
@@ -396,8 +420,11 @@
     "police GPS off the report's roads; fuzzy match held by the gate": 43,
     "no street map for this place": 1
    },
-   "accuracy": "73.4% (1257 of 1712; 95% low 71.3%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "89.3% (1348 of 1510; 95% low 87.6%)",
+   "accuracy_point_all_gps": "71.3% (1323 of 1855; 95% low 69.2%)",
+   "accuracy_agencies": 11,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 5",
@@ -439,8 +466,11 @@
     "police GPS off the report's roads; no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)": 58,
     "police GPS off the report's roads; fuzzy match held by the gate": 11
    },
-   "accuracy": "80.7% (1363 of 1688; 95% low 78.8%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "92.9% (1363 of 1467; 95% low 91.5%)",
+   "accuracy_point_all_gps": "68.5% (1157 of 1688; 95% low 66.3%)",
+   "accuracy_agencies": 8,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 1",
@@ -480,8 +510,11 @@
     "fuzzy match held by the gate": 12,
     "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)": 4
    },
-   "accuracy": "73.4% (448 of 610; 95% low 69.8%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "88.1% (593 of 673; 95% low 85.4%)",
+   "accuracy_point_all_gps": "75.3% (625 of 830; 95% low 72.3%)",
+   "accuracy_agencies": 3,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 2",
@@ -522,8 +555,11 @@
     "police GPS off the report's roads; relaxed match held by the gate": 11,
     "police GPS off the report's roads; fuzzy match held by the gate": 1
    },
-   "accuracy": "87.5% (481 of 550; 95% low 84.4%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "96.2% (481 of 500; 95% low 94.1%)",
+   "accuracy_point_all_gps": "77.6% (427 of 550; 95% low 74.0%)",
+   "accuracy_agencies": 2,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "District 9",
@@ -558,7 +594,8 @@
     "streets meet in more than one place": 6,
     "police GPS off the report's roads; no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)": 1
    },
-   "accuracy": "can't verify (no agency here with GPS usable as truth)"
+   "accuracy": "can't verify (no tested agency here)",
+   "accuracy_point_all_gps": "can't verify"
   },
   {
    "name": "unknown",
@@ -585,7 +622,8 @@
     "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)": 2,
     "police GPS off the report's roads; no street map for this place": 2
    },
-   "accuracy": "can't verify (no agency here with GPS usable as truth)"
+   "accuracy": "can't verify (no tested agency here)",
+   "accuracy_point_all_gps": "can't verify"
   }
  ],
  "county": [
@@ -37640,8 +37678,11 @@
     "police GPS off the report's roads; streets meet in more than one place": 399,
     "police GPS off the report's roads; near match held by the gate": 198
    },
-   "accuracy": "79.5% (23862 of 29998; 95% low 79.1%)",
-   "accuracy_basis": "hidden police GPS (#88), exact tier at the intersection, pooled over agencies whose GPS is usable as truth"
+   "accuracy": "92.1% (24831 of 26961; 95% low 91.8%)",
+   "accuracy_point_all_gps": "72.1% (23067 of 32013; 95% low 71.6%)",
+   "accuracy_agencies": 144,
+   "accuracy_basis": "right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS test #88, pooled over tested agencies",
+   "accuracy_point_basis": "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
   },
   {
    "name": "freeway",
@@ -37682,7 +37723,8 @@
     "no street map for this place": 6,
     "relaxed match held by the gate": 5
    },
-   "accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)"
+   "accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)",
+   "accuracy_point_all_gps": "can't verify"
   },
   {
    "name": "county road (outside cities)",
@@ -37722,7 +37764,8 @@
     "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)": 20,
     "near match held by the gate": 19
    },
-   "accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)"
+   "accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)",
+   "accuracy_point_all_gps": "can't verify"
   },
   {
    "name": "state highway (off freeway)",
@@ -37764,7 +37807,8 @@
     "no street map for this place": 23,
     "police GPS off the report's roads; fuzzy match held by the gate": 8
    },
-   "accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)"
+   "accuracy": "can't verify (police GPS checked for consistency only; CrashIQ places few here)",
+   "accuracy_point_all_gps": "can't verify"
   }
  ],
  "district_road_type": [

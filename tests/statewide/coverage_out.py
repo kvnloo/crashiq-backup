@@ -67,11 +67,14 @@ def main() -> None:
     _write("coverage_reasons.csv", ["reason", "crashes"],
            [{"reason": k, "crashes": v} for k, v in sorted(reasons.items(), key=lambda kv: -kv[1])])
     by_name = lambda g: sorted(cv[g], key=lambda r: r["name"])    # noqa: E731
-    _write("coverage_districts.csv", cols + ["accuracy"], sorted(cv["district"], key=lambda r: int(r["name"].split()[-1])
+    _write("coverage_districts.csv", cols + ["accuracy", "accuracy_point_all_gps"], sorted(cv["district"], key=lambda r: int(r["name"].split()[-1])
                                                   if r["name"].split()[-1].isdigit() else 99))
-    _write("coverage_road_types.csv", cols + ["accuracy"], cv["road_type"])
+    _write("coverage_road_types.csv", cols + ["accuracy", "accuracy_point_all_gps"], cv["road_type"])
     _write("coverage_accuracy.csv", ["scope", "accuracy", "basis"],
-           [{"scope": "California (all checkable)", "accuracy": s.get("accuracy"), "basis": s.get("accuracy_basis")},
+           [{"scope": "California: right intersection, self-consistent GPS (headline)", "accuracy": s.get("accuracy"),
+             "basis": s.get("accuracy_basis")},
+            {"scope": "California: final point, all police GPS (lower bound)", "accuracy": s.get("accuracy_point_all_gps"),
+             "basis": s.get("accuracy_point_basis")},
             {"scope": "San Francisco open data (C1)", "accuracy": s.get("accuracy_open_data"), "basis": "claim C1"}])
     _write("coverage_counties.csv", cols, by_name("county"))
     where = citywide_out.centroids(ROOT / "data" / "osm" / "ca_osm.sqlite")
