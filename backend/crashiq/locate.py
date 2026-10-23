@@ -145,9 +145,19 @@ def _unique_pair(net: Network, crash: dict, kp: StreetKey, ks: StreetKey, aliase
     node = _one_intersection(net, nodes)       # two or more places: not unique, the later tiers decide as before
     if node is None:
         return None
+    node = _prefer_osm(net, nodes, node, a, b)
     lat, lon = offset(net, node, a, crash.get("offset_ft"), crash.get("offset_dir"))
     return Placement("unique_pair", lat, lon, node, tiger=_tiger(net, node, a, b),
                      tiger_road=_tiger(net, node, a, b, road=True))
+
+
+def _prefer_osm(net: Network, nodes: list[int], node: int, a, b) -> int:
+    """Within one intersection's cluster, a node where the streets meet on OSM alone wins over a TIGER-only one
+    (#243: a TIGER road spliced near an OSM corner must not make an OSM placement tiger_road)."""
+    if not _tiger(net, node, a, b, road=True):
+        return node
+    osm_ok = [n for n in nodes if not _tiger(net, n, a, b, road=True)]
+    return min(osm_ok, key=lambda n: metres(net.coord[n], net.coord[node])) if osm_ok else node
 
 
 def _tiger(net: Network, node: int, a, b, road: bool = False) -> bool:
@@ -332,6 +342,8 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
         # the key drops a trailing direction: 20TH ST W must never land on 20th Street East, in any tier (#205)
         nodes = [n for n in nodes if _trail_fits(net, n, a, tp) and _trail_fits(net, n, b, ts)]
         node = _one_intersection(net, nodes)
+        if node is not None:
+            node = _prefer_osm(net, nodes, node, a, b)
         if node is None:
             up = _unique_pair(net, crash, kp, ks, aliases) if tier == "exact" else None
             if up:
