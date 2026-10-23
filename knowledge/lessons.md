@@ -12,8 +12,10 @@
   missing longitude minus 74% vs 0.78% (real, 432); whole-degree latitude shifts ±1° 1.5% vs 2.1% (pure chance).
 - 2026-10-23 · Landing on the named freeway is weak evidence: a 2 km random shift still lands on it 7.7% of the time,
   so ~1 in 5 of 5,894 "fits" are chance. Require agreement with the report's spot, not the road.
-- 2026-10-23 · Public CCRS has no route/postmile column; TASAS postmiles are assigned later by Caltrans from the same
-  road-name description. Postmile can still be derived for output from the public Caltrans layer (#248).
+- 2026-10-23 · Check the live schema, not the mirror. Our CCRS mirror keeps 30 of 75 crash columns, and the PM told
+  the user "CCRS has no postmile field" from it. The live table has `Milepost*` fields: real CHP postmiles, but on only
+  2–4% of 2021–22 freeway crashes and ~0 from 2023. TASAS postmiles are assigned later by Caltrans; a postmile can still
+  be derived for output from the public Caltrans layer (#248).
 - 2026-10-23 · Write coordinates with an ASCII hyphen. A typographic minus (U+2212) made the user's Google Maps
   searches fail.
 - 2026-10-22 · Name the leftovers. Sorting the difficult bin into buckets (D1–D9) and having the user place 3–20 real

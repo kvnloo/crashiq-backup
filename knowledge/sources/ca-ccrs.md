@@ -31,8 +31,16 @@ at runtime with `package_show` (code: `backend/crashiq/sources/ca_ccrs.py`).
   San Jose (4,111 difficult crashes, mostly CHP areas 9370, 9675, 9252, 9550, 9530); longitude missing its minus
   (432); 1,676 raw points outside California. Whole-degree latitude errors exist but can't be told from chance.
 - **Default / dispatch GPS points** (1,755 crashes on 50 points) and coarse coordinates (≤ 2 decimals, 547). (#218)
-- **No route or postmile column** in Crashes, Parties or IWP. `IsFreeway` = freeway jurisdiction, including ramps and
-  connectors. Freeway crashes: `methods/freeway-crashes.md`.
+- **The live Crashes table has 75 columns** (our mirror keeps 30), Parties 49, IWP 22. Check the live schema, not a
+  local copy, before saying a field doesn't exist (a wrong "no postmile" claim stood for a day, 2026-10-23).
+- **Milepost fields exist but are rarely filled:** `MilepostMarker`, `MilepostDistance`, `MilepostDirection`,
+  `MilepostUnitOfMeasure`. CHP filled them with a real Caltrans postmile ("route county postmile", e.g. `80 SAC M7.128`, plus distance and
+  direction from it) on 3.7% of 2021 and 2.3% of 2022 freeway crashes, and essentially never from 2023 (it switched to
+  `IsLocationReferToNarrative`). City PDs use the field for a reference line ("W CURBLINE OF MARINA BLVD"), not a
+  postmile. D1: 830 of 24,076 have one. (Tester, live data, 2026-10-23)
+- Other fields the mirror drops: `Beat`, `IsHighwayRelated`, `IsCountyRoad`, `IsLocationReferToNarrative`,
+  `SketchDesc`; Parties: `Lane`, `ThruLanes`, `SpeedLimit`, `StreetOrHighwayName`, vehicle make/model/year.
+- `IsFreeway` = freeway jurisdiction, including ramps and connectors. Freeway crashes: `methods/freeway-crashes.md`.
 - **Parties_2025** was downloadable but not loaded in the datastore (`datastore_active = false`) from ~2026-09-30;
   fallback = the file (docs/03, 2026-10-22).
 - Most recent ~12 months may be preliminary (`Is Preliminary`).
