@@ -340,7 +340,7 @@
     {
       "topic": "Street network: OpenStreetMap + TIGER/Line",
       "status": "decision",
-      "what": "Crashes are placed, and report street names checked, on OpenStreetMap joined with the US Census TIGER/Line roads of the counties the corridor is in. A TIGER road running along an OpenStreetMap street (most of its length within 12 m) adds its names to that street; a TIGER road OpenStreetMap lacks is added and joined at the nearest OpenStreetMap corner. Each street keeps where its name comes from (OpenStreetMap, TIGER or both); a crash placed with a name or road only TIGER/Line has is marked. User decision 2026-10-22.",
+      "what": "Crashes are placed, and report street names checked, on OpenStreetMap joined with the US Census TIGER/Line roads of the counties the corridor is in. A TIGER road running along an OpenStreetMap street (most of its length within 12 m) adds its names to that street; a TIGER road OpenStreetMap lacks is added and joined at the nearest OpenStreetMap corner. Each street keeps where its name comes from (OpenStreetMap, TIGER or both); a crash placed with a name or road only TIGER/Line has is marked, and one that needs a road only TIGER/Line has goes to the review list as a suggestion until its accuracy is measured statewide. User decision 2026-10-22.",
       "cite": [
         [
           "osm",

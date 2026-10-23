@@ -38,6 +38,7 @@ class Placement:
     p: float | None = None         # Jev probability of its pick when tier == jev
     p2: float | None = None        # Jev probability of the runner-up (for the margin check)
     tiger: bool = False            # relies on a street name or road only TIGER/Line has (#229)
+    tiger_road: bool = False       # relies on a road only TIGER/Line has (not just its name on an OSM way)
 
 
 def _keys_matching(net: Network, k: StreetKey) -> list[StreetKey]:
@@ -142,13 +143,15 @@ def _unique_pair(net: Network, crash: dict, kp: StreetKey, ks: StreetKey, aliase
     if node is None:
         return None
     lat, lon = offset(net, node, a, crash.get("offset_ft"), crash.get("offset_dir"))
-    return Placement("unique_pair", lat, lon, node, tiger=_tiger(net, node, a, b))
+    return Placement("unique_pair", lat, lon, node, tiger=_tiger(net, node, a, b),
+                     tiger_road=_tiger(net, node, a, b, road=True))
 
 
-def _tiger(net: Network, node: int, a, b) -> bool:
-    """Either street is known at this corner only from TIGER/Line (#229); the near tier's node may lie on one only."""
+def _tiger(net: Network, node: int, a, b, road: bool = False) -> bool:
+    """Either street is known at this corner only from TIGER/Line (#229); with `road`, only as a road OSM doesn't have.
+    The near tier's node may lie on one street only."""
     at = net.keys_at.get(node, set())
-    return any(net.tiger_only(node, [k for k in keys if k in at]) for keys in (a, b))
+    return any(net.tiger_only(node, [k for k in keys if k in at], road) for keys in (a, b))
 
 
 def offset(net: Network, node: int, primary: list[StreetKey], dist_ft: float | None, direction: str | None) -> tuple[float, float]:
@@ -252,7 +255,8 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
                 return Placement("review", note=f"{tier}: streets meet in more than one place")
             continue
         lat, lon = offset(net, node, a, crash.get("offset_ft"), crash.get("offset_dir"))
-        return Placement(tier, lat, lon, node, tiger=_tiger(net, node, a, b))
+        return Placement(tier, lat, lon, node, tiger=_tiger(net, node, a, b),
+                         tiger_road=_tiger(net, node, a, b, road=True))
     return Placement("review", note="no intersection of the two named streets")
 
 
@@ -316,9 +320,14 @@ class Gate:
     auto_tiers: frozenset = field(default_factory=lambda: configured_tiers())
     jev_tau: float | None = None     # Jev pick probability needed to auto-place; None = never
     jev_margin: float = 0.0          # and its lead over the runner-up
+    # a placement needing a road only TIGER/Line has (#229): a suggestion unless config says otherwise. TIGER's names
+    # on an OSM way keep their tier's gate. The user decides after run 9's statewide accuracy (PM review of #232)
+    tiger_only_auto: bool = field(default_factory=lambda: bool(json.loads(CONFIG.read_text()).get("tiger_only_auto")))
 
     def auto(self, pl: Placement) -> bool:
         if pl.lat is None:
+            return False
+        if pl.tiger_road and not self.tiger_only_auto:
             return False
         if pl.tier == "jev":
             return self.jev_tau is not None and (pl.p or 0) >= self.jev_tau and (pl.p or 0) - (pl.p2 or 0) >= self.jev_margin

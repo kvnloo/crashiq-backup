@@ -30,7 +30,7 @@ def test_a_street_only_in_tiger_is_matched_where_it_meets_the_corridor():
     els, counts = union.union(OSM, [edge(501, ["Elm St"], [(34.0, -117.9990), (34.0010, -117.9990)], 7, 8)], LINE, 40)
     net = Network(els)
     p = locate.place(net, crash("MAIN ST", "ELM ST"))
-    assert p.tier == "exact" and p.node == 3 and p.tiger
+    assert p.tier == "exact" and p.node == 3 and p.tiger and p.tiger_road
     assert counts == {"tiger_segments": 1, "added_from_tiger": 1}
     assert locate.place(Network(OSM), crash("MAIN ST", "ELM ST")).tier == "review"      # OSM alone can't
     assert not locate.place(net, crash("MAIN ST", "OAK AVE")).tiger                      # OSM streets stay OSM
@@ -69,7 +69,8 @@ def test_an_osm_name_and_a_tiger_name_on_one_way_both_match():
         assert p.node == 2, name
     assert not locate.place(net, crash("MAIN ST", "OAK AVE")).tiger
     assert locate.place(net, crash("OLD MILL RD", "OAK AVE")).tiger                     # name only TIGER has
-    assert net.key_source[next(k for k in net.streets if k.core == "OLD MILL")] == {"tiger"}
+    assert net.key_source[next(k for k in net.streets if k.core == "OLD MILL")] == {"tiger_name"}
+    assert not locate.place(net, crash("OLD MILL RD", "OAK AVE")).tiger_road                # a name on an OSM way
 
 
 def test_tiger_far_from_the_corridor_is_left_out():
@@ -101,3 +102,30 @@ def test_a_cross_street_beside_a_divided_roads_far_carriageway_doesnt_name_it():
     assert all("Masonic" not in e["tags"].get("tiger:name", "") for e in geary)
     p = locate.place(Network(els), crash("MASONIC AV", "GEARY BL"))
     assert p.tier == "exact" and p.node in (2, 5)
+
+
+def test_a_tiger_only_road_is_a_suggestion_unless_config_says_otherwise():
+    # PM review of #232: tiger_only_auto (default false); a TIGER name on an OSM way keeps its tier's gate
+    els, _ = union.union(OSM, [edge(501, ["Elm St"], [(34.0, -117.9990), (34.0010, -117.9990)], 7, 8),
+                               edge(504, ["Old Mill Rd"], [(34.00002, -118.0010), (34.00002, -117.9990)])], LINE, 40)
+    net = Network(els)
+    road = locate.place(net, crash("MAIN ST", "ELM ST"))          # Elm St: a road only TIGER has
+    name = locate.place(net, crash("OLD MILL RD", "OAK AVE"))     # Old Mill Rd: TIGER's name for OSM's Main St
+    assert locate.Gate().tiger_only_auto is False
+    assert not locate.Gate().auto(road) and locate.Gate().auto(name)
+    assert locate.Gate(tiger_only_auto=True).auto(road)
+
+
+def test_placement_keeps_a_tiger_road_crash_as_a_tagged_suggestion():
+    from crashiq import placement
+    els, _ = union.union(OSM, [edge(501, ["Elm St"], [(34.0, -117.9990), (34.0010, -117.9990)], 7, 8)], LINE, 40)
+
+    def run(gate):
+        r = {"cleaning": {}, "crashes": [{"crash_id": "t1", "primary_road": "MAIN ST", "secondary_road": "ELM ST",
+                                         "lat": None, "lon": None, "location_source": "unmatched"}]}
+        placement.place_unmatched(None, {"line": LINE}, r, gate=gate, raw=els)
+        return r["crashes"][0]
+    c = run(locate.Gate())
+    assert c["location_source"] == "unmatched" and c["suggestion"]["tiger_road"] and c["suggestion"]["tier"] == "exact"
+    c = run(locate.Gate(tiger_only_auto=True))
+    assert c["location_source"] == "exact" and c["placed_on"] == "tiger"

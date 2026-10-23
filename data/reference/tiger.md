@@ -19,6 +19,9 @@ hour. The vintage is set in `backend/crashiq/config/tiger.json` (2026); a new vi
 `both`); otherwise it is added as a way (`tiger`), joined at an OSM node within 12 m or spliced into the OSM way there.
 TIGER names for the corridor and for each study intersection are used by the pull's name filters, the GPS street
 check and the FARS road check. A crash placed with a name or road only TIGER has is tagged `placed_on: tiger`.
+A placement that needs a road only TIGER has (not just TIGER's name on an OSM way) goes to the review list as a
+suggestion tagged TIGER while `tiger_only_auto` is false (`config/placement.json`, PM review of #232); the user
+decides after run 9's statewide accuracy.
 
 **County boxes:** `ca_county_boxes.json`, from CCRS crashes with GPS (0.5–99.5 percentile + 5 km), built by
 `backend/scripts/build_county_boxes.py` from the Tester's CCRS mirror.

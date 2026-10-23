@@ -96,7 +96,8 @@ class Network:
         # trailing direction of the ways of a key through a node ("20th Street West" -> W; None when not written).
         # The key drops it, so 20th St East and West share one; the unique-pair tier tells them apart (#203)
         self.trail_at: dict[tuple[int, StreetKey], set[str | None]] = defaultdict(set)
-        # where each name comes from (#229): OSM, TIGER/Line, or both; per street key and per node
+        # where each name comes from (#229): "osm"; "tiger_name", a TIGER/Line name on an OSM way; "tiger", a road only
+        # TIGER/Line has. Per street key and per node
         self.key_source: dict[StreetKey, set[str]] = defaultdict(set)
         self.src_at: dict[tuple[int, StreetKey], set[str]] = defaultdict(set)
         for w in ways:
@@ -104,7 +105,7 @@ class Network:
             way_src = "tiger" if tags.get("crashiq:source") == "tiger" else "osm"
             names = []
             for t in NAME_TAGS + ("tiger:name",):
-                src = "tiger" if t == "tiger:name" else way_src
+                src = "tiger_name" if t == "tiger:name" else way_src   # a TIGER name on an OSM way
                 for v in str(tags.get(t, "")).split(";"):
                     k = street_key(v)
                     if k:
@@ -143,10 +144,11 @@ class Network:
             for k in self.keys_at[n]:
                 self.nodes_of[k].append(n)
 
-    def tiger_only(self, node: int, keys) -> bool:
-        """The street (these keys) is at this node only by a TIGER/Line name or way (#229)."""
+    def tiger_only(self, node: int, keys, road: bool = False) -> bool:
+        """The street (these keys) is at this node only by a TIGER/Line name or road (#229); with `road`, only by a
+        road OSM doesn't have."""
         srcs = set().union(*(self.src_at.get((node, k), set()) for k in keys)) if keys else set()
-        return bool(srcs) and "osm" not in srcs
+        return bool(srcs) and (srcs == {"tiger"} if road else "osm" not in srcs)
 
     def name(self, k: StreetKey) -> str:
         return self.label.get(k, k.core)

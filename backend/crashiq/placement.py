@@ -123,7 +123,8 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
                     counts["placed_on_tiger"] = counts.get("placed_on_tiger", 0) + 1
                 continue
             if pl.lat is not None:
-                c["suggestion"] = {"tier": pl.tier, "lat": pl.lat, "lon": pl.lon, **({"tiger": True} if pl.tiger else {})}
+                c["suggestion"] = {"tier": pl.tier, "lat": pl.lat, "lon": pl.lon, **({"tiger": True} if pl.tiger else {}),
+                                   **({"tiger_road": True} if pl.tiger_road else {})}
                 counts["suggested"] += 1
             counts["still_unplaced"] += 1
     # FARS only after the locator: a fatal crash it placed exactly has a usable location (#191)
