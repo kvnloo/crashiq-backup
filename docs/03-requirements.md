@@ -424,3 +424,16 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Street aliases, last 7 APPROVED (user, 2026-10-22, PM session, "approve all"):** the 7 entries that were narrowly
   under the 98% hidden-GPS check (90.9–95.5%, e.g. ATLANTA AV → Atlantic Avenue, Long Beach) are approved too. Live
   table: all 912 draft entries.
+- **Freeway crash placement (D1) DECIDED in principle (user, 2026-10-23, PM session; #246):** worked through three real
+  crashes. (1) **Mainline:** start where the reference street crosses the freeway, then the stated distance in the stated
+  direction along the stated-direction lanes; directions are read as written. (2) **Ramp:** at the ramp terminal on the
+  reference street, plus the offset. (3) **"X TO Y":** the crash is on the connector ramp, the stated distance from Y
+  along the connector (`IsFreeway = True` covers ramps and connectors). (4) **The report beats the officer's GPS** when
+  they disagree; the GPS stays as provenance. Builds behind a gate; Tester measures; the user approves turning it on.
+  Method and evidence: `knowledge/methods/freeway-crashes.md`.
+- **Postmile in the output DECIDED (user, 2026-10-23, PM session; #248):** each placed state-highway crash gets a postmile
+  looked up by code (no agent) from the public Caltrans postmile layer, marked as derived. It doesn't change placement.
+- **GPS format repair statewide (PM, 2026-10-23, under the user's 2026-10-19 obvious-mistakes rule; #247):** the
+  approved per-crash DMS reading (#143) applies to every agency, and a missing longitude minus is restored, each only
+  when exactly one repair fits the report's roads. Measured: 4,111 + 432 crashes, chance control ≤ 1%. Whole-degree
+  latitude shifts are **not** used (they fit by chance).
