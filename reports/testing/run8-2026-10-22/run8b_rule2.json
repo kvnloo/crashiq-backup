@@ -1,0 +1,15 @@
+{
+ "gps_crashes_checked": 1498647,
+ "ignored": {
+  "default_point": 145,
+  "coarse": 57
+ },
+ "moves": {
+  "gps_usable -> review (default_point)": 63,
+  "gps_usable -> placed_exact (default_point)": 59,
+  "gps_usable -> placed_exact (coarse)": 33,
+  "gps_usable -> placed_unique_pair (default_point)": 23,
+  "gps_usable -> review (coarse)": 13,
+  "gps_usable -> placed_unique_pair (coarse)": 11
+ }
+}

@@ -179,6 +179,31 @@ def network_in_area(local: "LocalOSM", area_id: int) -> dict:
     return {"elements": ways + list(nodes.values())}
 
 
+def network_in_box(local: "LocalOSM", area_id: int, margin_km: float = 1.0) -> dict:
+    """Like network_in_area, but every named road way in the boundary's box widened by margin_km, with no outline test
+    (run 8, PM 2026-10-22): a corridor study fetches the streets around its corridor, never a clipped city outline, so
+    county pockets and boundary streets belong on the map the coverage test uses."""
+    row = local.db.execute("SELECT minlat, minlon, maxlat, maxlon FROM areas WHERE id = ? "
+                           "ORDER BY CAST(admin_level AS INT) DESC LIMIT 1", (area_id,)).fetchone()
+    if not row:
+        return {"elements": []}
+    dlat = margin_km / 111.32
+    dlon = dlat / max(0.2, math.cos(math.radians((row[0] + row[2]) / 2)))
+    ways, nodes = [], {}
+    for wid, tags, nids, coords in local.db.execute(
+            "SELECT w.id, w.tags, w.nodes, w.coords FROM way_box b JOIN ways w ON w.id = b.id "
+            "WHERE b.maxlat >= ? AND b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ?",
+            (row[0] - dlat, row[2] + dlat, row[1] - dlon, row[3] + dlon)):
+        t = json.loads(tags)
+        if not (t.get("name") or t.get("ref")):
+            continue
+        ids, cs = json.loads(nids), json.loads(coords)
+        ways.append({"type": "way", "id": wid, "nodes": ids, "tags": t})
+        for nid, (la, lo) in zip(ids, cs):
+            nodes[nid] = {"type": "node", "id": nid, "lat": la, "lon": lo}
+    return {"elements": ways + list(nodes.values())}
+
+
 def _inside(p, rings) -> bool:
     """Point in any outer ring (ray casting; inner rings ignored: a road node in a hole is rare and harmless here)."""
     y, x = p

@@ -1,0 +1,4563 @@
+{
+ "tree": "a63f583340d0-pfile",
+ "studies": 479,
+ "fatal_outcomes": {
+  "placed_gps": 113,
+  "placed_exact": 58,
+  "excluded_freeway": 37,
+  "excluded_outside_study_limits": 30,
+  "excluded_outside_buffer": 22,
+  "placed_gps_offset_applied": 13,
+  "placed_unique_pair": 11,
+  "placed_fars": 9,
+  "excluded_fars_off_corridor": 8,
+  "unplaced": 2
+ },
+ "crashes": [
+  {
+   "crash_id": "2760108",
+   "outcome": "placed_gps",
+   "location_id": "osm-65403011",
+   "distance_ft": 239.1,
+   "roads": [
+    "RT 82",
+    "LINCOLN AV"
+   ],
+   "city": "Redwood City",
+   "lat": 37.48007,
+   "lon": -122.22573,
+   "fars_case": null,
+   "test_city": "Redwood City"
+  },
+  {
+   "crash_id": "2725929",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-65402979",
+   "distance_ft": 105.9,
+   "roads": [
+    "EL CAMINO REAL",
+    "JAMES AV"
+   ],
+   "city": "Redwood City",
+   "lat": 37.4852803622497,
+   "lon": -122.23401934677455,
+   "fars_case": null,
+   "test_city": "Redwood City"
+  },
+  {
+   "crash_id": "2445239",
+   "outcome": "placed_gps",
+   "location_id": "osm-13609832447",
+   "distance_ft": 185.8,
+   "roads": [
+    "RT 82",
+    "BROADWAY"
+   ],
+   "city": "Redwood City",
+   "lat": 37.48672,
+   "lon": -122.23502,
+   "fars_case": null,
+   "test_city": "Redwood City"
+  },
+  {
+   "crash_id": "4674035",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 442.0,
+   "roads": [
+    "BROADWAY",
+    "ARCH ST"
+   ],
+   "city": "Redwood City",
+   "lat": 37.48615,
+   "lon": -122.23646,
+   "fars_case": null,
+   "test_city": "Redwood City"
+  },
+  {
+   "crash_id": "2700720",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-1125481267",
+   "distance_ft": 85.2,
+   "roads": [
+    "FLETCHER PKWY",
+    "JOHNSON AV"
+   ],
+   "city": "El Cajon",
+   "lat": 32.8077908,
+   "lon": -116.9710554,
+   "fars_case": null,
+   "test_city": "El Cajon"
+  },
+  {
+   "crash_id": "4395472",
+   "outcome": "excluded_fars_off_corridor",
+   "location_id": null,
+   "distance_ft": 7720.5,
+   "roads": [
+    "CUYAMACA ST",
+    "MARSHALL AV"
+   ],
+   "city": "El Cajon",
+   "lat": 32.82827778,
+   "lon": -116.98390833,
+   "fars_case": "2023-63806",
+   "test_city": "El Cajon"
+  },
+  {
+   "crash_id": "2487142",
+   "outcome": "placed_gps",
+   "location_id": "osm-268167398",
+   "distance_ft": 1.1,
+   "roads": [
+    "SA GABRIEL BL",
+    "WELLS ST"
+   ],
+   "city": "San Gabriel",
+   "lat": 34.084457,
+   "lon": -118.090797,
+   "fars_case": null,
+   "test_city": "San Gabriel"
+  },
+  {
+   "crash_id": "1518770",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 227.1,
+   "roads": [
+    "SR-43",
+    "NEVADA AVENUE"
+   ],
+   "city": "Unincorporated",
+   "lat": 36.13793,
+   "lon": -119.58505,
+   "fars_case": null,
+   "test_city": "Corcoran"
+  },
+  {
+   "crash_id": "4622317",
+   "outcome": "placed_exact",
+   "location_id": "osm-49107307",
+   "distance_ft": 29.6,
+   "roads": [
+    "S MELROSE DR",
+    "BUENA VISTA DR"
+   ],
+   "city": "Vista",
+   "lat": 33.1671457,
+   "lon": -117.2472099,
+   "fars_case": null,
+   "test_city": "Vista"
+  },
+  {
+   "crash_id": "1965876",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "STATE ROUTE 111 (NORTHBOUND)",
+    "OVERTURE DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.88357,
+   "lon": -116.596604,
+   "fars_case": null,
+   "test_city": "Palm Springs"
+  },
+  {
+   "crash_id": "4876590",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "STATE ROUTE 111 SOUTHBOUND",
+    "OVERTURE DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.888852,
+   "lon": -116.606206,
+   "fars_case": null,
+   "test_city": "Palm Springs"
+  },
+  {
+   "crash_id": "4674121",
+   "outcome": "placed_exact",
+   "location_id": "osm-90903893",
+   "distance_ft": 0.0,
+   "roads": [
+    "CHEROKEE LN",
+    "LOCUST ST"
+   ],
+   "city": "Lodi",
+   "lat": 38.1363701,
+   "lon": -121.2608506,
+   "fars_case": null,
+   "test_city": "Lodi"
+  },
+  {
+   "crash_id": "1920588",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-164898455:osm-165014394",
+   "distance_ft": 33.3,
+   "roads": [
+    "SR-246 (MISSION DRIVE) WESTBOUND",
+    "SKYTT MESA DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.599831,
+   "lon": -120.161103,
+   "fars_case": null,
+   "test_city": "Buellton"
+  },
+  {
+   "crash_id": "2143280",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "STATE ROUTE 246 WESTBOUND",
+    "SKYTT MESA DR"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.601458,
+   "lon": -120.165028,
+   "fars_case": null,
+   "test_city": "Buellton"
+  },
+  {
+   "crash_id": "2034844",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-90337430",
+   "distance_ft": 114.4,
+   "roads": [
+    "AUBURN BLVD",
+    "COBALT WAY"
+   ],
+   "city": "Citrus Heights",
+   "lat": 38.690084386558965,
+   "lon": -121.3038536935616,
+   "fars_case": null,
+   "test_city": "Citrus Heights"
+  },
+  {
+   "crash_id": "2700642",
+   "outcome": "placed_gps",
+   "location_id": "osm-92103768",
+   "distance_ft": 24.9,
+   "roads": [
+    "RT 273",
+    "WYNDHAM LN"
+   ],
+   "city": "Redding",
+   "lat": 40.554591,
+   "lon": -122.388161,
+   "fars_case": null,
+   "test_city": "Redding"
+  },
+  {
+   "crash_id": "1772954",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-880 S/B",
+    "Mowry Ave"
+   ],
+   "city": "Fremont",
+   "lat": 37.53496,
+   "lon": -122.01185,
+   "fars_case": null,
+   "test_city": "Newark"
+  },
+  {
+   "crash_id": "2197422",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 880 NORTHBOUND (NIMITZ FREEWAY)",
+    "MOWRY AVENUE"
+   ],
+   "city": "Fremont",
+   "lat": 37.533675,
+   "lon": -122.009003,
+   "fars_case": null,
+   "test_city": "Newark"
+  },
+  {
+   "crash_id": "2573562",
+   "outcome": "placed_exact",
+   "location_id": "osm-87728849",
+   "distance_ft": 0.0,
+   "roads": [
+    "RT 32",
+    "PAPST AV"
+   ],
+   "city": "Orland",
+   "lat": 39.7472753,
+   "lon": -122.1780814,
+   "fars_case": null,
+   "test_city": "Orland"
+  },
+  {
+   "crash_id": "1698846",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-210 E/B TO ANGELES CREST HIGHWAY",
+    "Angeles Crest Highway"
+   ],
+   "city": "La Canada Flintridge",
+   "lat": 34.20643,
+   "lon": -118.20203,
+   "fars_case": null,
+   "test_city": "La Canada Flintridge"
+  },
+  {
+   "crash_id": "2700687",
+   "outcome": "excluded_fars_off_corridor",
+   "location_id": null,
+   "distance_ft": 4896.1,
+   "roads": [
+    "RT 18",
+    "OLD WATERMAN CANYON RD"
+   ],
+   "city": "San Bernardino",
+   "lat": 34.18255,
+   "lon": -117.27394444,
+   "fars_case": "2022-62879",
+   "test_city": "San Bernardino"
+  },
+  {
+   "crash_id": "2376089",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 499.8,
+   "roads": [
+    "STATE ROUTE 18",
+    "MILE POST MARKER 18 SBD 12.50"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.210141,
+   "lon": -117.285841,
+   "fars_case": null,
+   "test_city": "San Bernardino"
+  },
+  {
+   "crash_id": "4664258",
+   "outcome": "excluded_fars_off_corridor",
+   "location_id": null,
+   "distance_ft": 3900.3,
+   "roads": [
+    "RT 18",
+    "OLD WATERMAN CANYON RD"
+   ],
+   "city": "San Bernardino",
+   "lat": 34.18451389,
+   "lon": -117.27773889,
+   "fars_case": "2024-63134",
+   "test_city": "San Bernardino"
+  },
+  {
+   "crash_id": "5201645",
+   "outcome": "unplaced",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "N RT 18",
+    "OLD WATERMAN CANYON RD (UPPER)"
+   ],
+   "city": "San Bernardino",
+   "lat": null,
+   "lon": null,
+   "fars_case": null,
+   "test_city": "San Bernardino"
+  },
+  {
+   "crash_id": "2813496",
+   "outcome": "placed_gps",
+   "location_id": "osm-54438451",
+   "distance_ft": 34.4,
+   "roads": [
+    "HAMNER AV",
+    "5TH ST"
+   ],
+   "city": "Norco",
+   "lat": 33.931177,
+   "lon": -117.557693,
+   "fars_case": null,
+   "test_city": "Norco"
+  },
+  {
+   "crash_id": "1811688",
+   "outcome": "placed_gps",
+   "location_id": "osm-54438451",
+   "distance_ft": 168.1,
+   "roads": [
+    "5TH ST",
+    "HAMNER AV"
+   ],
+   "city": "Norco",
+   "lat": 33.930696,
+   "lon": -117.557964,
+   "fars_case": null,
+   "test_city": "Norco"
+  },
+  {
+   "crash_id": "5092357",
+   "outcome": "placed_unique_pair",
+   "location_id": "seg:osm-385070170:osm-385070439",
+   "distance_ft": 42.9,
+   "roads": [
+    "S. RANCHO SANTA FE RD",
+    "SAN MARCOS BL"
+   ],
+   "city": "San Marcos",
+   "lat": 33.130086209107624,
+   "lon": -117.20968663056203,
+   "fars_case": null,
+   "test_city": "San Marcos"
+  },
+  {
+   "crash_id": "2687329",
+   "outcome": "placed_exact",
+   "location_id": "osm-122972788",
+   "distance_ft": 0.0,
+   "roads": [
+    "RT-1",
+    "PEARL ST"
+   ],
+   "city": "Laguna Beach",
+   "lat": 33.5287622,
+   "lon": -117.771268,
+   "fars_case": null,
+   "test_city": "Laguna Beach"
+  },
+  {
+   "crash_id": "2558586",
+   "outcome": "placed_exact",
+   "location_id": "osm-122972785",
+   "distance_ft": 0.0,
+   "roads": [
+    "RT 1",
+    "MOUNTAIN RD"
+   ],
+   "city": "Laguna Beach",
+   "lat": 33.531763,
+   "lon": -117.7749002,
+   "fars_case": null,
+   "test_city": "Laguna Beach"
+  },
+  {
+   "crash_id": "2353107",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-3204790417:osm-57926547",
+   "distance_ft": 72.1,
+   "roads": [
+    "SAN PABLO AVENUE",
+    "ROAD 20"
+   ],
+   "city": "San Pablo",
+   "lat": 37.9633,
+   "lon": -122.34583,
+   "fars_case": null,
+   "test_city": "Richmond"
+  },
+  {
+   "crash_id": "2367557",
+   "outcome": "placed_gps",
+   "location_id": "osm-3204790417",
+   "distance_ft": 210.3,
+   "roads": [
+    "SAN PABLO AVE",
+    "23RD STREET"
+   ],
+   "city": "San Pablo",
+   "lat": 37.96347,
+   "lon": -122.34559,
+   "fars_case": null,
+   "test_city": "Richmond"
+  },
+  {
+   "crash_id": "1478548",
+   "outcome": "placed_gps",
+   "location_id": "osm-88796577",
+   "distance_ft": 195.2,
+   "roads": [
+    "PANAMA LN",
+    "BUENA VISTA RD"
+   ],
+   "city": "Bakersfield",
+   "lat": 35.296736,
+   "lon": -119.12844,
+   "fars_case": null,
+   "test_city": "Bakersfield"
+  },
+  {
+   "crash_id": "1566639",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "SR-60 Eastbound (Pomona Freeway)",
+    "Santa Anita Avenue"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.03927,
+   "lon": -118.04964,
+   "fars_case": null,
+   "test_city": "South El Monte"
+  },
+  {
+   "crash_id": "2481542",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 494.0,
+   "roads": [
+    "ROSEMEAD BL",
+    "LOWER AZUSA RD"
+   ],
+   "city": "Rosemead",
+   "lat": 34.05325,
+   "lon": -118.04409,
+   "fars_case": null,
+   "test_city": "South El Monte"
+  },
+  {
+   "crash_id": "5156033",
+   "outcome": "placed_gps",
+   "location_id": "osm-268900301",
+   "distance_ft": 18.5,
+   "roads": [
+    "SANTA ANITA AV",
+    "MERCED AV"
+   ],
+   "city": "South El Monte",
+   "lat": 34.0409,
+   "lon": -118.05,
+   "fars_case": null,
+   "test_city": "South El Monte"
+  },
+  {
+   "crash_id": "2760035",
+   "outcome": "placed_exact",
+   "location_id": "osm-123194233",
+   "distance_ft": 41.8,
+   "roads": [
+    "TELEGRAPH RD",
+    "NORWALK BL"
+   ],
+   "city": "Santa Fe Springs",
+   "lat": 33.94195588492703,
+   "lon": -118.07258552284276,
+   "fars_case": null,
+   "test_city": "Santa Fe Springs"
+  },
+  {
+   "crash_id": "2563319",
+   "outcome": "placed_gps",
+   "location_id": "osm-490519155",
+   "distance_ft": 7.8,
+   "roads": [
+    "MT HERMON RD",
+    "PG&E POLE 152026"
+   ],
+   "city": "Scotts Valley",
+   "lat": 37.04829,
+   "lon": -122.03433,
+   "fars_case": null,
+   "test_city": "Scotts Valley"
+  },
+  {
+   "crash_id": "1714606",
+   "outcome": "placed_gps",
+   "location_id": "osm-13599870556",
+   "distance_ft": 18.3,
+   "roads": [
+    "ATLANTIC AVENUE S/B (15100 Block)",
+    "COMPTON BOULEVARD"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.896125,
+   "lon": -118.193409,
+   "fars_case": null,
+   "test_city": "Compton"
+  },
+  {
+   "crash_id": "1776173",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 391.3,
+   "roads": [
+    "EAST COMPTON BOULEVARD (4600 BLOCK)",
+    "SOUTH LIME AVENUE"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.896177,
+   "lon": -118.192213,
+   "fars_case": null,
+   "test_city": "Compton"
+  },
+  {
+   "crash_id": "2017328",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-13599870556:osm-122821261",
+   "distance_ft": 34.5,
+   "roads": [
+    "ATLANTIC AVE.",
+    "ROSE ST."
+   ],
+   "city": "Unincorporated",
+   "lat": 33.89517,
+   "lon": -118.19332,
+   "fars_case": null,
+   "test_city": "Compton"
+  },
+  {
+   "crash_id": "3768123",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 525.1,
+   "roads": [
+    "ROSECRANS AV",
+    "COOKACRE AV"
+   ],
+   "city": "Compton",
+   "lat": 33.9035,
+   "lon": -118.19485,
+   "fars_case": null,
+   "test_city": "Compton"
+  },
+  {
+   "crash_id": "4500635",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 295.4,
+   "roads": [
+    "ATLANTIC AVENUE (14300 BLOCK)",
+    "ROSECRANS AVENUE"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.903084,
+   "lon": -118.19384,
+   "fars_case": null,
+   "test_city": "Compton"
+  },
+  {
+   "crash_id": "4952767",
+   "outcome": "placed_gps",
+   "location_id": "osm-122821261",
+   "distance_ft": 33.8,
+   "roads": [
+    "ATLANTIC AVENUE",
+    "ROSE STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.894287,
+   "lon": -118.193378,
+   "fars_case": null,
+   "test_city": "Compton"
+  },
+  {
+   "crash_id": "5146609",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-627041956",
+   "distance_ft": 74.8,
+   "roads": [
+    "ATLANTIC AV",
+    "ALONDRA BLVD"
+   ],
+   "city": "Compton",
+   "lat": 33.88817892780552,
+   "lon": -118.19294345767038,
+   "fars_case": null,
+   "test_city": "Compton"
+  },
+  {
+   "crash_id": "2486955",
+   "outcome": "placed_exact",
+   "location_id": "osm-122901937",
+   "distance_ft": 225.4,
+   "roads": [
+    "RT 1 PACIFIC COAST HIGHWAY",
+    "GOLDEN LANTERN"
+   ],
+   "city": "Dana Point",
+   "lat": 33.46711323758165,
+   "lon": -117.698751522766,
+   "fars_case": null,
+   "test_city": "Dana Point"
+  },
+  {
+   "crash_id": "5063589",
+   "outcome": "placed_gps",
+   "location_id": "osm-294532543",
+   "distance_ft": 121.7,
+   "roads": [
+    "PACIFIC COAST HWY",
+    "DEL OBISPO"
+   ],
+   "city": "Dana Point",
+   "lat": 33.4641,
+   "lon": -117.684,
+   "fars_case": null,
+   "test_city": "Dana Point"
+  },
+  {
+   "crash_id": "4765516",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-6436764494",
+   "distance_ft": 117.1,
+   "roads": [
+    "14TH ST",
+    "SAN LEANDRO BL"
+   ],
+   "city": "San Leandro",
+   "lat": 37.71560629150433,
+   "lon": -122.14311722187813,
+   "fars_case": null,
+   "test_city": "San Leandro"
+  },
+  {
+   "crash_id": "2134315",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-680 NORTHBOUND",
+    "N. MAIN STREET"
+   ],
+   "city": "Walnut Creek",
+   "lat": 37.91619,
+   "lon": -122.06518,
+   "fars_case": null,
+   "test_city": "Walnut Creek"
+  },
+  {
+   "crash_id": "5160841",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-1762975153:osm-94603401",
+   "distance_ft": 34.0,
+   "roads": [
+    "W RIGGIN AV",
+    "N ROEBEN ST"
+   ],
+   "city": "Visalia",
+   "lat": 36.35661,
+   "lon": -119.357981,
+   "fars_case": null,
+   "test_city": "Visalia"
+  },
+  {
+   "crash_id": "1746882",
+   "outcome": "placed_exact",
+   "location_id": "osm-53101680",
+   "distance_ft": 106.5,
+   "roads": [
+    "PASEO PADRE PKWY",
+    "WALNUT AVE"
+   ],
+   "city": "Fremont",
+   "lat": 37.551804256134176,
+   "lon": -121.9775070306499,
+   "fars_case": null,
+   "test_city": "Fremont"
+  },
+  {
+   "crash_id": "5063093",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-53081594:osm-53101680",
+   "distance_ft": 62.7,
+   "roads": [
+    "PASEO PADRE PKWY",
+    "CAPITOL AV"
+   ],
+   "city": "Fremont",
+   "lat": 37.553254121765704,
+   "lon": -121.98028373097988,
+   "fars_case": null,
+   "test_city": "Fremont"
+  },
+  {
+   "crash_id": "1411125",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-110 N/B (HARBOR FREEWAY)",
+    "PEDESTRAIN BRIDGE  #53-27675"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.828118,
+   "lon": -118.287265,
+   "fars_case": null,
+   "test_city": "Carson"
+  },
+  {
+   "crash_id": "1932003",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-110 SOUTHBOUND",
+    "CARSON ST."
+   ],
+   "city": "Unincorporated",
+   "lat": 33.829623,
+   "lon": -118.287441,
+   "fars_case": null,
+   "test_city": "Carson"
+  },
+  {
+   "crash_id": "1855469",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 110 SOUTHBOUND (HARBOR FREEWAY)",
+    "228TH STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.817285,
+   "lon": -118.287371,
+   "fars_case": null,
+   "test_city": "Carson"
+  },
+  {
+   "crash_id": "4508117",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 110 SOUTHBOUND (HARBOR FREEWAY)",
+    "CARSON STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.829952,
+   "lon": -118.287553,
+   "fars_case": null,
+   "test_city": "Carson"
+  },
+  {
+   "crash_id": "4460611",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 110 NORTHBOUND",
+    "220TH STREET PEDESTRIAN OVERCROSSING"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.8281,
+   "lon": -118.287217,
+   "fars_case": null,
+   "test_city": "Carson"
+  },
+  {
+   "crash_id": "4538533",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 110 SOUTHBOUND (HARBOR FREEWAY)",
+    "CARSON STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.831477,
+   "lon": -118.287547,
+   "fars_case": null,
+   "test_city": "Carson"
+  },
+  {
+   "crash_id": "2728025",
+   "outcome": "placed_exact",
+   "location_id": "osm-123228904",
+   "distance_ft": 24.0,
+   "roads": [
+    "SHERMAN WY",
+    "WHITAKER AV"
+   ],
+   "city": "Los Angeles",
+   "lat": 34.2012391,
+   "lon": -118.4978659,
+   "fars_case": null,
+   "test_city": "Los Angeles"
+  },
+  {
+   "crash_id": "2573591",
+   "outcome": "placed_exact",
+   "location_id": "osm-122864930",
+   "distance_ft": 159.3,
+   "roads": [
+    "SHERMAN WY",
+    "GENESTA AV"
+   ],
+   "city": "Los Angeles",
+   "lat": 34.20123581690106,
+   "lon": -118.50280206527077,
+   "fars_case": null,
+   "test_city": "Los Angeles"
+  },
+  {
+   "crash_id": "4921092",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 292.3,
+   "roads": [
+    "BALBOA BL",
+    "SHERMAN WAY"
+   ],
+   "city": "Los Angeles",
+   "lat": 34.202034585773546,
+   "lon": -118.50113619463733,
+   "fars_case": null,
+   "test_city": "Los Angeles"
+  },
+  {
+   "crash_id": "4353241",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-54469854",
+   "distance_ft": 74.0,
+   "roads": [
+    "INDIAN CANYON DR",
+    "PIERSON BLVD"
+   ],
+   "city": "Desert Hot Springs",
+   "lat": 33.95974842395743,
+   "lon": -116.545035007453,
+   "fars_case": null,
+   "test_city": "Desert Hot Springs"
+  },
+  {
+   "crash_id": "2654708",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-95716602",
+   "distance_ft": 0.0,
+   "roads": [
+    "E GRANT AV",
+    "E MAIN ST"
+   ],
+   "city": "Winters",
+   "lat": 38.5209775,
+   "lon": -121.9819276,
+   "fars_case": null,
+   "test_city": "Winters"
+  },
+  {
+   "crash_id": "2760111",
+   "outcome": "placed_exact",
+   "location_id": "osm-54588079",
+   "distance_ft": 120.3,
+   "roads": [
+    "GREENSPOT RD",
+    "WEAVER ST"
+   ],
+   "city": "Highland",
+   "lat": 34.109818092366396,
+   "lon": -117.16123339235817,
+   "fars_case": null,
+   "test_city": "Highland"
+  },
+  {
+   "crash_id": "1920588",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 46.9,
+   "roads": [
+    "SR-246 (MISSION DRIVE) WESTBOUND",
+    "SKYTT MESA DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.599831,
+   "lon": -120.161103,
+   "fars_case": null,
+   "test_city": "Solvang"
+  },
+  {
+   "crash_id": "2597680",
+   "outcome": "placed_unique_pair",
+   "location_id": "seg:osm-87500080:B",
+   "distance_ft": 65.6,
+   "roads": [
+    "GOLDEN STATE BL",
+    "DINUBA"
+   ],
+   "city": "Selma",
+   "lat": 36.58900890535041,
+   "lon": -119.63671364414503,
+   "fars_case": null,
+   "test_city": "Selma"
+  },
+  {
+   "crash_id": "4371714",
+   "outcome": "placed_gps",
+   "location_id": "seg:A:B",
+   "distance_ft": 13.9,
+   "roads": [
+    "STATE ROUTE 33 (S. LOST HILLS ROAD)",
+    "ZAPATO CHINO CREEK BRIDGE #42-115"
+   ],
+   "city": "Unincorporated",
+   "lat": 36.073339,
+   "lon": -120.228459,
+   "fars_case": null,
+   "test_city": "Avenal"
+  },
+  {
+   "crash_id": "1978805",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "STATE ROUTE 91 EASTBOUND",
+    "ARTESIA BOULEVARD"
+   ],
+   "city": "Cerritos",
+   "lat": 33.873148,
+   "lon": -118.060386,
+   "fars_case": null,
+   "test_city": "Cerritos"
+  },
+  {
+   "crash_id": "2074556",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 5 SOUTHBOUND",
+    "ROSECRANS AVENUE"
+   ],
+   "city": "Santa Fe Springs",
+   "lat": 33.900993,
+   "lon": -118.060278,
+   "fars_case": null,
+   "test_city": "Norwalk"
+  },
+  {
+   "crash_id": "5147846",
+   "outcome": "placed_exact",
+   "location_id": "osm-123115777",
+   "distance_ft": 46.7,
+   "roads": [
+    "ROSECRANS AV",
+    "FRONT ST"
+   ],
+   "city": "Norwalk",
+   "lat": 33.9023664568415,
+   "lon": -118.06540410038271,
+   "fars_case": null,
+   "test_city": "Norwalk"
+  },
+  {
+   "crash_id": "2813379",
+   "outcome": "placed_gps",
+   "location_id": "osm-243673088",
+   "distance_ft": 16.0,
+   "roads": [
+    "RT 123",
+    "OREGON"
+   ],
+   "city": "Berkeley",
+   "lat": 37.854919,
+   "lon": -122.287564,
+   "fars_case": null,
+   "test_city": "Berkeley"
+  },
+  {
+   "crash_id": "2422156",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 5 SOUTHBOUND",
+    "SAN JUAN CREEK ROAD"
+   ],
+   "city": "San Juan Capistrano",
+   "lat": 33.488375,
+   "lon": -117.664665,
+   "fars_case": null,
+   "test_city": "San Juan Capistrano"
+  },
+  {
+   "crash_id": "4851609",
+   "outcome": "placed_gps",
+   "location_id": "osm-4989274366",
+   "distance_ft": 165.2,
+   "roads": [
+    "CAMINO CAPISTRANO",
+    "RT 5"
+   ],
+   "city": "San Juan Capistrano",
+   "lat": 33.490914,
+   "lon": -117.663622,
+   "fars_case": null,
+   "test_city": "San Juan Capistrano"
+  },
+  {
+   "crash_id": "1427818",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 598.7,
+   "roads": [
+    "TALBERT AVE",
+    "BELL CIR"
+   ],
+   "city": "Huntington Beach",
+   "lat": 33.700045,
+   "lon": -117.991183,
+   "fars_case": null,
+   "test_city": "Huntington Beach"
+  },
+  {
+   "crash_id": "2778591",
+   "outcome": "placed_fars",
+   "location_id": "osm-122974560",
+   "distance_ft": 69.7,
+   "roads": [
+    "RT 39",
+    "LIBERTY DR"
+   ],
+   "city": "Huntington Beach",
+   "lat": 33.70588333,
+   "lon": -117.98935833,
+   "fars_case": "2021-63895",
+   "test_city": "Huntington Beach"
+  },
+  {
+   "crash_id": "2602961",
+   "outcome": "placed_gps",
+   "location_id": "osm-122647678",
+   "distance_ft": 175.1,
+   "roads": [
+    "RT 39",
+    "ELLIS AV"
+   ],
+   "city": "Huntington Beach",
+   "lat": 33.69348,
+   "lon": -117.98876,
+   "fars_case": null,
+   "test_city": "Huntington Beach"
+  },
+  {
+   "crash_id": "4617097",
+   "outcome": "unplaced",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "RT 39",
+    "SPEER DR"
+   ],
+   "city": "Huntington Beach",
+   "lat": null,
+   "lon": null,
+   "fars_case": null,
+   "test_city": "Huntington Beach"
+  },
+  {
+   "crash_id": "4966648",
+   "outcome": "placed_exact",
+   "location_id": "osm-772792947",
+   "distance_ft": 31.1,
+   "roads": [
+    "RT 39 (BEACH BL)",
+    "TAYLOR DR"
+   ],
+   "city": "Huntington Beach",
+   "lat": 33.6975968,
+   "lon": -117.9891385,
+   "fars_case": null,
+   "test_city": "Huntington Beach"
+  },
+  {
+   "crash_id": "4881318",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-122998038:osm-28937935",
+   "distance_ft": 59.4,
+   "roads": [
+    "RT 39",
+    "TALBERT AV"
+   ],
+   "city": "Huntington Beach",
+   "lat": 33.70272002847884,
+   "lon": -117.98905809952656,
+   "fars_case": null,
+   "test_city": "Huntington Beach"
+  },
+  {
+   "crash_id": "5153031",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-772792947:osm-122647678",
+   "distance_ft": 69.4,
+   "roads": [
+    "RT 39",
+    "ELLIS AV"
+   ],
+   "city": "Huntington Beach",
+   "lat": 33.69473582157687,
+   "lon": -117.98875381225554,
+   "fars_case": null,
+   "test_city": "Huntington Beach"
+  },
+  {
+   "crash_id": "2898265",
+   "outcome": "placed_gps",
+   "location_id": "osm-91120760",
+   "distance_ft": 139.4,
+   "roads": [
+    "PRICE CANYON RD",
+    "THOUSAND HILLS RD"
+   ],
+   "city": "Unincorporated",
+   "lat": 35.16458,
+   "lon": -120.634381,
+   "fars_case": null,
+   "test_city": "Pismo Beach"
+  },
+  {
+   "crash_id": "2813621",
+   "outcome": "placed_exact",
+   "location_id": "osm-89492766",
+   "distance_ft": 166.1,
+   "roads": [
+    "RT 33",
+    "OLIVE ST"
+   ],
+   "city": "Dos Palos",
+   "lat": 36.98739940500657,
+   "lon": -120.63556868899082,
+   "fars_case": null,
+   "test_city": "Dos Palos"
+  },
+  {
+   "crash_id": "2801882",
+   "outcome": "placed_exact",
+   "location_id": "osm-1823130328",
+   "distance_ft": 24.2,
+   "roads": [
+    "GARDEN GROVE BL",
+    "NELSON ST"
+   ],
+   "city": "Garden Grove",
+   "lat": 33.77420027870981,
+   "lon": -117.94500238415783,
+   "fars_case": null,
+   "test_city": "Garden Grove"
+  },
+  {
+   "crash_id": "4767146",
+   "outcome": "placed_gps",
+   "location_id": "osm-1687158672",
+   "distance_ft": 77.9,
+   "roads": [
+    "HUNTINGTON DR N",
+    "ELMHURST AV"
+   ],
+   "city": "Duarte",
+   "lat": 34.13968,
+   "lon": -117.95891,
+   "fars_case": null,
+   "test_city": "Duarte"
+  },
+  {
+   "crash_id": "4926860",
+   "outcome": "placed_gps",
+   "location_id": "osm-1687158725",
+   "distance_ft": 26.2,
+   "roads": [
+    "HUNTINGTON DR",
+    "POPS RD"
+   ],
+   "city": "Duarte",
+   "lat": 34.13962,
+   "lon": -117.96897,
+   "fars_case": null,
+   "test_city": "Duarte"
+  },
+  {
+   "crash_id": "1775323",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-110433482:osm-110348535",
+   "distance_ft": 17.0,
+   "roads": [
+    "NOVATO BOULEVARD",
+    "NOVATO CREEK ROAD"
+   ],
+   "city": "Unincorporated",
+   "lat": 38.122183,
+   "lon": -122.628085,
+   "fars_case": null,
+   "test_city": "Novato"
+  },
+  {
+   "crash_id": "2654890",
+   "outcome": "placed_fars",
+   "location_id": "seg:osm-796698687:osm-122891631",
+   "distance_ft": 31.4,
+   "roads": [
+    "ALISO CREEK RD",
+    "RT-73"
+   ],
+   "city": "Aliso Viejo",
+   "lat": 33.58063889,
+   "lon": -117.72070278,
+   "fars_case": "2022-63177",
+   "test_city": "Aliso Viejo"
+  },
+  {
+   "crash_id": "2749074",
+   "outcome": "placed_exact",
+   "location_id": "osm-122695017",
+   "distance_ft": 22.8,
+   "roads": [
+    "ARTESIA BL",
+    "FELTON LN"
+   ],
+   "city": "Redondo Beach",
+   "lat": 33.87291720000602,
+   "lon": -118.36427958386011,
+   "fars_case": null,
+   "test_city": "Redondo Beach"
+  },
+  {
+   "crash_id": "2573658",
+   "outcome": "placed_gps",
+   "location_id": "osm-122965369",
+   "distance_ft": 7.6,
+   "roads": [
+    "ARTESIA BL",
+    "RIDGE LN"
+   ],
+   "city": "Redondo Beach",
+   "lat": 33.872853,
+   "lon": -118.37276,
+   "fars_case": null,
+   "test_city": "Redondo Beach"
+  },
+  {
+   "crash_id": "4378046",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-4021850723",
+   "distance_ft": 94.8,
+   "roads": [
+    "ATLANTIC BLVD",
+    "GARVEY AV"
+   ],
+   "city": "Monterey Park",
+   "lat": 34.06220441619366,
+   "lon": -118.13422700078573,
+   "fars_case": null,
+   "test_city": "Monterey Park"
+  },
+  {
+   "crash_id": "2813485",
+   "outcome": "placed_exact",
+   "location_id": "osm-92822336",
+   "distance_ft": 71.1,
+   "roads": [
+    "BUTTE HOUSE RD",
+    "ORO GRANDE ST"
+   ],
+   "city": "Yuba City",
+   "lat": 39.152084021639574,
+   "lon": -121.65817588572216,
+   "fars_case": null,
+   "test_city": "Yuba City"
+  },
+  {
+   "crash_id": "2813585",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 598.3,
+   "roads": [
+    "SAGE AV",
+    "ANTELOPE TRAIL"
+   ],
+   "city": "Yucca Valley",
+   "lat": 34.122636,
+   "lon": -116.422487,
+   "fars_case": null,
+   "test_city": "Yucca Valley"
+  },
+  {
+   "crash_id": "2700463",
+   "outcome": "placed_gps",
+   "location_id": "osm-54827417",
+   "distance_ft": 239.0,
+   "roads": [
+    "RT 62",
+    "SAGE AV"
+   ],
+   "city": "Yucca Valley",
+   "lat": 34.120605,
+   "lon": -116.423022,
+   "fars_case": null,
+   "test_city": "Yucca Valley"
+  },
+  {
+   "crash_id": "5157642",
+   "outcome": "placed_gps",
+   "location_id": "osm-616052583",
+   "distance_ft": 221.5,
+   "roads": [
+    "29 PALMS HWY",
+    "MOHAWK TRL"
+   ],
+   "city": "Yucca Valley",
+   "lat": 34.12079,
+   "lon": -116.4403,
+   "fars_case": null,
+   "test_city": "Yucca Valley"
+  },
+  {
+   "crash_id": "2330997",
+   "outcome": "placed_gps",
+   "location_id": "osm-57850357",
+   "distance_ft": 134.0,
+   "roads": [
+    "14501 SAN PABLO AVE",
+    "EL PORTAL DR"
+   ],
+   "city": "San Pablo",
+   "lat": 37.96778,
+   "lon": -122.34418,
+   "fars_case": null,
+   "test_city": "San Pablo"
+  },
+  {
+   "crash_id": "2353107",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-3204790417:osm-57926547",
+   "distance_ft": 72.1,
+   "roads": [
+    "SAN PABLO AVENUE",
+    "ROAD 20"
+   ],
+   "city": "San Pablo",
+   "lat": 37.9633,
+   "lon": -122.34583,
+   "fars_case": null,
+   "test_city": "San Pablo"
+  },
+  {
+   "crash_id": "2367557",
+   "outcome": "placed_gps",
+   "location_id": "osm-3204790417",
+   "distance_ft": 210.3,
+   "roads": [
+    "SAN PABLO AVE",
+    "23RD STREET"
+   ],
+   "city": "San Pablo",
+   "lat": 37.96347,
+   "lon": -122.34559,
+   "fars_case": null,
+   "test_city": "San Pablo"
+  },
+  {
+   "crash_id": "2728074",
+   "outcome": "placed_exact",
+   "location_id": "osm-49352010",
+   "distance_ft": 31.4,
+   "roads": [
+    "OCEANSIDE BL",
+    "COLLEGE BL"
+   ],
+   "city": "Oceanside",
+   "lat": 33.2071969,
+   "lon": -117.2848733,
+   "fars_case": null,
+   "test_city": "Oceanside"
+  },
+  {
+   "crash_id": "2445345",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 579.3,
+   "roads": [
+    "OCEANSIDE BL",
+    "COLLEGE BL"
+   ],
+   "city": "Oceanside",
+   "lat": 33.20686072024886,
+   "lon": -117.28691447281935,
+   "fars_case": null,
+   "test_city": "Oceanside"
+  },
+  {
+   "crash_id": "1945740",
+   "outcome": "placed_gps",
+   "location_id": "osm-2317432468",
+   "distance_ft": 81.9,
+   "roads": [
+    "SR-1 (E. COAST HWY)",
+    "MARGUERITE AVE"
+   ],
+   "city": "Newport Beach",
+   "lat": 33.59629,
+   "lon": -117.87109,
+   "fars_case": null,
+   "test_city": "Newport Beach"
+  },
+  {
+   "crash_id": "2760154",
+   "outcome": "placed_exact",
+   "location_id": "osm-54712154",
+   "distance_ft": 194.7,
+   "roads": [
+    "CENTRAL AV",
+    "KINGSLEY ST"
+   ],
+   "city": "Montclair",
+   "lat": 34.06623132287855,
+   "lon": -117.68950132906649,
+   "fars_case": null,
+   "test_city": "Montclair"
+  },
+  {
+   "crash_id": "1695836",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 10 EASTBOUND (SAN BERNARDINO FREEWAY)",
+    "VINEYARD AVENUE"
+   ],
+   "city": "Ontario",
+   "lat": 34.06948,
+   "lon": -117.68949,
+   "fars_case": null,
+   "test_city": "Montclair"
+  },
+  {
+   "crash_id": "2597515",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-54906234:osm-54930751",
+   "distance_ft": 44.3,
+   "roads": [
+    "CENTRAL AV",
+    "EL MORADO ST"
+   ],
+   "city": "Montclair",
+   "lat": 34.07260929176978,
+   "lon": -117.68963790000001,
+   "fars_case": null,
+   "test_city": "Montclair"
+  },
+  {
+   "crash_id": "2597639",
+   "outcome": "placed_exact",
+   "location_id": "osm-54712154",
+   "distance_ft": 24.3,
+   "roads": [
+    "CENTRAL AV",
+    "KINGSLEY ST"
+   ],
+   "city": "Montclair",
+   "lat": 34.066730206569815,
+   "lon": -117.6895028966427,
+   "fars_case": null,
+   "test_city": "Montclair"
+  },
+  {
+   "crash_id": "4733674",
+   "outcome": "placed_exact",
+   "location_id": "osm-54906234",
+   "distance_ft": 25.7,
+   "roads": [
+    "CENTRAL AV",
+    "BENITO ST"
+   ],
+   "city": "Montclair",
+   "lat": 34.073998424201434,
+   "lon": -117.68963790000001,
+   "fars_case": null,
+   "test_city": "Montclair"
+  },
+  {
+   "crash_id": "1985901",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "US-101 S/B",
+    "MATHILDA AVE"
+   ],
+   "city": "Sunnyvale",
+   "lat": 37.3988,
+   "lon": -122.02739,
+   "fars_case": null,
+   "test_city": "Sunnyvale"
+  },
+  {
+   "crash_id": "1680058",
+   "outcome": "placed_gps",
+   "location_id": "osm-56030693",
+   "distance_ft": 21.9,
+   "roads": [
+    "WEST SIERRA AVENUE",
+    "WEST SCHOOL STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 38.324391,
+   "lon": -122.725304,
+   "fars_case": null,
+   "test_city": "Cotati"
+  },
+  {
+   "crash_id": "4565852",
+   "outcome": "placed_gps",
+   "location_id": "osm-56099066",
+   "distance_ft": 42.6,
+   "roads": [
+    "WEST SIERRA AVENUE",
+    "GROVE STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 38.323867,
+   "lon": -122.726911,
+   "fars_case": null,
+   "test_city": "Cotati"
+  },
+  {
+   "crash_id": "2487043",
+   "outcome": "placed_gps",
+   "location_id": "osm-122739518",
+   "distance_ft": 58.4,
+   "roads": [
+    "EL TORO RD",
+    "CALLE SONORA"
+   ],
+   "city": "Laguna Woods",
+   "lat": 33.60917,
+   "lon": -117.7322,
+   "fars_case": null,
+   "test_city": "Laguna Woods"
+  },
+  {
+   "crash_id": "4767070",
+   "outcome": "placed_gps",
+   "location_id": "osm-122739518",
+   "distance_ft": 103.6,
+   "roads": [
+    "EL TORO RD",
+    "CALLE SONORA"
+   ],
+   "city": "Laguna Woods",
+   "lat": 33.609173,
+   "lon": -117.732045,
+   "fars_case": null,
+   "test_city": "Laguna Woods"
+  },
+  {
+   "crash_id": "2654983",
+   "outcome": "placed_gps",
+   "location_id": "osm-13599869469",
+   "distance_ft": 33.2,
+   "roads": [
+    "LAKEWOOD BL",
+    "PASEO ST"
+   ],
+   "city": "Bellflower",
+   "lat": 33.894497,
+   "lon": -118.142631,
+   "fars_case": null,
+   "test_city": "Bellflower"
+  },
+  {
+   "crash_id": "5154324",
+   "outcome": "placed_gps",
+   "location_id": "osm-2500788323",
+   "distance_ft": 83.2,
+   "roads": [
+    "LAKEWOOD BL (RT 19)",
+    "WALNUT ST"
+   ],
+   "city": "Bellflower",
+   "lat": 33.879991,
+   "lon": -118.142751,
+   "fars_case": null,
+   "test_city": "Bellflower"
+  },
+  {
+   "crash_id": "1970323",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 270.9,
+   "roads": [
+    "COUNTRY CLUB DR",
+    "COOK ST"
+   ],
+   "city": "Palm Desert",
+   "lat": 33.757952,
+   "lon": -116.356379,
+   "fars_case": null,
+   "test_city": "Palm Desert"
+  },
+  {
+   "crash_id": "4567942",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-3369042708:osm-54393393",
+   "distance_ft": 1.1,
+   "roads": [
+    "COUNTRY CLUB DR",
+    "EL DORADO DR"
+   ],
+   "city": "Palm Desert",
+   "lat": 33.75817410135769,
+   "lon": -116.34060046331855,
+   "fars_case": null,
+   "test_city": "Palm Desert"
+  },
+  {
+   "crash_id": "2359290",
+   "outcome": "placed_gps",
+   "location_id": "osm-12338709126",
+   "distance_ft": 227.2,
+   "roads": [
+    "COOK ST",
+    "COUNTRY CLUB DR"
+   ],
+   "city": "Palm Desert",
+   "lat": 33.758039,
+   "lon": -116.356251,
+   "fars_case": null,
+   "test_city": "Palm Desert"
+  },
+  {
+   "crash_id": "5019360",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "seg:osm-3369042708:osm-54393393",
+   "distance_ft": 48.7,
+   "roads": [
+    "COUNTRY CLUB DR",
+    "ELDORADO DR"
+   ],
+   "city": "Palm Desert",
+   "lat": 33.758021254029,
+   "lon": -116.34583234360807,
+   "fars_case": null,
+   "test_city": "Palm Desert"
+  },
+  {
+   "crash_id": "2700624",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-122662835",
+   "distance_ft": 20.1,
+   "roads": [
+    "LAMBERT RD",
+    "WALNUT"
+   ],
+   "city": "La Habra",
+   "lat": 33.9246515,
+   "lon": -117.950468,
+   "fars_case": null,
+   "test_city": "La Habra"
+  },
+  {
+   "crash_id": "4643547",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-123015025",
+   "distance_ft": 0.0,
+   "roads": [
+    "SOUTH EUCLID ST",
+    "LAMBERT RD"
+   ],
+   "city": "La Habra",
+   "lat": 33.9246033,
+   "lon": -117.9461206,
+   "fars_case": null,
+   "test_city": "La Habra"
+  },
+  {
+   "crash_id": "1869505",
+   "outcome": "placed_gps",
+   "location_id": "osm-2305912035",
+   "distance_ft": 182.0,
+   "roads": [
+    "FAIRVIEW STREET",
+    "EDINGER AVENUE"
+   ],
+   "city": "Santa Ana",
+   "lat": 33.727033,
+   "lon": -117.906645,
+   "fars_case": null,
+   "test_city": "Santa Ana"
+  },
+  {
+   "crash_id": "4439648",
+   "outcome": "placed_gps",
+   "location_id": "osm-2305912009",
+   "distance_ft": 39.5,
+   "roads": [
+    "FAIRVIEW STREET",
+    "HARVARD STREET"
+   ],
+   "city": "Santa Ana",
+   "lat": 33.720243,
+   "lon": -117.908651,
+   "fars_case": null,
+   "test_city": "Santa Ana"
+  },
+  {
+   "crash_id": "2700772",
+   "outcome": "placed_fars",
+   "location_id": "osm-2298130554",
+   "distance_ft": 214.2,
+   "roads": [
+    "KELLY AV",
+    "MAYA ST"
+   ],
+   "city": "Parlier",
+   "lat": 36.60532222,
+   "lon": -119.53827778,
+   "fars_case": "2022-63168",
+   "test_city": "Parlier"
+  },
+  {
+   "crash_id": "2700771",
+   "outcome": "placed_gps",
+   "location_id": "osm-13771013639",
+   "distance_ft": 159.7,
+   "roads": [
+    "MANNING AV",
+    "MENDOCINO AV"
+   ],
+   "city": "Parlier",
+   "lat": 36.604937,
+   "lon": -119.548378,
+   "fars_case": null,
+   "test_city": "Parlier"
+  },
+  {
+   "crash_id": "4535811",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-4075477068:osm-123333761",
+   "distance_ft": 6.8,
+   "roads": [
+    "ARROW HWY",
+    "RIVERGRADE RD"
+   ],
+   "city": "Irwindale",
+   "lat": 34.112275,
+   "lon": -117.969703,
+   "fars_case": null,
+   "test_city": "Irwindale"
+  },
+  {
+   "crash_id": "1706974",
+   "outcome": "placed_gps",
+   "location_id": "osm-1299484398",
+   "distance_ft": 200.6,
+   "roads": [
+    "VAN BUREN BOULEVARD (14000 BLOCK)",
+    "PINE COURT"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.886141,
+   "lon": -117.40814,
+   "fars_case": null,
+   "test_city": "Riverside"
+  },
+  {
+   "crash_id": "2344824",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 397.0,
+   "roads": [
+    "VAN BUREN BOULEVARD",
+    "FIRETHORN AVENUE"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.885879,
+   "lon": -117.407574,
+   "fars_case": null,
+   "test_city": "Riverside"
+  },
+  {
+   "crash_id": "1972282",
+   "outcome": "placed_gps",
+   "location_id": "osm-2298130496",
+   "distance_ft": 157.8,
+   "roads": [
+    "MANNING AVENUE",
+    "KINGS RIVER ROAD"
+   ],
+   "city": "Unincorporated",
+   "lat": 36.604538,
+   "lon": -119.469387,
+   "fars_case": null,
+   "test_city": "Reedley"
+  },
+  {
+   "crash_id": "2486908",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-91077761:osm-91085437",
+   "distance_ft": 2.7,
+   "roads": [
+    "RT 152",
+    "RODRIGUEZ ST"
+   ],
+   "city": "Watsonville",
+   "lat": 36.91551235828053,
+   "lon": -121.76590331983184,
+   "fars_case": null,
+   "test_city": "Watsonville"
+  },
+  {
+   "crash_id": "2595990",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-91085437:osm-91085433",
+   "distance_ft": 12.3,
+   "roads": [
+    "MAIN ST",
+    "RODRIGUEZ ST"
+   ],
+   "city": "Watsonville",
+   "lat": 36.9150826762278,
+   "lon": -121.76331871692334,
+   "fars_case": null,
+   "test_city": "Watsonville"
+  },
+  {
+   "crash_id": "5146603",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "US-101 N/B",
+    "UNIVERSITY AVE"
+   ],
+   "city": "East Palo Alto",
+   "lat": 37.45753,
+   "lon": -122.135587,
+   "fars_case": null,
+   "test_city": "East Palo Alto"
+  },
+  {
+   "crash_id": "5146604",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "US-101 N/B",
+    "UNIVERSITY AVE"
+   ],
+   "city": "East Palo Alto",
+   "lat": 37.457565,
+   "lon": -122.135682,
+   "fars_case": null,
+   "test_city": "East Palo Alto"
+  },
+  {
+   "crash_id": "2487040",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 600.6,
+   "roads": [
+    "FLORENCE AV",
+    "PINE AV"
+   ],
+   "city": "Bell",
+   "lat": 33.97002,
+   "lon": -118.18987,
+   "fars_case": null,
+   "test_city": "Cudahy"
+  },
+  {
+   "crash_id": "2232779",
+   "outcome": "placed_gps",
+   "location_id": "osm-91178235",
+   "distance_ft": 41.5,
+   "roads": [
+    "EL CAMINO REAL",
+    "MORRO NB OFFRAMP"
+   ],
+   "city": "Atascadero",
+   "lat": 35.485125,
+   "lon": -120.663526,
+   "fars_case": null,
+   "test_city": "Atascadero"
+  },
+  {
+   "crash_id": "2813641",
+   "outcome": "placed_gps",
+   "location_id": "osm-54643772",
+   "distance_ft": 18.2,
+   "roads": [
+    "S LA CADENA DR",
+    "W LITTON AV"
+   ],
+   "city": "Colton",
+   "lat": 34.038402,
+   "lon": -117.332432,
+   "fars_case": null,
+   "test_city": "Colton"
+  },
+  {
+   "crash_id": "2655071",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 455.8,
+   "roads": [
+    "LA CADENA AV",
+    "DE BERRY ST"
+   ],
+   "city": "Colton",
+   "lat": 34.03311,
+   "lon": -117.33341,
+   "fars_case": null,
+   "test_city": "Colton"
+  },
+  {
+   "crash_id": "5329736",
+   "outcome": "placed_gps",
+   "location_id": "osm-122750504",
+   "distance_ft": 135.4,
+   "roads": [
+    "SANTA MONICA BL",
+    "ORANGE GROVE AV"
+   ],
+   "city": "West Hollywood",
+   "lat": 34.09089,
+   "lon": -118.3609,
+   "fars_case": null,
+   "test_city": "West Hollywood"
+  },
+  {
+   "crash_id": "2558597",
+   "outcome": "placed_exact",
+   "location_id": "osm-54541286",
+   "distance_ft": 191.7,
+   "roads": [
+    "FOOTHILL BL",
+    "SIERRA AV"
+   ],
+   "city": "Fontana",
+   "lat": 34.10656689588858,
+   "lon": -117.43519912574976,
+   "fars_case": null,
+   "test_city": "Fontana"
+  },
+  {
+   "crash_id": "1483153",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "STATE ROUTE 91 EASTBOUND",
+    "Pioneer Boulevard"
+   ],
+   "city": "Artesia",
+   "lat": 33.876406,
+   "lon": -118.082412,
+   "fars_case": null,
+   "test_city": "Artesia"
+  },
+  {
+   "crash_id": "4753793",
+   "outcome": "placed_gps",
+   "location_id": "osm-62456441",
+   "distance_ft": 23.4,
+   "roads": [
+    "RIVER RD",
+    "AIRPORT RD"
+   ],
+   "city": "Rio Vista",
+   "lat": 38.168868,
+   "lon": -121.680223,
+   "fars_case": null,
+   "test_city": "Rio Vista"
+  },
+  {
+   "crash_id": "4820910",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "seg:osm-55955634:B",
+   "distance_ft": 5.7,
+   "roads": [
+    "AMERICAN CANYON RD",
+    "VIA FIRENZE"
+   ],
+   "city": "American Canyon",
+   "lat": 38.16420820026068,
+   "lon": -122.2346545532333,
+   "fars_case": null,
+   "test_city": "American Canyon"
+  },
+  {
+   "crash_id": "4553429",
+   "outcome": "placed_gps",
+   "location_id": "osm-54294121",
+   "distance_ft": 171.2,
+   "roads": [
+    "LIMONITE AV",
+    "HARRISON AV"
+   ],
+   "city": "Eastvale",
+   "lat": 33.975179,
+   "lon": -117.583943,
+   "fars_case": null,
+   "test_city": "Eastvale"
+  },
+  {
+   "crash_id": "2728053",
+   "outcome": "placed_gps",
+   "location_id": "osm-769416203",
+   "distance_ft": 84.9,
+   "roads": [
+    "RT 39",
+    "HOLT ST"
+   ],
+   "city": "Buena Park",
+   "lat": 33.8751,
+   "lon": -117.9981,
+   "fars_case": null,
+   "test_city": "Buena Park"
+  },
+  {
+   "crash_id": "2279375",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 5 SOUTHBOUND (SANTA ANA FREEWAY)",
+    "BEACH BOULEVARD"
+   ],
+   "city": "Buena Park",
+   "lat": 33.865288,
+   "lon": -117.996217,
+   "fars_case": null,
+   "test_city": "Buena Park"
+  },
+  {
+   "crash_id": "4809151",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 5 SOUTHBOUND (SANTA ANA FREEWAY)",
+    "BEACH BOULEVARD"
+   ],
+   "city": "Buena Park",
+   "lat": 33.866458,
+   "lon": -117.99868,
+   "fars_case": null,
+   "test_city": "Buena Park"
+  },
+  {
+   "crash_id": "1899823",
+   "outcome": "placed_gps",
+   "location_id": "osm-90774503",
+   "distance_ft": 18.0,
+   "roads": [
+    "SR-120",
+    "SEXTON RD"
+   ],
+   "city": "Unincorporated",
+   "lat": 37.798591,
+   "lon": -121.03842,
+   "fars_case": null,
+   "test_city": "Escalon"
+  },
+  {
+   "crash_id": "4818506",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-90774503:osm-90954979",
+   "distance_ft": 1.5,
+   "roads": [
+    "STATE ROUTE 120",
+    "SEXTON ROAD"
+   ],
+   "city": "Unincorporated",
+   "lat": 37.798611,
+   "lon": -121.035229,
+   "fars_case": null,
+   "test_city": "Escalon"
+  },
+  {
+   "crash_id": "1619608",
+   "outcome": "placed_gps",
+   "location_id": "osm-3830416498",
+   "distance_ft": 21.4,
+   "roads": [
+    "ROSECRANS AVENUE",
+    "KINGSLEY DRIVE"
+   ],
+   "city": "Gardena",
+   "lat": 33.901912,
+   "lon": -118.304217,
+   "fars_case": null,
+   "test_city": "Gardena"
+  },
+  {
+   "crash_id": "2813620",
+   "outcome": "placed_exact",
+   "location_id": "osm-26731124",
+   "distance_ft": 21.2,
+   "roads": [
+    "MARINE AV",
+    "N SEPULVEDA BL"
+   ],
+   "city": "Manhattan Beach",
+   "lat": 33.8946431,
+   "lon": -118.395935,
+   "fars_case": null,
+   "test_city": "Manhattan Beach"
+  },
+  {
+   "crash_id": "5143197",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 550.6,
+   "roads": [
+    "SEPULVEDA BL",
+    "5TH ST"
+   ],
+   "city": "Manhattan Beach",
+   "lat": 33.881864,
+   "lon": -118.395993,
+   "fars_case": null,
+   "test_city": "Manhattan Beach"
+  },
+  {
+   "crash_id": "4674064",
+   "outcome": "placed_gps",
+   "location_id": "osm-122895167",
+   "distance_ft": 36.2,
+   "roads": [
+    "SEPULVEDA BL",
+    "8TH ST EAST"
+   ],
+   "city": "Manhattan Beach",
+   "lat": 33.883683,
+   "lon": -118.396046,
+   "fars_case": null,
+   "test_city": "Manhattan Beach"
+  },
+  {
+   "crash_id": "5329398",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-95465575",
+   "distance_ft": 15.0,
+   "roads": [
+    "1055 ONTARIO ST",
+    "WOOLEY RD"
+   ],
+   "city": "Oxnard",
+   "lat": 34.19042331553596,
+   "lon": -119.19618159111647,
+   "fars_case": null,
+   "test_city": "Oxnard"
+  },
+  {
+   "crash_id": "1746253",
+   "outcome": "placed_gps",
+   "location_id": "seg:A:B",
+   "distance_ft": 14.2,
+   "roads": [
+    "STATE ROUTE 84 (LA HONDA ROAD)",
+    "SEQUOIA DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 37.37357,
+   "lon": -122.26444,
+   "fars_case": null,
+   "test_city": "Woodside"
+  },
+  {
+   "crash_id": "1906732",
+   "outcome": "placed_gps",
+   "location_id": "seg:A:B",
+   "distance_ft": 27.4,
+   "roads": [
+    "STATE ROUTE 84 (LA HONDA ROAD)",
+    "STATE ROUTE 35 (SKYLINE BOULEVARD)"
+   ],
+   "city": "Unincorporated",
+   "lat": 37.372099,
+   "lon": -122.26421,
+   "fars_case": null,
+   "test_city": "Woodside"
+  },
+  {
+   "crash_id": "4388915",
+   "outcome": "placed_exact",
+   "location_id": "osm-295247402",
+   "distance_ft": 37.8,
+   "roads": [
+    "MISSION GORGE RD",
+    "RT 125"
+   ],
+   "city": "Santee",
+   "lat": 32.8386479,
+   "lon": -117.0033485,
+   "fars_case": null,
+   "test_city": "Santee"
+  },
+  {
+   "crash_id": "2383071",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "STATE ROUTE 125 NORTHBOUND TO STATE ROUTE 52 WESTBOUND",
+    "STATE ROUTE 125"
+   ],
+   "city": "Unincorporated",
+   "lat": 32.836181,
+   "lon": -117.003663,
+   "fars_case": null,
+   "test_city": "Santee"
+  },
+  {
+   "crash_id": "4629724",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-10 W/B FROM 20TH STREET",
+    "20TH STREET"
+   ],
+   "city": "Santa Monica",
+   "lat": 34.02162,
+   "lon": -118.4772,
+   "fars_case": null,
+   "test_city": "Santa Monica"
+  },
+  {
+   "crash_id": "2142293",
+   "outcome": "placed_gps",
+   "location_id": "osm-92667473",
+   "distance_ft": 143.4,
+   "roads": [
+    "SPERRY AVE",
+    "AMERICAN EAGLE AVE"
+   ],
+   "city": "Patterson",
+   "lat": 37.464159,
+   "lon": -121.149385,
+   "fars_case": null,
+   "test_city": "Patterson"
+  },
+  {
+   "crash_id": "2760297",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-87310969:osm-87402448",
+   "distance_ft": 6.2,
+   "roads": [
+    "BROADWAY DR",
+    "AIRPORT RD"
+   ],
+   "city": "Placerville",
+   "lat": 38.72987383203313,
+   "lon": -120.766156617576,
+   "fars_case": null,
+   "test_city": "Placerville"
+  },
+  {
+   "crash_id": "2487092",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-3479444246",
+   "distance_ft": 72.5,
+   "roads": [
+    "ROSEMEAD BL",
+    "PENTLAND ST"
+   ],
+   "city": "Temple City",
+   "lat": 34.0935965498949,
+   "lon": -118.0733310128354,
+   "fars_case": null,
+   "test_city": "Temple City"
+  },
+  {
+   "crash_id": "2700484",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-2453732624:osm-2453732606",
+   "distance_ft": 9.7,
+   "roads": [
+    "YORBA LINDA BL",
+    "AVENIDA RIO DEL ORO"
+   ],
+   "city": "Yorba Linda",
+   "lat": 33.88981,
+   "lon": -117.78485,
+   "fars_case": null,
+   "test_city": "Yorba Linda"
+  },
+  {
+   "crash_id": "1977256",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-10 E/B FROM OAK VALLEY PARKWAY",
+    "OAK VALLEY PARKWAY"
+   ],
+   "city": "Beaumont",
+   "lat": 33.944361,
+   "lon": -117.003972,
+   "fars_case": null,
+   "test_city": "Beaumont"
+  },
+  {
+   "crash_id": "2017586",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSATE 10 EASTBOUND",
+    "OAK VALLEY PARKWAY"
+   ],
+   "city": "Beaumont",
+   "lat": 33.944318,
+   "lon": -117.002741,
+   "fars_case": null,
+   "test_city": "Beaumont"
+  },
+  {
+   "crash_id": "2319457",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-10 EASTBOUND TO OAK VALLEY PARKWAY",
+    "OAK VALLEY PARKWAY"
+   ],
+   "city": "Beaumont",
+   "lat": 33.94487,
+   "lon": -117.004089,
+   "fars_case": null,
+   "test_city": "Beaumont"
+  },
+  {
+   "crash_id": "4625840",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 406.3,
+   "roads": [
+    "BRENTWOOD BL",
+    "VALDRY CT"
+   ],
+   "city": "Brentwood",
+   "lat": 37.92563,
+   "lon": -121.69057,
+   "fars_case": null,
+   "test_city": "Brentwood"
+  },
+  {
+   "crash_id": "4872041",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 275.8,
+   "roads": [
+    "DAINTY AV",
+    "WALNUT BL"
+   ],
+   "city": "Brentwood",
+   "lat": 37.93251,
+   "lon": -121.69759,
+   "fars_case": null,
+   "test_city": "Brentwood"
+  },
+  {
+   "crash_id": "2558663",
+   "outcome": "placed_gps",
+   "location_id": "osm-65426566",
+   "distance_ft": 74.1,
+   "roads": [
+    "DE ANZA BL",
+    "STEVENS CREEK BL"
+   ],
+   "city": "Cupertino",
+   "lat": 37.322829,
+   "lon": -122.032058,
+   "fars_case": null,
+   "test_city": "Cupertino"
+  },
+  {
+   "crash_id": "2445378",
+   "outcome": "placed_gps",
+   "location_id": "osm-65426566",
+   "distance_ft": 74.1,
+   "roads": [
+    "DE ANZA BL",
+    "STEVENS CREEK BL"
+   ],
+   "city": "Cupertino",
+   "lat": 37.322829,
+   "lon": -122.032058,
+   "fars_case": null,
+   "test_city": "Cupertino"
+  },
+  {
+   "crash_id": "2486920",
+   "outcome": "placed_gps",
+   "location_id": "osm-19668858",
+   "distance_ft": 63.0,
+   "roads": [
+    "VERDUGO RD",
+    "VERDUGO LOMA DR"
+   ],
+   "city": "Glendale",
+   "lat": 34.1702,
+   "lon": -118.227173,
+   "fars_case": null,
+   "test_city": "Glendale"
+  },
+  {
+   "crash_id": "2487040",
+   "outcome": "placed_gps",
+   "location_id": "osm-122647821",
+   "distance_ft": 192.5,
+   "roads": [
+    "FLORENCE AV",
+    "PINE AV"
+   ],
+   "city": "Bell",
+   "lat": 33.97002,
+   "lon": -118.18987,
+   "fars_case": null,
+   "test_city": "Bell"
+  },
+  {
+   "crash_id": "4646576",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 233.4,
+   "roads": [
+    "LOS ANGELES",
+    "MAYFLOWER AV"
+   ],
+   "city": "Bell",
+   "lat": 33.96913,
+   "lon": -118.18302,
+   "fars_case": null,
+   "test_city": "Bell"
+  },
+  {
+   "crash_id": "4869902",
+   "outcome": "placed_exact",
+   "location_id": "osm-4077374117",
+   "distance_ft": 106.8,
+   "roads": [
+    "ALTON PKWY",
+    "SAND CANYON AVE"
+   ],
+   "city": "Irvine",
+   "lat": 33.66109717801409,
+   "lon": -117.77627089453415,
+   "fars_case": null,
+   "test_city": "Irvine"
+  },
+  {
+   "crash_id": "1649039",
+   "outcome": "placed_gps",
+   "location_id": "osm-90413686",
+   "distance_ft": 8.1,
+   "roads": [
+    "SR-12",
+    "Jackson Slough Road"
+   ],
+   "city": "Unincorporated",
+   "lat": 38.13997,
+   "lon": -121.62376,
+   "fars_case": null,
+   "test_city": "Isleton"
+  },
+  {
+   "crash_id": "2813792",
+   "outcome": "placed_fars",
+   "location_id": "osm-6788635885",
+   "distance_ft": 104.8,
+   "roads": [
+    "SEAL BEACH BL",
+    "WESTMINSTER AV"
+   ],
+   "city": "Seal Beach",
+   "lat": 33.75903333,
+   "lon": -118.07874444,
+   "fars_case": "2021-63847",
+   "test_city": "Seal Beach"
+  },
+  {
+   "crash_id": "2700806",
+   "outcome": "placed_gps",
+   "location_id": "osm-4600207852",
+   "distance_ft": 13.5,
+   "roads": [
+    "ALHAMBRA AV",
+    "TRUITT AV"
+   ],
+   "city": "Martinez",
+   "lat": 37.98337,
+   "lon": -122.1216,
+   "fars_case": null,
+   "test_city": "Martinez"
+  },
+  {
+   "crash_id": "2813787",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 582.5,
+   "roads": [
+    "W WILLIAMS ST",
+    "N WOODLAND AV"
+   ],
+   "city": "Banning",
+   "lat": 33.92737,
+   "lon": -116.90513,
+   "fars_case": null,
+   "test_city": "Banning"
+  },
+  {
+   "crash_id": "2876043",
+   "outcome": "placed_gps",
+   "location_id": "osm-54387717",
+   "distance_ft": 2.7,
+   "roads": [
+    "W RAMSEY ST",
+    "N 16TH ST"
+   ],
+   "city": "Banning",
+   "lat": 33.9254,
+   "lon": -116.89434,
+   "fars_case": null,
+   "test_city": "Banning"
+  },
+  {
+   "crash_id": "2074813",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 476.1,
+   "roads": [
+    "FLORENCE AV",
+    "TOLER AV"
+   ],
+   "city": "Bell Gardens",
+   "lat": 33.966139,
+   "lon": -118.152847,
+   "fars_case": null,
+   "test_city": "Bell Gardens"
+  },
+  {
+   "crash_id": "2760230",
+   "outcome": "placed_gps",
+   "location_id": "osm-54833060",
+   "distance_ft": 50.8,
+   "roads": [
+    "RT 62",
+    "ESTRELLA AV"
+   ],
+   "city": "Twentynine Palms",
+   "lat": 34.135437,
+   "lon": -116.087167,
+   "fars_case": null,
+   "test_city": "Twentynine Palms"
+  },
+  {
+   "crash_id": "2573645",
+   "outcome": "placed_exact",
+   "location_id": "osm-10204440772",
+   "distance_ft": 0.0,
+   "roads": [
+    "LARREA AV",
+    "RT 62"
+   ],
+   "city": "Twentynine Palms",
+   "lat": 34.1354635,
+   "lon": -116.0882827,
+   "fars_case": null,
+   "test_city": "Twentynine Palms"
+  },
+  {
+   "crash_id": "2654918",
+   "outcome": "placed_exact",
+   "location_id": "osm-89455051",
+   "distance_ft": 0.0,
+   "roads": [
+    "E CHILDS AV",
+    "KIBBY RD"
+   ],
+   "city": "Merced",
+   "lat": 37.2878714,
+   "lon": -120.4154676,
+   "fars_case": null,
+   "test_city": "Merced"
+  },
+  {
+   "crash_id": "2597695",
+   "outcome": "placed_gps",
+   "location_id": "osm-1223355449",
+   "distance_ft": 5.7,
+   "roads": [
+    "MARENGO AV",
+    "VALLEY BL"
+   ],
+   "city": "Alhambra",
+   "lat": 34.077492,
+   "lon": -118.141892,
+   "fars_case": null,
+   "test_city": "Alhambra"
+  },
+  {
+   "crash_id": "2597694",
+   "outcome": "placed_gps",
+   "location_id": "osm-123414672",
+   "distance_ft": 10.0,
+   "roads": [
+    "VALLEY BL",
+    "4TH ST"
+   ],
+   "city": "Alhambra",
+   "lat": 34.07835,
+   "lon": -118.126831,
+   "fars_case": null,
+   "test_city": "Alhambra"
+  },
+  {
+   "crash_id": "4020350",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 554.1,
+   "roads": [
+    "MARENGO AVE",
+    "VALLEY BLVD"
+   ],
+   "city": "Alhambra",
+   "lat": 34.076022186601925,
+   "lon": -118.14158185323373,
+   "fars_case": null,
+   "test_city": "Alhambra"
+  },
+  {
+   "crash_id": "4443200",
+   "outcome": "placed_gps",
+   "location_id": "osm-1223355449",
+   "distance_ft": 8.6,
+   "roads": [
+    "VALLEY BLVD",
+    "MARENGO AVE"
+   ],
+   "city": "Alhambra",
+   "lat": 34.077464,
+   "lon": -118.141904,
+   "fars_case": null,
+   "test_city": "Alhambra"
+  },
+  {
+   "crash_id": "1956089",
+   "outcome": "placed_exact",
+   "location_id": "osm-54388463",
+   "distance_ft": 21.9,
+   "roads": [
+    "RAMONA EXPY",
+    "CHASE ST"
+   ],
+   "city": "San Jacinto",
+   "lat": 33.8043642,
+   "lon": -116.977213,
+   "fars_case": null,
+   "test_city": "San Jacinto"
+  },
+  {
+   "crash_id": "2322208",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 294.5,
+   "roads": [
+    "PELANDALE AVE",
+    "CARVER RD"
+   ],
+   "city": "Modesto",
+   "lat": 37.700455,
+   "lon": -121.02269,
+   "fars_case": null,
+   "test_city": "Modesto"
+  },
+  {
+   "crash_id": "5184320",
+   "outcome": "placed_gps",
+   "location_id": "osm-92674819",
+   "distance_ft": 60.4,
+   "roads": [
+    "PRESCOTT RD",
+    "PELANDALE AVE"
+   ],
+   "city": "Modesto",
+   "lat": 37.700683,
+   "lon": -121.031811,
+   "fars_case": null,
+   "test_city": "Modesto"
+  },
+  {
+   "crash_id": "2760316",
+   "outcome": "placed_gps",
+   "location_id": "osm-89405833",
+   "distance_ft": 31.7,
+   "roads": [
+    "RT 152",
+    "RT 165"
+   ],
+   "city": "Los Banos",
+   "lat": 37.05686,
+   "lon": -120.8353,
+   "fars_case": null,
+   "test_city": "Los Banos"
+  },
+  {
+   "crash_id": "2130773",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-56132764:B",
+   "distance_ft": 2.0,
+   "roads": [
+    "SR-12",
+    "OAKMONT DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 38.449216,
+   "lon": -122.613461,
+   "fars_case": null,
+   "test_city": "Santa Rosa"
+  },
+  {
+   "crash_id": "2378302",
+   "outcome": "placed_gps",
+   "location_id": "osm-54653913",
+   "distance_ft": 19.2,
+   "roads": [
+    "SAN BERNARDINO AVENUE",
+    "ALABAMA STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.07749,
+   "lon": -117.208751,
+   "fars_case": null,
+   "test_city": "Redlands"
+  },
+  {
+   "crash_id": "2319464",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-54548972:osm-412298469",
+   "distance_ft": 84.7,
+   "roads": [
+    "DOMENIGONI PARKWAY E/B",
+    "ALAMAR MESA DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.707768,
+   "lon": -117.024144,
+   "fars_case": null,
+   "test_city": "Hemet"
+  },
+  {
+   "crash_id": "4612397",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-80 W/B",
+    "CUTTING BOULEVARD"
+   ],
+   "city": "Richmond",
+   "lat": 37.923874,
+   "lon": -122.319894,
+   "fars_case": null,
+   "test_city": "El Cerrito"
+  },
+  {
+   "crash_id": "4604281",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "I-80 W/B",
+    "CUTTING BOULEVARD"
+   ],
+   "city": "El Cerrito",
+   "lat": 37.923846,
+   "lon": -122.319861,
+   "fars_case": null,
+   "test_city": "El Cerrito"
+  },
+  {
+   "crash_id": "5249375",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 546.3,
+   "roads": [
+    "EASTSHORE BL",
+    "POTRERO AV"
+   ],
+   "city": "El Cerrito",
+   "lat": 37.92082,
+   "lon": -122.317489,
+   "fars_case": null,
+   "test_city": "El Cerrito"
+  },
+  {
+   "crash_id": "2801885",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-94569583",
+   "distance_ft": 21.0,
+   "roads": [
+    "RT 63",
+    "PROSPERITY"
+   ],
+   "city": "Tulare",
+   "lat": 36.2258681,
+   "lon": -119.3130449,
+   "fars_case": null,
+   "test_city": "Tulare"
+  },
+  {
+   "crash_id": "5147790",
+   "outcome": "placed_gps",
+   "location_id": "osm-94569583",
+   "distance_ft": 29.1,
+   "roads": [
+    "RT 63 (MOONEY)",
+    "CROSS"
+   ],
+   "city": "Tulare",
+   "lat": 36.225891,
+   "lon": -119.31309,
+   "fars_case": null,
+   "test_city": "Tulare"
+  },
+  {
+   "crash_id": "2813676",
+   "outcome": "placed_gps",
+   "location_id": "seg:A:B",
+   "distance_ft": 19.3,
+   "roads": [
+    "ELIZABETH LAKE RD",
+    "VINEYARD LANE"
+   ],
+   "city": "Palmdale",
+   "lat": 34.598969,
+   "lon": -118.235428,
+   "fars_case": null,
+   "test_city": "Palmdale"
+  },
+  {
+   "crash_id": "2813575",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 105.1,
+   "roads": [
+    "BEACH BL ( RT-39)",
+    "CHAPMAN AV"
+   ],
+   "city": "Stanton",
+   "lat": 33.79021,
+   "lon": -117.99271,
+   "fars_case": null,
+   "test_city": "Stanton"
+  },
+  {
+   "crash_id": "2876534",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-2160890982:osm-122734300",
+   "distance_ft": 2.2,
+   "roads": [
+    "RT 39",
+    "PLAZA WY"
+   ],
+   "city": "Stanton",
+   "lat": 33.79964,
+   "lon": -117.99319,
+   "fars_case": null,
+   "test_city": "Stanton"
+  },
+  {
+   "crash_id": "2813822",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-2160890982:osm-122734300",
+   "distance_ft": 2.8,
+   "roads": [
+    "RT 39",
+    "KATELLA AV"
+   ],
+   "city": "Stanton",
+   "lat": 33.79977,
+   "lon": -117.99319,
+   "fars_case": null,
+   "test_city": "Stanton"
+  },
+  {
+   "crash_id": "2655031",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 548.1,
+   "roads": [
+    "RT 39",
+    "KATELLA AV"
+   ],
+   "city": "Stanton",
+   "lat": 33.80273,
+   "lon": -117.99315,
+   "fars_case": null,
+   "test_city": "Stanton"
+  },
+  {
+   "crash_id": "4416821",
+   "outcome": "placed_gps",
+   "location_id": "osm-18305844",
+   "distance_ft": 71.4,
+   "roads": [
+    "BEACH BL",
+    "CHAPMAN AV"
+   ],
+   "city": "Stanton",
+   "lat": 33.788549,
+   "lon": -117.992786,
+   "fars_case": null,
+   "test_city": "Stanton"
+  },
+  {
+   "crash_id": "5199784",
+   "outcome": "placed_gps",
+   "location_id": "osm-18305844",
+   "distance_ft": 54.8,
+   "roads": [
+    "CHAPMAN AV",
+    "BEACH BL"
+   ],
+   "city": "Stanton",
+   "lat": 33.788353,
+   "lon": -117.99275,
+   "fars_case": null,
+   "test_city": "Stanton"
+  },
+  {
+   "crash_id": "2813659",
+   "outcome": "placed_gps",
+   "location_id": "osm-6335229315",
+   "distance_ft": 184.8,
+   "roads": [
+    "HACIENDA BL",
+    "VALLEY BL"
+   ],
+   "city": "City of Industry",
+   "lat": 34.020265,
+   "lon": -117.958199,
+   "fars_case": null,
+   "test_city": "City of Industry"
+  },
+  {
+   "crash_id": "2813711",
+   "outcome": "placed_gps",
+   "location_id": "osm-6335229315",
+   "distance_ft": 155.2,
+   "roads": [
+    "HACIENDA BL",
+    "VALLEY BL"
+   ],
+   "city": "City of Industry",
+   "lat": 34.02019,
+   "lon": -117.95806,
+   "fars_case": null,
+   "test_city": "City of Industry"
+  },
+  {
+   "crash_id": "5198752",
+   "outcome": "placed_gps",
+   "location_id": "osm-4630202009",
+   "distance_ft": 215.2,
+   "roads": [
+    "SOSCOL AV",
+    "SHETLER AV"
+   ],
+   "city": "Napa",
+   "lat": 38.30747,
+   "lon": -122.285032,
+   "fars_case": null,
+   "test_city": "Napa"
+  },
+  {
+   "crash_id": "4703798",
+   "outcome": "placed_exact",
+   "location_id": "osm-122878705",
+   "distance_ft": 32.3,
+   "roads": [
+    "LA PALMA AV",
+    "MOODY ST"
+   ],
+   "city": "La Palma",
+   "lat": 33.8463421,
+   "lon": -118.0460811,
+   "fars_case": null,
+   "test_city": "La Palma"
+  },
+  {
+   "crash_id": "2813823",
+   "outcome": "placed_unique_pair",
+   "location_id": "osm-511969479",
+   "distance_ft": 0.0,
+   "roads": [
+    "EUCLID AV",
+    "13TH ST"
+   ],
+   "city": "Upland",
+   "lat": 34.1106452,
+   "lon": -117.6513543,
+   "fars_case": null,
+   "test_city": "Upland"
+  },
+  {
+   "crash_id": "2487088",
+   "outcome": "excluded_fars_off_corridor",
+   "location_id": null,
+   "distance_ft": 5569.1,
+   "roads": [
+    "GARFIELD AV",
+    "N. SOMERSET RANCH RD"
+   ],
+   "city": "Paramount",
+   "lat": 33.91173611,
+   "lon": -118.16892222,
+   "fars_case": "2023-61764",
+   "test_city": "Paramount"
+  },
+  {
+   "crash_id": "4667862",
+   "outcome": "placed_gps",
+   "location_id": "osm-13348462557",
+   "distance_ft": 28.1,
+   "roads": [
+    "STATE ST",
+    "MISSION ST"
+   ],
+   "city": "Santa Barbara",
+   "lat": 34.430792,
+   "lon": -119.714776,
+   "fars_case": null,
+   "test_city": "Santa Barbara"
+  },
+  {
+   "crash_id": "4872066",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-13348462557",
+   "distance_ft": 134.0,
+   "roads": [
+    "STATE ST",
+    "MISSION ST"
+   ],
+   "city": "Santa Barbara",
+   "lat": 34.43060625257033,
+   "lon": -119.71436380064799,
+   "fars_case": null,
+   "test_city": "Santa Barbara"
+  },
+  {
+   "crash_id": "5004864",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "seg:osm-7309162205:osm-86334667",
+   "distance_ft": 2.2,
+   "roads": [
+    "RT 104",
+    "CASTLE OAKS DR"
+   ],
+   "city": "Ione",
+   "lat": 38.36608112669106,
+   "lon": -120.9520135251761,
+   "fars_case": null,
+   "test_city": "Ione"
+  },
+  {
+   "crash_id": "4412673",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "STATE ROUTE 4 W/B",
+    "SAN PABLO AVENUE"
+   ],
+   "city": "Hercules",
+   "lat": 38.015947,
+   "lon": -122.271792,
+   "fars_case": null,
+   "test_city": "Hercules"
+  },
+  {
+   "crash_id": "1949271",
+   "outcome": "placed_gps",
+   "location_id": "osm-4855247063",
+   "distance_ft": 27.5,
+   "roads": [
+    "EAST CHAPMAN AVENUE",
+    "EARLHAM STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.78783,
+   "lon": -117.80787,
+   "fars_case": null,
+   "test_city": "Orange"
+  },
+  {
+   "crash_id": "2035985",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 627.8,
+   "roads": [
+    "HEWES STREET",
+    "CENTER AVENUE"
+   ],
+   "city": "Unincorporated",
+   "lat": 33.789469,
+   "lon": -117.805751,
+   "fars_case": null,
+   "test_city": "Orange"
+  },
+  {
+   "crash_id": "2061853",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 445.8,
+   "roads": [
+    "CHAPMAN AVE",
+    "HAMLIN ST"
+   ],
+   "city": "Orange",
+   "lat": 33.786507,
+   "lon": -117.802964,
+   "fars_case": null,
+   "test_city": "Orange"
+  },
+  {
+   "crash_id": "5152971",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 71.2,
+   "roads": [
+    "CHAPMAN AV",
+    "SWIDLER PL"
+   ],
+   "city": "Orange",
+   "lat": 33.7877852220977,
+   "lon": -117.81566722639417,
+   "fars_case": null,
+   "test_city": "Orange"
+  },
+  {
+   "crash_id": "2481762",
+   "outcome": "placed_fars",
+   "location_id": "osm-54505888",
+   "distance_ft": 214.3,
+   "roads": [
+    "RT 18",
+    "SYMERON RD"
+   ],
+   "city": "Apple Valley",
+   "lat": 34.53096111,
+   "lon": -117.22899167,
+   "fars_case": "2023-61189",
+   "test_city": "Apple Valley"
+  },
+  {
+   "crash_id": "2813812",
+   "outcome": "placed_fars",
+   "location_id": "osm-65402802",
+   "distance_ft": 219.1,
+   "roads": [
+    "RT 82",
+    "CARMELITA AV"
+   ],
+   "city": "Burlingame",
+   "lat": 37.583325,
+   "lon": -122.36467222,
+   "fars_case": "2021-64087",
+   "test_city": "Burlingame"
+  },
+  {
+   "crash_id": "4881021",
+   "outcome": "placed_gps",
+   "location_id": "osm-65401721",
+   "distance_ft": 222.0,
+   "roads": [
+    "RT 82",
+    "OXFORD RD/CAMBNRIDGE RD"
+   ],
+   "city": "Burlingame",
+   "lat": 37.58841,
+   "lon": -122.37411,
+   "fars_case": null,
+   "test_city": "Burlingame"
+  },
+  {
+   "crash_id": "2282334",
+   "outcome": "placed_exact",
+   "location_id": "osm-122918999",
+   "distance_ft": 19.9,
+   "roads": [
+    "FIRESTONE BLVD",
+    "CALIFORNIA AV"
+   ],
+   "city": "South Gate",
+   "lat": 33.9542631,
+   "lon": -118.2060853,
+   "fars_case": null,
+   "test_city": "South Gate"
+  },
+  {
+   "crash_id": "5319501",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 392.6,
+   "roads": [
+    "CALIFORNIA AV",
+    "DR GLENN T SEABORG WY"
+   ],
+   "city": "South Gate",
+   "lat": 33.955333,
+   "lon": -118.205932,
+   "fars_case": null,
+   "test_city": "South Gate"
+  },
+  {
+   "crash_id": "4560889",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-13809204379:osm-13809162141",
+   "distance_ft": 3.3,
+   "roads": [
+    "LONE TREE WAY",
+    "SAGEBRUSH DR"
+   ],
+   "city": "Antioch",
+   "lat": 37.96337243177614,
+   "lon": -121.77007272082368,
+   "fars_case": null,
+   "test_city": "Antioch"
+  },
+  {
+   "crash_id": "2023875",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-90475190:B",
+   "distance_ft": 33.8,
+   "roads": [
+    "SUNRISE BLVD",
+    "REFINEMENT RD"
+   ],
+   "city": "Rancho Cordova",
+   "lat": 38.565305,
+   "lon": -121.24869,
+   "fars_case": null,
+   "test_city": "Rancho Cordova"
+  },
+  {
+   "crash_id": "2024353",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-90338017:osm-90475192",
+   "distance_ft": 60.7,
+   "roads": [
+    "3531 SUNRISE BLVD",
+    "FITZGERALD RD"
+   ],
+   "city": "Rancho Cordova",
+   "lat": 38.57454,
+   "lon": -121.25799,
+   "fars_case": null,
+   "test_city": "Rancho Cordova"
+  },
+  {
+   "crash_id": "3768689",
+   "outcome": "placed_exact",
+   "location_id": "osm-54341056",
+   "distance_ft": 0.0,
+   "roads": [
+    "INDIO BL",
+    "SUNGOLD ST"
+   ],
+   "city": "Indio",
+   "lat": 33.7282733,
+   "lon": -116.2310844,
+   "fars_case": null,
+   "test_city": "Indio"
+  },
+  {
+   "crash_id": "2876096",
+   "outcome": "placed_exact",
+   "location_id": "osm-92770295",
+   "distance_ft": 41.6,
+   "roads": [
+    "NORTH GOLDEN STATE BL",
+    "PEDRAS RD"
+   ],
+   "city": "Turlock",
+   "lat": 37.5093180480106,
+   "lon": -120.86308891969783,
+   "fars_case": null,
+   "test_city": "Turlock"
+  },
+  {
+   "crash_id": "1850246",
+   "outcome": "placed_gps",
+   "location_id": "osm-56087159",
+   "distance_ft": 136.2,
+   "roads": [
+    "ROHNERT PARK EXPY",
+    "SAN SIMEON DR"
+   ],
+   "city": "Rohnert Park",
+   "lat": 38.346257,
+   "lon": -122.690898,
+   "fars_case": null,
+   "test_city": "Rohnert Park"
+  },
+  {
+   "crash_id": "2355539",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 164.4,
+   "roads": [
+    "RIVERSIDE AVE",
+    "CASMALIA ST"
+   ],
+   "city": "Rialto",
+   "lat": 34.139163,
+   "lon": -117.371813,
+   "fars_case": null,
+   "test_city": "Rialto"
+  },
+  {
+   "crash_id": "2058687",
+   "outcome": "placed_gps",
+   "location_id": "osm-54494442",
+   "distance_ft": 88.2,
+   "roads": [
+    "ALESSANDRO BLVD",
+    "KITCHING ST"
+   ],
+   "city": "Moreno Valley",
+   "lat": 33.917089,
+   "lon": -117.217633,
+   "fars_case": null,
+   "test_city": "Moreno Valley"
+  },
+  {
+   "crash_id": "4618399",
+   "outcome": "placed_gps",
+   "location_id": "osm-10024161605",
+   "distance_ft": 79.8,
+   "roads": [
+    "GRAND AV",
+    "BRISCO RD"
+   ],
+   "city": "Arroyo Grande",
+   "lat": 35.120401,
+   "lon": -120.600639,
+   "fars_case": null,
+   "test_city": "Arroyo Grande"
+  },
+  {
+   "crash_id": "2700729",
+   "outcome": "placed_exact",
+   "location_id": "osm-122937020",
+   "distance_ft": 0.0,
+   "roads": [
+    "BANDINI BL",
+    "S BONNIE BEACH PL"
+   ],
+   "city": "Vernon",
+   "lat": 34.0020079,
+   "lon": -118.1861395,
+   "fars_case": null,
+   "test_city": "Vernon"
+  },
+  {
+   "crash_id": "4812450",
+   "outcome": "placed_gps",
+   "location_id": "osm-2314684429",
+   "distance_ft": 62.0,
+   "roads": [
+    "MARGUERITE PKWY",
+    "PUEBLO NUEVO DR"
+   ],
+   "city": "Mission Viejo",
+   "lat": 33.610012,
+   "lon": -117.654158,
+   "fars_case": null,
+   "test_city": "Mission Viejo"
+  },
+  {
+   "crash_id": "2760309",
+   "outcome": "excluded_fars_off_corridor",
+   "location_id": null,
+   "distance_ft": 38980.3,
+   "roads": [
+    "RT 32",
+    "STEWART AV"
+   ],
+   "city": "Chico",
+   "lat": 39.72596389,
+   "lon": -121.85143056,
+   "fars_case": "2021-61978",
+   "test_city": "Chico"
+  },
+  {
+   "crash_id": "2801803",
+   "outcome": "excluded_fars_off_corridor",
+   "location_id": null,
+   "distance_ft": 35147.1,
+   "roads": [
+    "RT 32",
+    "MAIN ST"
+   ],
+   "city": "Chico",
+   "lat": 39.72624722,
+   "lon": -121.83564444,
+   "fars_case": "2021-62479",
+   "test_city": "Chico"
+  },
+  {
+   "crash_id": "2597465",
+   "outcome": "excluded_fars_off_corridor",
+   "location_id": null,
+   "distance_ft": 25118.3,
+   "roads": [
+    "RT 32",
+    "FOREST AV"
+   ],
+   "city": "Chico",
+   "lat": 39.73954722,
+   "lon": -121.80421389,
+   "fars_case": "2022-61492",
+   "test_city": "Chico"
+  },
+  {
+   "crash_id": "2481749",
+   "outcome": "excluded_fars_off_corridor",
+   "location_id": null,
+   "distance_ft": 28918.5,
+   "roads": [
+    "RT 32",
+    "FIR ST"
+   ],
+   "city": "Chico",
+   "lat": 39.73671944,
+   "lon": -121.81803056,
+   "fars_case": "2023-61203",
+   "test_city": "Chico"
+  },
+  {
+   "crash_id": "2487164",
+   "outcome": "placed_fars",
+   "location_id": "seg:osm-54548743:osm-54548740",
+   "distance_ft": 42.9,
+   "roads": [
+    "MAIN ST",
+    "BALSAM AV"
+   ],
+   "city": "Hesperia",
+   "lat": 34.42708333,
+   "lon": -117.33106111,
+   "fars_case": "2023-61438",
+   "test_city": "Hesperia"
+  },
+  {
+   "crash_id": "1752564",
+   "outcome": "placed_gps",
+   "location_id": "osm-54517644",
+   "distance_ft": 87.4,
+   "roads": [
+    "MISSION BOULEVARD (8300 BLOCK)",
+    "VERNON STREET"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.011782,
+   "lon": -117.465627,
+   "fars_case": null,
+   "test_city": "Jurupa Valley"
+  },
+  {
+   "crash_id": "2222093",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-54425312",
+   "distance_ft": 116.9,
+   "roads": [
+    "MISSION BL",
+    "PEDLEY RD"
+   ],
+   "city": "Jurupa Valley",
+   "lat": 34.01179874881062,
+   "lon": -117.47331319368656,
+   "fars_case": null,
+   "test_city": "Jurupa Valley"
+  },
+  {
+   "crash_id": "4674036",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 3725.2,
+   "roads": [
+    "MISSION BL",
+    "PYRITE ST"
+   ],
+   "city": "Jurupa Valley",
+   "lat": 34.01199654567803,
+   "lon": -117.4494841497531,
+   "fars_case": null,
+   "test_city": "Jurupa Valley"
+  },
+  {
+   "crash_id": "2687296",
+   "outcome": "placed_gps",
+   "location_id": "osm-7882964922",
+   "distance_ft": 227.2,
+   "roads": [
+    "SOLEDAD CANYON RD",
+    "SHANGRI LA DR"
+   ],
+   "city": "Santa Clarita",
+   "lat": 34.415938,
+   "lon": -118.453781,
+   "fars_case": null,
+   "test_city": "Santa Clarita"
+  },
+  {
+   "crash_id": "4528749",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 331.1,
+   "roads": [
+    "SOLEDAD CANYON RD",
+    "GALETON RD"
+   ],
+   "city": "Santa Clarita",
+   "lat": 34.41651,
+   "lon": -118.44566,
+   "fars_case": null,
+   "test_city": "Santa Clarita"
+  },
+  {
+   "crash_id": "2876078",
+   "outcome": "placed_gps",
+   "location_id": "osm-87484317",
+   "distance_ft": 36.4,
+   "roads": [
+    "CEDAR AV",
+    "ALAMOS AV"
+   ],
+   "city": "Fresno",
+   "lat": 36.805718,
+   "lon": -119.754182,
+   "fars_case": null,
+   "test_city": "Fresno"
+  },
+  {
+   "crash_id": "2876088",
+   "outcome": "placed_gps",
+   "location_id": "osm-87511839",
+   "distance_ft": 39.8,
+   "roads": [
+    "SHAW AV",
+    "CEDAR AV"
+   ],
+   "city": "Fresno",
+   "lat": 36.80852,
+   "lon": -119.754137,
+   "fars_case": null,
+   "test_city": "Fresno"
+  },
+  {
+   "crash_id": "5006619",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 460.1,
+   "roads": [
+    "GETTYSBURG AV",
+    "CEDAR AV"
+   ],
+   "city": "Fresno",
+   "lat": 36.801266,
+   "lon": -119.754255,
+   "fars_case": null,
+   "test_city": "Fresno"
+  },
+  {
+   "crash_id": "5234093",
+   "outcome": "placed_exact",
+   "location_id": "osm-122627710",
+   "distance_ft": 0.0,
+   "roads": [
+    "LOS ALAMITOS BL",
+    "HEDWIG RD"
+   ],
+   "city": "Los Alamitos",
+   "lat": 33.8001815,
+   "lon": -118.0719203,
+   "fars_case": null,
+   "test_city": "Los Alamitos"
+  },
+  {
+   "crash_id": "2487005",
+   "outcome": "placed_exact",
+   "location_id": "osm-53060533",
+   "distance_ft": 27.2,
+   "roads": [
+    "ALVARADO NILES RD",
+    "DOWE AV"
+   ],
+   "city": "Union City",
+   "lat": 37.59348593763054,
+   "lon": -122.04388563209139,
+   "fars_case": null,
+   "test_city": "Union City"
+  },
+  {
+   "crash_id": "5156140",
+   "outcome": "placed_exact",
+   "location_id": "osm-53096843",
+   "distance_ft": 21.4,
+   "roads": [
+    "ALVARADO NILES RD",
+    "ALMADEN BL"
+   ],
+   "city": "Union City",
+   "lat": 37.5965537,
+   "lon": -122.0550356,
+   "fars_case": null,
+   "test_city": "Union City"
+  },
+  {
+   "crash_id": "5145205",
+   "outcome": "placed_exact",
+   "location_id": "osm-268161351",
+   "distance_ft": 103.4,
+   "roads": [
+    "CAMPUS DR",
+    "HOLLY AV"
+   ],
+   "city": "Arcadia",
+   "lat": 34.13125953766981,
+   "lon": -118.04591218946908,
+   "fars_case": null,
+   "test_city": "Arcadia"
+  },
+  {
+   "crash_id": "1604266",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 595.8,
+   "roads": [
+    "RANCHO VISTA RD",
+    "ARGO CT"
+   ],
+   "city": "Temecula",
+   "lat": 33.500721,
+   "lon": -117.121514,
+   "fars_case": null,
+   "test_city": "Temecula"
+  },
+  {
+   "crash_id": "1888898",
+   "outcome": "placed_gps",
+   "location_id": "osm-1541542415",
+   "distance_ft": 89.9,
+   "roads": [
+    "RANCHO CALIFORNIA RD",
+    "MARGARITA RD"
+   ],
+   "city": "Temecula",
+   "lat": 33.507765,
+   "lon": -117.124687,
+   "fars_case": null,
+   "test_city": "Temecula"
+  },
+  {
+   "crash_id": "4364659",
+   "outcome": "placed_gps",
+   "location_id": "osm-1541542415",
+   "distance_ft": 75.3,
+   "roads": [
+    "RANCHO CALIFORNIA RD",
+    "MARGARITA RD"
+   ],
+   "city": "Temecula",
+   "lat": 33.507825,
+   "lon": -117.124513,
+   "fars_case": null,
+   "test_city": "Temecula"
+  },
+  {
+   "crash_id": "1473827",
+   "outcome": "placed_exact",
+   "location_id": "osm-65402753",
+   "distance_ft": 26.8,
+   "roads": [
+    "SR-82 (EL CAMINO REAL)",
+    "SILVA AV"
+   ],
+   "city": "Millbrae",
+   "lat": 37.6041601,
+   "lon": -122.3943132,
+   "fars_case": null,
+   "test_city": "Millbrae"
+  },
+  {
+   "crash_id": "2700890",
+   "outcome": "placed_exact",
+   "location_id": "osm-54549993",
+   "distance_ft": 0.0,
+   "roads": [
+    "RT 18",
+    "KNICKERBOCKER RD"
+   ],
+   "city": "Big Bear Lake",
+   "lat": 34.2436641,
+   "lon": -116.9098054,
+   "fars_case": null,
+   "test_city": "Big Bear Lake"
+  },
+  {
+   "crash_id": "1547973",
+   "outcome": "placed_gps",
+   "location_id": "osm-88791794",
+   "distance_ft": 11.7,
+   "roads": [
+    "STATE ROUTE  223",
+    "TOWERLINE ROAD"
+   ],
+   "city": "Unincorporated",
+   "lat": 35.209185,
+   "lon": -118.80623,
+   "fars_case": null,
+   "test_city": "Arvin"
+  },
+  {
+   "crash_id": "4812731",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-65467327",
+   "distance_ft": 70.2,
+   "roads": [
+    "MONTEREY RD",
+    "4TH ST"
+   ],
+   "city": "Morgan Hill",
+   "lat": 37.12733736393391,
+   "lon": -121.6519810372112,
+   "fars_case": null,
+   "test_city": "Morgan Hill"
+  },
+  {
+   "crash_id": "2687357",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 897.2,
+   "roads": [
+    "ELMIRA RD",
+    "LEISURE TOWN RD"
+   ],
+   "city": "Vacaville",
+   "lat": 38.35132795479522,
+   "lon": -121.93086408394545,
+   "fars_case": null,
+   "test_city": "Vacaville"
+  },
+  {
+   "crash_id": "1779050",
+   "outcome": "placed_gps",
+   "location_id": "osm-54552616",
+   "distance_ft": 117.3,
+   "roads": [
+    "WEST MAIN STREET",
+    "WESTERN DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.880601,
+   "lon": -117.101054,
+   "fars_case": null,
+   "test_city": "Barstow"
+  },
+  {
+   "crash_id": "2597693",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-54552616:B",
+   "distance_ft": 38.0,
+   "roads": [
+    "W MAIN ST",
+    "WESTERN DR"
+   ],
+   "city": "Barstow",
+   "lat": 34.88119955768533,
+   "lon": -117.0993340944652,
+   "fars_case": null,
+   "test_city": "Barstow"
+  },
+  {
+   "crash_id": "2445315",
+   "outcome": "placed_gps",
+   "location_id": "osm-122948992",
+   "distance_ft": 98.2,
+   "roads": [
+    "HARBOR BL",
+    "SCL PRINCETON DR"
+   ],
+   "city": "Costa Mesa",
+   "lat": 33.667,
+   "lon": -117.919,
+   "fars_case": null,
+   "test_city": "Costa Mesa"
+  },
+  {
+   "crash_id": "1862345",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "INTERSTATE 10 EASTBOUND (SAN BERNARDINO FREEWAY)",
+    "WALNUT GROVE AVENUE"
+   ],
+   "city": "Rosemead",
+   "lat": 34.071938,
+   "lon": -118.083109,
+   "fars_case": null,
+   "test_city": "Rosemead"
+  },
+  {
+   "crash_id": "5156011",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 10.7,
+   "roads": [
+    "WALNUT GROVE AV",
+    "FERN AV"
+   ],
+   "city": "Rosemead",
+   "lat": 34.0603,
+   "lon": -118.0819,
+   "fars_case": null,
+   "test_city": "Rosemead"
+  },
+  {
+   "crash_id": "2700880",
+   "outcome": "placed_gps",
+   "location_id": "osm-13811835438",
+   "distance_ft": 34.1,
+   "roads": [
+    "JUNIPER AV",
+    "AUGUSTA LN"
+   ],
+   "city": "Atwater",
+   "lat": 37.34946,
+   "lon": -120.57669,
+   "fars_case": null,
+   "test_city": "Atwater"
+  },
+  {
+   "crash_id": "4851695",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 174.7,
+   "roads": [
+    "BAYSHORE BL",
+    "VAN WATERS AND ROGERS RD"
+   ],
+   "city": "Brisbane",
+   "lat": 37.6822,
+   "lon": -122.39572,
+   "fars_case": null,
+   "test_city": "Brisbane"
+  },
+  {
+   "crash_id": "2813594",
+   "outcome": "placed_exact",
+   "location_id": "osm-90650128",
+   "distance_ft": 3.7,
+   "roads": [
+    "SAN FELIPE RD",
+    "MCCLOSKEY RD"
+   ],
+   "city": "Hollister",
+   "lat": 36.8693604,
+   "lon": -121.401061,
+   "fars_case": null,
+   "test_city": "Hollister"
+  },
+  {
+   "crash_id": "1919975",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-6755453629",
+   "distance_ft": 78.0,
+   "roads": [
+    "PRAIRIE AV",
+    "CENTURY BLVD"
+   ],
+   "city": "Inglewood",
+   "lat": 33.94523838774758,
+   "lon": -118.34392571185334,
+   "fars_case": null,
+   "test_city": "Inglewood"
+  },
+  {
+   "crash_id": "1999604",
+   "outcome": "placed_gps",
+   "location_id": "osm-6755453629",
+   "distance_ft": 7.8,
+   "roads": [
+    "CENTURY BLVD",
+    "PRAIRIE AV"
+   ],
+   "city": "Inglewood",
+   "lat": 33.945474,
+   "lon": -118.343923,
+   "fars_case": null,
+   "test_city": "Inglewood"
+  },
+  {
+   "crash_id": "4747025",
+   "outcome": "placed_gps",
+   "location_id": "osm-13427806374",
+   "distance_ft": 20.1,
+   "roads": [
+    "CENTURY BLVD",
+    "DOTY AV"
+   ],
+   "city": "Inglewood",
+   "lat": 33.945463,
+   "lon": -118.339772,
+   "fars_case": null,
+   "test_city": "Inglewood"
+  },
+  {
+   "crash_id": "1437560",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 362.4,
+   "roads": [
+    "GOLDENWEST STREET",
+    "WESTMINSTER BOULEVARD"
+   ],
+   "city": "Westminster",
+   "lat": 33.75819919658671,
+   "lon": -118.00715129902717,
+   "fars_case": null,
+   "test_city": "Westminster"
+  },
+  {
+   "crash_id": "1467617",
+   "outcome": "placed_fars",
+   "location_id": "osm-3526730047",
+   "distance_ft": 58.1,
+   "roads": [
+    "WESTMINSTER BOULEVARD",
+    "LOCUST STREET (E)"
+   ],
+   "city": "Westminster",
+   "lat": 33.75913333,
+   "lon": -118.00601944,
+   "fars_case": "2021-60244",
+   "test_city": "Westminster"
+  },
+  {
+   "crash_id": "1833715",
+   "outcome": "placed_gps_offset_applied",
+   "location_id": "osm-3526730051",
+   "distance_ft": 111.2,
+   "roads": [
+    "WESTMINSTER BOULEVARD",
+    "CEDAR STREET"
+   ],
+   "city": "Westminster",
+   "lat": 33.75919756565306,
+   "lon": -118.00390282458672,
+   "fars_case": null,
+   "test_city": "Westminster"
+  },
+  {
+   "crash_id": "2813352",
+   "outcome": "placed_exact",
+   "location_id": "osm-123056746",
+   "distance_ft": 17.3,
+   "roads": [
+    "GLENOAKS BL",
+    "N MACLAY AV"
+   ],
+   "city": "San Fernando",
+   "lat": 34.2913332,
+   "lon": -118.4303081,
+   "fars_case": null,
+   "test_city": "San Fernando"
+  },
+  {
+   "crash_id": "4915239",
+   "outcome": "placed_exact",
+   "location_id": "osm-258910914",
+   "distance_ft": 23.3,
+   "roads": [
+    "GEARY BL",
+    "02ND AV"
+   ],
+   "city": "San Francisco",
+   "lat": 37.78128501789557,
+   "lon": -122.45999464450024,
+   "fars_case": null,
+   "test_city": "San Francisco"
+  },
+  {
+   "crash_id": "2760081",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 504.3,
+   "roads": [
+    "ARROW HIGHWAY",
+    "AMBERSON ST"
+   ],
+   "city": "Pomona",
+   "lat": 34.090004,
+   "lon": -117.751062,
+   "fars_case": null,
+   "test_city": "Pomona"
+  },
+  {
+   "crash_id": "1904796",
+   "outcome": "placed_gps",
+   "location_id": "osm-773769484",
+   "distance_ft": 35.4,
+   "roads": [
+    "GAREY AVE",
+    "PENFIELD ST"
+   ],
+   "city": "Pomona",
+   "lat": 34.08227,
+   "lon": -117.752891,
+   "fars_case": null,
+   "test_city": "Pomona"
+  },
+  {
+   "crash_id": "2597311",
+   "outcome": "placed_exact",
+   "location_id": "seg:osm-91071946:osm-692323809",
+   "distance_ft": 0.5,
+   "roads": [
+    "OCEAN ST",
+    "SOQUEL AV"
+   ],
+   "city": "Santa Cruz",
+   "lat": 36.9754110453566,
+   "lon": -122.01936295933169,
+   "fars_case": null,
+   "test_city": "Santa Cruz"
+  },
+  {
+   "crash_id": "2662280",
+   "outcome": "placed_exact",
+   "location_id": "osm-91071957",
+   "distance_ft": 128.2,
+   "roads": [
+    "OCEAN ST",
+    "FRANKLIN ST"
+   ],
+   "city": "Santa Cruz",
+   "lat": 36.984186647894155,
+   "lon": -122.02300921924811,
+   "fars_case": null,
+   "test_city": "Santa Cruz"
+  },
+  {
+   "crash_id": "2654957",
+   "outcome": "placed_exact",
+   "location_id": "osm-692323825",
+   "distance_ft": 48.4,
+   "roads": [
+    "OCEAN ST",
+    "HUBBARD ST"
+   ],
+   "city": "Santa Cruz",
+   "lat": 36.9819219526119,
+   "lon": -122.02210392093056,
+   "fars_case": null,
+   "test_city": "Santa Cruz"
+  },
+  {
+   "crash_id": "2196932",
+   "outcome": "placed_exact",
+   "location_id": "osm-1339382047",
+   "distance_ft": 50.1,
+   "roads": [
+    "MISSION BL",
+    "PROFORMA AV"
+   ],
+   "city": "Ontario",
+   "lat": 34.04530777521277,
+   "lon": -117.5974105345257,
+   "fars_case": null,
+   "test_city": "Ontario"
+  },
+  {
+   "crash_id": "2801793",
+   "outcome": "placed_exact",
+   "location_id": "osm-57916921",
+   "distance_ft": 61.8,
+   "roads": [
+    "SAN PABLO AV",
+    "MAIDEN LN"
+   ],
+   "city": "Pinole",
+   "lat": 38.004255687302454,
+   "lon": -122.29703415366367,
+   "fars_case": null,
+   "test_city": "Pinole"
+  },
+  {
+   "crash_id": "2655027",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 326.0,
+   "roads": [
+    "TENNENT AV",
+    "PEAR ST"
+   ],
+   "city": "Pinole",
+   "lat": 38.00489,
+   "lon": -122.29045,
+   "fars_case": null,
+   "test_city": "Pinole"
+  },
+  {
+   "crash_id": "4528969",
+   "outcome": "placed_gps",
+   "location_id": "osm-57833419",
+   "distance_ft": 17.9,
+   "roads": [
+    "SAN PABLO AV",
+    "OAKRIDGE RD"
+   ],
+   "city": "Pinole",
+   "lat": 38.00425,
+   "lon": -122.29266,
+   "fars_case": null,
+   "test_city": "Pinole"
+  },
+  {
+   "crash_id": "2870259",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 375.3,
+   "roads": [
+    "CROWN VALLEY PKWY",
+    "VIA VALLE"
+   ],
+   "city": "Laguna Niguel",
+   "lat": 33.52086449294589,
+   "lon": -117.71919755091109,
+   "fars_case": null,
+   "test_city": "Laguna Niguel"
+  },
+  {
+   "crash_id": "1697226",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-123086419:osm-122948929",
+   "distance_ft": 1.5,
+   "roads": [
+    "Avenue J",
+    "70TH STREET EAST"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.690054,
+   "lon": -117.998933,
+   "fars_case": null,
+   "test_city": "Lancaster"
+  },
+  {
+   "crash_id": "1482764",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-123086419:osm-122948929",
+   "distance_ft": 7.6,
+   "roads": [
+    "East Avenue J",
+    "70th Street East"
+   ],
+   "city": "Unincorporated",
+   "lat": 34.690085,
+   "lon": -117.996928,
+   "fars_case": null,
+   "test_city": "Lancaster"
+  },
+  {
+   "crash_id": "1637322",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "STATE ROUTE 210 WESTBOUND (FOOTHILL FREEWAY)",
+    "INDIAN HILL BOULEVARD"
+   ],
+   "city": "Claremont",
+   "lat": 34.120287,
+   "lon": -117.723311,
+   "fars_case": null,
+   "test_city": "Claremont"
+  },
+  {
+   "crash_id": "1713542",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "SR-210 E/B (FOOTHILL FREEWAY)",
+    "INDIAN HILL BOULEVARD"
+   ],
+   "city": "Claremont",
+   "lat": 34.119983,
+   "lon": -117.71857,
+   "fars_case": null,
+   "test_city": "Claremont"
+  },
+  {
+   "crash_id": "2445383",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 493.2,
+   "roads": [
+    "WASHINGTON BL",
+    "ROSEMEAD BL"
+   ],
+   "city": "Pico Rivera",
+   "lat": 33.9824,
+   "lon": -118.09586,
+   "fars_case": null,
+   "test_city": "Pico Rivera"
+  },
+  {
+   "crash_id": "1692409",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 1798.4,
+   "roads": [
+    "GRAPEFRUIT BL",
+    "TYLER ST"
+   ],
+   "city": "Coachella",
+   "lat": 33.66434021573956,
+   "lon": -116.16029004774461,
+   "fars_case": null,
+   "test_city": "Coachella"
+  },
+  {
+   "crash_id": "5198810",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 268.0,
+   "roads": [
+    "JEFFERSON BL",
+    "BEVAN RD"
+   ],
+   "city": "West Sacramento",
+   "lat": 38.523508,
+   "lon": -121.564543,
+   "fars_case": null,
+   "test_city": "West Sacramento"
+  },
+  {
+   "crash_id": "2597556",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 527.2,
+   "roads": [
+    "GRAND AV",
+    "VALLEY BL"
+   ],
+   "city": "City of Industry",
+   "lat": 34.02733,
+   "lon": -117.83545,
+   "fars_case": null,
+   "test_city": "Walnut"
+  },
+  {
+   "crash_id": "2481747",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 430.0,
+   "roads": [
+    "VALLEY BL",
+    "GRAND AV"
+   ],
+   "city": "City of Industry",
+   "lat": 34.027126,
+   "lon": -117.83566,
+   "fars_case": null,
+   "test_city": "Walnut"
+  },
+  {
+   "crash_id": "2876579",
+   "outcome": "placed_gps",
+   "location_id": "osm-123024623",
+   "distance_ft": 96.5,
+   "roads": [
+    "LAMBERT RD",
+    "BREA BL"
+   ],
+   "city": "Brea",
+   "lat": 33.924632,
+   "lon": -117.895724,
+   "fars_case": null,
+   "test_city": "Brea"
+  },
+  {
+   "crash_id": "1622808",
+   "outcome": "placed_exact",
+   "location_id": "osm-54346661",
+   "distance_ft": 0.0,
+   "roads": [
+    "23540 CANYON LAKE DRIVE N",
+    "CLEAR WATER DRIVE"
+   ],
+   "city": "Canyon Lake",
+   "lat": 33.6860045,
+   "lon": -117.2484979,
+   "fars_case": null,
+   "test_city": "Canyon Lake"
+  },
+  {
+   "crash_id": "2595087",
+   "outcome": "placed_gps",
+   "location_id": "osm-53065139",
+   "distance_ft": 81.9,
+   "roads": [
+    "BRIGHTON AV",
+    "110236282"
+   ],
+   "city": "Albany",
+   "lat": 37.89659,
+   "lon": -122.3008,
+   "fars_case": null,
+   "test_city": "Albany"
+  },
+  {
+   "crash_id": "1841889",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "SR-1 N/B",
+    "SR-35 N/B O/C"
+   ],
+   "city": "Daly City",
+   "lat": 37.668471,
+   "lon": -122.485054,
+   "fars_case": null,
+   "test_city": "Daly City"
+  },
+  {
+   "crash_id": "4677399",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 644.1,
+   "roads": [
+    "WESTMOOR AV",
+    "SKYLINE BL"
+   ],
+   "city": "Daly City",
+   "lat": 37.68334,
+   "lon": -122.48911,
+   "fars_case": null,
+   "test_city": "Daly City"
+  },
+  {
+   "crash_id": "4447710",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 218.0,
+   "roads": [
+    "SR-35 (SKYLINE BLVD.)",
+    "WARD RD"
+   ],
+   "city": "Unincorporated",
+   "lat": 37.274854,
+   "lon": -122.147873,
+   "fars_case": null,
+   "test_city": "Palo Alto"
+  },
+  {
+   "crash_id": "4971219",
+   "outcome": "placed_gps",
+   "location_id": "osm-5971947731",
+   "distance_ft": 109.6,
+   "roads": [
+    "WEST LN",
+    "SWAIN RD"
+   ],
+   "city": "Stockton",
+   "lat": 38.010885,
+   "lon": -121.294578,
+   "fars_case": null,
+   "test_city": "Stockton"
+  },
+  {
+   "crash_id": "2813680",
+   "outcome": "placed_fars",
+   "location_id": "seg:osm-49373609:osm-49373597",
+   "distance_ft": 27.4,
+   "roads": [
+    "ENCINITAS BL",
+    "PRINCEHOUSE WY"
+   ],
+   "city": "Encinitas",
+   "lat": 33.04692778,
+   "lon": -117.27228056,
+   "fars_case": "2021-63318",
+   "test_city": "Encinitas"
+  },
+  {
+   "crash_id": "5001470",
+   "outcome": "excluded_outside_study_limits",
+   "location_id": null,
+   "distance_ft": 110.1,
+   "roads": [
+    "ENCINITAS BL",
+    "VILLAGE SQUARE DR"
+   ],
+   "city": "Encinitas",
+   "lat": 33.045805,
+   "lon": -117.256696,
+   "fars_case": null,
+   "test_city": "Encinitas"
+  },
+  {
+   "crash_id": "2508649",
+   "outcome": "excluded_outside_buffer",
+   "location_id": null,
+   "distance_ft": 415.9,
+   "roads": [
+    "HWY 111",
+    "SIMON DR"
+   ],
+   "city": "La Quinta",
+   "lat": 33.713895,
+   "lon": -116.293433,
+   "fars_case": null,
+   "test_city": "La Quinta"
+  },
+  {
+   "crash_id": "4637687",
+   "outcome": "excluded_freeway",
+   "location_id": null,
+   "distance_ft": null,
+   "roads": [
+    "WB I80",
+    "S. AUBURN ST."
+   ],
+   "city": "Colfax",
+   "lat": 39.099445,
+   "lon": -120.950415,
+   "fars_case": null,
+   "test_city": "Colfax"
+  },
+  {
+   "crash_id": "4540365",
+   "outcome": "placed_gps",
+   "location_id": "seg:osm-90128957:osm-90114176",
+   "distance_ft": 7.7,
+   "roads": [
+    "SR-174",
+    "HILL DRIVE"
+   ],
+   "city": "Unincorporated",
+   "lat": 39.112148,
+   "lon": -120.950029,
+   "fars_case": null,
+   "test_city": "Colfax"
+  }
+ ]
+}

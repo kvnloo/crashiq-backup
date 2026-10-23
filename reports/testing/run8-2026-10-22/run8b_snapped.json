@@ -1,0 +1,42 @@
+{
+ "3019 Santa Ana": {
+  "gps_fits": 15096,
+  "at_named_intersection": 1206,
+  "snapped_with_offset": 508,
+  "kept_no_road_that_way": 25,
+  "moved": 483,
+  "moved_beyond_250ft": 142,
+  "median_move_ft": 166,
+  "p90_move_ft": 462
+ },
+ "4806 Vacaville": {
+  "gps_fits": 2627,
+  "at_named_intersection": 2158,
+  "snapped_with_offset": 1065,
+  "moved": 1054,
+  "moved_beyond_250ft": 544,
+  "kept_no_road_that_way": 11,
+  "median_move_ft": 260,
+  "p90_move_ft": 665
+ },
+ "1969 South Gate": {
+  "gps_fits": 4113,
+  "at_named_intersection": 3767,
+  "snapped_with_offset": 1628,
+  "moved": 1598,
+  "moved_beyond_250ft": 473,
+  "kept_no_road_that_way": 30,
+  "median_move_ft": 158,
+  "p90_move_ft": 456
+ },
+ "1925 Glendale": {
+  "gps_fits": 2980,
+  "at_named_intersection": 1151,
+  "snapped_with_offset": 549,
+  "moved": 523,
+  "moved_beyond_250ft": 148,
+  "kept_no_road_that_way": 26,
+  "median_move_ft": 165,
+  "p90_move_ft": 416
+ }
+}
