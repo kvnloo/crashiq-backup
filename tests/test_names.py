@@ -1,4 +1,4 @@
-from crashiq.names import StreetKey, same_core, same_street, similarity, street_key
+from crashiq.names import StreetKey, route_numbers, same_core, same_street, similarity, street_key
 
 
 def test_suffix_variants_collapse():
@@ -81,3 +81,29 @@ def test_pull_searches_chp_abbreviations_of_a_leading_word():
     assert _like_words("CRENSHAW") == ["CRENSHAW"]
     assert all(not route for _, route in _search_words("AVENUE J"))                 # not route spellings
     assert all(route for _, route in _search_words("SR 1"))
+
+
+def test_chps_type_and_word_abbreviations_are_general_rules():
+    # alias batch A (user 2026-10-22): these work in every city, not only where an alias row lists them
+    pairs = [("MARTIN LUTHER KING JR WY", "Martin Luther King Junior Way"), ("ARROW RT", "Arrow Route"),
+             ("ARROW RTE", "Arrow Route"), ("E CAPITOL EXPWY", "East Capitol Expressway"),
+             ("W CAPITOL EX", "West Capitol Expressway"), ("ONTARIO MILLS PW", "Ontario Mills Parkway"),
+             ("EAGLE GLEN PY", "Eagle Glen Parkway"), ("MOULTON PKY", "Moulton Parkway"),
+             ("SILVERADO TRL", "Silverado Trail"), ("TWO BUNCH PALMS TR", "Two Bunch Palms Trail"),
+             ("LAUREL CYN BL", "Laurel Canyon Boulevard"), ("OLD REDWOOD HW", "Old Redwood Highway"),
+             ("PACIFIC COAST HWY - SR1", "Pacific Coast Highway"), ("BEACH BL - SR39", "Beach Boulevard"),
+             ("TWIN PEAKS (N)", "Twin Peaks"), ("BALDWIN HTS DR", "Baldwin Heights Drive"),
+             ("SAN BRUNO MTN RD", "San Bruno Mountain Road")]
+    for raw, osm in pairs:
+        assert street_key(raw) == street_key(osm), raw
+
+
+def test_the_general_rules_dont_touch_what_they_shouldnt():
+    assert street_key("RT 46") == StreetKey("SR 46", None)              # a route number, not "Route"
+    assert street_key("ROUTE 66") == StreetKey("SR 66", None)
+    assert street_key("STATE ROUTE 1") == StreetKey("SR 1", None)
+    assert street_key("EXPO PARK DR").core == "EXPO PARK"               # EX only as a whole word, and last
+    assert street_key("TRUMAN ST").core == "TRUMAN"
+    assert street_key("ST JOHNS AVE").core == "SAINT JOHNS"            # #212 unchanged
+    assert route_numbers("PACIFIC COAST HWY - SR1") == {"1"}            # the route still matches by number
+    assert street_key("JR HIGH SCHOOL DR").core == "JUNIOR HIGH SCHOOL"

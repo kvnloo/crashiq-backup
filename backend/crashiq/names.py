@@ -24,7 +24,17 @@ SUFFIX = {
     "HIGHWAY": "HWY", "HWY": "HWY", "HY": "HWY", "HIWAY": "HWY", "PARKWAY": "PKWY", "PKWY": "PKWY",
     "CIRCLE": "CIR", "CIR": "CIR", "EXPRESSWAY": "EXPY", "EXPY": "EXPY", "FREEWAY": "FWY", "FWY": "FWY", "FRWY": "FWY",
     "PLAZA": "PLZ", "PLZ": "PLZ", "SQUARE": "SQ", "SQ": "SQ", "WALK": "WALK", "TUNNEL": "TUNL",
+    # CHP's own type abbreviations (alias batch A, user 2026-10-22, docs/03): general rules, every city
+    "PW": "PKWY", "PY": "PKWY", "PKY": "PKWY", "EXPWY": "EXPY", "EXPRWY": "EXPY", "EX": "EXPY", "HW": "HWY",
+    "TRAIL": "TRL", "TRL": "TRL", "TR": "TRL",
+    # a trailing type word only (ARROW RT = Arrow Route); "RT 46" is a route number, read before this table
+    "ROUTE": "RTE", "RTE": "RTE", "RT": "RTE",
 }
+# Words CHP shortens anywhere in a name (alias batch A): MARTIN LUTHER KING JR WY = Martin Luther King Junior Way
+WORDS = {"JR": "JUNIOR", "CYN": "CANYON", "MTN": "MOUNTAIN", "HTS": "HEIGHTS"}
+# A route tag after the name ("PACIFIC COAST HWY - SR1", "BEACH BL - SR39"): the route is read from the raw text
+# (route_numbers), the name is what's left
+ROUTE_TAIL = re.compile(r"\s+-\s*(?:SR|RT|RTE|HWY|US|I|CA)[\s-]*\d+\s*$")
 DIRECTIONAL = {"N": "N", "NORTH": "N", "S": "S", "SOUTH": "S", "E": "E", "EAST": "E", "W": "W", "WEST": "W"}
 ORDINAL_WORDS = {
     "FIRST": 1, "SECOND": 2, "THIRD": 3, "FOURTH": 4, "FIFTH": 5, "SIXTH": 6, "SEVENTH": 7,
@@ -93,7 +103,8 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     if not raw:
         return None
     s = raw.upper()
-    s = re.sub(r"\(.*?\)", " ", s)              # "(3100 BLOCK)"
+    s = re.sub(r"\(.*?\)", " ", s)              # "(3100 BLOCK)", "(N)"
+    s = ROUTE_TAIL.sub("", s)
     s = re.sub(r"[.,#'\"]", " ", s).replace("&", " ")
     s = re.sub(r"\s+", " ", s).strip()
     if aliases and s in aliases:
@@ -127,6 +138,7 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
         toks[i] = LEADING[toks[i]]
     toks = [str(int(t[:-2])) + t[-2:] if re.fullmatch(r"0\d+(ST|ND|RD|TH)", t) else t for t in toks]  # 07TH -> 7TH
     toks = [_ordinal(ORDINAL_WORDS[t]) if t in ORDINAL_WORDS else t for t in toks]
+    toks = [WORDS.get(t, t) for t in toks]
     suffix = None
     if len(toks) > 1 and toks[-1] in SUFFIX:
         suffix = SUFFIX[toks.pop()]
