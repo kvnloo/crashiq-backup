@@ -44,19 +44,23 @@ def test_pull_counts_and_cleaning_log(fake):
     # 120 of the 121 real crashes are in the box (one is 0.85 mi north at I-105) + duplicate (2 versions)
     # + deleted report + 3 no-coordinate Crenshaw crashes in Hawthorne
     # + 9200005 (Crenshaw / 135th, no coordinates, in Gardena): found by the county-wide search
-    assert log["rows_read"] == 120 + 2 + 1 + 3 + 1
+    assert log["rows_read"] == 120 + 2 + 1 + 3 + 1 + 1     # + 1: GPS written 33.95, -118.4, found by name (#218)
     assert log["deleted_dropped"] == 1
     assert log["duplicate_versions_dropped"] == 1
-    assert log["no_coords_read"] == 4            # rows naming the corridor street, anywhere in the county
+    assert log["no_coords_read"] == 5            # rows naming the corridor street, anywhere in the county; + 1
+    # whose GPS is coarse (33.95, -118.4: 2 decimals), found by name (#218)
     assert log["no_coords_not_corridor_street"] == 0
-    assert (log["with_coords"], log["without_coords"]) == (121, 4)
+    assert (log["with_coords"], log["without_coords"]) == (121, 5)      # + the coarse-GPS report (#218)
     ids = {c["crash_id"] for c in out["crashes"]}
     assert "9000058" not in ids                  # real crash at the I-105 ramps, outside the corridor box
-    assert "9300001" not in ids                  # far away
+    # GPS far away, but written 33.95, -118.4 (2 decimals, ~1 km): not a location, so the report is placed by its
+    # names, CRENSHAW / 135TH ST in Hawthorne (#218; before, it was dropped as far away)
+    far = next(c for c in out["crashes"] if c["crash_id"] == "9300001")
+    assert far["gps_ignored"]["reason"] == "coarse" and far["lat"] is None
     assert "9200005" in ids                      # same street in the next city (Gardena): corridors cross city lines
     assert "9200004" not in ids                  # MARINE AV / AVIATION BL: not the corridor street
     assert {"9200001", "9200002", "9200003"} <= ids
-    assert log["kept"] == len(out["crashes"]) == 125
+    assert log["kept"] == len(out["crashes"]) == 126
     assert log["cities"] == ["HAWTHORNE"]
     assert log["preliminary_kept"] == sum(c["preliminary"] for c in out["crashes"]) > 0
 
@@ -132,13 +136,13 @@ def sid(client, fake):
 
 def test_api_pull_then_cache_then_refresh(client, sid, fake):
     r = client.post(f"/api/studies/{sid}/crashes/pull").json()
-    assert r["count"] == 125 and r["from_cache"] is False
+    assert r["count"] == 126 and r["from_cache"] is False
     n_sql = len(fake.sql_log)
     assert client.post(f"/api/studies/{sid}/crashes/pull").json()["from_cache"] is True
     assert len(fake.sql_log) == n_sql                          # cache hit: no queries
     assert client.post(f"/api/studies/{sid}/crashes/pull?refresh=true").json()["from_cache"] is False
     slim = client.get(f"/api/studies/{sid}/crashes").json()
-    assert len(slim["crashes"]) == 125 and "parties" not in slim["crashes"][0]     # #54: screens don't read them
+    assert len(slim["crashes"]) == 126 and "parties" not in slim["crashes"][0]     # #54: screens don't read them
     full = client.get(f"/api/studies/{sid}/crashes?full=true").json()
     assert full["crashes"][0]["parties"]
 

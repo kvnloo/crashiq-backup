@@ -355,7 +355,14 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
              value=sum(1 for c in placed if c.get("location_provenance") == "user")),
         # how the counted crashes were located (#104 data-quality strip): GPS + exact + other tiers + you = Crashes
         _row("located_gps", "Located by the officer's GPS",
-             value=sum(1 for c in placed if c.get("location_provenance") in ("gps", "gps_dms_corrected"))),
+             value=sum(1 for c in placed if c.get("location_provenance") in ("gps", "gps_dms_corrected",
+                                                                                 "gps_offset_applied"))),
+        # GPS at the named intersection while the report states a distance from it: moved by it (#218); in located_gps
+        _row("located_gps_offset", "Of these, GPS moved by the distance and direction the report states",
+             value=sum(1 for c in placed if c.get("location_provenance") == "gps_offset_applied")),
+        # a default / dispatch point or coarse coordinates aren't a location (#218): placed by street names instead
+        _row("gps_ignored", "GPS not used (a default point shared by many reports, or coarse); placed by street names",
+             value=sum(1 for c in placed + unmatched if c.get("gps_ignored"))),
         # of which written as degrees-minutes-seconds and converted (#143); already in located_gps
         _row("located_gps_dms", "Of these, GPS converted from degrees-minutes-seconds",
              value=sum(1 for c in placed if c.get("location_provenance") == "gps_dms_corrected")),
@@ -368,7 +375,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
              "suffix the report leaves out may differ)",
              value=sum(1 for c in placed if c.get("location_provenance") == "unique_pair")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
-             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "fars", "exact",
+             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_offset_applied", "fars", "exact",
                                                                                  "unique_pair", "user"))),
         _row("excluded", "Crashes outside the study area", value=excluded_n),
     ]
