@@ -154,6 +154,7 @@ class Outside:
 
 
 NETWORK, GATE_TIERS = "clipped", []          # set from the command line
+AUTO_TIERS = ("exact", "unique_pair")          # the tiers the app auto-places (config/placement.json since #222)
 
 NO_CROSS = "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)"
 
@@ -396,20 +397,24 @@ def add_accuracy(res: dict, agencies: dict) -> None:
       on all police GPS, noisy GPS included.
     k of n with the Wilson 95% low bound. It covers city streets (where the test samples); freeways, state highways
     and county roads can't be verified this way. San Francisco's open-data test (claim C1) is cited separately."""
-    acc = json.loads((DATA / "accuracy_by_agency.json").read_text())
+    r8 = DATA / "accuracy_by_agency_r8.json"            # run 8: unique_pair measured too (it auto-places since #222)
+    acc = json.loads((r8 if r8.exists() else DATA / "accuracy_by_agency.json").read_text())
+    tiers = [t for t in AUTO_TIERS if any(a.get(f"{t}_counts") for a in acc)]
     dist, _ = districts()
     pool: dict[str, Counter] = defaultdict(Counter)
     for a in acc:
-        c = a.get("exact_counts")
-        if not c:
+        cs = [a.get(f"{t}_counts") for t in tiers if a.get(f"{t}_counts")]
+        if not cs:
             continue
         ag = agencies.get(a["ncic"]) or {}
         d = dist.get(int(ag.get("county") or a.get("county") or 0))
         for key in ("California", f"District {d}"):
-            pool[key].update({"agencies": 1, **c})
-    head = ("right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ exact tier; hidden-GPS "
-            "test #88, pooled over tested agencies")
-    low = "final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); exact tier; #88"
+            pool[key].update({"agencies": 1})
+            for c in cs:
+                pool[key].update(c)
+    head = (f"right intersection (within 250 ft), self-consistent police GPS as truth; CrashIQ {' + '.join(tiers)} "
+            "(the tiers that auto-place); hidden-GPS test #88, pooled over tested agencies")
+    low = f"final point within 250 ft of police GPS, all police GPS (noisy truth: a lower bound); {' + '.join(tiers)}; #88"
 
     def fmt(k, n):
         return f"{round(100 * k / n, 1)}% ({k} of {n}; 95% low {_wilson_low(k, n)}%)"

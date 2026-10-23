@@ -1,0 +1,192 @@
+{
+ "district": 5,
+ "truth_crashes": 24902,
+ "tiers": {
+  "exact": {
+   "k": 16188,
+   "n": 18719,
+   "pct": 86.5,
+   "low": 86.0
+  },
+  "unique_pair": {
+   "k": 3181,
+   "n": 3639,
+   "pct": 87.4,
+   "low": 86.3
+  },
+  "relaxed": {
+   "k": 362,
+   "n": 439,
+   "pct": 82.5,
+   "low": 78.6
+  }
+ },
+ "cities": {
+  "Santa Maria": {
+   "exact_n": 365,
+   "exact_k": 318,
+   "unique_pair_n": 2118,
+   "unique_pair_k": 1741
+  },
+  "Santa Barbara": {
+   "exact_n": 937,
+   "exact_k": 869,
+   "unique_pair_n": 896,
+   "unique_pair_k": 862
+  },
+  "Paso Robles": {
+   "exact_n": 1596,
+   "exact_k": 1435,
+   "unique_pair_n": 209,
+   "unique_pair_k": 204
+  },
+  "Arroyo Grande": {
+   "exact_n": 126,
+   "exact_k": 107,
+   "unique_pair_n": 196,
+   "unique_pair_k": 169
+  },
+  "Monterey": {
+   "exact_n": 554,
+   "exact_k": 550,
+   "unique_pair_n": 73,
+   "unique_pair_k": 73
+  },
+  "San Luis Obispo": {
+   "exact_n": 1141,
+   "exact_k": 1106,
+   "unique_pair_n": 58,
+   "unique_pair_k": 57
+  },
+  "Goleta": {
+   "unique_pair_n": 47,
+   "unique_pair_k": 39,
+   "exact_n": 84,
+   "exact_k": 72
+  },
+  "Grover Beach": {
+   "exact_n": 80,
+   "exact_k": 69,
+   "unique_pair_n": 15,
+   "unique_pair_k": 13
+  },
+  "Salinas": {
+   "unique_pair_n": 12,
+   "unique_pair_k": 10,
+   "exact_n": 34,
+   "exact_k": 28
+  },
+  "Pismo Beach": {
+   "exact_n": 153,
+   "exact_k": 111,
+   "unique_pair_n": 8,
+   "unique_pair_k": 8
+  },
+  "Marina": {
+   "exact_n": 313,
+   "exact_k": 235,
+   "unique_pair_n": 3,
+   "unique_pair_k": 3
+  },
+  "Lompoc": {
+   "unique_pair_n": 2,
+   "unique_pair_k": 1
+  },
+  "King City": {
+   "unique_pair_n": 1,
+   "unique_pair_k": 1,
+   "exact_n": 3,
+   "exact_k": 2
+  },
+  "Santa Cruz": {
+   "unique_pair_n": 1,
+   "unique_pair_k": 0,
+   "exact_n": 27,
+   "exact_k": 24
+  },
+  "Unincorporated": {
+   "exact_n": 12490,
+   "exact_k": 10512
+  },
+  "Atascadero": {
+   "exact_n": 408,
+   "exact_k": 398
+  },
+  "Carpinteria": {
+   "exact_n": 8,
+   "exact_k": 7
+  },
+  "Scotts Valley": {
+   "exact_n": 135,
+   "exact_k": 118
+  },
+  "Morro Bay": {
+   "exact_n": 98,
+   "exact_k": 93
+  },
+  "Uc Santa Cruz": {
+   "exact_n": 22,
+   "exact_k": 18
+  },
+  "Hollister": {
+   "exact_n": 36,
+   "exact_k": 31
+  },
+  "Watsonville": {
+   "exact_n": 24,
+   "exact_k": 21
+  },
+  "Seaside": {
+   "exact_n": 9,
+   "exact_k": 2
+  },
+  "Cal Poly Slo": {
+   "exact_n": 15,
+   "exact_k": 11
+  },
+  "Uc Santa Barbara": {
+   "exact_n": 12,
+   "exact_k": 12
+  },
+  "Greenfield": {
+   "exact_n": 5,
+   "exact_k": 4
+  },
+  "Soledad": {
+   "exact_n": 3,
+   "exact_k": 3
+  },
+  "Carmel": {
+   "exact_n": 15,
+   "exact_k": 9
+  },
+  "Capitola": {
+   "exact_n": 9,
+   "exact_k": 7
+  },
+  "Buellton": {
+   "exact_n": 4,
+   "exact_k": 4
+  },
+  "Guadalupe": {
+   "exact_n": 5,
+   "exact_k": 5
+  },
+  "San Juan Bautista": {
+   "exact_n": 2,
+   "exact_k": 2
+  },
+  "Solvang": {
+   "exact_n": 1,
+   "exact_k": 1
+  },
+  "Del Rey Oaks": {
+   "exact_n": 3,
+   "exact_k": 2
+  },
+  "Pacific Grove": {
+   "exact_n": 2,
+   "exact_k": 2
+  }
+ }
+}

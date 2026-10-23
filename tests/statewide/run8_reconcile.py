@@ -7,7 +7,8 @@
       --gate-tiers exact; coverage_crashes_r8_exact.csv)
   S2  S1 + unique_pair auto-places (the app's config since 2026-10-22, #222): a crash whose recorded tier is
       unique_pair and that wasn't placed by police GPS is placed (placed_unique_pair), FARS no longer needed for it
-  S3  run 8b, after #218 (rules 1 and 2): added when it merges
+  S3  run 8b: S2 + #218 rule 2 (run8b_rule2.py: default points and coarse coordinates are no location). #218 rule 1
+      (snapped GPS + the report's offset) moves points, not bins: counted in the corridor run and run8b_snapped.py
 
 Effects: harness network = S1a - S0; #212 = S1 - S1a; unique_pair = S2 - S1.
 Writes data/statewide/run8_reconcile.json and coverage_crashes_r8_up.csv (S2 per crash, for coverage.py --merge).
@@ -92,12 +93,14 @@ def main() -> None:
         w.writerows(s2.values())
     stages = {"S0 #199 corrected (clipped network, 5f54c02)": s0, "S1a box + 1 km network (code e2f1633)": s1a,
               "S1 + #212 leading abbreviations": s1, "S2 + unique_pair auto-places": s2}
+    if (DATA / "coverage_crashes_r8b.csv").exists():                 # run 8b: #218 rule 2 (run8b_rule2.py)
+        stages["S3 + #218 rule 2 (default points, coarse GPS)"] = load("coverage_crashes_r8b.csv")
     st = {k: stats(v) for k, v in stages.items()}
     keys = list(stages)
     eff = []
     for (ka, a), (kb, b) in zip(list(stages.items())[:-1], list(stages.items())[1:]):
         eff.append({"effect": {keys[1]: "harness network (box + 1 km; also #204/#206 code)", keys[2]: "#212",
-                               keys[3]: "unique_pair"}[kb],
+                               keys[3]: "unique_pair", **({keys[4]: "#218 rule 2"} if len(keys) > 4 else {})}[kb],
                     "on_map_change": st[kb]["on_map"] - st[ka]["on_map"],
                     "on_map_pct": f"{st[ka]['on_map_pct']} -> {st[kb]['on_map_pct']}",
                     "fatal_pct": f"{st[ka]['fatal_on_map_pct']} -> {st[kb]['fatal_on_map_pct']}",

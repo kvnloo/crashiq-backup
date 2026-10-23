@@ -4191,3 +4191,527 @@ run,city,county,result,reason,candidates_v1,located_v1,silent_drops_v1,double_co
 8,Yuba City,51,pass,97% located or placed,35,34,0,0,0,,pass,pass,0,pass,0,frozen list
 8,Yucaipa,36,pass,100% located or placed,6,6,0,2,0,,pass,pass,0,pass,0,frozen list
 8,Yucca Valley,36,pass,97% located or placed,73,71,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Adelanto,36,pass,100% located or placed,12,12,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Agoura Hills,19,pass,99% located or placed,102,101,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Alameda,1,warn,"86% located or placed, 14% sent for review",21,18,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Albany,1,pass,100% located or placed,192,192,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Alhambra,19,pass,98% located or placed,196,193,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Aliso Viejo,30,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,71,63,1,1,0,,fail,warn,0,warn,0,frozen list
+9,Alturas,25,pass,100% located or placed,10,10,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Amador City,3,untested,corridor step failed: no straight-enough 1-mile stretch on the six longest roads,,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,American Canyon,28,warn,"83% located or placed, 17% sent for review",46,38,0,0,0,,warn,warn,0,warn,0,frozen list
+9,American Riv Pk Dist,34,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Anaheim,30,pass,97% located or placed,65,63,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Anderson,45,warn,"81% located or placed, 19% sent for review",54,44,1,0,0,,fail,warn,0,warn,0,frozen list
+9,Angels Camp,5,pass,100% located or placed,4,4,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Antioch,7,pass,94% located or placed,48,45,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Apple Valley,36,pass,97% located or placed,58,56,0,4,0,,pass,pass,0,pass,0,frozen list
+9,Arcadia,19,pass,94% located or placed,70,66,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Arcata,12,pass,100% located or placed,9,9,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Arroyo Grande,40,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,137,137,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Artesia,19,pass,97% located or placed,254,247,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Arvin,15,pass,100% located or placed,11,11,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Atascadero,40,warn,"89% located or placed, 11% sent for review",271,241,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Atherton,41,pass,100% located or placed,42,42,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Atwater,24,pass,97% located or placed,38,37,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Auburn,31,pass,100% located or placed,33,33,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Avalon,19,warn,"75% located or placed, 25% sent for review",4,3,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Avenal,16,fail,only 67% of crashes located (GPS) or placed,6,4,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Azusa,19,pass,97% located or placed,67,65,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Bakersfield,15,pass,94% located or placed,18,17,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Baldwin Park,19,warn,"88% located or placed, 12% sent for review",112,98,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Banning,33,pass,100% located or placed,238,238,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Barstow,36,pass,100% located or placed,46,46,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Bay Area Pk Dist,41,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Bear Valley Springs,15,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Beaumont,33,pass,99% located or placed,74,73,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Bellflower,19,pass,99% located or placed,265,262,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Bell Gardens,19,pass,98% located or placed,242,237,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Bell,19,pass,99% located or placed,348,345,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Belmont,41,pass,100% located or placed,106,106,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Belvedere,21,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Benicia,48,warn,"84% located or placed, 16% sent for review",19,16,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Berkeley,1,pass,100% located or placed,206,205,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Beverly Hills,19,pass,96% located or placed,136,130,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Big Bear Lake,36,pass,94% located or placed,62,58,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Biggs,4,pass,100% located or placed,12,12,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Bishop,14,pass,100% located or placed,66,66,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Blue Lake,12,pass,100% located or placed,12,12,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Blythe,33,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Bradbury,19,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Brawley,13,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Brea,30,pass,100% located or placed,192,192,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Brentwood,7,pass,100% located or placed,208,208,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Brisbane,41,pass,100% located or placed,50,50,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Broadmoor,41,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Buellton,42,pass,100% located or placed,25,25,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Buena Park,30,pass,97% located or placed,242,235,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Burbank,19,pass,99% located or placed,87,86,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Burlingame,41,pass,100% located or placed,72,72,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Calabasas,19,warn,"86% located or placed, 14% sent for review",28,24,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Calexico,13,fail,0 crashes pulled while 3 reports in the city name COLE (suspected silent drop),0,0,0,0,0,,untested,fail,0,fail,0,frozen list
+9,California City,15,pass,100% located or placed,4,4,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Calimesa,33,pass,100% located or placed,9,9,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Calistoga,28,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,22,22,0,0,0,,pass,fail,1,pass,0,frozen list
+9,Cal Poly Pomona,19,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Cal Poly Slo,40,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Camarillo,56,warn,"83% located or placed, 17% sent for review",6,5,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Campbell,43,pass,94% located or placed,18,17,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Canyon Lake,33,warn,"73% located or placed, 27% sent for review",11,8,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Capitola,44,pass,99% located or placed,232,230,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Carlsbad,37,fail,only 49% of crashes located (GPS) or placed,133,65,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Carmel,27,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,124,121,1,0,0,,fail,pass,0,pass,0,frozen list
+9,Carpinteria,42,pass,98% located or placed,55,54,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Carson,19,pass,99% located or placed,567,564,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Cathedral City,33,pass,96% located or placed,54,52,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Ceres,50,pass,100% located or placed,19,19,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Cerritos,19,pass,100% located or placed,288,287,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Channel Cst Pk Dist,56,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Chico,4,fail,only 39% of crashes located (GPS) or placed,36,14,0,0,0,,fail,fail,0,fail,0,frozen list
+9,China Lake,15,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Chino Hills,36,pass,98% located or placed,59,58,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Chino,36,pass,100% located or placed,23,23,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Chowchilla,20,pass,100% located or placed,4,4,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Chula Vista,37,pass,100% located or placed,65,65,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Citrus Heights,34,warn,"90% located or placed, 10% sent for review",144,129,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Claremont,19,pass,100% located or placed,180,180,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Clayton,7,pass,100% located or placed,36,36,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Clearlake,17,pass,100% located or placed,7,7,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Cloverdale,49,pass,95% located or placed,22,21,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Clovis,10,pass,100% located or placed,25,25,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Coachella,33,warn,"81% located or placed, 19% sent for review",75,61,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Coalinga,10,fail,only 67% of crashes located (GPS) or placed,3,2,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Colfax,31,pass,100% located or placed,15,15,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Colma,41,untested,0 crashes: no report in the city names this street (nothing to test),0,0,0,0,0,,untested,untested,0,untested,0,frozen list
+9,Colorado Desert Pk,37,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Colton,36,pass,100% located or placed,67,67,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Colusa,6,pass,100% located or placed,15,15,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Commerce,19,pass,100% located or placed,229,228,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Compton,19,pass,100% located or placed,663,663,0,0,0,,pass,pass,0,pass,0,picked (added after the corridor list was frozen)
+9,Concord,7,pass,92% located or placed,188,173,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Corcoran,16,warn,"80% located or placed, 20% sent for review",10,8,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Corning,52,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Coronado,37,pass,97% located or placed,37,36,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Corona,33,fail,3 no-GPS reports naming the corridor and a study cross street were not pulled,33,32,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Corte Madera,21,pass,97% located or placed,123,119,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Costa Mesa,30,pass,100% located or placed,218,218,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Cotati,49,pass,100% located or placed,31,31,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Covina,19,pass,96% located or placed,46,44,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Crescent City,8,pass,100% located or placed,8,8,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Csu Channel Islands,56,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Csu Fullerton,30,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Csu Long Beach,19,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Csu Los Angeles,19,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Csu Monterey Bay,27,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Csu Northridge,19,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Csu Sacramento,34,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Cudahy,19,pass,96% located or placed,363,350,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Culver City,19,pass,100% located or placed,34,34,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Cupertino,43,pass,100% located or placed,117,117,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Cypress,30,pass,96% located or placed,156,150,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Daly City,41,pass,100% located or placed,86,86,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Dana Point,30,pass,100% located or placed,103,103,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Danville,7,pass,100% located or placed,26,26,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Davis,57,pass,100% located or placed,37,37,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Delano,15,pass,100% located or placed,18,18,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Del Mar,37,pass,92% located or placed,13,12,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Del Rey Oaks,27,pass,100% located or placed,14,14,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Desert Hot Springs,33,pass,100% located or placed,40,40,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Diamond Bar,19,pass,100% located or placed,96,96,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Dinuba,54,pass,100% located or placed,20,20,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Dixon,48,pass,100% located or placed,57,57,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Dorris,47,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Dos Palos,24,pass,93% located or placed,45,42,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Downey,19,pass,99% located or placed,138,137,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Duarte,19,pass,100% located or placed,73,73,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Dublin,1,pass,100% located or placed,95,95,0,1,2,,pass,pass,0,pass,0,frozen list
+9,Dunsmuir,47,pass,100% located or placed,16,16,0,0,0,,pass,pass,0,pass,0,frozen list
+9,East Palo Alto,41,pass,99% located or placed,347,343,0,0,1,,pass,pass,0,pass,0,frozen list
+9,Eastvale,33,fail,only 50% of crashes located (GPS) or placed,118,59,0,1,1,,fail,fail,0,fail,0,frozen list
+9,El Cajon,37,pass,91% located or placed,54,49,0,0,0,,pass,pass,0,pass,0,frozen list
+9,El Centro,13,pass,100% located or placed,12,12,0,0,0,,pass,pass,0,pass,0,frozen list
+9,El Cerrito,7,pass,98% located or placed,284,279,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Elk Grove,34,pass,100% located or placed,140,140,0,2,0,,pass,pass,0,pass,0,frozen list
+9,El Monte,19,pass,100% located or placed,484,482,0,0,0,,pass,pass,0,pass,0,frozen list
+9,El Segundo,19,pass,99% located or placed,71,70,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Emeryville,1,pass,94% located or placed,634,598,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Encinitas,37,pass,97% located or placed,61,59,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Escalon,39,pass,100% located or placed,21,21,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Escondido,37,warn,"78% located or placed, 22% sent for review",27,21,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Etna,47,fail,only 67% of crashes located (GPS) or placed,3,2,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Eureka,12,pass,100% located or placed,13,13,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Exeter,54,pass,100% located or placed,7,7,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Fairfax,21,pass,100% located or placed,49,49,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Fairfield,48,pass,100% located or placed,108,108,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Farmersville,54,pass,95% located or placed,61,58,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Ferndale,12,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Fillmore,56,pass,100% located or placed,33,33,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Firebaugh,10,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Folsom,34,fail,only 65% of crashes located (GPS) or placed,74,48,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Fontana,36,pass,98% located or placed,244,238,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Fort Bragg,23,pass,100% located or placed,18,18,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Fort Jones,47,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Fortuna,12,pass,100% located or placed,5,5,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Foster City,41,pass,100% located or placed,12,12,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Fountain Valley,30,fail,5 no-GPS reports naming the corridor and a study cross street were not pulled,285,261,5,0,0,,fail,pass,0,pass,0,frozen list
+9,Fowler,10,pass,100% located or placed,31,31,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Fremont,1,pass,97% located or placed,75,73,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Fresno,10,warn,"84% located or placed, 16% sent for review",146,122,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Fullerton,30,pass,98% located or placed,46,45,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Galt,34,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Gardena,19,pass,98% located or placed,59,58,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Garden Grove,30,pass,96% located or placed,280,269,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Gilroy,43,pass,100% located or placed,46,46,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Glendale,19,warn,"87% located or placed, 13% sent for review",68,59,0,1,1,,warn,warn,0,warn,0,frozen list
+9,Glendora,19,pass,100% located or placed,328,327,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Goleta,42,pass,96% located or placed,92,88,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Gonzales,27,fail,only 25% of crashes located (GPS) or placed,4,1,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Grand Terrace,36,pass,100% located or placed,51,51,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Grass Valley,29,pass,100% located or placed,30,30,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Greenfield,27,pass,96% located or placed,54,52,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Gridley,4,pass,100% located or placed,11,11,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Grover Beach,40,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,77,68,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Guadalupe,42,pass,100% located or placed,20,20,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Gustine,24,pass,100% located or placed,10,10,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Half Moon Bay,41,pass,100% located or placed,40,40,0,0,2,,pass,pass,0,pass,0,frozen list
+9,Hanford,16,pass,100% located or placed,12,12,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Hawaiian Gardens,19,pass,99% located or placed,241,238,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Hawthorne,19,pass,99% located or placed,170,169,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Hayward,1,pass,100% located or placed,83,83,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Healdsburg,49,pass,100% located or placed,72,72,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Hemet,33,pass,100% located or placed,45,45,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Hercules,7,pass,99% located or placed,144,143,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Hermosa Beach,19,pass,98% located or placed,123,120,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Hesperia,36,warn,"86% located or placed, 14% sent for review",182,157,0,3,0,,warn,warn,0,warn,0,frozen list
+9,Hidden Hills,19,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Highland,36,pass,100% located or placed,22,22,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Hillsborough,41,pass,100% located or placed,19,19,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Hollister Hills Pk,35,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Hollister,35,pass,91% located or placed,34,31,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Holtville,13,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Hughson,50,pass,100% located or placed,42,42,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Huntington Beach,30,fail,only 60% of crashes located (GPS) or placed,581,350,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Huntington Park,19,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,295,294,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Huron,10,pass,100% located or placed,18,18,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Imperial Beach,37,pass,100% located or placed,23,23,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Imperial,13,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Indian Wells,33,fail,only 63% of crashes located (GPS) or placed,165,104,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Indio,33,warn,"90% located or placed, 10% sent for review",39,35,0,0,0,,warn,warn,0,warn,0,frozen list
+9,City of Industry,19,pass,100% located or placed,115,115,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Inglewood,19,pass,90% located or placed,312,282,0,0,1,,pass,pass,0,pass,0,frozen list
+9,Ione,3,pass,100% located or placed,7,7,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Irvine,30,pass,95% located or placed,43,41,0,1,4,,pass,pass,0,pass,0,frozen list
+9,Irwindale,19,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,120,118,1,0,0,,fail,pass,0,pass,0,frozen list
+9,Isleton,34,pass,100% located or placed,28,28,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Jackson,3,pass,100% located or placed,13,13,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Jurupa Valley,33,fail,only 69% of crashes located (GPS) or placed,223,154,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Kensington,7,pass,97% located or placed,65,63,0,0,0,,pass,pass,0,pass,0,picked (added after the corridor list was frozen)
+9,Kerman,10,pass,100% located or placed,8,8,0,0,0,,pass,pass,0,pass,0,frozen list
+9,King City,27,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Kingsburg,10,pass,100% located or placed,17,17,0,0,0,,pass,pass,0,pass,0,frozen list
+9,La Canada Flintridge,19,pass,99% located or placed,159,158,0,0,1,,pass,pass,0,pass,0,frozen list
+9,Lafayette,7,pass,100% located or placed,83,83,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Laguna Beach,30,pass,95% located or placed,130,123,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Laguna Hills,30,warn,"87% located or placed, 13% sent for review",55,48,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Laguna Niguel,30,pass,100% located or placed,42,42,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Laguna Woods,30,pass,100% located or placed,30,30,0,0,0,,pass,pass,0,pass,0,frozen list
+9,La Habra Heights,19,pass,100% located or placed,50,50,0,0,0,,pass,pass,0,pass,0,frozen list
+9,La Habra,30,pass,95% located or placed,105,100,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lake Elsinore,33,pass,92% located or placed,26,24,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lake Forest,30,pass,90% located or placed,52,47,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lakeport,17,pass,100% located or placed,16,16,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lakewood,19,pass,99% located or placed,202,200,0,0,0,,pass,pass,0,pass,0,frozen list
+9,La Mesa,37,pass,100% located or placed,89,89,0,1,0,,pass,pass,0,pass,0,frozen list
+9,La Mirada,19,pass,99% located or placed,130,129,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lancaster,19,warn,"76% located or placed, 24% sent for review",21,16,0,1,0,,warn,warn,0,warn,0,frozen list
+9,La Palma,30,pass,99% located or placed,138,136,0,0,0,,pass,pass,0,pass,0,frozen list
+9,La Puente,19,pass,96% located or placed,232,223,0,0,0,,pass,pass,0,pass,0,frozen list
+9,La Quinta,33,pass,96% located or placed,334,319,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Larkspur,21,pass,100% located or placed,91,91,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lathrop,39,pass,100% located or placed,34,34,0,0,0,,pass,pass,0,pass,0,frozen list
+9,La Verne,19,pass,99% located or placed,92,91,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lawndale,19,pass,96% located or placed,443,426,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Lemon Grove,37,pass,100% located or placed,20,20,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lemoore,16,pass,100% located or placed,19,19,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lincoln,31,pass,100% located or placed,5,5,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lindsay,54,pass,94% located or placed,52,49,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Live Oak,51,pass,100% located or placed,9,9,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Livermore,1,fail,only 62% of crashes located (GPS) or placed,120,75,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Livingston,24,pass,100% located or placed,94,94,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lodi,39,pass,100% located or placed,137,137,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Loma Linda,36,pass,99% located or placed,74,73,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Lomita,19,pass,90% located or placed,10,9,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Lompoc,42,pass,100% located or placed,31,31,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Long Beach,19,pass,99% located or placed,292,290,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Loomis,31,pass,100% located or placed,60,60,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Los Alamitos,30,pass,97% located or placed,119,115,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Los Altos Hills,43,warn,"88% located or placed, 12% sent for review",8,7,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Los Altos,43,pass,100% located or placed,18,18,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Los Angeles,19,pass,94% located or placed,67,63,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Los Banos,24,pass,100% located or placed,141,141,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Los Gatos,43,pass,95% located or placed,20,19,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Los Lagos Pk Dist,33,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Loyalton,46,untested,0 crashes: no report in the city names this street (nothing to test),0,0,0,0,0,,untested,untested,0,untested,0,frozen list
+9,Lynwood,19,pass,97% located or placed,529,511,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Madera,20,pass,100% located or placed,8,8,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Malibu,19,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Mammoth Lakes,26,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Manhattan Beach,19,pass,100% located or placed,158,158,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Manteca,39,pass,100% located or placed,11,11,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Marina,27,warn,"71% located or placed, 29% sent for review",82,58,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Marin Pk Dist,21,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Martinez,7,pass,100% located or placed,18,18,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Marysville,58,pass,100% located or placed,5,5,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Maywood,19,pass,93% located or placed,393,366,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Mc Farland,15,pass,100% located or placed,4,4,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Mendota,10,fail,only 15% of crashes located (GPS) or placed,13,2,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Menifee,33,warn,"82% located or placed, 18% sent for review",22,18,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Menlo Park,41,pass,92% located or placed,252,231,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Merced,24,pass,100% located or placed,6,6,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Millbrae,41,warn,"75% located or placed, 25% sent for review",102,77,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Mill Valley,21,pass,99% located or placed,80,79,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Milpitas,43,pass,100% located or placed,72,72,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Mission Viejo,30,pass,100% located or placed,33,33,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Modesto,50,pass,96% located or placed,52,50,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Monrovia,19,pass,98% located or placed,207,202,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Montague,47,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Montclair,36,pass,99% located or placed,148,146,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Montebello,19,pass,95% located or placed,134,127,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Monterey Park,19,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,163,163,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Monterey,27,pass,99% located or placed,146,145,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Monte Sereno,43,pass,100% located or placed,13,13,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Moorpark,56,warn,"89% located or placed, 11% sent for review",47,42,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Moraga,7,pass,100% located or placed,14,14,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Moreno Valley,33,fail,only 47% of crashes located (GPS) or placed,133,63,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Morgan Hill,43,pass,100% located or placed,76,76,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Morro Bay,40,pass,100% located or placed,15,15,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Mountain House,39,pass,100% located or placed,30,30,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Mountain View,43,fail,22 no-GPS reports naming the corridor and a study cross street were not pulled,50,48,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Mount Shasta,47,warn,"88% located or placed, 12% sent for review",8,7,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Murrieta,33,warn,"88% located or placed, 12% sent for review",50,44,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Napa,28,pass,100% located or placed,108,108,0,0,0,,pass,pass,0,pass,0,frozen list
+9,National City,37,pass,100% located or placed,53,53,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Needles,36,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Nevada City,29,pass,100% located or placed,20,20,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Newark,1,pass,100% located or placed,232,232,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Newman,50,pass,100% located or placed,39,39,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Newport Beach,30,pass,99% located or placed,200,198,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Norco,33,warn,"72% located or placed, 28% sent for review",233,168,0,2,0,,warn,warn,0,warn,0,frozen list
+9,Norwalk,19,warn,"81% located or placed, 19% sent for review",335,270,0,2,0,,warn,warn,0,warn,0,frozen list
+9,Novato,21,pass,100% located or placed,15,15,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Oakdale,50,pass,100% located or placed,78,78,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Oakland Intl Airport,1,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Oakland,1,pass,94% located or placed,18,17,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Oakley,7,pass,96% located or placed,102,98,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Oceanside,37,warn,"75% located or placed, 25% sent for review",151,113,0,1,0,,warn,warn,0,warn,0,frozen list
+9,Ocotillo Wls Pk Dist,37,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Ojai,56,warn,"78% located or placed, 22% sent for review",41,32,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Ontario,36,pass,90% located or placed,20,18,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Orange,30,warn,"80% located or placed, 20% sent for review",228,182,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Orinda,7,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,6,5,1,0,0,,fail,warn,0,warn,0,frozen list
+9,Orland,11,pass,100% located or placed,9,9,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Oroville,4,pass,100% located or placed,72,72,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Oxnard,56,pass,100% located or placed,124,124,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pacifica,41,pass,97% located or placed,39,38,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pacific Grove,27,warn,"88% located or placed, 12% sent for review",34,30,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Palmdale,19,warn,"79% located or placed, 21% sent for review",19,15,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Palm Desert,33,warn,"79% located or placed, 21% sent for review",111,88,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Palm Springs,33,pass,100% located or placed,22,22,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Palo Alto,43,pass,95% located or placed,19,18,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Palos Verdes Estates,19,pass,100% located or placed,31,31,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Paradise,4,pass,100% located or placed,10,10,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Paramount,19,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,299,183,1,0,0,,fail,fail,0,fail,0,frozen list
+9,Parlier,10,pass,100% located or placed,72,72,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pasadena,19,pass,95% located or placed,84,80,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Paso Robles,40,warn,"79% located or placed, 21% sent for review",19,15,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Patterson,50,warn,"86% located or placed, 14% sent for review",87,75,0,1,0,,warn,warn,0,warn,0,frozen list
+9,Perris,33,pass,100% located or placed,37,37,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Petaluma,49,pass,98% located or placed,52,51,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pico Rivera,19,pass,100% located or placed,233,233,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Piedmont,1,pass,100% located or placed,35,35,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pinole,7,pass,100% located or placed,8,8,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pismo Beach,40,pass,100% located or placed,13,13,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pismo Dunes Pk Dist,40,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Pittsburg,7,warn,"81% located or placed, 19% sent for review",16,13,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Placentia,30,pass,95% located or placed,142,135,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Placerville,9,pass,100% located or placed,41,41,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pleasant Hill,7,pass,100% located or placed,48,48,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pleasanton,1,pass,100% located or placed,40,40,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Plymouth,3,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Pomona,19,pass,100% located or placed,210,210,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Porterville,54,pass,96% located or placed,200,191,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Port Hueneme,56,pass,100% located or placed,90,90,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Port Of Los Angeles,19,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Portola Valley,41,pass,100% located or placed,6,6,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Portola,32,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Poway,37,pass,100% located or placed,15,15,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rancho Cordova,34,pass,100% located or placed,57,57,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rancho Cucamonga,36,warn,"82% located or placed, 18% sent for review",148,121,0,2,0,,warn,warn,0,warn,0,frozen list
+9,Rancho Mirage,33,warn,"76% located or placed, 24% sent for review",102,78,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Rancho Palos Verdes,19,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rancho Santa Margarita,30,fail,only 52% of crashes located (GPS) or placed,25,13,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Red Bluff,52,pass,100% located or placed,26,26,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Redding,45,warn,"80% located or placed, 20% sent for review",44,35,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Redlands,36,pass,100% located or placed,257,257,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Redondo Beach,19,pass,99% located or placed,269,267,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Redwood City,41,pass,100% located or placed,262,261,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Reedley,10,pass,100% located or placed,37,37,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rialto,36,fail,only 50% of crashes located (GPS) or placed,117,58,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Richmond,7,pass,98% located or placed,253,247,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Ridgecrest,15,pass,100% located or placed,37,37,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rio Dell,12,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rio Vista,48,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Ripon,39,pass,100% located or placed,20,20,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Riverbank,50,fail,only 67% of crashes located (GPS) or placed,43,29,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Riverside,33,fail,only 35% of crashes located (GPS) or placed,199,69,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Rocklin,31,pass,100% located or placed,159,159,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rohnert Park,49,pass,100% located or placed,85,85,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rolling Hills Estates,19,pass,100% located or placed,12,12,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rolling Hills,19,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Rosemead,19,pass,100% located or placed,282,281,0,0,0,,pass,pass,0,pass,0,picked (added after the corridor list was frozen)
+9,Roseville,31,pass,98% located or placed,121,118,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Ross,21,pass,100% located or placed,72,72,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sacramento,34,fail,only 57% of crashes located (GPS) or placed,7,4,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Salinas,27,warn,"75% located or placed, 25% sent for review",104,78,0,0,0,,warn,warn,0,warn,0,frozen list
+9,San Anselmo,21,pass,100% located or placed,109,109,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Bernardino,36,fail,only 40% of crashes located (GPS) or placed,40,16,0,1,0,,fail,fail,0,fail,0,frozen list
+9,San Bruno,41,pass,100% located or placed,8,8,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Carlos,41,warn,"85% located or placed, 15% sent for review",67,57,0,0,1,,warn,warn,0,warn,0,frozen list
+9,San Clemente,30,pass,100% located or placed,24,24,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Sand City,27,pass,100% located or placed,44,44,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Diego Harbor,37,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,San Diego Pk Dist,37,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,San Diego State Univ,37,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,San Diego,37,pass,100% located or placed,8,8,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Dimas,19,pass,97% located or placed,93,90,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Fernando,19,pass,97% located or placed,77,75,0,1,0,,pass,pass,0,pass,0,frozen list
+9,San Francisco State,38,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,San Francisco,38,pass,95% located or placed,109,104,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Gabriel,19,pass,98% located or placed,180,177,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sanger,10,pass,97% located or placed,36,35,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Jacinto,33,pass,91% located or placed,123,112,0,1,0,,pass,pass,0,pass,0,frozen list
+9,San Joaquin,10,fail,0 crashes pulled while 1 reports in the city name MANNING (suspected silent drop),0,0,0,0,0,,untested,fail,0,fail,0,frozen list
+9,San Jose Evergrn Comm Clg,43,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,San Jose State Univ,43,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,San Jose,43,fail,only 69% of crashes located (GPS) or placed,32,22,0,1,0,,fail,fail,0,fail,0,frozen list
+9,San Juan Bautista,35,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Juan Capistrano,30,pass,100% located or placed,159,159,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Leandro,1,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,138,138,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Luis Obispo,40,pass,91% located or placed,100,91,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Marcos,37,pass,98% located or placed,115,113,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Marino,19,pass,92% located or placed,73,67,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Mateo,41,pass,100% located or placed,157,157,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Pablo,7,pass,97% located or placed,238,230,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Rafael,21,pass,100% located or placed,16,16,0,0,0,,pass,pass,0,pass,0,frozen list
+9,San Ramon,7,pass,92% located or placed,199,183,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Santa Ana,30,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,283,269,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Santa Barbara,42,pass,100% located or placed,102,102,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Santa Clara,43,pass,97% located or placed,238,231,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Santa Clarita,19,pass,100% located or placed,270,269,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Santa Cruz,44,pass,99% located or placed,136,134,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Santa Fe Springs,19,pass,100% located or placed,105,105,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Santa Maria,42,pass,100% located or placed,57,57,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Santa Monica,19,pass,98% located or placed,498,489,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Santa Paula,56,warn,"78% located or placed, 22% sent for review",9,7,0,1,0,,warn,warn,0,warn,0,frozen list
+9,Santa Rosa,49,warn,"74% located or placed, 26% sent for review",47,35,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Santee,37,pass,94% located or placed,130,122,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Saratoga,43,pass,100% located or placed,30,30,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sausalito,21,warn,"73% located or placed, 27% sent for review",62,45,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Scotts Valley,44,pass,100% located or placed,123,123,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Seal Beach,30,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Seaside,27,pass,100% located or placed,9,9,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sebastopol,49,pass,100% located or placed,40,40,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Selma,10,pass,100% located or placed,34,34,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sf Intl Airport,41,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Shafter,15,pass,100% located or placed,4,4,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Shasta Lake,45,pass,100% located or placed,8,8,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sierra Madre,19,pass,94% located or placed,16,15,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sierra Pk Dist,31,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Signal Hill,19,warn,"85% located or placed, 15% sent for review",301,257,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Simi Valley,56,pass,100% located or placed,77,77,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sj Delta Comm Clg Dist,39,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Solana Beach,37,fail,only 0% of crashes located (GPS) or placed,3,0,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Soledad,27,pass,100% located or placed,13,13,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Solvang,42,pass,100% located or placed,37,37,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sonoma State Univ,49,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Sonoma,49,pass,97% located or placed,64,62,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Sonora,55,pass,100% located or placed,23,23,0,0,0,,pass,pass,0,pass,0,frozen list
+9,South El Monte,19,pass,99% located or placed,217,214,0,0,0,,pass,pass,0,pass,0,frozen list
+9,South Gate,19,warn,"80% located or placed, 20% sent for review",453,364,0,0,0,,warn,warn,0,warn,0,frozen list
+9,South Lake Tahoe,9,pass,100% located or placed,44,44,0,0,0,,pass,pass,0,pass,0,frozen list
+9,South Pasadena,19,pass,98% located or placed,121,119,0,0,0,,pass,pass,0,pass,0,frozen list
+9,South San Francisco,41,pass,100% located or placed,178,178,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Stanton,30,pass,99% located or placed,136,135,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Saint Helena,28,pass,91% located or placed,34,31,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Stockton,39,warn,"82% located or placed, 18% sent for review",345,283,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Suisun City,48,pass,98% located or placed,63,62,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Sunnyvale,43,pass,95% located or placed,239,226,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Susanville,18,warn,"82% located or placed, 18% sent for review",11,9,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Sutter Creek,3,pass,100% located or placed,22,22,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Taft,15,pass,100% located or placed,4,4,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Tehachapi,15,pass,100% located or placed,20,20,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Tehama,52,pass,100% located or placed,1,1,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Temecula,33,pass,92% located or placed,112,103,0,0,1,,pass,pass,0,pass,0,frozen list
+9,Temple City,19,pass,99% located or placed,185,184,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Thousand Oaks,56,pass,100% located or placed,22,22,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Tiburon,21,warn,"75% located or placed, 25% sent for review",4,3,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Torrance,19,warn,"76% located or placed, 24% sent for review",200,151,0,1,0,,warn,warn,0,warn,0,frozen list
+9,Tracy,39,pass,100% located or placed,55,55,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Trinidad,12,pass,100% located or placed,7,7,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Truckee,29,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Tulare,54,pass,100% located or placed,113,113,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Tulelake,47,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Turlock,50,pass,100% located or placed,116,116,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Tustin,30,pass,99% located or placed,176,175,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Twentynine Palms,36,pass,100% located or placed,44,44,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Twin Cities Pk Dist,34,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc Berkeley,1,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc Davis Medical Center,34,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc Davis,57,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc Los Angeles,19,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc Merced,24,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc Riverside,33,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc San Diego,37,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc San Francisco,38,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc Santa Barbara,42,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Uc Santa Cruz,44,untested,"corridor step failed: no OSM city boundary with this name (CCRS also files state parks, campuses, airports and some unincorporated places as c",,,,,,,untested,untested,,untested,,picked (added after the corridor list was frozen)
+9,Ukiah,23,pass,100% located or placed,63,63,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Union City,1,pass,99% located or placed,160,159,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Upland,36,pass,100% located or placed,94,94,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Vacaville,48,pass,100% located or placed,44,44,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Vallejo,48,pass,100% located or placed,32,32,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Ventura,56,pass,94% located or placed,69,65,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Vernon,19,pass,97% located or placed,35,34,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Victorville,36,pass,97% located or placed,441,427,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Villa Park,30,pass,100% located or placed,34,34,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Visalia,54,pass,100% located or placed,19,19,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Vista,37,pass,91% located or placed,64,58,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Walnut Creek,7,fail,1 no-GPS reports naming the corridor and a study cross street were not pulled,518,516,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Walnut,19,pass,100% located or placed,108,108,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Wasco,15,fail,only 41% of crashes located (GPS) or placed,17,7,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Waterford,50,pass,100% located or placed,7,7,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Watsonville,44,pass,98% located or placed,127,125,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Weed,47,pass,100% located or placed,14,14,0,0,0,,pass,pass,0,pass,0,frozen list
+9,West Covina,19,warn,"90% located or placed, 10% sent for review",127,114,0,0,0,,warn,warn,0,warn,0,frozen list
+9,West Hollywood,19,pass,100% located or placed,634,633,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Westlake Village,19,warn,"90% located or placed, 10% sent for review",78,70,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Westminster,30,fail,only 66% of crashes located (GPS) or placed,308,204,0,0,0,,fail,fail,0,fail,0,frozen list
+9,Westmorland,13,untested,0 crashes: no report in the city names this street (nothing to test),0,0,0,0,0,,untested,untested,0,untested,0,frozen list
+9,West Sacramento,57,pass,100% located or placed,24,24,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Wheatland,58,fail,0 crashes pulled while 9 reports in the city name SPENCEVILLE (suspected silent drop),0,0,0,0,0,,untested,fail,0,fail,0,frozen list
+9,Whittier,19,pass,92% located or placed,144,132,0,1,0,,pass,pass,0,pass,0,frozen list
+9,Wildomar,33,pass,92% located or placed,97,89,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Williams,6,pass,94% located or placed,17,16,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Willits,23,pass,100% located or placed,14,14,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Willows,11,pass,100% located or placed,2,2,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Windsor,49,warn,"89% located or placed, 11% sent for review",53,47,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Winters,57,pass,100% located or placed,11,11,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Woodlake,54,pass,100% located or placed,3,3,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Woodland,57,pass,99% located or placed,95,94,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Woodside,41,warn,"88% located or placed, 12% sent for review",42,37,0,0,0,,warn,warn,0,warn,0,frozen list
+9,Yorba Linda,30,pass,98% located or placed,46,45,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Yountville,28,pass,100% located or placed,43,43,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Yreka,47,pass,100% located or placed,11,11,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Yuba City,51,pass,97% located or placed,35,34,0,0,0,,pass,pass,0,pass,0,frozen list
+9,Yucaipa,36,pass,100% located or placed,6,6,0,2,0,,pass,pass,0,pass,0,frozen list
+9,Yucca Valley,36,pass,97% located or placed,73,71,0,0,0,,pass,pass,0,pass,0,frozen list

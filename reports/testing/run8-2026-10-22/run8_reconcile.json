@@ -1,0 +1,218 @@
+{
+ "stages": {
+  "S0 #199 corrected (clipped network, 5f54c02)": {
+   "crashes": 2057508,
+   "on_map": 1771803,
+   "on_map_pct": 86.11,
+   "fatal_on_map_pct": 95.18,
+   "ksi_on_map_pct": 86.12,
+   "outcomes": {
+    "gps_usable": 1476753,
+    "placed_exact": 291538,
+    "cant_place": 140338,
+    "review": 145367,
+    "placed_fars": 1515,
+    "gps_usable_dms": 1997
+   },
+   "district_on_map_pct": {
+    "District 1": 94.46,
+    "District 10": 91.74,
+    "District 11": 83.55,
+    "District 12": 82.23,
+    "District 2": 88.43,
+    "District 3": 92.16,
+    "District 4": 89.66,
+    "District 5": 89.04,
+    "District 6": 87.58,
+    "District 7": 81.17,
+    "District 8": 86.36,
+    "District 9": 93.91,
+    "unknown": 23.73
+   }
+  },
+  "S1a box + 1 km network (code e2f1633)": {
+   "crashes": 2057508,
+   "on_map": 1795270,
+   "on_map_pct": 87.25,
+   "fatal_on_map_pct": 96.13,
+   "ksi_on_map_pct": 87.09,
+   "outcomes": {
+    "gps_usable": 1496646,
+    "placed_exact": 295053,
+    "cant_place": 223020,
+    "review": 39218,
+    "placed_fars": 1570,
+    "gps_usable_dms": 2001
+   },
+   "district_on_map_pct": {
+    "District 1": 94.69,
+    "District 10": 92.35,
+    "District 11": 85.17,
+    "District 12": 83.65,
+    "District 2": 88.97,
+    "District 3": 92.95,
+    "District 4": 90.94,
+    "District 5": 89.5,
+    "District 6": 88.22,
+    "District 7": 82.45,
+    "District 8": 87.74,
+    "District 9": 94.34,
+    "unknown": 23.73
+   }
+  },
+  "S1 + #212 leading abbreviations": {
+   "crashes": 2057508,
+   "on_map": 1796377,
+   "on_map_pct": 87.31,
+   "fatal_on_map_pct": 96.17,
+   "ksi_on_map_pct": 87.14,
+   "outcomes": {
+    "gps_usable": 1496646,
+    "placed_exact": 296160,
+    "cant_place": 223020,
+    "review": 38111,
+    "placed_fars": 1570,
+    "gps_usable_dms": 2001
+   },
+   "district_on_map_pct": {
+    "District 1": 94.69,
+    "District 10": 92.36,
+    "District 11": 85.21,
+    "District 12": 83.71,
+    "District 2": 89.01,
+    "District 3": 92.96,
+    "District 4": 90.98,
+    "District 5": 89.54,
+    "District 6": 88.28,
+    "District 7": 82.48,
+    "District 8": 87.91,
+    "District 9": 94.37,
+    "unknown": 23.73
+   }
+  },
+  "S2 + unique_pair auto-places": {
+   "crashes": 2057508,
+   "on_map": 1904924,
+   "on_map_pct": 92.58,
+   "fatal_on_map_pct": 97.33,
+   "ksi_on_map_pct": 93.31,
+   "outcomes": {
+    "gps_usable": 1496646,
+    "placed_exact": 296160,
+    "cant_place": 114473,
+    "review": 38111,
+    "placed_fars": 735,
+    "placed_unique_pair": 109382,
+    "gps_usable_dms": 2001
+   },
+   "district_on_map_pct": {
+    "District 1": 95.85,
+    "District 10": 94.96,
+    "District 11": 88.44,
+    "District 12": 90.41,
+    "District 2": 89.84,
+    "District 3": 93.21,
+    "District 4": 92.31,
+    "District 5": 92.46,
+    "District 6": 93.81,
+    "District 7": 93.71,
+    "District 8": 91.54,
+    "District 9": 94.99,
+    "unknown": 23.73
+   }
+  },
+  "S3 + #218 rule 2 (default points, coarse GPS)": {
+   "crashes": 2057508,
+   "on_map": 1904848,
+   "on_map_pct": 92.58,
+   "fatal_on_map_pct": 97.33,
+   "ksi_on_map_pct": 93.31,
+   "outcomes": {
+    "gps_usable": 1496444,
+    "placed_exact": 296252,
+    "cant_place": 114473,
+    "review": 38187,
+    "placed_fars": 735,
+    "placed_unique_pair": 109416,
+    "gps_usable_dms": 2001
+   },
+   "district_on_map_pct": {
+    "District 1": 95.83,
+    "District 10": 94.95,
+    "District 11": 88.43,
+    "District 12": 90.41,
+    "District 2": 89.84,
+    "District 3": 93.21,
+    "District 4": 92.3,
+    "District 5": 92.46,
+    "District 6": 93.81,
+    "District 7": 93.71,
+    "District 8": 91.54,
+    "District 9": 94.99,
+    "unknown": 23.73
+   }
+  }
+ },
+ "effects": [
+  {
+   "effect": "harness network (box + 1 km; also #204/#206 code)",
+   "on_map_change": 23467,
+   "on_map_pct": "86.11 -> 87.25",
+   "fatal_pct": "95.18 -> 96.13",
+   "ksi_pct": "86.12 -> 87.09",
+   "moves": {
+    "review -> cant_place": 107733,
+    "cant_place -> gps_usable": 18730,
+    "cant_place -> placed_exact": 4006,
+    "cant_place -> review": 2555,
+    "review -> placed_exact": 1015,
+    "placed_exact -> review": 975,
+    "review -> gps_usable": 883,
+    "placed_exact -> cant_place": 284,
+    "placed_exact -> gps_usable": 278,
+    "review -> placed_fars": 52,
+    "cant_place -> placed_fars": 41,
+    "placed_fars -> placed_exact": 37,
+    "placed_exact -> placed_fars": 6,
+    "placed_fars -> review": 4,
+    "cant_place -> gps_usable_dms": 4,
+    "placed_fars -> gps_usable": 3,
+    "gps_usable -> cant_place": 1
+   }
+  },
+  {
+   "effect": "#212",
+   "on_map_change": 1107,
+   "on_map_pct": "87.25 -> 87.31",
+   "fatal_pct": "96.13 -> 96.17",
+   "ksi_pct": "87.09 -> 87.14",
+   "moves": {
+    "review -> placed_exact": 1111,
+    "placed_exact -> review": 4
+   }
+  },
+  {
+   "effect": "unique_pair",
+   "on_map_change": 108547,
+   "on_map_pct": "87.31 -> 92.58",
+   "fatal_pct": "96.17 -> 97.33",
+   "ksi_pct": "87.14 -> 93.31",
+   "moves": {
+    "cant_place -> placed_unique_pair": 108547,
+    "placed_fars -> placed_unique_pair": 835
+   }
+  },
+  {
+   "effect": "#218 rule 2",
+   "on_map_change": -76,
+   "on_map_pct": "92.58 -> 92.58",
+   "fatal_pct": "97.33 -> 97.33",
+   "ksi_pct": "93.31 -> 93.31",
+   "moves": {
+    "gps_usable -> placed_exact": 92,
+    "gps_usable -> review": 76,
+    "gps_usable -> placed_unique_pair": 34
+   }
+  }
+ ]
+}
