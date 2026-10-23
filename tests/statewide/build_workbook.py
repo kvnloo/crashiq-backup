@@ -871,6 +871,46 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         table(wdb, "DifficultAudit", ["Sample", "Root cause", "Estimated crashes (weighted)"], aud, {1: 32, 2: 46},
               start_row=last + 3)
 
+    # ---------------- Agency GPS profile (#219): what each agency's police GPS is ----------------
+    gp_file = DATA / "gps_profile.json"
+    if gp_file.exists():
+        import gps_report
+        gp = json.loads(gp_file.read_text())
+        pl = json.loads((DATA / "gps_piles.json").read_text())
+        rc = json.loads((DATA / "gps_recheck.json").read_text())
+        agj = {a_["ncic"]: a_ for a_ in agencies}
+        wgp = wb.create_sheet("Agency GPS profile")
+        cls_ = gp["classes"]
+        st_ = gp["statewide"]
+        wgp["A1"], wgp["A1"].font = (f"Police GPS quality: {st_['gps_crashes']:,} crashes with GPS, each in one class "
+                                     "(#219)"), H1
+        wgp["A2"] = (f"Basis: {gp['basis']}. Classes, first match wins: degrees-minutes-seconds; shared default point "
+                     "(pooled pile rule, #218); 2 decimals or fewer; at the named intersection while the report states "
+                     "an offset over 50 ft (snapped); fits the report's streets; more than a mile from the named roads; "
+                     "other off-road. tests/statewide/gps_profile.py, gps_report.py.")
+        wgp["A2"].alignment = WRAP
+        wgp.merge_cells("A2:J2")
+        wgp.row_dimensions[2].height = 60
+        last = table(wgp, "GpsClasses", ["Class", "Crashes", "Share %"],
+                     [[gps_report.LABEL[c], st_[c], st_[f"{c}_pct"]] for c in cls_], {1: 52, 2: 14, 3: 10}, start_row=4)
+        last = table(wgp, "GpsYears", ["Year", "GPS crashes"] + [gps_report.LABEL[c] + " %" for c in cls_],
+                     [[y, v["gps_crashes"]] + [v[f"{c}_pct"] for c in cls_] for y, v in gp["by_year"].items()],
+                     {1: 10}, start_row=last + 3)
+        last = table(wgp, "GpsAgencies", ["NCIC", "Agency", "GPS crashes", "Share of reports with GPS %"]
+                     + [gps_report.LABEL[c] + " %" for c in cls_] + ["Not fitting % by year"],
+                     [[a_["ncic"], gps_report.agency_label(a_, agj), a_["gps_crashes"], a_["gps_share_pct"]]
+                      + [a_[f"{c}_pct"] for c in cls_] + [json.dumps(a_["not_fits_pct_by_year"])]
+                      for a_ in gp["agencies"] if a_["gps_crashes"] >= gps_report.MIN_GPS],
+                     {2: 40, 12: 50}, start_row=last + 3)
+        last = table(wgp, "GpsPiles", ["Lat", "Lon", "Crashes", "Agencies", "Street pairs", "Years", "Nearest streets",
+                                       "Nearest city outline", "Miles from its centre"],
+                     [[p_["lat"], p_["lon"], p_["crashes"], p_["n_agencies"], p_["street_pairs"],
+                       ", ".join(map(str, p_["by_year"])), "; ".join(p_["nearest_streets"]), p_["nearest_city_centre"],
+                       p_["miles_from_city_centre"]] for p_ in pl["piles"]], {7: 50, 8: 22}, start_row=last + 3)
+        table(wgp, "GpsRecheck", ["Re-check class ('GPS right, names wrong'?)", "All cases", "Random sample"],
+              [[k, v, rc["classes_random_sample"].get(k, 0)] for k, v in rc["classes"].items()], {1: 44},
+              start_row=last + 3)
+
     # ---------------- Citywide coverage (#199): every non-freeway crash of every agency ----------------
     cw_file = DATA / "citywide.json"
     if cw_file.exists():
@@ -1181,7 +1221,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
              "City by run", "Before-after", "Reconciliation", "Reconciliation by city", "Accuracy by agency",
              "Findings", "Citywide coverage", "Fatal before-after", "Fatal crashes", "Fatal residue", "Sources for unplaced", "Glossary"]
     order = [n for n in order if n in wb.sheetnames]
-    order[0:0] = [n for n in ("Statewide coverage", "Difficult bin") if n in wb.sheetnames]   # #199, #211 first
+    order[0:0] = [n for n in ("Statewide coverage", "Difficult bin", "Agency GPS profile") if n in wb.sheetnames]
     order[order.index("Summary") + 1:order.index("Summary") + 1] = [n for n in ("Conclusion",) if n in wb.sheetnames]
     wb._sheets = [wb[n] for n in order] + [w for w in wb._sheets if w.title not in order]   # never drop a sheet
     out_dir.mkdir(parents=True, exist_ok=True)

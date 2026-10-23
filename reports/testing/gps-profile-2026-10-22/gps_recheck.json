@@ -1,0 +1,27 @@
+{
+ "cases": 284,
+ "by_source": {
+  "audit": 84,
+  "random": 200
+ },
+ "classes": {
+  "freeway": 128,
+  "mid_block": 64,
+  "offset_consistent": 43,
+  "elsewhere": 25,
+  "gps_at_named_intersection": 10,
+  "default_point": 8,
+  "cross_disagrees": 4,
+  "names_misspelled": 2
+ },
+ "classes_random_sample": {
+  "freeway": 87,
+  "mid_block": 49,
+  "offset_consistent": 32,
+  "elsewhere": 15,
+  "default_point": 7,
+  "gps_at_named_intersection": 5,
+  "cross_disagrees": 3,
+  "names_misspelled": 2
+ }
+}
