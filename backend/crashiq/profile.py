@@ -387,9 +387,13 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("located_verified_typo", "Placed after correcting a small typo in a street name (one possible street, "
              "confirmed by the cross street)",
              value=sum(1 for c in placed if c.get("location_provenance") == "verified_typo")),
+        # freeway crashes placed by the report (#246, D1): crossing + offset, ramp terminal, connector; gated
+        _row("located_freeway", "Freeway crashes placed by the report (where the reference street crosses, the ramp "
+             "terminal, or along the connector, plus the stated distance)",
+             value=sum(1 for c in placed if c.get("location_provenance") == "freeway_offset")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
              value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied", "fars", "exact",
-                                                                                 "unique_pair", "verified_typo", "user"))),
+                                                                                 "unique_pair", "verified_typo", "freeway_offset", "user"))),
         # placed by street names using a name or road only Census TIGER/Line has (#229); already in the rows above
         _row("located_tiger", "Of the crashes placed by street names, placed with a street name or road only "
              "TIGER/Line has", value=sum(1 for c in placed if c.get("placed_on") == "tiger")),

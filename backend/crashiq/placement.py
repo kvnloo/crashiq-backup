@@ -9,7 +9,7 @@ any change to the gate is the user's decision (docs/03, PR #16 decision 2).
 
 from __future__ import annotations
 
-from . import fars, gps_rules, grade, locate, osm
+from . import fars, freeway, gps_rules, grade, locate, osm
 from . import network as network_mod
 from . import union as union_mod
 from .db import Database
@@ -96,6 +96,28 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
     return counts
 
 
+GPS_LIKE = ("gps", "gps_dms_corrected", "gps_offset_applied")
+
+
+def _freeway_gps(raw: dict, crashes: list[dict]) -> int:
+    """The report beats the officer's GPS on a freeway when they disagree (#246, docs/03 D1 rule 4): a GPS point more
+    than the GPS-check distance from the spot the report describes moves there; the GPS stays as provenance.
+    Only when the gate allows freeway_offset."""
+    from .assign import GPS_CHECK_FT
+    from .osm import metres
+    moved = 0
+    for c in crashes:
+        sp = freeway.place(raw, c)
+        if sp is None:
+            continue
+        # the spot already includes the stated distance: GPS within the check distance of it agrees (Tester, D1 step 2)
+        if metres((c["lat"], c["lon"]), (sp.lat, sp.lon)) * 3.28084 > GPS_CHECK_FT:
+            c["gps_as_reported"] = [c["lat"], c["lon"]]
+            c.update(lat=sp.lat, lon=sp.lon, location_source="freeway_offset", freeway_spot=sp.kind)
+            moved += 1
+    return moved
+
+
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
                     raw: dict | None = None, tiger=None) -> dict:
     gate = gate or locate.Gate()
@@ -106,15 +128,22 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
     # GPS snapped to the named intersection while the report states an offset (#218): the offset wins
     offset_cands = [c for c in result["crashes"] if c.get("location_source") in ("gps", "gps_dms_corrected", "gps_sign_corrected")
                     and (c.get("offset_ft") or 0) > gps_rules.CONFIG["offset_min_ft"] and c.get("offset_dir")]
+    # freeway crashes on a freeway corridor (#246, D1): placed by the report; GPS that disagrees with it is moved, gated
+    fwy = bool(net.get("is_freeway"))
+    fwy_gps = [c for c in result["crashes"] if fwy and c.get("is_freeway") and not c.get("exclude_rule")
+               and c.get("location_source") in GPS_LIKE and c.get("lat") is not None] if gate.allows("freeway_offset") else []
     onet = None
-    if (todo or offset_cands) and net.get("line"):
+    if (todo or offset_cands or fwy_gps) and net.get("line"):
         if raw is None:                   # OSM only (the caller passes the OSM + TIGER network when it has one, #229)
             raw = network_mod.fetch_overpass(db, network_mod.overpass_query([tuple(p) for p in net["line"]]))
         onet = osm.Network(raw)
     result["cleaning"]["gps_offset_applied"] = gps_rules.apply_offsets(onet, net, offset_cands) if onet else 0
+    counts["freeway_gps_moved"] = _freeway_gps(raw, fwy_gps) if fwy_gps else 0
     if todo and onet is not None:
         for c in todo:
-            pl = locate.place(onet, c)
+            sp = freeway.place(raw, c) if fwy and c.get("is_freeway") else None
+            pl = (locate.Placement("freeway_offset", sp.lat, sp.lon, note=f"{sp.kind}: {sp.note}") if sp
+                  else locate.place(onet, c))
             if gate.auto(pl):
                 c["lat"], c["lon"], c["location_source"] = pl.lat, pl.lon, pl.tier
                 counts["placed"][pl.tier] = counts["placed"].get(pl.tier, 0) + 1

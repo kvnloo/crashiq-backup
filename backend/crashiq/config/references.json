@@ -373,6 +373,17 @@
           ""
         ]
       ]
+    },
+    {
+      "topic": "Freeway crashes (placed by the report)",
+      "status": "decision",
+      "what": "A freeway report names the freeway (or a ramp, or a connector 'X TO Y'), a reference street that usually crosses over or under it, and a distance and compass direction from it, read as written. Mainline: from where the reference street crosses the lanes of the stated travel direction, the stated distance along those lanes. Ramp: at the ramp terminal on the reference street (under 400 ft), else along the ramp. Connector: from where it reaches the second freeway, the stated distance along the connector. A description that fits more than one place is never guessed. Where the officer's GPS is more than 400 ft from that spot, the report's spot is used and the GPS kept. Until it is measured on hidden police GPS and the user approves, these placements are suggestions on the review list and GPS is left as it is (user decision 2026-10-23, #246).",
+      "cite": [
+        [
+          "osm",
+          ""
+        ]
+      ]
     }
   ]
 }
