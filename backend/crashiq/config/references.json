@@ -309,6 +309,17 @@
           ""
         ]
       ]
+    },
+    {
+      "topic": "Placing crashes without GPS",
+      "status": "decision",
+      "what": "A report without usable GPS is placed from its two street names on the OpenStreetMap network, at the intersection, then moved by the report's distance and direction along the primary road. It is placed automatically when both names match exactly, or when the two streets can meet at only one place allowing only what the report leaves out (a leading or trailing direction, a suffix: AVENUE J & 20TH ST W is West Avenue J & 20th Street West). A direction the report writes must match. Pairs that meet in more than one place, and looser matches, go to the review list. User decisions 2026-10-18 (exact, 98% bar) and 2026-10-22 (unique pair).",
+      "cite": [
+        [
+          "osm",
+          ""
+        ]
+      ]
     }
   ]
 }

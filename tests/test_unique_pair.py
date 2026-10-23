@@ -66,13 +66,21 @@ def _pull(monkeypatch, *crashes):
     return {"cleaning": {}, "crashes": list(crashes)}
 
 
-def test_gate_off_by_default_leaves_a_one_click_suggestion(monkeypatch):
-    assert locate.configured_tiers() == frozenset({"exact"})                       # until #201 and the user's OK
+def test_on_by_default_since_the_users_decision(monkeypatch):
+    assert locate.configured_tiers() == frozenset({"exact", "unique_pair"})        # docs/03, 2026-10-22
     r = _pull(monkeypatch, crash("AVENUE J", "20TH ST W"))
     counts = placement.place_unmatched(None, {"line": [(34.69, -118.17), (34.69, -118.10)]}, r)
     c = r["crashes"][0]
-    assert c["location_source"] == "unmatched" and c["lat"] is None
-    assert c["suggestion"]["tier"] == "unique_pair" and (c["suggestion"]["lat"], c["suggestion"]["lon"]) == NET.coord[2]
+    assert c["location_source"] == "unique_pair" and (c["lat"], c["lon"]) == NET.coord[2]
+    assert counts["placed"] == {"unique_pair": 1}
+
+
+def test_gate_off_leaves_a_one_click_suggestion(monkeypatch):
+    r = _pull(monkeypatch, crash("AVENUE J", "20TH ST W"))
+    counts = placement.place_unmatched(None, {"line": [(34.69, -118.17), (34.69, -118.10)]}, r,
+                                       gate=locate.Gate(auto_tiers=frozenset({"exact"})))
+    c = r["crashes"][0]
+    assert c["location_source"] == "unmatched" and c["suggestion"]["tier"] == "unique_pair"
     assert counts["placed"] == {} and counts["suggested"] == 1
 
 

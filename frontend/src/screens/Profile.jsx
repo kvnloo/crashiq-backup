@@ -235,7 +235,7 @@ const RULE_LABEL = { outside_buffer: 'outside the corridor buffer', outside_stud
 // short labels so the line stays one line at the 400 px column; the T1 row labels (ⓘ, export) carry the full wording
 const QUALITY = [['located_gps', 'GPS', 'q-gps', "Located by the officer's GPS"],
   ['located_fars', 'FARS', 'q-fars', 'Fatal crashes placed at their FARS point (NHTSA), checked against the streets the report names'], ['located_exact', 'exact', 'q-exact', 'Placed by exact street-name match'],
-  ['located_unique_pair', 'one possible corner', 'q-pair', "Placed where the report's two streets meet at only one place"],
+  ['located_unique_pair', 'one possible corner', 'q-pair', "Placed where the report's two streets meet at only one place (a direction or suffix the report leaves out may differ)"],
   ['located_other', 'other', 'q-other', 'Placed by other matching tiers'], ['user_placed', 'by you', 'q-user', 'Placed by you on the review list'],
   ['unplaced', 'to review', 'q-review', 'Not placed yet: open the review list'], ['excluded', 'nearby, outside the corridor', 'q-ex', 'Nearby crashes outside the corridor: show the rules']]
 

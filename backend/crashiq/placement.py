@@ -3,7 +3,7 @@
 Runs right after a crash pull, on the corridor's own OpenStreetMap data (the cached Overpass response, so no new
 download). The pull already keeps only no-coordinate reports on the study stretch (#48). Placed crashes get the tier
 as provenance (`exact`, ...); the rest stay `unmatched` with the locator's suggestion for the review list.
-Auto-placement follows `locate.Gate()` (default: only tiers proven >= 98% on held-out data, i.e. `exact`);
+Auto-placement follows `locate.Gate()` (the tiers in config/placement.json: `exact` and `unique_pair`);
 any change to the gate is the user's decision (docs/03, PR #16 decision 2).
 """
 

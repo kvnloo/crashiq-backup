@@ -1,4 +1,7 @@
 {
-  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only after it meets the 98% bar (Wilson 95% lower bound) on hidden-truth tests and the user confirms (docs/03). unique_pair (#203): pending the Tester's #201 measurement.",
-  "auto_tiers": ["exact"]
+  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only by a user decision (docs/03): exact (>= 98% Wilson 95% lower bound on hidden-truth tests); unique_pair (user 2026-10-22, #211 evidence: at or above exact on hidden police GPS and LAPD open data). Street pairs that meet in more than one place still go to review.",
+  "auto_tiers": [
+    "exact",
+    "unique_pair"
+  ]
 }
