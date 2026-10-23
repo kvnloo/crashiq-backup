@@ -1,0 +1,1894 @@
+{
+ "thresholds": {
+  "min_crashes": 10,
+  "min_street_pairs": 5,
+  "max_fit_share": 0.5,
+  "point": "exact to 5 decimals (~1 m)"
+ },
+ "piles": [
+  {
+   "agencies": {
+    "9245": 39,
+    "9220": 36,
+    "9590": 35,
+    "9670": 21,
+    "9295": 16
+   },
+   "n_agencies": 59,
+   "lat": 38.8198,
+   "lon": -121.0276,
+   "crashes": 333,
+   "street_pairs": 294,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 211,
+    "2022": 122
+   },
+   "city_names": {
+    "Unincorporated": 201,
+    "Los Angeles": 38,
+    "Roseville": 13
+   },
+   "examples": [
+    "11TH & SR 198",
+    "12TH & I 110",
+    "14TH & ELKHORN",
+    "23RD & I 110",
+    "29TH & I 880"
+   ],
+   "nearest_streets": [
+    "Pilot View Drive (82 ft)",
+    "Pilot Peak Road (612 ft)",
+    "Safari Trail (2930 ft)"
+   ],
+   "nearest_city_centre": "Auburn",
+   "miles_from_city_centre": 6.72
+  },
+  {
+   "agencies": {
+    "9250": 22,
+    "9530": 21,
+    "9252": 20,
+    "9840": 12,
+    "9435": 12
+   },
+   "n_agencies": 51,
+   "lat": 38.59684,
+   "lon": -121.49004,
+   "crashes": 256,
+   "street_pairs": 240,
+   "fit_share": 0.008,
+   "by_year": {
+    "2025": 256
+   },
+   "city_names": {
+    "Unincorporated": 137,
+    "Los Angeles": 16,
+    "San Diego": 7
+   },
+   "examples": [
+    "10TH & B",
+    "110 TO REDONDO BEACH & REDONDO BEACH",
+    "11TH & I 10",
+    "124TH & AVALON",
+    "150TH & SR 185"
+   ],
+   "nearest_streets": [
+    "Signature Street (60 ft)",
+    "North 7th Street (172 ft)",
+    "Township 9 Avenue (229 ft)"
+   ],
+   "nearest_city_centre": "Sacramento",
+   "miles_from_city_centre": 2.88
+  },
+  {
+   "agencies": {
+    "9590": 31,
+    "9670": 13,
+    "9840": 13,
+    "9835": 11,
+    "9675": 11
+   },
+   "n_agencies": 59,
+   "lat": 38.5824,
+   "lon": -121.4954,
+   "crashes": 225,
+   "street_pairs": 202,
+   "fit_share": 0.004,
+   "by_year": {
+    "2021": 116,
+    "2022": 109
+   },
+   "city_names": {
+    "Unincorporated": 124,
+    "Los Angeles": 37,
+    "Anaheim": 10
+   },
+   "examples": [
+    "110 & MANCHESTER",
+    "11TH & NEIGHBORS",
+    "28TH & ELKHORN",
+    "30TH & I 580",
+    "39TH & EXPOSITION STATE PARK"
+   ],
+   "nearest_streets": [
+    "8th Street (94 ft)",
+    "I Street (123 ft)",
+    "H Street (295 ft)"
+   ],
+   "nearest_city_centre": "Sacramento",
+   "miles_from_city_centre": 2.33
+  },
+  {
+   "agencies": {
+    "9590": 42,
+    "9245": 19,
+    "9295": 10,
+    "9266": 5,
+    "9535": 3
+   },
+   "n_agencies": 21,
+   "lat": 34.953,
+   "lon": -120.4155,
+   "crashes": 103,
+   "street_pairs": 81,
+   "fit_share": 0.039,
+   "by_year": {
+    "2021": 14,
+    "2022": 89
+   },
+   "city_names": {
+    "Unincorporated": 50,
+    "Los Angeles": 43,
+    "Anaheim": 1
+   },
+   "examples": [
+    "11TH & BIRD",
+    "11TH & I 110",
+    "11TH & I 205",
+    "190TH & I 405",
+    "21ST & I 110"
+   ],
+   "nearest_streets": [
+    "East Main Street (55 ft)",
+    "Nicholson Avenue (268 ft)",
+    "East Church Street (421 ft)"
+   ],
+   "nearest_city_centre": "Santa Maria",
+   "miles_from_city_centre": 1.69
+  },
+  {
+   "agencies": {
+    "1984": 56,
+    "1942": 9
+   },
+   "n_agencies": 2,
+   "lat": 34.23992,
+   "lon": -118.52625,
+   "crashes": 65,
+   "street_pairs": 47,
+   "fit_share": 0.108,
+   "by_year": {
+    "2021": 7,
+    "2022": 8,
+    "2023": 21,
+    "2024": 11,
+    "2025": 18
+   },
+   "city_names": {
+    "Csu Northridge": 56,
+    "Los Angeles": 9
+   },
+   "examples": [
+    "1ST LEVEL & G3 PARKING LOT",
+    "B1 PARKING LOT & NORDHOFF",
+    "B3 PARKING STRUCTURE LEVEL 2 & NORDHOFF",
+    "B5 PARKING LOT & NORDHOFF",
+    "B5 PARKING STRUC & NORDHOFF"
+   ],
+   "nearest_streets": [
+    "Vincennes Street (374 ft)",
+    "Bertrand Avenue (387 ft)",
+    "Prairie Street (387 ft)"
+   ],
+   "nearest_city_centre": "Unincorporated Chatsworth",
+   "miles_from_city_centre": 6.07
+  },
+  {
+   "agencies": {
+    "9220": 60
+   },
+   "n_agencies": 1,
+   "lat": 38.12346,
+   "lon": -121.12346,
+   "crashes": 60,
+   "street_pairs": 45,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 32,
+    "2022": 28
+   },
+   "city_names": {
+    "Unincorporated": 49,
+    "Roseville": 6,
+    "Rocklin": 3
+   },
+   "examples": [
+    "ATHENS & FIDDYMENT",
+    "ATHENS & THUNDER VALLEY",
+    "AUBURN FOLSOM & CRIPPLE CREEK",
+    "AUBURN FOLSOM & NEWCASTLE",
+    "BASELINE & PALLADAY"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Lodi",
+   "miles_from_city_centre": 10.85
+  },
+  {
+   "agencies": {
+    "9590": 15,
+    "9540": 13,
+    "1900": 11,
+    "9535": 4,
+    "9575": 2
+   },
+   "n_agencies": 6,
+   "lat": 34,
+   "lon": -118,
+   "crashes": 46,
+   "street_pairs": 43,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 15,
+    "2022": 21,
+    "2023": 5,
+    "2024": 4,
+    "2025": 1
+   },
+   "city_names": {
+    "Los Angeles": 18,
+    "Unincorporated": 13,
+    "West Hollywood": 6
+   },
+   "examples": [
+    "1ST & DITMAN",
+    "7TH & CENTRAL",
+    "BALBOA & I 5",
+    "BALDWIN PARK & TEMPLE",
+    "BEAUDRY & I 110"
+   ],
+   "nearest_streets": [
+    "Athel Drive (160 ft)",
+    "East Oak Canyon Drive (176 ft)",
+    "Descending Drive (484 ft)"
+   ],
+   "nearest_city_centre": "Whittier",
+   "miles_from_city_centre": 1.8
+  },
+  {
+   "agencies": {
+    "9675": 11,
+    "9685": 10,
+    "9840": 7,
+    "3004": 4,
+    "9690": 3
+   },
+   "n_agencies": 7,
+   "lat": 33,
+   "lon": -117,
+   "crashes": 39,
+   "street_pairs": 38,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 20,
+    "2022": 16,
+    "2023": 2,
+    "2024": 1
+   },
+   "city_names": {
+    "Unincorporated": 10,
+    "Costa Mesa": 6,
+    "Anaheim": 4
+   },
+   "examples": [
+    "ADAMS & PLACENTIA",
+    "ALICIA & I 5",
+    "ANZA & RANCHO CALIFORNIA",
+    "BAKER & SR 55",
+    "BLANIK & CORBETT"
+   ],
+   "nearest_streets": [
+    "Oak Canyon Road (388 ft)"
+   ],
+   "nearest_city_centre": "Poway",
+   "miles_from_city_centre": 0.75
+  },
+  {
+   "agencies": {
+    "9590": 9,
+    "9670": 5,
+    "9245": 3,
+    "9221": 3,
+    "9855": 3
+   },
+   "n_agencies": 17,
+   "lat": 38.581,
+   "lon": -121.4946,
+   "crashes": 37,
+   "street_pairs": 33,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 37
+   },
+   "city_names": {
+    "Unincorporated": 14,
+    "Los Angeles": 11,
+    "Westminster": 2
+   },
+   "examples": [
+    "3RD & I 110",
+    "7TH & I 110",
+    "ANTELOPE & I 80",
+    "APPIAN & I 80",
+    "ARTESIA & I 5"
+   ],
+   "nearest_streets": [
+    "9th Street (104 ft)",
+    "J Street (133 ft)",
+    "I Street (285 ft)"
+   ],
+   "nearest_city_centre": "Sacramento",
+   "miles_from_city_centre": 2.23
+  },
+  {
+   "agencies": {
+    "9252": 16,
+    "9250": 9,
+    "9220": 7
+   },
+   "n_agencies": 3,
+   "lat": 38,
+   "lon": -121,
+   "crashes": 32,
+   "street_pairs": 29,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 20,
+    "2022": 12
+   },
+   "city_names": {
+    "Unincorporated": 25,
+    "Sacramento": 4,
+    "Auburn": 1
+   },
+   "examples": [
+    "47TH & 47TH",
+    "65TH & STOCKTON",
+    "65TH & US 50",
+    "ALTA ARDEN & HOWE",
+    "ARDEN & FULTON"
+   ],
+   "nearest_streets": [
+    "Escalon Bellota Road (24 ft)"
+   ],
+   "nearest_city_centre": "Escalon",
+   "miles_from_city_centre": 15.24
+  },
+  {
+   "agencies": {
+    "9550": 17,
+    "9530": 10,
+    "1900": 5
+   },
+   "n_agencies": 3,
+   "lat": 33,
+   "lon": -118,
+   "crashes": 32,
+   "street_pairs": 31,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 11,
+    "2022": 17,
+    "2023": 4
+   },
+   "city_names": {
+    "Unincorporated": 24,
+    "Pico Rivera": 3,
+    "Los Angeles": 2
+   },
+   "examples": [
+    "124TH & SAN PEDRO",
+    "195TH & NORWALK",
+    "223RD & MAIN",
+    "74TH & ALAMEDA",
+    "76TH & COMPTON"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Avalon",
+   "miles_from_city_centre": 30.5
+  },
+  {
+   "agencies": {
+    "9855": 16,
+    "3609": 9,
+    "9525": 3,
+    "9860": 1,
+    "9840": 1
+   },
+   "n_agencies": 5,
+   "lat": 34,
+   "lon": -117,
+   "crashes": 30,
+   "street_pairs": 25,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 12,
+    "2022": 17,
+    "2023": 1
+   },
+   "city_names": {
+    "Rialto": 9,
+    "Ontario": 7,
+    "Fontana": 7
+   },
+   "examples": [
+    "AGUA MANSA & RIVERSIDE",
+    "ARCHIBALD & I 10",
+    "BLAKE & MACY",
+    "BLOOMINGTON & WILLOW",
+    "CARNELIAN & SR 210"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Cherry Valley",
+   "miles_from_city_centre": 2.75
+  },
+  {
+   "agencies": {
+    "9590": 6,
+    "9675": 4,
+    "9670": 3,
+    "9370": 2,
+    "9260": 2
+   },
+   "n_agencies": 15,
+   "lat": 33.8942,
+   "lon": -118.2982,
+   "crashes": 28,
+   "street_pairs": 27,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 21,
+    "2022": 7
+   },
+   "city_names": {
+    "Unincorporated": 10,
+    "Los Angeles": 6,
+    "Anaheim": 3
+   },
+   "examples": [
+    "11TH & I 980",
+    "23RD & I 110",
+    "3RD & I 110",
+    "ARROYO SECO & US 101",
+    "BAKE & I 5"
+   ],
+   "nearest_streets": [
+    "Raymond Avenue (34 ft)",
+    "Marine Avenue (162 ft)",
+    "Van Buren Avenue (347 ft)"
+   ],
+   "nearest_city_centre": "Gardena",
+   "miles_from_city_centre": 0.63
+  },
+  {
+   "agencies": {
+    "5002": 25,
+    "5001": 1
+   },
+   "n_agencies": 2,
+   "lat": 37.6093,
+   "lon": -120.9388,
+   "crashes": 26,
+   "street_pairs": 10,
+   "fit_share": 0.038,
+   "by_year": {
+    "2021": 18,
+    "2022": 2,
+    "2024": 4,
+    "2025": 2
+   },
+   "city_names": {
+    "Modesto": 25,
+    "Ceres": 1
+   },
+   "examples": [
+    "ADRIEN & MITCHELL",
+    "ALPHONSE & MITCHELL",
+    "ANGIE & EAST HATCH",
+    "EAST HATCH & HATCH",
+    "EAST HATCH & MITCHELL"
+   ],
+   "nearest_streets": [
+    "East Hatch Road (7 ft)",
+    "Mitchell Road (7 ft)",
+    "Angie Avenue (381 ft)"
+   ],
+   "nearest_city_centre": "Ceres",
+   "miles_from_city_centre": 1.74
+  },
+  {
+   "agencies": {
+    "3610": 26
+   },
+   "n_agencies": 1,
+   "lat": 34.135,
+   "lon": -117.27642,
+   "crashes": 26,
+   "street_pairs": 21,
+   "fit_share": 0.385,
+   "by_year": {
+    "2021": 7,
+    "2022": 7,
+    "2023": 5,
+    "2024": 3,
+    "2025": 4
+   },
+   "city_names": {
+    "San Bernardino": 26
+   },
+   "examples": [
+    "28TH & VICTORIA",
+    "ACACIA & WEST BASELINE",
+    "BASELINE & NORTH 1236 N WATERMAN",
+    "BASELINE & NORTH PERRIS HILL",
+    "DEL ROSA & EAST DATE"
+   ],
+   "nearest_streets": [
+    "East 21st Street (334 ft)",
+    "North Kenwood Avenue (334 ft)",
+    "East Highland Avenue (364 ft)"
+   ],
+   "nearest_city_centre": "San Bernardino",
+   "miles_from_city_centre": 1.75
+  },
+  {
+   "agencies": {
+    "3714": 19,
+    "3711": 3,
+    "3797": 1
+   },
+   "n_agencies": 3,
+   "lat": 32.77563,
+   "lon": -117.07472,
+   "crashes": 23,
+   "street_pairs": 6,
+   "fit_share": 0.217,
+   "by_year": {
+    "2021": 1,
+    "2022": 1,
+    "2023": 4,
+    "2024": 1,
+    "2025": 16
+   },
+   "city_names": {
+    "San Diego State Univ": 19,
+    "San Diego": 3,
+    "Uc San Diego": 1
+   },
+   "examples": [
+    "55TH & AZTEC CIRCLE",
+    "AZTEC CIR & CANYON CREST",
+    "AZTEC CIRCLE & AZTEC CIRCLE DR 5530",
+    "AZTEC CIRCLE & CANYON CREST",
+    "AZTEC CIRCLE & LEVEL 5 PARKING STRUCTURE"
+   ],
+   "nearest_streets": [
+    "Canyon Crest Drive (173 ft)",
+    "Scripps Terrace (221 ft)",
+    "Campanile Diagonal (472 ft)"
+   ],
+   "nearest_city_centre": "Lemon Grove",
+   "miles_from_city_centre": 3.6
+  },
+  {
+   "agencies": {
+    "9390": 6,
+    "9590": 3,
+    "9221": 3,
+    "9295": 2,
+    "9675": 2
+   },
+   "n_agencies": 10,
+   "lat": 33.9004,
+   "lon": -118.0079,
+   "crashes": 22,
+   "street_pairs": 22,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 4,
+    "2022": 18
+   },
+   "city_names": {
+    "Unincorporated": 9,
+    "Los Angeles": 3,
+    "Pleasanton": 3
+   },
+   "examples": [
+    "BENTON & LEON",
+    "BERNAL & I 680",
+    "CAMANCHE & CURRAN",
+    "CIMMARRON & CIMMARRON",
+    "CISCO ROAD OVER CROSSING & INTERSTATE 80"
+   ],
+   "nearest_streets": [
+    "Manzanares Road (52 ft)",
+    "Jalon Road (208 ft)",
+    "Caravaca Road (296 ft)"
+   ],
+   "nearest_city_centre": "La Mirada",
+   "miles_from_city_centre": 0.05
+  },
+  {
+   "agencies": {
+    "2401": 20
+   },
+   "n_agencies": 1,
+   "lat": 37.3403,
+   "lon": -120.60938,
+   "crashes": 20,
+   "street_pairs": 9,
+   "fit_share": 0.15,
+   "by_year": {
+    "2021": 10,
+    "2022": 5,
+    "2023": 1,
+    "2024": 3,
+    "2025": 1
+   },
+   "city_names": {
+    "Atwater": 20
+   },
+   "examples": [
+    "APPLEGATE & BELL",
+    "APPLEGATE & COMMERCE",
+    "APPLEGATE & SYCAMORE",
+    "AVIATOR & BUSINESS",
+    "COMMERCE & COMMERCE AV 800"
+   ],
+   "nearest_streets": [
+    "Golden State Highway (935 ft)",
+    "Progress Avenue (1226 ft)"
+   ],
+   "nearest_city_centre": "Atwater",
+   "miles_from_city_centre": 1.11
+  },
+  {
+   "agencies": {
+    "4109": 19
+   },
+   "n_agencies": 1,
+   "lat": 37.45296,
+   "lon": -122.18172,
+   "crashes": 19,
+   "street_pairs": 16,
+   "fit_share": 0.053,
+   "by_year": {
+    "2021": 11,
+    "2023": 2,
+    "2024": 6
+   },
+   "city_names": {
+    "Menlo Park": 19
+   },
+   "examples": [
+    "BAYFRONT & CHRYSLER",
+    "BAYFRONT & MARSH",
+    "BAYFRONT & MARSH ROAD HAVEN",
+    "BAYFRONT EX & CHRYSLER",
+    "BAYFRONT EX & EASTERN CURB PROLONGATION LINE MARSH"
+   ],
+   "nearest_streets": [
+    "El Camino Real (18 ft)",
+    "Menlo Avenue (18 ft)",
+    "Ravenswood Avenue (18 ft)"
+   ],
+   "nearest_city_centre": "Atherton",
+   "miles_from_city_centre": 1.06
+  },
+  {
+   "agencies": {
+    "9390": 8,
+    "9855": 3,
+    "9835": 2,
+    "9295": 1,
+    "9535": 1
+   },
+   "n_agencies": 9,
+   "lat": 35.7775,
+   "lon": -120.605,
+   "crashes": 19,
+   "street_pairs": 18,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 1,
+    "2022": 18
+   },
+   "city_names": {
+    "Unincorporated": 9,
+    "Pleasanton": 5,
+    "Ontario": 2
+   },
+   "examples": [
+    "AIRWAY & I 580",
+    "EL CHARRO & I 580",
+    "GHOST TOWN & I 15",
+    "HOPYARD & I 580",
+    "I 10 & MILLIKEN"
+   ],
+   "nearest_streets": [
+    "Via Escondida (28 ft)",
+    "Ranchita Vista Way (283 ft)"
+   ],
+   "nearest_city_centre": "Paso Robles",
+   "miles_from_city_centre": 9.9
+  },
+  {
+   "agencies": {
+    "4104": 19
+   },
+   "n_agencies": 1,
+   "lat": 37.57787,
+   "lon": -122.34809,
+   "crashes": 19,
+   "street_pairs": 6,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 3,
+    "2022": 2,
+    "2023": 5,
+    "2024": 5,
+    "2025": 4
+   },
+   "city_names": {
+    "Burlingame": 19
+   },
+   "examples": [
+    "101SB & BROADWAY",
+    "BAYSHORE & BROADWAY",
+    "BROADWAY & OLD BAYSHORE",
+    "BROADWAY & ROLLINS",
+    "BROADWAY & SR 101"
+   ],
+   "nearest_streets": [
+    "Burlingame Avenue (8 ft)",
+    "Primrose Road (19 ft)",
+    "Donnelly Avenue (309 ft)"
+   ],
+   "nearest_city_centre": "Burlingame",
+   "miles_from_city_centre": 1.24
+  },
+  {
+   "agencies": {
+    "2401": 18
+   },
+   "n_agencies": 1,
+   "lat": 37.34828,
+   "lon": -120.61105,
+   "crashes": 18,
+   "street_pairs": 15,
+   "fit_share": 0.278,
+   "by_year": {
+    "2021": 6,
+    "2022": 8,
+    "2023": 1,
+    "2024": 2,
+    "2025": 1
+   },
+   "city_names": {
+    "Atwater": 18
+   },
+   "examples": [
+    "1ST & BELLEVUE",
+    "3RD & FIR",
+    "5TH & GROVE",
+    "APPLEGATE & ATWATER",
+    "ATWATER & MAPLE"
+   ],
+   "nearest_streets": [
+    "Cedar Avenue (130 ft)",
+    "5th Street (160 ft)",
+    "6th Street (168 ft)"
+   ],
+   "nearest_city_centre": "Atwater",
+   "miles_from_city_centre": 0.92
+  },
+  {
+   "agencies": {
+    "1602": 17
+   },
+   "n_agencies": 1,
+   "lat": 36.32745,
+   "lon": -119.64568,
+   "crashes": 17,
+   "street_pairs": 16,
+   "fit_share": 0.059,
+   "by_year": {
+    "2021": 8,
+    "2022": 3,
+    "2023": 4,
+    "2024": 1,
+    "2025": 1
+   },
+   "city_names": {
+    "Hanford": 17
+   },
+   "examples": [
+    "11TH & LACEY",
+    "1216480E SCE POLE & WEST GRANGEVILLE",
+    "12TH & TRAX",
+    "9 1 2 & EAST LACEY",
+    "9 1 4 & WEST LACEY"
+   ],
+   "nearest_streets": [
+    "North Douty Street (95 ft)",
+    "East 8th Street (123 ft)",
+    "West 8th Street (123 ft)"
+   ],
+   "nearest_city_centre": "Hanford",
+   "miles_from_city_centre": 0.59
+  },
+  {
+   "agencies": {
+    "1509": 16
+   },
+   "n_agencies": 1,
+   "lat": 35.13993,
+   "lon": -118.46848,
+   "crashes": 16,
+   "street_pairs": 6,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 6,
+    "2022": 4,
+    "2023": 1,
+    "2024": 4,
+    "2025": 1
+   },
+   "city_names": {
+    "Tehachapi": 16
+   },
+   "examples": [
+    "RED APPLE & TUCKER",
+    "SR 58 & TUCKER",
+    "TEHACHAPI & TUCKER",
+    "TUCKER & WALMART DWY",
+    "TUCKER & WEST TEHACHAPI"
+   ],
+   "nearest_streets": [
+    "West Tehachapi Boulevard (23 ft)",
+    "Bakersfield\u2013Tehachapi Highway (588 ft)"
+   ],
+   "nearest_city_centre": "Tehachapi",
+   "miles_from_city_centre": 1.69
+  },
+  {
+   "agencies": {
+    "1900": 16
+   },
+   "n_agencies": 1,
+   "lat": 34.09798,
+   "lon": -117.80608,
+   "crashes": 16,
+   "street_pairs": 6,
+   "fit_share": 0.062,
+   "by_year": {
+    "2022": 2,
+    "2023": 10,
+    "2024": 4
+   },
+   "city_names": {
+    "San Dimas": 16
+   },
+   "examples": [
+    "ARROW & LONEHILL",
+    "COVINA & LONEHILL",
+    "COVINA & STATE HIGHWAY 57",
+    "COVINA & TERRACE",
+    "GLADSTONE & LONEHILL"
+   ],
+   "nearest_streets": [
+    "Ironbark Lane (14 ft)",
+    "Tanglewood Drive (14 ft)",
+    "South San Dimas Avenue (490 ft)"
+   ],
+   "nearest_city_centre": "San Dimas",
+   "miles_from_city_centre": 1.2
+  },
+  {
+   "agencies": {
+    "9220": 15
+   },
+   "n_agencies": 1,
+   "lat": 38.12345,
+   "lon": -121.12345,
+   "crashes": 15,
+   "street_pairs": 11,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 15
+   },
+   "city_names": {
+    "Unincorporated": 9,
+    "Roseville": 6
+   },
+   "examples": [
+    "AMORUSO & SUNSET",
+    "BEAR RIVER & SR 65",
+    "BLUE OAKS & SR 65",
+    "CINCINNATI & NICHOLS",
+    "I 80 & SR 65"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Lodi",
+   "miles_from_city_centre": 10.85
+  },
+  {
+   "agencies": {
+    "9220": 14
+   },
+   "n_agencies": 1,
+   "lat": 34.12346,
+   "lon": -121.12346,
+   "crashes": 14,
+   "street_pairs": 13,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 1,
+    "2022": 13
+   },
+   "city_names": {
+    "Unincorporated": 12,
+    "Roseville": 1,
+    "Loomis": 1
+   },
+   "examples": [
+    "AUBURN FOLSOM & KING",
+    "AUBURN FOLSOM & NEWCASTLE",
+    "DUTCH RAVINE & SR 193",
+    "FORESTHILL & LINCOLN",
+    "I 80 & LINCOLN"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Lompoc",
+   "miles_from_city_centre": 52.17
+  },
+  {
+   "agencies": {
+    "9420": 14
+   },
+   "n_agencies": 1,
+   "lat": 35,
+   "lon": -119,
+   "crashes": 14,
+   "street_pairs": 14,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 7,
+    "2022": 7
+   },
+   "city_names": {
+    "Unincorporated": 9,
+    "Bakersfield": 5
+   },
+   "examples": [
+    "AIRPORT & CHINA GRADE LOOP",
+    "AIRPORT & SR 99",
+    "ALLEN & OLD TOWN",
+    "BARLOW & NILES",
+    "BEARDSLEY & NORTH CHESTER"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Arvin",
+   "miles_from_city_centre": 16.66
+  },
+  {
+   "agencies": {
+    "4116": 14
+   },
+   "n_agencies": 1,
+   "lat": 37.55248,
+   "lon": -122.28008,
+   "crashes": 14,
+   "street_pairs": 9,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 4,
+    "2022": 1,
+    "2023": 3,
+    "2024": 6
+   },
+   "city_names": {
+    "San Mateo": 14
+   },
+   "examples": [
+    "EAST HILLSDALE",
+    "EAST HILLSDALE & FRANKLIN",
+    "EAST HILLSDALE & S",
+    "EAST HILLSDALE & SR 101",
+    "EAST HILLSDALE & US 101"
+   ],
+   "nearest_streets": [
+    "East Hillsdale Boulevard (48 ft)",
+    "Sea Spray Lane (159 ft)",
+    "Altair Avenue (167 ft)"
+   ],
+   "nearest_city_centre": "San Mateo",
+   "miles_from_city_centre": 1.91
+  },
+  {
+   "agencies": {
+    "2404": 14
+   },
+   "n_agencies": 1,
+   "lat": 37.38688,
+   "lon": -120.72353,
+   "crashes": 14,
+   "street_pairs": 5,
+   "fit_share": 0.286,
+   "by_year": {
+    "2021": 1,
+    "2022": 3,
+    "2023": 2,
+    "2024": 6,
+    "2025": 2
+   },
+   "city_names": {
+    "Livingston": 14
+   },
+   "examples": [
+    "CAMPBELL & HAMMATT",
+    "F & HAMMATT",
+    "F & WINTON",
+    "HAMMATT & SR 99",
+    "SR 99 & WINTON"
+   ],
+   "nearest_streets": [
+    "Main Street (90 ft)",
+    "2nd Street (246 ft)",
+    "A Street (246 ft)"
+   ],
+   "nearest_city_centre": "Livingston",
+   "miles_from_city_centre": 0.42
+  },
+  {
+   "agencies": {
+    "1203": 14
+   },
+   "n_agencies": 1,
+   "lat": 40.77996,
+   "lon": -124.18974,
+   "crashes": 14,
+   "street_pairs": 8,
+   "fit_share": 0.429,
+   "by_year": {
+    "2021": 4,
+    "2022": 2,
+    "2023": 5,
+    "2024": 1,
+    "2025": 2
+   },
+   "city_names": {
+    "Eureka": 14
+   },
+   "examples": [
+    "5TH & A",
+    "BAYSHORE & BROADWAY",
+    "BAYSHORE MALL & BROADWAY",
+    "BROADWAY & BROADWAY",
+    "BROADWAY & HARRIS"
+   ],
+   "nearest_streets": [
+    "Broadway Street (621 ft)"
+   ],
+   "nearest_city_centre": "Eureka",
+   "miles_from_city_centre": 2.24
+  },
+  {
+   "agencies": {
+    "5604": 14
+   },
+   "n_agencies": 1,
+   "lat": 34.22496,
+   "lon": -119.22113,
+   "crashes": 14,
+   "street_pairs": 5,
+   "fit_share": 0.071,
+   "by_year": {
+    "2021": 2,
+    "2022": 1,
+    "2023": 4,
+    "2024": 5,
+    "2025": 2
+   },
+   "city_names": {
+    "Oxnard": 14
+   },
+   "examples": [
+    "GUM TREE & NORTH VICTORIA",
+    "GUM TREE & VICTORIA",
+    "GUMTREE & NORTH VICTORIA",
+    "GUMTREE & VICTORIA",
+    "NORTH VICTORIA & WEST GONZALES"
+   ],
+   "nearest_streets": [
+    "North Victoria Avenue (19 ft)"
+   ],
+   "nearest_city_centre": "Oxnard",
+   "miles_from_city_centre": 2.39
+  },
+  {
+   "agencies": {
+    "4120": 14
+   },
+   "n_agencies": 1,
+   "lat": 37.55855,
+   "lon": -122.27108,
+   "crashes": 14,
+   "street_pairs": 7,
+   "fit_share": 0.0,
+   "by_year": {
+    "2022": 2,
+    "2023": 4,
+    "2024": 5,
+    "2025": 3
+   },
+   "city_names": {
+    "Foster City": 14
+   },
+   "examples": [
+    "CHESS & LIGHTPOLE 3295A",
+    "CHESS & LP 3297",
+    "CHESS & SR 92",
+    "EDGEWATER & METRO CENTER",
+    "EDGEWATER & SR 92"
+   ],
+   "nearest_streets": [
+    "Shell Boulevard (36 ft)",
+    "East Hillsdale Boulevard (63 ft)",
+    "Civic Center Drive (309 ft)"
+   ],
+   "nearest_city_centre": "San Mateo",
+   "miles_from_city_centre": 2.39
+  },
+  {
+   "agencies": {
+    "4106": 13
+   },
+   "n_agencies": 1,
+   "lat": 37.68792,
+   "lon": -122.47021,
+   "crashes": 13,
+   "street_pairs": 7,
+   "fit_share": 0.231,
+   "by_year": {
+    "2021": 2,
+    "2022": 2,
+    "2023": 6,
+    "2024": 1,
+    "2025": 2
+   },
+   "city_names": {
+    "Daly City": 13
+   },
+   "examples": [
+    "280 & JOHN DALY",
+    "DUNKS & SAN PEDRO",
+    "GENEVA & PASADENA",
+    "HICKEY & SR 280",
+    "JOHN DALY & SR 280"
+   ],
+   "nearest_streets": [
+    "Junipero Serra Boulevard (34 ft)",
+    "Washington Street (34 ft)",
+    "Junipero Serra Freeway (236 ft)"
+   ],
+   "nearest_city_centre": "Daly City",
+   "miles_from_city_centre": 1.15
+  },
+  {
+   "agencies": {
+    "4014": 13
+   },
+   "n_agencies": 1,
+   "lat": 35.0774,
+   "lon": -120.6291,
+   "crashes": 13,
+   "street_pairs": 11,
+   "fit_share": 0.077,
+   "by_year": {
+    "2024": 1,
+    "2025": 12
+   },
+   "city_names": {
+    "Pismo Dunes Pk Dist": 13
+   },
+   "examples": [
+    "35 0774 120 6291 & CXT J",
+    "CTX B & OCEAN DUNES SVRA",
+    "CXT B & OCEANO DUNES SVRA",
+    "CXT B & YARDS CXT B",
+    "CXT C & OCEAN DUNES SVRA"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Grover Beach",
+   "miles_from_city_centre": 2.27
+  },
+  {
+   "agencies": {
+    "5004": 5,
+    "0303": 2,
+    "4906": 1,
+    "1506": 1,
+    "4805": 1
+   },
+   "n_agencies": 7,
+   "lat": 36.77826,
+   "lon": -119.41793,
+   "crashes": 12,
+   "street_pairs": 12,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 4,
+    "2022": 1,
+    "2023": 3,
+    "2024": 1,
+    "2025": 3
+   },
+   "city_names": {
+    "Oakdale": 5,
+    "Jackson": 2,
+    "Sebastopol": 1
+   },
+   "examples": [
+    "ALBERS & WARNERVILLE",
+    "BROADWAY & SR 88",
+    "BURNETT & PETALUMA",
+    "CHURCH & SOUTH CLOVERDALE",
+    "CIELO & SOUTH COLLEGE HEIGHTS"
+   ],
+   "nearest_streets": [
+    "North Piedra Road (1984 ft)",
+    "East Trimmer Springs Road (3611 ft)"
+   ],
+   "nearest_city_centre": "Reedley",
+   "miles_from_city_centre": 10.6
+  },
+  {
+   "agencies": {
+    "1601": 12
+   },
+   "n_agencies": 1,
+   "lat": 36.09282,
+   "lon": -119.57354,
+   "crashes": 12,
+   "street_pairs": 6,
+   "fit_share": 0.083,
+   "by_year": {
+    "2021": 2,
+    "2022": 3,
+    "2024": 1,
+    "2025": 6
+   },
+   "city_names": {
+    "Corcoran": 12
+   },
+   "examples": [
+    "6 1 2 & SHERMAN",
+    "6TH & PUEBLO",
+    "BAINUM & DAIRY",
+    "DAIRY & DAIRY AV 1700",
+    "DAIRY & DENTON"
+   ],
+   "nearest_streets": [
+    "Dairy Avenue (423 ft)",
+    "Stanley Avenue (445 ft)"
+   ],
+   "nearest_city_centre": "Corcoran",
+   "miles_from_city_centre": 0.61
+  },
+  {
+   "agencies": {
+    "9735": 4,
+    "9670": 2,
+    "9465": 2,
+    "9025": 1,
+    "9840": 1
+   },
+   "n_agencies": 7,
+   "lat": 38.6311,
+   "lon": -121.3305,
+   "crashes": 12,
+   "street_pairs": 11,
+   "fit_share": 0.0,
+   "by_year": {
+    "2022": 12
+   },
+   "city_names": {
+    "Unincorporated": 8,
+    "Sacramento": 1,
+    "Buena Park": 1
+   },
+   "examples": [
+    "CARRILLO & US 101",
+    "CENTRAL DUNSMUIR & I 5",
+    "CENTRAL EXTENSION & US 101",
+    "FINK & I 5",
+    "I 215 & RAMONA"
+   ],
+   "nearest_streets": [
+    "Hallelujah Court (32 ft)",
+    "Engle Road (223 ft)",
+    "Sareco Court (291 ft)"
+   ],
+   "nearest_city_centre": "Carmichael",
+   "miles_from_city_centre": 0.69
+  },
+  {
+   "agencies": {
+    "3797": 12
+   },
+   "n_agencies": 1,
+   "lat": 32.87536,
+   "lon": -117.23586,
+   "crashes": 12,
+   "street_pairs": 12,
+   "fit_share": 0.0,
+   "by_year": {
+    "2022": 8,
+    "2023": 3,
+    "2024": 1
+   },
+   "city_names": {
+    "Uc San Diego": 12
+   },
+   "examples": [
+    "GILMAN & LA JOLLA VILLAGE",
+    "GILMAN & LIGHT POST 8T",
+    "GILMAN & P 703",
+    "GILMAN & VILLA LJ",
+    "LOT 359 & P352"
+   ],
+   "nearest_streets": [
+    "Biomedical Sciences Way (207 ft)",
+    "Pharmacy Lane (214 ft)",
+    "Villa La Jolla Drive (679 ft)"
+   ],
+   "nearest_city_centre": "Del Mar",
+   "miles_from_city_centre": 5.99
+  },
+  {
+   "agencies": {
+    "0108": 11
+   },
+   "n_agencies": 1,
+   "lat": 37.52966,
+   "lon": -122.04024,
+   "crashes": 11,
+   "street_pairs": 8,
+   "fit_share": 0.182,
+   "by_year": {
+    "2021": 7,
+    "2022": 4
+   },
+   "city_names": {
+    "Newark": 11
+   },
+   "examples": [
+    "ALPENROSE & MOWRY",
+    "CEDAR & MOWRY",
+    "JARVIS & NEWARK",
+    "MOWRY & SR 880",
+    "NEWARK & SR 84"
+   ],
+   "nearest_streets": [
+    "Thornton Avenue (92 ft)",
+    "Dairy Avenue (216 ft)",
+    "Ash Street (255 ft)"
+   ],
+   "nearest_city_centre": "Newark",
+   "miles_from_city_centre": 0.86
+  },
+  {
+   "agencies": {
+    "2109": 11
+   },
+   "n_agencies": 1,
+   "lat": 37.97353,
+   "lon": -122.53109,
+   "crashes": 11,
+   "street_pairs": 11,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 2,
+    "2022": 2,
+    "2023": 1,
+    "2024": 3,
+    "2025": 3
+   },
+   "city_names": {
+    "San Rafael": 11
+   },
+   "examples": [
+    "2ND & IRWIN",
+    "BAYPOINT & CATALINA",
+    "BELLAM & SR 580",
+    "CIVIC CENTER & MANUEL T FREITAS",
+    "DU BOIS & IRWIN"
+   ],
+   "nearest_streets": [
+    "Fourth Street (39 ft)",
+    "C Street (112 ft)",
+    "Via Sessi (156 ft)"
+   ],
+   "nearest_city_centre": "Los Ranchitos",
+   "miles_from_city_centre": 1.33
+  },
+  {
+   "agencies": {
+    "9375": 11
+   },
+   "n_agencies": 1,
+   "lat": 37.69336,
+   "lon": -122.07243,
+   "crashes": 11,
+   "street_pairs": 10,
+   "fit_share": 0.182,
+   "by_year": {
+    "2022": 11
+   },
+   "city_names": {
+    "Unincorporated": 11
+   },
+   "examples": [
+    "163RD & SR 185",
+    "ALANA & OMEGA AVUENE",
+    "BOWIE & EDWIN MARKHAM",
+    "CENTER & GROVE",
+    "EAST CASTRO VALLEY & FIVE CANYONS"
+   ],
+   "nearest_streets": [
+    "Norbridge Avenue (254 ft)",
+    "Elm Street (271 ft)",
+    "Redwood Road (382 ft)"
+   ],
+   "nearest_city_centre": "Hayward",
+   "miles_from_city_centre": 5.15
+  },
+  {
+   "agencies": {
+    "1509": 11
+   },
+   "n_agencies": 1,
+   "lat": 35.12792,
+   "lon": -118.451,
+   "crashes": 11,
+   "street_pairs": 11,
+   "fit_share": 0.364,
+   "by_year": {
+    "2022": 1,
+    "2023": 3,
+    "2024": 4,
+    "2025": 3
+   },
+   "city_names": {
+    "Tehachapi": 11
+   },
+   "examples": [
+    "C & SOUTH CURRY",
+    "CHEYENNE & SIOUX",
+    "EAST ORHARD & SOUTH CURRY",
+    "INDUSTRIAL & NORTH MILL",
+    "SOUTH CURRY & TEHACHAPI"
+   ],
+   "nearest_streets": [
+    "West C Street (144 ft)",
+    "South Pauley Street (196 ft)",
+    "Pauley Court (259 ft)"
+   ],
+   "nearest_city_centre": "Tehachapi",
+   "miles_from_city_centre": 2.47
+  },
+  {
+   "agencies": {
+    "2401": 10
+   },
+   "n_agencies": 1,
+   "lat": 37.36075,
+   "lon": -120.63072,
+   "crashes": 10,
+   "street_pairs": 5,
+   "fit_share": 0.0,
+   "by_year": {
+    "2021": 5,
+    "2023": 2,
+    "2024": 2,
+    "2025": 1
+   },
+   "city_names": {
+    "Atwater": 10
+   },
+   "examples": [
+    "7TH & BELLEVUE",
+    "BELLEVUE & WINTON",
+    "FAY & WINTON",
+    "FRUITLAND & WINTON",
+    "WEST BELLEVUE & WINTON"
+   ],
+   "nearest_streets": [
+    "West Bellevue Road (142 ft)",
+    "Vine Avenue (439 ft)",
+    "Golden State Highway (2160 ft)"
+   ],
+   "nearest_city_centre": "Atwater",
+   "miles_from_city_centre": 2.07
+  },
+  {
+   "agencies": {
+    "5604": 10
+   },
+   "n_agencies": 1,
+   "lat": 34.21635,
+   "lon": -119.1559,
+   "crashes": 10,
+   "street_pairs": 8,
+   "fit_share": 0.1,
+   "by_year": {
+    "2021": 3,
+    "2022": 4,
+    "2023": 1,
+    "2025": 2
+   },
+   "city_names": {
+    "Oxnard": 10
+   },
+   "examples": [
+    "5TH & SOUTH C",
+    "BARD & SAVIERS",
+    "EAST GONZALES & NORTH ROSE",
+    "GONZALES & NORTH ROSE",
+    "GONZALES & ROSE"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Nyeland Acres",
+   "miles_from_city_centre": 1.63
+  },
+  {
+   "agencies": {
+    "1501": 10
+   },
+   "n_agencies": 1,
+   "lat": 35.21024,
+   "lon": -118.83285,
+   "crashes": 10,
+   "street_pairs": 10,
+   "fit_share": 0.2,
+   "by_year": {
+    "2021": 1,
+    "2022": 3,
+    "2023": 3,
+    "2024": 2,
+    "2025": 1
+   },
+   "city_names": {
+    "Arvin": 10
+   },
+   "examples": [
+    "5TH & NORTH A",
+    "ARVIN & C",
+    "AUSTIN & SCHIPPER",
+    "BEAR MOUNTAIN & CAMPUS",
+    "BEAR MOUNTAIN & MONROE"
+   ],
+   "nearest_streets": [
+    "4th Street (169 ft)",
+    "Campus Drive (190 ft)",
+    "Plumtree Drive (247 ft)"
+   ],
+   "nearest_city_centre": "Arvin",
+   "miles_from_city_centre": 0.98
+  },
+  {
+   "agencies": {
+    "3104": 10
+   },
+   "n_agencies": 1,
+   "lat": 38.79073,
+   "lon": -121.23579,
+   "crashes": 10,
+   "street_pairs": 6,
+   "fit_share": 0.1,
+   "by_year": {
+    "2021": 1,
+    "2022": 1,
+    "2023": 6,
+    "2025": 2
+   },
+   "city_names": {
+    "Rocklin": 10
+   },
+   "examples": [
+    "2ND & MIDAS",
+    "BERRY CREEK & CREEK HOLLOW",
+    "EL DON & ROCKLIN",
+    "PAINTED PONY & WHITNEY RANCH",
+    "SIERRA COLLEGE & STADIUM"
+   ],
+   "nearest_streets": [
+    "Rocklin Road (19 ft)",
+    "Pacific Street (39 ft)",
+    "San Francisco Street (346 ft)"
+   ],
+   "nearest_city_centre": "Rocklin",
+   "miles_from_city_centre": 1.46
+  },
+  {
+   "agencies": {
+    "1001": 10
+   },
+   "n_agencies": 1,
+   "lat": 36.81766,
+   "lon": -119.67892,
+   "crashes": 10,
+   "street_pairs": 5,
+   "fit_share": 0.2,
+   "by_year": {
+    "2021": 1,
+    "2023": 1,
+    "2024": 3,
+    "2025": 5
+   },
+   "city_names": {
+    "Clovis": 10
+   },
+   "examples": [
+    "ASH & BARSTOW",
+    "BARSTOW & FOWLER",
+    "FOWLER & JENINE PARDINI",
+    "FOWLER & ROBINWOOD",
+    "FOWLER & WRENWOOD"
+   ],
+   "nearest_streets": [],
+   "nearest_city_centre": "Clovis",
+   "miles_from_city_centre": 3.26
+  },
+  {
+   "agencies": {
+    "5604": 10
+   },
+   "n_agencies": 1,
+   "lat": 34.22525,
+   "lon": -119.14271,
+   "crashes": 10,
+   "street_pairs": 5,
+   "fit_share": 0.0,
+   "by_year": {
+    "2022": 3,
+    "2023": 2,
+    "2024": 3,
+    "2025": 2
+   },
+   "city_names": {
+    "Oxnard": 10
+   },
+   "examples": [
+    "NORTH RICE & SR 101",
+    "NORTH RICE & VENTURA",
+    "RICE & SR 101",
+    "SOUTH RICE & SR 101",
+    "SR 1 & SR 101"
+   ],
+   "nearest_streets": [
+    "Auto Center Drive (63 ft)",
+    "Santa Clara Avenue (604 ft)"
+   ],
+   "nearest_city_centre": "Nyeland Acres",
+   "miles_from_city_centre": 0.72
+  },
+  {
+   "agencies": {
+    "3711": 6,
+    "3600": 2,
+    "3700": 1,
+    "3710": 1
+   },
+   "n_agencies": 4,
+   "lat": 34.0272,
+   "lon": -117.11907,
+   "crashes": 10,
+   "street_pairs": 10,
+   "fit_share": 0.2,
+   "by_year": {
+    "2024": 3,
+    "2025": 7
+   },
+   "city_names": {
+    "San Diego": 6,
+    "Yucaipa": 2,
+    "San Marcos": 1
+   },
+   "examples": [
+    "5TH & ASH",
+    "BALBOA & GENESEE",
+    "BALBOA & MORAGA",
+    "CLAIREMONT MESA & KEARNY VILLA",
+    "CRAVEN & FOXHALL"
+   ],
+   "nearest_streets": [
+    "Yucaipa Boulevard (41 ft)",
+    "Pearl Harbor Memorial Highway (196 ft)",
+    "Hampton Road (295 ft)"
+   ],
+   "nearest_city_centre": "Redlands",
+   "miles_from_city_centre": 2.51
+  }
+ ],
+ "pile_crashes": 1828,
+ "shared_points_distribution": {
+  "0+ crashes, 0+ pairs, fit 0.0": 442,
+  "0+ crashes, 0+ pairs, fit 0.2": 60,
+  "0+ crashes, 0+ pairs, fit 0.3": 156,
+  "0+ crashes, 0+ pairs, fit 0.5": 55,
+  "0+ crashes, 0+ pairs, fit 0.7": 372,
+  "0+ crashes, 0+ pairs, fit 0.8": 200,
+  "0+ crashes, 0+ pairs, fit 1.0": 16374,
+  "5+ crashes, 0+ pairs, fit 0.0": 194,
+  "5+ crashes, 0+ pairs, fit 0.1": 11,
+  "5+ crashes, 0+ pairs, fit 0.2": 30,
+  "5+ crashes, 0+ pairs, fit 0.3": 25,
+  "5+ crashes, 0+ pairs, fit 0.4": 34,
+  "5+ crashes, 0+ pairs, fit 0.5": 16,
+  "5+ crashes, 0+ pairs, fit 0.6": 46,
+  "5+ crashes, 0+ pairs, fit 0.7": 22,
+  "5+ crashes, 0+ pairs, fit 0.8": 182,
+  "5+ crashes, 0+ pairs, fit 0.9": 125,
+  "5+ crashes, 0+ pairs, fit 1.0": 10778,
+  "5+ crashes, 5+ pairs, fit 0.0": 25,
+  "5+ crashes, 5+ pairs, fit 0.1": 4,
+  "5+ crashes, 5+ pairs, fit 0.2": 25,
+  "5+ crashes, 5+ pairs, fit 0.3": 4,
+  "5+ crashes, 5+ pairs, fit 0.4": 7,
+  "5+ crashes, 5+ pairs, fit 0.5": 3,
+  "5+ crashes, 5+ pairs, fit 0.6": 5,
+  "5+ crashes, 5+ pairs, fit 0.7": 9,
+  "5+ crashes, 5+ pairs, fit 0.8": 34,
+  "5+ crashes, 5+ pairs, fit 0.9": 45,
+  "5+ crashes, 5+ pairs, fit 1.0": 199,
+  "10+ crashes, 0+ pairs, fit 0.0": 24,
+  "10+ crashes, 0+ pairs, fit 0.1": 7,
+  "10+ crashes, 0+ pairs, fit 0.2": 7,
+  "10+ crashes, 0+ pairs, fit 0.3": 4,
+  "10+ crashes, 0+ pairs, fit 0.4": 6,
+  "10+ crashes, 0+ pairs, fit 0.5": 9,
+  "10+ crashes, 0+ pairs, fit 0.6": 4,
+  "10+ crashes, 0+ pairs, fit 0.7": 9,
+  "10+ crashes, 0+ pairs, fit 0.8": 11,
+  "10+ crashes, 0+ pairs, fit 0.9": 133,
+  "10+ crashes, 0+ pairs, fit 1.0": 2996,
+  "10+ crashes, 5+ pairs, fit 0.0": 4,
+  "10+ crashes, 5+ pairs, fit 0.1": 4,
+  "10+ crashes, 5+ pairs, fit 0.2": 3,
+  "10+ crashes, 5+ pairs, fit 0.3": 1,
+  "10+ crashes, 5+ pairs, fit 0.4": 1,
+  "10+ crashes, 5+ pairs, fit 0.5": 1,
+  "10+ crashes, 5+ pairs, fit 0.6": 2,
+  "10+ crashes, 5+ pairs, fit 0.7": 6,
+  "10+ crashes, 5+ pairs, fit 0.8": 12,
+  "10+ crashes, 5+ pairs, fit 0.9": 52,
+  "10+ crashes, 5+ pairs, fit 1.0": 146,
+  "10+ crashes, 10+ pairs, fit 0.0": 6,
+  "10+ crashes, 10+ pairs, fit 0.1": 1,
+  "10+ crashes, 10+ pairs, fit 0.2": 3,
+  "10+ crashes, 10+ pairs, fit 0.4": 1,
+  "10+ crashes, 10+ pairs, fit 0.6": 2,
+  "10+ crashes, 10+ pairs, fit 0.9": 1,
+  "10+ crashes, 10+ pairs, fit 1.0": 3,
+  "15+ crashes, 0+ pairs, fit 0.0": 13,
+  "15+ crashes, 0+ pairs, fit 0.1": 4,
+  "15+ crashes, 0+ pairs, fit 0.2": 2,
+  "15+ crashes, 0+ pairs, fit 0.3": 2,
+  "15+ crashes, 0+ pairs, fit 0.4": 3,
+  "15+ crashes, 0+ pairs, fit 0.5": 1,
+  "15+ crashes, 0+ pairs, fit 0.6": 1,
+  "15+ crashes, 0+ pairs, fit 0.7": 1,
+  "15+ crashes, 0+ pairs, fit 0.8": 5,
+  "15+ crashes, 0+ pairs, fit 0.9": 57,
+  "15+ crashes, 0+ pairs, fit 1.0": 1333,
+  "15+ crashes, 5+ pairs, fit 0.0": 2,
+  "15+ crashes, 5+ pairs, fit 0.1": 1,
+  "15+ crashes, 5+ pairs, fit 0.7": 1,
+  "15+ crashes, 5+ pairs, fit 0.8": 1,
+  "15+ crashes, 5+ pairs, fit 0.9": 43,
+  "15+ crashes, 5+ pairs, fit 1.0": 89,
+  "15+ crashes, 10+ pairs, fit 0.0": 1,
+  "15+ crashes, 10+ pairs, fit 0.8": 2,
+  "15+ crashes, 10+ pairs, fit 0.9": 5,
+  "15+ crashes, 10+ pairs, fit 1.0": 8,
+  "15+ crashes, 15+ pairs, fit 0.0": 1,
+  "15+ crashes, 15+ pairs, fit 0.1": 2,
+  "15+ crashes, 15+ pairs, fit 0.3": 1,
+  "20+ crashes, 0+ pairs, fit 0.0": 3,
+  "20+ crashes, 0+ pairs, fit 0.2": 2,
+  "20+ crashes, 0+ pairs, fit 0.4": 2,
+  "20+ crashes, 0+ pairs, fit 0.8": 2,
+  "20+ crashes, 0+ pairs, fit 0.9": 14,
+  "20+ crashes, 0+ pairs, fit 1.0": 697,
+  "20+ crashes, 5+ pairs, fit 0.1": 1,
+  "20+ crashes, 5+ pairs, fit 0.2": 1,
+  "20+ crashes, 5+ pairs, fit 0.7": 1,
+  "20+ crashes, 5+ pairs, fit 0.9": 12,
+  "20+ crashes, 5+ pairs, fit 1.0": 82,
+  "20+ crashes, 10+ pairs, fit 0.6": 1,
+  "20+ crashes, 10+ pairs, fit 0.7": 1,
+  "20+ crashes, 10+ pairs, fit 0.8": 1,
+  "20+ crashes, 10+ pairs, fit 0.9": 4,
+  "20+ crashes, 10+ pairs, fit 1.0": 11,
+  "20+ crashes, 20+ pairs, fit 0.0": 1,
+  "25+ crashes, 0+ pairs, fit 0.0": 3,
+  "25+ crashes, 0+ pairs, fit 0.1": 1,
+  "25+ crashes, 0+ pairs, fit 0.6": 1,
+  "25+ crashes, 0+ pairs, fit 0.7": 1,
+  "25+ crashes, 0+ pairs, fit 0.9": 4,
+  "25+ crashes, 0+ pairs, fit 1.0": 387,
+  "25+ crashes, 5+ pairs, fit 0.9": 3,
+  "25+ crashes, 5+ pairs, fit 1.0": 49,
+  "25+ crashes, 10+ pairs, fit 0.0": 1,
+  "25+ crashes, 10+ pairs, fit 0.9": 3,
+  "25+ crashes, 10+ pairs, fit 1.0": 11,
+  "25+ crashes, 15+ pairs, fit 1.0": 1,
+  "25+ crashes, 20+ pairs, fit 0.0": 1,
+  "25+ crashes, 20+ pairs, fit 0.4": 1,
+  "30+ crashes, 0+ pairs, fit 0.0": 1,
+  "30+ crashes, 0+ pairs, fit 0.6": 1,
+  "30+ crashes, 0+ pairs, fit 0.8": 2,
+  "30+ crashes, 0+ pairs, fit 1.0": 224,
+  "30+ crashes, 5+ pairs, fit 0.9": 2,
+  "30+ crashes, 5+ pairs, fit 1.0": 31,
+  "30+ crashes, 10+ pairs, fit 0.8": 1,
+  "30+ crashes, 10+ pairs, fit 0.9": 2,
+  "30+ crashes, 10+ pairs, fit 1.0": 10,
+  "30+ crashes, 15+ pairs, fit 1.0": 1,
+  "30+ crashes, 20+ pairs, fit 0.0": 3,
+  "35+ crashes, 0+ pairs, fit 0.0": 1,
+  "35+ crashes, 0+ pairs, fit 0.6": 1,
+  "35+ crashes, 0+ pairs, fit 0.8": 1,
+  "35+ crashes, 0+ pairs, fit 0.9": 1,
+  "35+ crashes, 0+ pairs, fit 1.0": 156,
+  "35+ crashes, 5+ pairs, fit 1.0": 13,
+  "35+ crashes, 10+ pairs, fit 0.9": 1,
+  "35+ crashes, 10+ pairs, fit 1.0": 3,
+  "35+ crashes, 15+ pairs, fit 0.9": 1,
+  "35+ crashes, 20+ pairs, fit 0.0": 2,
+  "35+ crashes, 20+ pairs, fit 0.9": 1,
+  "40+ crashes, 0+ pairs, fit 0.0": 1,
+  "40+ crashes, 0+ pairs, fit 0.9": 1,
+  "40+ crashes, 0+ pairs, fit 1.0": 99,
+  "40+ crashes, 5+ pairs, fit 1.0": 8,
+  "40+ crashes, 10+ pairs, fit 1.0": 5,
+  "40+ crashes, 15+ pairs, fit 1.0": 1,
+  "45+ crashes, 0+ pairs, fit 0.5": 1,
+  "45+ crashes, 0+ pairs, fit 0.9": 2,
+  "45+ crashes, 0+ pairs, fit 1.0": 58,
+  "45+ crashes, 5+ pairs, fit 1.0": 9,
+  "45+ crashes, 10+ pairs, fit 1.0": 3,
+  "45+ crashes, 20+ pairs, fit 0.0": 1,
+  "50+ crashes, 0+ pairs, fit 0.0": 1,
+  "50+ crashes, 0+ pairs, fit 1.0": 140,
+  "50+ crashes, 5+ pairs, fit 0.9": 1,
+  "50+ crashes, 5+ pairs, fit 1.0": 11,
+  "50+ crashes, 10+ pairs, fit 1.0": 3,
+  "50+ crashes, 15+ pairs, fit 1.0": 3,
+  "50+ crashes, 20+ pairs, fit 0.0": 5,
+  "50+ crashes, 20+ pairs, fit 0.1": 1
+ },
+ "gps_crashes": 1554835
+}
