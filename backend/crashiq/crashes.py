@@ -31,6 +31,7 @@ from .db import Database
 from .geo import LocalProjection, Polyline
 from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
 from . import gps_rules
+from . import union as union_mod
 from .sources import ca_ccrs as cc
 from .sources import ccrs_files
 from .sources.ckan import Ckan, CkanError
@@ -62,7 +63,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 22    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218)
+PULL_FORMAT = 23    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -586,8 +587,9 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
     cores = _corridor_cores(net)
     corridor_keys = grade.corridor_keys(net)
     # One corner can carry two cross-street names ("Eastin Drive / Lowry Road"): each one counts (Lowry Rd, Union City).
-    cross_keys = [k for k in (street_key(part) for i in net.get("intersections", []) if i.get("is_study")
-                              for part in str(i.get("name") or "").split("/")) if k]
+    cross_keys = [k for i in net.get("intersections", []) if i.get("is_study")
+                  for k in [street_key(p) for nm in [i.get("name")] + list(i.get("alt_names") or [])
+                            for p in str(nm or "").split("/")] if k]
     cross_cores = [c for c in dict.fromkeys(_search_core(k) for k in cross_keys) if c not in cores and len(c) >= 3]
     gs_keys = grade.crossing_keys(net)      # roads crossing over/under the corridor (N7, #67)
     name_area: list[str] | None = None     # found once from street names, reused for every year
@@ -988,11 +990,21 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
             study = study_mod.require(db, sid)
             net = network_mod.network(db, sid)
             key = cache_key(study, net) if net.get("line") else None
+            raw, ninfo, alt = None, None, None
             if net.get("line"):                    # the cities the line enters (#142); cached with the OSM answers
                 net = {**net, "cities": network_mod.corridor_cities(db, net["line"], study["buffer_ft"], overpass)}
+                # OSM + TIGER/Line (#229): the locator's network, and TIGER's names for the corridor and its corners
+                tiger = getattr(ckan, "tiger", None)
+                raw, ninfo = union_mod.corridor_network(db, net, tiger)
+                alt = union_mod.alt_names(raw, net) if tiger is not None else None
+                net = union_mod.with_alt(net, alt)
             result = pull(study, net, ckan, progress)
+            if ninfo is not None:
+                result["cleaning"]["network"] = ninfo
+                result["cleaning"].setdefault("files_pending", {}).update(ninfo["tiger_pending"])
+                result["network_alt"] = alt
             from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
-            place_unmatched(db, net, result, overpass=overpass)
+            place_unmatched(db, net, result, overpass=overpass, raw=raw, tiger=getattr(ckan, "tiger", None))
             now = study_mod.require(db, sid)
             now_net = network_mod.network(db, sid)
             if (cache_key(now, now_net) if now_net.get("line") else None) == key:
@@ -1006,7 +1018,24 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
 
 def ckan_for(request: Request) -> Ckan:
     st = request.app.state
-    return Ckan(getattr(st, "ckan", None), retries=getattr(st, "ckan_retries", 3), files=files_for(st))
+    return Ckan(getattr(st, "ckan", None), retries=getattr(st, "ckan_retries", 3), files=files_for(st),
+                tiger=tiger_for(st))
+
+
+_TIGER_CACHES: dict[str, object] = {}
+
+
+def tiger_for(st):
+    """The TIGER/Line county cache (#229; downloads approved by the user 2026-10-22). Live data.ca.gov only, unless a
+    test or harness sets `app.state.tiger`: a fake or recorded CKAN never starts a real download."""
+    from .sources.tiger_files import TigerCache
+    if getattr(st, "tiger", None) is not None:
+        return st.tiger
+    if getattr(st, "ckan", None) is not None:
+        return None
+    folder = str(st.settings.tiger_dir)
+    with _LOCKS_GUARD:
+        return _TIGER_CACHES.setdefault(folder, TigerCache(folder))
 
 
 _FILE_CACHES: dict[str, ccrs_files.FileCache] = {}

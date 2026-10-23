@@ -39,7 +39,9 @@ NOISE = re.compile(
     r"OFF[- ]?RAMP|ON[- ]?RAMP|RAMP|UNDERCROSSING|OVERCROSSING|U/C|O/C|OVERPASS|UNDERPASS|"
     r"PEDESTRIAN|ENTRANCE|EXIT|OF THE|THE|OF|AT|NEAR|AND)\b"
 )
-ROUTE = re.compile(r"^(I|US|SR|CA|STATE ROUTE|INTERSTATE|HWY|HIGHWAY|ROUTE|RT|RTE)[\s-]*(\d+)")
+# TIGER/Line writes State Hwy 39, State Rte 1, US Hwy 101, I- 5 (#229)
+ROUTE = re.compile(r"^(STATE HWY|STATE HIGHWAY|STATE RTE|STATE ROUTE|US HWY|US HIGHWAY|US ROUTE|I|US|SR|CA|INTERSTATE|HWY|"
+                   r"HIGHWAY|ROUTE|RT|RTE)[\s-]*(\d+)")
 
 
 class StreetKey(NamedTuple):
@@ -98,7 +100,9 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
         s = aliases[s]
     route = ROUTE.match(s)
     if route:
-        kind = {"INTERSTATE": "I", "STATE ROUTE": "SR", "CA": "SR", "HWY": "SR", "HIGHWAY": "SR", "ROUTE": "SR", "RT": "SR", "RTE": "SR"}.get(route.group(1), route.group(1))
+        kind = {"INTERSTATE": "I", "STATE ROUTE": "SR", "CA": "SR", "HWY": "SR", "HIGHWAY": "SR", "ROUTE": "SR", "RT": "SR",
+                "RTE": "SR", "STATE HWY": "SR", "STATE HIGHWAY": "SR", "STATE RTE": "SR", "US HWY": "US",
+                "US HIGHWAY": "US", "US ROUTE": "US"}.get(route.group(1), route.group(1))
         return StreetKey(f"{kind} {int(route.group(2))}", None)
     numbered = bool(re.match(r"^\d+\s+(?=[A-Z])", s))
     s = re.sub(r"^\d+\s+(?=[A-Z])", "", s)       # house number "3144 W 147TH ST"

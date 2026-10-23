@@ -1,0 +1,7 @@
+{
+  "_doc": "OSM + TIGER/Line street network (#229, user decision and download approval 2026-10-22, docs/03). vintage: the TIGER/Line year to use; a new vintage downloads into its own folder when first needed. coincide_m: a TIGER segment this close (most of its length) to an OSM way is that way, and only adds its names. snap_m: a TIGER segment end this close to an OSM node joins it there.",
+  "vintage": 2026,
+  "coincide_m": 12,
+  "coincide_share": 0.8,
+  "snap_m": 12
+}

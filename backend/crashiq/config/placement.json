@@ -1,7 +1,8 @@
 {
-  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only by a user decision (docs/03): exact (>= 98% Wilson 95% lower bound on hidden-truth tests); unique_pair (user 2026-10-22, #211 evidence: at or above exact on hidden police GPS and LAPD open data). Street pairs that meet in more than one place still go to review.",
+  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only by a user decision (docs/03): exact (>= 98% Wilson 95% lower bound on hidden-truth tests); unique_pair (user 2026-10-22, #211 evidence: at or above exact on hidden police GPS and LAPD open data). Street pairs that meet in more than one place still go to review. tiger_only_auto (#229): false = a placement that needs a road only TIGER/Line has goes to review with the suggestion; TIGER names on an OSM way keep their tier's gate. The user decides after run 9.",
   "auto_tiers": [
     "exact",
     "unique_pair"
-  ]
+  ],
+  "tiger_only_auto": false
 }
