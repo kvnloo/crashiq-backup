@@ -2,8 +2,6 @@
 that the union doesn't recognize as the same street (here ~37 m off) joins the cross street near the OSM intersection;
 the locator then picks a node whose street is "only on TIGER" and the gate holds a crash OSM places exactly.
 Strict xfail until fixed (see the issue linked in the PR)."""
-import pytest
-
 from crashiq import locate, osm, union
 
 OSM = {"elements": [
@@ -21,7 +19,6 @@ def test_osm_alone_places_it():
     assert locate.Gate().auto(locate.place(osm.Network(OSM), CRASH))
 
 
-@pytest.mark.xfail(strict=True, reason="union regression: a TIGER copy near an OSM street makes the placement tiger_road")
 def test_union_keeps_the_osm_placement():
     raw, _ = union.union(OSM, TIGER_COPY, None, 0)
     pl = locate.place(osm.Network(raw), CRASH)

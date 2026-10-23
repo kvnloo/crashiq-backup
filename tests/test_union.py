@@ -129,3 +129,24 @@ def test_placement_keeps_a_tiger_road_crash_as_a_tagged_suggestion():
     assert c["location_source"] == "unmatched" and c["suggestion"]["tiger_road"] and c["suggestion"]["tier"] == "exact"
     c = run(locate.Gate(tiger_only_auto=True))
     assert c["location_source"] == "exact" and c["placed_on"] == "tiger"
+
+
+def test_a_diverging_tiger_copy_adds_no_second_meeting_point():
+    # #243, run 9 (JOHN F SHELLEY DR & MANSELL ST: meeting points 0, 23 and 393 m apart): TIGER's Oak Ave strays
+    # 320 m east of OSM's and ends on Main Street; OSM already has Main & Oak meeting, so TIGER adds no corner
+    osm = {"elements": OSM["elements"][:3] + [{"type": "node", "id": 6, "lat": 34.0, "lon": -117.9950}] + OSM["elements"][3:5]
+           + [{"type": "way", "id": 10, "nodes": [1, 2, 3, 6], "tags": {"name": "Main Street"}},
+              {"type": "way", "id": 11, "nodes": [5, 2, 4], "tags": {"name": "Oak Avenue"}}]}
+    stray = edge(701, ["Oak Ave"], [(33.9990, -117.99655), (34.0, -117.99655)], 11, 12)
+    els, counts = union.union(osm, [stray], [(34.0, -118.001), (34.0, -117.995)], 40)
+    assert counts["join_refused_osm_meets"] == 1
+    p = locate.place(Network(els), crash("MAIN ST", "OAK AVE"))
+    assert p.tier == "exact" and p.node == 2 and not p.tiger_road
+
+
+def test_a_loose_tiger_copy_of_a_named_osm_street_adds_nothing():
+    # ~37 m off (outside coincide_m) but the same name and direction: a copy, not a new road (#243)
+    copy = edge(702, ["Oak Ave"], [(33.9990, -117.99957), (34.0010, -117.99957)], 13, 14)
+    els, counts = union.union(OSM, [copy], LINE, 40)
+    assert counts.get("copy_of_osm_street") == 1 and not counts.get("added_from_tiger")
+    assert sum(e["type"] == "way" for e in els["elements"]) == 2

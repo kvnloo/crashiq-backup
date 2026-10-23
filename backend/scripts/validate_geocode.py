@@ -386,7 +386,7 @@ def main():
         pl = locate.place(net, hidden(c), addresses=addresses, aliases=aliases)
         err = score(net, pl, c, a.city)
         rows.append({"report": c["report_number"], "primary": c["primary_road"], "secondary": c["secondary_road"],
-                     "offset_ft": c["offset_ft"], "dir": c["offset_dir"], "tier": pl.tier, "note": pl.note, "tiger": pl.tiger,
+                     "offset_ft": c["offset_ft"], "dir": c["offset_dir"], "tier": pl.tier, "note": pl.note, "tiger": pl.tiger, "tiger_road": pl.tiger_road,
                      "err_m": err, "ok": err is not None and err <= TOL_M, "node": pl.node,
                      "int_ok": int_ok(net, pl.node, c),
                      "offset_lost": bool(c.get("truth_offset")) and not c.get("offset_ft")})
