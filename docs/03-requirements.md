@@ -408,3 +408,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   highest-impact entries of the #230 draft (review sheet `reports/testing/alias-review-2026-10-22.md`) are approved and
   copied to the live table `data/reference/street_aliases.csv` (status approved, approver and date per row). The rest
   of the draft stays proposed until the user approves it.
+- **Verified typos DECIDED (user, 2026-10-22, PM session, "1 yes"):** build and measure a `verified_typo` tier (≤ 2
+  edits, no rival street, the corrected pair meets at exactly one intersection, GPS agrees where present) so one-off
+  typos like MAONOLIA → Magnolia don't need a human ("I don't expect a human to check it all"). It ships switched off;
+  it auto-places only after Tester's measurement (#233) and the user's OK.
