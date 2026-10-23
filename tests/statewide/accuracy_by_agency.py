@@ -11,7 +11,7 @@ even when the report says hundreds of feet away; Concord 2026-10-20: 92% vs 73%)
 bounds, on all GPS and (intersection accuracy) on self-consistent GPS only (the point lies within 400 ft of an
 intersection of the two streets the report names, the GPS-check distance of decision #77).
 
-Run: python tests/statewide/accuracy_by_agency.py   (writes data/statewide/accuracy_by_agency.json)
+Run: python tests/statewide/accuracy_by_agency.py [--out NAME]   (writes data/statewide/accuracy_by_agency.json, or NAME)
 """
 
 from __future__ import annotations
@@ -37,7 +37,7 @@ from crashiq.sources import ca_ccrs as cc  # noqa: E402
 DATA = ROOT / "data" / "statewide"
 MIN_N, SAMPLE, SEED = 200, 400, 88
 TOL_M, CONSIST_M = 250 * 0.3048, 400 * 0.3048
-TIERS = ("exact", "relaxed", "near", "fuzzy")
+TIERS = ("exact", "unique_pair", "relaxed", "near", "fuzzy")   # unique_pair: #203, auto-places since 2026-10-22
 COLS = ("Collision Id", "Report Version", "NCIC Code", "Crash Date Time", "Latitude", "Longitude", "PrimaryRoad",
         "SecondaryRoad", "SecondaryDistance", "SecondaryDirection", "SecondaryUnitOfMeasure", "IsFreeway", "IsDeleted")
 
@@ -98,7 +98,7 @@ def consistent(net, grid, c) -> bool | None:
     return False
 
 
-def run() -> list[dict]:
+def run(out_name: str = "accuracy_by_agency.json") -> list[dict]:
     agencies = json.loads((DATA / "agencies.json").read_text())
     local = osm_local.LocalOSM(ROOT / "data" / "osm" / "ca_osm.sqlite")
     bounds = corridors.local_boundaries(local)
@@ -159,9 +159,12 @@ def run() -> list[dict]:
               f"(intersection {res['exact_intersection_acc_pct']}%, point {res['exact_acc_pct']}%), relaxed "
               f"{res['relaxed_share_pct']}% (intersection {res['relaxed_intersection_acc_pct']}%), "
               f"review {res['review_pct']}%, GPS consistent {res['gps_self_consistent_pct']}%", flush=True)
-    (DATA / "accuracy_by_agency.json").write_text(json.dumps(out, indent=1))
+    (DATA / out_name).write_text(json.dumps(out, indent=1))
     return out
 
 
 if __name__ == "__main__":
-    run()
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--out", default="accuracy_by_agency.json")
+    run(ap.parse_args().out)

@@ -60,6 +60,7 @@ def main() -> None:
             for k, lbl in (("gps_usable", "Police GPS, checked against the report's roads"),
                            ("gps_usable_dms", "Police GPS converted from degrees-minutes-seconds"),
                            ("placed_exact", "CrashIQ placed from street names (exact, under the gate)"),
+                           ("placed_unique_pair", "CrashIQ placed: the two streets meet only once (unique pair)"),
                            ("placed_fars", "FARS point (fatal crashes)"),
                            ("review", "Review: a likely match held, or streets meeting twice"),
                            ("cant_place", "Can't place: no cross street, or streets that don't meet"))])

@@ -787,6 +787,7 @@ def build(out_dir: Path, ver: str | None = None, before: str | None = None, reco
         src_rows = [["Police GPS, checked", st_["counts"].get("gps_usable", 0)],
                     ["Police GPS, converted from degrees-minutes-seconds", st_["counts"].get("gps_usable_dms", 0)],
                     ["CrashIQ from street names (exact, gate)", st_["counts"].get("placed_exact", 0)],
+                    ["CrashIQ: the two streets meet only once (unique pair)", st_["counts"].get("placed_unique_pair", 0)],
                     ["FARS point (fatal)", st_["counts"].get("placed_fars", 0)],
                     ["Review", st_["counts"].get("review", 0)], ["Can't place", st_["counts"].get("cant_place", 0)]]
         se_ = table(wsc, "CoverageSources", ["Where each crash's location comes from", "Crashes"], src_rows,

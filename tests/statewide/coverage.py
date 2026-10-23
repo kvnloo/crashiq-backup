@@ -44,7 +44,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DATA = ROOT / "data" / "statewide"
 YEARS = cw.YEARS
-BIN1 = ("gps_usable", "gps_usable_dms", "placed_exact", "placed_fars")
+BIN1 = ("gps_usable", "gps_usable_dms", "placed_exact", "placed_unique_pair", "placed_fars")
 GROUPS = ("statewide", "district", "county", "city", "agency", "road_type", "district_road_type")
 
 
@@ -153,6 +153,8 @@ class Outside:
         return osm.Network({"elements": ways + list(nodes.values())})
 
 
+NETWORK, GATE_TIERS = "clipped", []          # set from the command line
+
 NO_CROSS = "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)"
 
 
@@ -175,8 +177,9 @@ def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db
         gps_note = "police GPS off the report's roads; "
     net = city.net if city else outside.network(c)
     pl = locate.place(net, c) if net is not None else locate.Placement("review", note="no street map")
+    c["_tier"], c["_note"] = pl.tier, pl.note or ""          # recorded per crash (run 8: effects derived from tiers)
     if gate.auto(pl):
-        return "placed_exact", None
+        return ("placed_unique_pair" if pl.tier == "unique_pair" else "placed_exact"), None
     if (c.get("killed") or 0) > 0 and fars_db is not None:
         status, row = fars.link(fars_db, c)
         p = fars.point(fars_db, row) if status == "linked" else None
@@ -230,7 +233,8 @@ class Agg:
             pct = lambda x, y: round(100 * x / y, 1) if y else None     # noqa: E731
             out.append({"name": name, "crashes": n, "on_map_pct": pct(a["bin1"], n), "difficult_pct": pct(a["bin2"], n),
                         "police_gps_pct": pct(a["gps_usable"] + a["gps_usable_dms"], n),
-                        "crashiq_placed_pct": pct(a["placed_exact"], n), "fars_pct": pct(a["placed_fars"], n),
+                        "crashiq_placed_pct": pct(a["placed_exact"] + a["placed_unique_pair"], n),
+                        "unique_pair_pct": pct(a["placed_unique_pair"], n), "fars_pct": pct(a["placed_fars"], n),
                         "review_pct": pct(a["review"], n), "cant_place_pct": pct(a["cant_place"], n),
                         "fatal": nf, "fatal_on_map_pct": pct(f["bin1"], nf), "ksi": nk, "ksi_on_map_pct": pct(k["bin1"], nk),
                         "counts": dict(a), "difficult_by_reason": dict(d["reasons"].most_common())})
@@ -254,7 +258,7 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
     con = sqlite3.connect(DATA / "ccrs_mirror.sqlite")
     ksi = ksi_ids(con)
     fars_db = Database(ROOT / "data" / "tester.sqlite")
-    gate, agg, dms_cache = locate.Gate(), Agg(), {}
+    gate, agg, dms_cache = (locate.Gate(auto_tiers=frozenset(GATE_TIERS)) if GATE_TIERS else locate.Gate()), Agg(), {}
     names = Counter()
     for rid, year in con.execute("SELECT rid, year FROM _meta WHERE tbl = 'crashes'").fetchall():
         if year in YEARS:
@@ -266,7 +270,7 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
     out_csv = open(DATA / (f"coverage_crashes_{part}.csv" if part else "coverage_crashes.csv"), "w", newline="")
     w = csv.writer(out_csv)
     w.writerow(["collision_id", "year", "county_code", "district", "city", "agency", "road_type", "killed", "ksi", "bin",
-                "outcome", "reason"])
+                "outcome", "reason", "tier", "note"])
     for i, (nm, n) in enumerate(names.most_common(), 1):
         if only_city is not None:
             if nm != only_city:
@@ -275,7 +279,12 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
             continue                          # another shard's city (a shard writes only its part file)
         b = bounds.get(corridors.norm_city(nm)) if nm else None
         cw._fuzzy_memo.clear()
-        city = City(osm.Network(osm_local.network_in_area(local, b["rel"]))) if b else None
+        if b:
+            raw = (osm_local.network_in_box(local, b["rel"]) if NETWORK == "box1km" else
+                   osm_local.network_in_area(local, b["rel"]))
+            city = City(osm.Network(raw))
+        else:
+            city = None
         for c in cw.mirror_rows(con, "City Name", nm):
             county = int(c.get("county_code") or 0)
             if split[1] > 1 and int(c["crash_id"]) % split[1] != split[0]:
@@ -295,7 +304,7 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
                     ("agency", ag), ("road_type", rt), ("district_road_type", f"District {d} · {rt}")]
             agg.add(keys, out, why, killed, is_ksi)
             w.writerow([c["crash_id"], c["year"], county, d, nm, ag, rt, int(killed), int(is_ksi),
-                        1 if out in BIN1 else 2, out, why or ""])
+                        1 if out in BIN1 else 2, out, why or "", c.get("_tier", ""), c.get("_note", "")])
         print(f"[{i}/{len(names)} {time.time() - t0:.0f}s] {nm or '(blank)'}: {n} crashes "
               f"({'city map' if city else 'outside cities'})", flush=True)
         if i % 25 == 0 and not part:
@@ -446,7 +455,12 @@ if __name__ == "__main__":
     ap.add_argument("--only-city", help="run just this CCRS city name (with --split)")
     ap.add_argument("--split", default="0/1", help="j/m: this process's share of one city's crashes, by Collision Id")
     ap.add_argument("--merge", nargs="*", help="part files to merge into coverage.json and coverage_crashes.csv")
+    ap.add_argument("--network", choices=["clipped", "box1km"], default="clipped",
+                    help="city street map: clipped to the city outline (#199) or its box + 1 km (run 8)")
+    ap.add_argument("--gate-tiers", default="", help="comma-separated auto tiers (default: the app's config)")
     a = ap.parse_args()
+    NETWORK = a.network
+    GATE_TIERS = [x for x in a.gate_tiers.split(",") if x]
     if a.merge:
         merge([Path(x) for x in a.merge])
     else:
