@@ -101,8 +101,14 @@ def load_linked(city, seed):
         crashes += ca_ccrs.fetch(y, where, CACHE)
         for k, v in ca_ccrs.cleaning_log(y, where, CACHE).items():
             log[f"ccrs_{k}"] += v
+    from crashiq import aliases as approved
+    county = str((int(COUNTY_FIPS[city][2:]) + 1) // 2)        # CCRS county code (FIPS 2n - 1)
     for c in crashes:  # LAPD writes 2401-07452 in CCRS and 240107452 in its own data
         c["report_number"] = c["report_number"].replace("-", "")
+        c.setdefault("city", CITIES[city][0])
+        c.setdefault("county_code", county)
+        approved.apply(c)              # the user-approved aliases of this city, as the app reads them (#235)
+    log["approved_alias_crashes"] = sum(1 for c in crashes if c.get("aliases_used"))
     if kind == "gps":  # hidden-GPS: the record's own coordinates are the truth; the locator never sees them
         linked = [dict(c, truth=(c["lat"], c["lon"]), truth_streets=(None, None), truth_offset=0.0)
                   for c in crashes if c["lat"] and c["lon"]]

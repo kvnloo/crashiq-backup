@@ -30,6 +30,7 @@ from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection, Polyline
 from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
+from . import aliases as aliases_mod
 from . import gps_rules
 from . import union as union_mod
 from .sources import ca_ccrs as cc
@@ -63,7 +64,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 23    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229)
+PULL_FORMAT = 24    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -327,6 +328,11 @@ def _ids_query(ckan: Ckan, rid: str, cols: dict[str, dict], ids: list[str]) -> l
     return _ids_query(ckan, rid, cols, ids[:mid]) + _ids_query(ckan, rid, cols, ids[mid:])
 
 
+def _record(r: dict, cols: dict) -> dict:
+    """A CCRS row as a crash, its road fields read through the user-approved aliases of its city (#235)."""
+    return aliases_mod.apply(cc.crash_record(r, cols))
+
+
 def _squeeze(t: str | None) -> str:
     return "".join(ch for ch in (t or "").upper() if ch.isalnum())
 
@@ -365,7 +371,13 @@ def _like_words(core: str) -> list[str]:
     if not m:
         # CHP abbreviates a leading AVENUE / SAINT / MOUNT / FORT / BOULEVARD (AVE J for Avenue J, #212)
         first, _, rest = core.partition(" ")
-        return [core] + ([f"{a} {rest}" for a in LEAD_SPELLINGS.get(first, ())] if rest else [])
+        words = [core] + ([f"{a} {rest}" for a in LEAD_SPELLINGS.get(first, ())] if rest else [])
+        # and CHP's spellings the user approved for this street, in any city: code keeps each to its own (#235)
+        for rep, raws in aliases_mod.replacements().items():
+            k = street_key(rep)
+            if k and _search_core(k) == core:
+                words += sorted(raws - set(words))
+        return words
     return [p + m.group(2) for p in ROUTE_SPELLINGS[m.group(1)]]
 
 
@@ -678,7 +690,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         recs = []
         ignored_rows: list[dict] = []          # coarse or default-point GPS (#218): read again as no-GPS reports
         for r in with_xy:
-            c = cc.crash_record(r, cols)
+            c = _record(r, cols)
             on_pile = c["lat"] is not None and gps_rules.point_key(c["lat"], c["lon"]) in gps_rules.listed_piles()
             if not on_pile and gps_rules.coarse(r.get(la_id), r.get(lo_id), lambda: c["lat"] is not None
                                                 and _pile_fits(c, line, studies, corridor_keys)):
@@ -701,7 +713,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                 if share < DMS_SHARE_MIXED:
                     continue
                 clear = share >= DMS_SHARE
-                c = cc.crash_record(r, cols)
+                c = _record(r, cols)
                 la, lo = (dms_decode(c["lat"]), dms_decode(c["lon"])) if c["lat"] is not None else (None, None)
                 if la is None or lo is None:
                     continue
@@ -765,7 +777,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                    f"WHERE NOT ({bad_xy}) AND NOT {box} AND {gps_rules.sql_condition(lat, lon)} "
                    f"AND {cc.q(cols[area_col]['id'])} IN ({area_in})")
             for r in _paged(ckan, f"SELECT * FROM ({far}) q WHERE ({names})", cid):
-                rc = cc.crash_record(r, cols)
+                rc = _record(r, cols)
                 why = gps_rules.ignored_reason(r.get(la_id), r.get(lo_id), {}, lambda: rc["lat"] is not None
                                                and _pile_fits(rc, line, studies, corridor_keys))
                 if why:
@@ -788,7 +800,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
             if corridor_cities["outside"]:
                 allowed |= {"UNINCORPORATED"} | {city_key(x) for x in corridor_cities["counties"]}
         for r in no_xy:
-            c = cc.crash_record(r, cols)
+            c = _record(r, cols)
             if c["crash_id"] in ignored:
                 c["gps_ignored"] = ignored[c["crash_id"]]
             no_gps(c, allowed, recs)
