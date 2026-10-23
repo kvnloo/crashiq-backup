@@ -1,0 +1,41 @@
+scope_type,scope,county_code,raw,replacement,map_street,votes,agreement_pct,rival,similarity,crashes_with_name,difficult_with_name,would_place,holdout_k,holdout_n,holdout_pct,holdout_low,examples,kind,status,approved_by,approved_on
+city,Oakland,1,MARTIN LUTHER KING JR WY,MARTIN LUTHER KING JUNIOR WAY,Martin Luther King Junior Way,392,100.0,,0.9,405,404,390,0,0,,,2728463 2738440 2732967,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Rancho Cucamonga,36,ARROW RT,ARROW ROUTE,Arrow Route,209,100.0,,0.82,277,269,260,6,6,100.0,61.0,2731990 2802397 2810312,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,San Jose,43,E CAPITOL EXPWY,EAST CAPITOL EXPRESSWAY,East Capitol Expressway,226,100.0,,0.81,241,176,166,10,11,90.9,62.3,2731048 2728553 2727181,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Merced,24,MARTIN LUTHER KING JR WY,MARTIN LUTHER KING JUNIOR WAY,Martin Luther King Junior Way,124,100.0,,0.9,126,125,124,0,0,,,1553833 2731664 2737632,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Rancho Cucamonga,36,ARROW RTE,ARROW ROUTE,Arrow Route,112,100.0,,0.89,155,112,106,2,2,100.0,34.2,2737633 2731998 2731991,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Ontario,36,ONTARIO MILLS PW,ONTARIO MILLS PARKWAY,Ontario Mills Parkway,46,100.0,,0.92,74,73,69,0,0,,,1401292 1417348 1414054,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Napa,28,SILVERADO TRL,SILVERADO TRAIL,Silverado Trail,101,100.0,,0.92,101,67,64,30,30,100.0,88.6,2728090 2739087 2732125,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,San Jose,43,SAN TOMAS EXPWY,SAN TOMAS EXPRESSWAY,San Tomas Expressway,69,100.0,,0.76,74,57,56,0,0,,,2728532 2726953 2746497,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Sacramento,34,MARTIN LUTHER KING JR BL,MARTIN LUTHER KING JUNIOR BOULEVARD,Martin Luther King Junior Boulevard,59,100.0,,0.9,59,56,56,0,0,,,2730656 2726580 2735326,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Laguna Niguel,30,PASEO DE COLINAS,PASEO DE LA COLINAS,Paseo de la Colinas,53,100.0,,0.93,59,53,53,0,0,,,2728482 2751877 2742570,local spelling or name,approved,user (PM session),2026-10-22
+city,Long Beach,19,MARTIN LUTHER KING JR AV,MARTIN LUTHER KING JUNIOR AVENUE,Martin Luther King Junior Avenue,73,100.0,,0.9,152,52,51,55,59,93.2,83.8,2783188 2814988 2854533,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Los Altos,43,FOOTHILL EXPWY,FOOTHILL EXPRESSWAY,Foothill Expressway,45,100.0,,0.76,60,53,48,5,5,100.0,56.6,2740067 2739885 2767654,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,San Jose,43,MONTAGUE EXPWY,MONTAGUE EXPRESSWAY,Montague Expressway,48,100.0,,0.76,64,43,40,0,0,,,2732362 2768989 2767871,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Windsor,49,OLD REDWOOD HW,OLD REDWOOD HIGHWAY,Old Redwood Highway,79,100.0,,0.91,91,42,36,37,40,92.5,80.1,1869467 1869466 1869460,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Torrance,19,HAWTHORN BL,HAWTHORNE BOULEVARD,Hawthorne Boulevard,28,100.0,,0.94,38,36,36,1,1,100.0,20.7,2732846 2750749 2746512,local spelling or name,approved,user (PM session),2026-10-22
+city,Huntington Beach,30,PACIFIC COAST HWY - SR1,PACIFIC COAST HIGHWAY,Pacific Coast Highway,476,100.0,,0.8,477,64,34,225,244,92.2,88.2,1381453 1403695 1403694,local spelling or name,approved,user (PM session),2026-10-22
+city,Encinitas,37,N COAST HWY 101,NORTH COAST HIGHWAY 101,North Coast Highway 101,34,100.0,,0.89,34,34,33,0,0,,,2753534 2874474 2874201,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Dublin,1,VILLAGE PW,VILLAGE PARKWAY,Village Parkway,77,100.0,,0.88,77,31,31,40,40,100.0,91.2,2773626 2782575 2782574,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Los Angeles,19,W MARTIN LUTHER KING JR BL,WEST MARTIN LUTHER KING JUNIOR BOULEVARD,West Martin Luther King Junior Boulevard,27,100.0,,0.92,30,30,30,0,0,,,1488218 2731861 2731381,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Campbell,43,SAN TOMAS EXPWY,SAN TOMAS EXPRESSWAY,San Tomas Expressway,18,100.0,,0.76,43,41,29,0,0,,,2798716 2806387 2844530,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Desert Hot Springs,33,TWO BUNCH PALMS TRL,TWO BUNCH PALMS TRAIL,Two Bunch Palms Trail,84,100.0,,0.94,84,29,29,54,55,98.2,90.4,1417602 1426556 1470654,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,San Jose,43,W CAPITOL EX,WEST CAPITOL EXPRESSWAY,West Capitol Expressway,38,100.0,,0.92,42,30,27,0,0,,,2747672 2781516 2806302,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Oceanside,37,VANDERGRIFT BL,VANDEGRIFT BOULEVARD,Vandegrift Boulevard,24,100.0,,0.95,30,30,27,0,0,,,2739065 2736044 2807782,local spelling or name,approved,user (PM session),2026-10-22
+city,San Diego,37,FAIRMONT AV,FAIRMOUNT AVENUE,Fairmount Avenue,28,100.0,,0.94,37,37,27,0,0,,,2758669 2780378 2778118,local spelling or name,approved,user (PM session),2026-10-22
+city,Sacramento,34,SUMMERSDALE DR,SUMMERDALE WAY,Summerdale Way,27,100.0,,0.85,27,26,26,0,0,,,2733917 2755423 2812063,local spelling or name,approved,user (PM session),2026-10-22
+city,San Jose,43,SOUTHWEST EXPWY,SOUTHWEST EXPRESSWAY,Southwest Expressway,19,100.0,,0.78,28,26,25,0,0,,,2761068 2832485 2607962,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Antioch,7,CANADA VALLEY RD,CAÑADA VALLEY ROAD,Cañada Valley Road,27,100.0,,0.92,27,25,25,1,1,100.0,20.7,1721231 2788157 2798912,local spelling or name,approved,user (PM session),2026-10-22
+city,Los Angeles,19,LAUREL CYN BL,LAUREL CANYON BOULEVARD,Laurel Canyon Boulevard,24,100.0,,0.86,26,25,24,0,0,,,2731527 2728994 2740660,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Berkeley,1,MARTIN LUTHER KING JR,MARTIN LUTHER KING JUNIOR WAY,Martin Luther King Junior Way,146,100.0,,0.9,147,28,23,102,107,95.3,89.5,2741852 2755607 2755399,local spelling or name,approved,user (PM session),2026-10-22
+city,Menifee,33,SH-74,CA 74,CA 74,61,100.0,,0.75,61,23,23,38,38,100.0,90.8,1931160 1860552 1871757,local spelling or name,approved,user (PM session),2026-10-22
+city,Downey,19,STEWART,STEWART AND GRAY ROAD,Stewart and Gray Road,22,100.0,,0.78,22,22,22,0,0,,,2866126 2606593 2647632,local spelling or name,approved,user (PM session),2026-10-22
+city,San Jose,43,LAWRENCE EXPWY,LAWRENCE EXPRESSWAY,Lawrence Expressway,24,100.0,,0.76,44,26,21,0,0,,,2742940 2845958 2859881,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Oakland,1,MARTIN LUTHER KING WY,MARTIN LUTHER KING JUNIOR WAY,Martin Luther King Junior Way,22,100.0,,0.84,22,22,21,0,0,,,2756598 2805845 2805089,local spelling or name,approved,user (PM session),2026-10-22
+city,Marina,27,IMJIN PW,IMJIN PARKWAY,Imjin Parkway,33,100.0,,0.83,40,40,21,0,0,,,2737921 2737206 2748127,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Lake Elsinore,33,SH 74,CA 74,CA 74,87,100.0,,0.75,102,29,19,41,41,100.0,91.4,1414822 1424760 1467481,local spelling or name,approved,user (PM session),2026-10-22
+city,San Juan Capistrano,30,AVE DE LA VISTA,AVENIDA DE LA VISTA,Avenida de la Vista,19,100.0,,0.84,19,19,19,0,0,,,2738022 2791391 2817298,local spelling or name,approved,user (PM session),2026-10-22
+city,Soledad,27,DIXIE ST,DIXI STREET,Dixi Street,19,100.0,,0.89,20,20,19,0,0,,,2779690 2779599 2805980,local spelling or name,approved,user (PM session),2026-10-22
+city,Corona,33,EAGLE GLEN PY,EAGLE GLEN PARKWAY,Eagle Glen Parkway,43,100.0,,0.9,43,18,18,18,19,94.7,75.4,1391141 1421873 1433835,abbreviation (cleaner rule),approved,user (PM session),2026-10-22
+city,Tulare,54,MARTIN LUTHER KING,MARTIN LUTHER KING JUNIOR AVENUE,Martin Luther King Junior Avenue,19,100.0,,0.84,28,18,18,5,5,100.0,56.6,2759713 2758846 2767464,local spelling or name,approved,user (PM session),2026-10-22
+city,Laguna Hills,30,MOULTON PKY,MOULTON PARKWAY,Moulton Parkway,19,100.0,,0.82,19,18,18,1,1,100.0,20.7,2817492 2856176 2614715,local spelling or name,approved,user (PM session),2026-10-22

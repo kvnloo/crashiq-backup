@@ -404,3 +404,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Street alias / spelling table DECIDED (user, 2026-10-22, PM session):** draft one from the #211 audit (~11,100
   difficult crashes). Per CLAUDE.md ("nothing is learned without user approval"), every entry is reviewed and approved
   by the user before the app uses it; entries carry their evidence.
+- **Street aliases: top 40 APPROVED (user, 2026-10-22, PM session):** "all are right... it's the same name." The 40
+  highest-impact entries of the #230 draft (review sheet `reports/testing/alias-review-2026-10-22.md`) are approved and
+  copied to the live table `data/reference/street_aliases.csv` (status approved, approver and date per row). The rest
+  of the draft stays proposed until the user approves it.
