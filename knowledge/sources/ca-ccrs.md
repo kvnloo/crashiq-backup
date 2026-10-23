@@ -31,7 +31,7 @@ at runtime with `package_show` (code: `backend/crashiq/sources/ca_ccrs.py`).
   San Jose (4,111 difficult crashes, mostly CHP areas 9370, 9675, 9252, 9550, 9530); longitude missing its minus
   (432); 1,676 raw points outside California. Whole-degree latitude errors exist but can't be told from chance.
 - **Default / dispatch GPS points** (1,755 crashes on 50 points) and coarse coordinates (≤ 2 decimals, 547). (#218)
-- **The live Crashes table has 75 columns** (our mirror keeps 30), Parties 49, IWP 22. Check the live schema, not a
+- **The live Crashes table has 75 columns** (our mirror keeps 30), Parties 49. Check the live schema, not a
   local copy, before saying a field doesn't exist (a wrong "no postmile" claim stood for a day, 2026-10-23).
 - **Milepost fields exist but are rarely filled:** `MilepostMarker`, `MilepostDistance`, `MilepostDirection`,
   `MilepostUnitOfMeasure`. CHP filled them with a real Caltrans postmile ("route county postmile", e.g. `80 SAC M7.128`, plus distance and
