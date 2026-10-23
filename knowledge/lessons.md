@@ -1,5 +1,39 @@
 # Lessons (newest first)
 
+- 2026-10-23 · Freeway crashes are described by a reference street that crosses over or under the freeway, plus a
+  distance along it. They never "intersect", so 24,076 sat unplaced (D1). Method: `methods/freeway-crashes.md`.
+- 2026-10-23 · `IsFreeway = True` is freeway jurisdiction, not the main lanes. "I-680 S/B TO SR-4" is a crash on the
+  connector ramp (Martinez 1428399, confirmed by the user).
+- 2026-10-23 · Read report fields literally. The user misread S as N, and a connector as mainline, on first pass.
+  A rule that reads the fields as written beats intuition.
+- 2026-10-23 · On freeways the report beats the officer's GPS when they disagree (Lawndale GPS at the crossing's
+  corner, report 200 ft S; Stockton GPS inside a parcel).
+- 2026-10-23 · A repair that "fits" needs a chance control. DMS repair fits 55.6% vs 0.7% control (real, 4,111 crashes);
+  missing longitude minus 74% vs 0.78% (real, 432); whole-degree latitude shifts ±1° 1.5% vs 2.1% (pure chance).
+- 2026-10-23 · Landing on the named freeway is weak evidence: a 2 km random shift still lands on it 7.7% of the time,
+  so ~1 in 5 of 5,894 "fits" are chance. Require agreement with the report's spot, not the road.
+- 2026-10-23 · Public CCRS has no route/postmile column; TASAS postmiles are assigned later by Caltrans from the same
+  road-name description. Postmile can still be derived for output from the public Caltrans layer (#248).
+- 2026-10-23 · Write coordinates with an ASCII hyphen. A typographic minus (U+2212) made the user's Google Maps
+  searches fail.
+- 2026-10-22 · Name the leftovers. Sorting the difficult bin into buckets (D1–D9) and having the user place 3–20 real
+  records by hand turned a vague 7% into concrete rules (playbook step 5).
+- 2026-10-22 · A second street map can lose correct placements: the OSM + TIGER union added TIGER copies that created
+  false meeting points (SF −35/+11, LA −66/+22 correct placements, #243). Gate a new source by "no correct placement
+  lost", not by net gain.
+- 2026-10-22 · unique_pair (the two streets meet exactly once, allowing only what the report leaves out) placed
+  +108,547 crashes at 92.4% vs exact 90.4% on hidden GPS, and 97.0% vs 95.7% on LAPD open data. Biggest single win.
+- 2026-10-22 · "GPS right, names wrong" is rare: 2 of 200 random cases. Freeway distance, offsets and off-street GPS
+  explain the rest. Check a plausible story with a random sample before building for it.
+- 2026-10-22 · Clipping a city's street network to its outline loses county pockets and boundary streets: city box
+  + 1 km recovered 23,467 crashes. A harness artefact can look like a data problem.
+- 2026-10-22 · Default/dispatch points pile crashes onto one coordinate (one CHP point near Auburn: 333 crashes from
+  59 areas). Find piles by pooling all agencies, then treat them as no GPS.
+- 2026-10-22 · An OR of "coarse coordinate" rules would have thrown out 1,396 good points (#225). Test each rule's
+  false positives on GPS that fits the report before adopting it.
+- 2026-10-21 · FARS overrode locator placements until #192. A fallback source must only fill gaps, and its point
+  must fit both named roads.
+
 - 2026-10-20 · Officer GPS is a weak answer key for offsets: it usually sits at the intersection even when the report
   says hundreds of feet away (Concord: 92% of exact matches right at the intersection, 73% after the stated offset).
   Score the matcher at the intersection, and only on GPS that agrees with the report's own streets (agencies run
