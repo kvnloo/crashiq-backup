@@ -67,7 +67,7 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
         if (c.get("killed") or 0) <= 0 or c.get("exclude_rule"):
             continue
         src = c.get("location_source")
-        if src not in ("unmatched", "gps", "gps_dms_corrected", "gps_offset_applied"):
+        if src not in ("unmatched", "gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied"):
             continue                       # placed by the locator (exact) or by hand: a usable location (#191)
         if src != "unmatched" and (c.get("lat") is None or _gps_usable(c, net)):
             continue                                       # its own GPS checks out
@@ -104,7 +104,7 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
             and not c.get("review_reason")]
     counts = {"tried": len(todo), "placed": {}, "suggested": 0, "still_unplaced": 0}
     # GPS snapped to the named intersection while the report states an offset (#218): the offset wins
-    offset_cands = [c for c in result["crashes"] if c.get("location_source") in ("gps", "gps_dms_corrected")
+    offset_cands = [c for c in result["crashes"] if c.get("location_source") in ("gps", "gps_dms_corrected", "gps_sign_corrected")
                     and (c.get("offset_ft") or 0) > gps_rules.CONFIG["offset_min_ft"] and c.get("offset_dir")]
     onet = None
     if (todo or offset_cands) and net.get("line"):

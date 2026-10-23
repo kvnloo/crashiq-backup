@@ -362,7 +362,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         # how the counted crashes were located (#104 data-quality strip): GPS + exact + other tiers + you = Crashes
         _row("located_gps", "Located by the officer's GPS",
              value=sum(1 for c in placed if c.get("location_provenance") in ("gps", "gps_dms_corrected",
-                                                                                 "gps_offset_applied"))),
+                                                                                 "gps_sign_corrected", "gps_offset_applied"))),
+        # the longitude's lost minus restored (#247); already in located_gps
+        _row("located_gps_sign", "Of these, GPS whose longitude had lost its minus sign",
+             value=sum(1 for c in placed if c.get("location_provenance") == "gps_sign_corrected")),
         # GPS at the named intersection while the report states a distance from it: moved by it (#218); in located_gps
         _row("located_gps_offset", "Of these, GPS moved by the distance and direction the report states",
              value=sum(1 for c in placed if c.get("location_provenance") == "gps_offset_applied")),
@@ -385,7 +388,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
              "confirmed by the cross street)",
              value=sum(1 for c in placed if c.get("location_provenance") == "verified_typo")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
-             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_offset_applied", "fars", "exact",
+             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied", "fars", "exact",
                                                                                  "unique_pair", "verified_typo", "user"))),
         # placed by street names using a name or road only Census TIGER/Line has (#229); already in the rows above
         _row("located_tiger", "Of the crashes placed by street names, placed with a street name or road only "
