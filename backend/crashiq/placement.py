@@ -9,7 +9,7 @@ any change to the gate is the user's decision (docs/03, PR #16 decision 2).
 
 from __future__ import annotations
 
-from . import fars, grade, locate, osm
+from . import fars, gps_rules, grade, locate, osm
 from . import network as network_mod
 from .db import Database
 
@@ -66,7 +66,7 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
         if (c.get("killed") or 0) <= 0 or c.get("exclude_rule"):
             continue
         src = c.get("location_source")
-        if src not in ("unmatched", "gps", "gps_dms_corrected"):
+        if src not in ("unmatched", "gps", "gps_dms_corrected", "gps_offset_applied"):
             continue                       # placed by the locator (exact) or by hand: a usable location (#191)
         if src != "unmatched" and (c.get("lat") is None or _gps_usable(c, net)):
             continue                                       # its own GPS checks out
@@ -100,9 +100,15 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
     todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")
             and not c.get("review_reason")]
     counts = {"tried": len(todo), "placed": {}, "suggested": 0, "still_unplaced": 0}
-    if todo and net.get("line"):
+    # GPS snapped to the named intersection while the report states an offset (#218): the offset wins
+    offset_cands = [c for c in result["crashes"] if c.get("location_source") in ("gps", "gps_dms_corrected")
+                    and (c.get("offset_ft") or 0) > gps_rules.CONFIG["offset_min_ft"] and c.get("offset_dir")]
+    onet = None
+    if (todo or offset_cands) and net.get("line"):
         raw = network_mod.fetch_overpass(db, network_mod.overpass_query([tuple(p) for p in net["line"]]))
         onet = osm.Network(raw)
+    result["cleaning"]["gps_offset_applied"] = gps_rules.apply_offsets(onet, net, offset_cands) if onet else 0
+    if todo and onet is not None:
         for c in todo:
             pl = locate.place(onet, c)
             if gate.auto(pl):

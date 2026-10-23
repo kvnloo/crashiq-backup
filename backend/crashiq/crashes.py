@@ -30,6 +30,7 @@ from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection, Polyline
 from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
+from . import gps_rules
 from .sources import ca_ccrs as cc
 from .sources import ccrs_files
 from .sources.ckan import Ckan, CkanError
@@ -45,6 +46,9 @@ class PullError(RuntimeError):
     pass
 
 
+GPS_SOURCES = ("gps", "gps_dms_corrected", "gps_offset_applied")     # police GPS, as written or corrected (#143, #218)
+
+
 def margin_ft(study: dict) -> float:
     """Bounding-box margin around the line: covers the influence radius and buffer, independent of small edits."""
     return max(500.0, study["radius_ft"], study["buffer_ft"]) + 150.0
@@ -58,7 +62,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 21    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on)
+PULL_FORMAT = 22    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -554,7 +558,9 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
            "feet_typed_as_miles_fixed": 0, "years_missing": [], "parties_missing_years": [], "iwp_missing_years": [],
            "parties_source": {}, "iwp_source": {}, "files_pending": {}, "file_errors": {},
            "missing_fields": {}, "unknown_injury_values": [], "cities": [], "area_rejected": [],
-           "gps_dms_corrected": 0, "gps_dms_unconfirmed": 0, "gps_dms_agencies": []}
+           "gps_dms_corrected": 0, "gps_dms_unconfirmed": 0, "gps_dms_agencies": [],
+           "gps_default_ignored": 0, "gps_default_ignored_by_agency": {}, "gps_coarse_ignored": 0,
+           "gps_ignored_found_by_name": 0}
     margin = margin_ft(study)
     line = Polyline([tuple(p) for p in net["line"]])
     s, w, n, e = bbox(net["line"], margin)
@@ -576,6 +582,48 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
     other_city: Counter = Counter()
     log["area_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
+
+    def no_gps(c: dict, allowed, recs: list) -> None:
+        """One report with no usable coordinates: kept only on the corridor street by name, in a city the corridor
+        enters, then sorted by its cross street (#39, #82, #94, #142)."""
+        if allowed is not None and _city_allowed(c.get("city"), allowed, corridor_cities["outside"]) is False:
+            log["no_coords_other_city"] += 1
+            other_city[c["city"]] += 1
+            return
+        log["implausible_coords"] += c["bad_coords"]
+        roads = [c["primary_road"], c["secondary_road"]]
+        on_idx = [i for i, rd in enumerate(roads) if _names_street(rd, corridor_keys)]
+        on = [roads[i] for i in on_idx]
+        other = [street_key(rd) for i, rd in enumerate(roads) if i not in on_idx and street_key(rd)]
+        if not on:
+            log["no_coords_not_corridor_street"] += 1
+        elif grade.on_crossing_road(c, corridor_keys, gs_keys):
+            # On a road passing over or under the corridor: never meets it (N7, #67). Kept and listed.
+            log["no_coords_grade_separated"] += 1
+            c["exclude_rule"] = "grade_separated_crossing"
+            recs.append((c, "unmatched"))
+        elif _no_cross_street(roads, on_idx):
+            # The report gives no usable cross street ('NOT STATED', blank, 'PRIVATE PROPERTY', junk): where on
+            # the corridor it happened is unknown. Not a side street (#82): its own rule and count.
+            rule = "private_property" if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd) \
+                else "no_cross_street"
+            log[f"no_coords_{rule}"] = log.get(f"no_coords_{rule}", 0) + 1
+            if rule == "private_property":
+                c["exclude_rule"] = rule        # not on the corridor
+            else:
+                c["review_reason"] = rule       # user, 2026-10-19 (#94): on the corridor, place unknown -> review
+            recs.append((c, "unmatched"))
+        else:
+            at_crossing = any(grade.same_road(k, x) for k in other for x in gs_keys)   # corridor, by an overpass
+            if cross_keys and not at_crossing and not any(same_core(k, x) for k in other for x in cross_keys):
+                # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
+                # listed under its rule (#39, docs/03).
+                log["no_coords_off_study_stretch"] += 1
+                c["exclude_rule"] = "cross_street_not_on_corridor"
+            recs.append((c, "unmatched"))
+
+    ignored: dict[str, dict] = {}         # collision id -> the GPS point not used, and why (#218)
+    last_allowed: list = [None]           # the cities a no-GPS report may come from, as of the latest year read
 
     for yi, y in enumerate(years):
         tell(f"Crash reports {y}", yi, len(years))
@@ -608,7 +656,13 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         with_xy = [r for r in rows if in_box(r)]
         dms_rows = [r for r in rows if not in_box(r)]
         recs = []
+        ignored_rows: list[dict] = []          # coarse or default-point GPS (#218): read again as no-GPS reports
         for r in with_xy:
+            if gps_rules.coarse(r.get(la_id), r.get(lo_id)):
+                ignored[str(r[cols["collision_id"]["id"]])] = {"lat": cc._num(r.get(la_id)), "lon": cc._num(r.get(lo_id)),
+                                                               "reason": "coarse", "shared_by": 0}
+                ignored_rows.append({**r, la_id: None, lo_id: None})
+                continue
             c = cc.crash_record(r, cols)
             # The box is a rectangle; on a diagonal corridor most of it is far from the line. Rows beyond the
             # margin can't be in the study at any radius/buffer the margin allows, so they stop here (#54).
@@ -683,9 +737,22 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
             inner = (f"SELECT {_select(cols)}, {_road_aliases(pr, sr)} FROM {cc.q(rid)} "
                      f"WHERE ({bad_xy}) AND {cc.q(cols[area_col]['id'])} IN ({area_in})")
             no_xy = _paged(ckan, f"SELECT * FROM ({inner}) q WHERE ({names})", cid)
-        if dms_no_gps:
-            ids = {str(r[cols["collision_id"]["id"]]) for r in no_xy}
-            no_xy = list(no_xy) + [r for r in dms_no_gps if str(r[cols["collision_id"]["id"]]) not in ids]
+            # GPS on a known default point, or coarse, anywhere in the area: never in the box and not in the query
+            # above, so a corridor study missed it (#218). Same names and area; the point is matched exactly in code.
+            far = (f"SELECT {_select(cols)}, {_road_aliases(pr, sr)} FROM {cc.q(rid)} "
+                   f"WHERE NOT ({bad_xy}) AND NOT {box} AND {gps_rules.sql_condition(lat, lon)} "
+                   f"AND {cc.q(cols[area_col]['id'])} IN ({area_in})")
+            for r in _paged(ckan, f"SELECT * FROM ({far}) q WHERE ({names})", cid):
+                why = gps_rules.ignored_reason(r.get(la_id), r.get(lo_id), {})
+                if why:
+                    ignored[str(r[cols["collision_id"]["id"]])] = {
+                        "lat": cc._num(r.get(la_id)), "lon": cc._num(r.get(lo_id)), "reason": why[0],
+                        "shared_by": why[1], "found_by_name": True}
+                    ignored_rows.append({**r, la_id: None, lo_id: None})
+        for extra in (dms_no_gps, ignored_rows):
+            if extra:
+                ids = {str(r[cols["collision_id"]["id"]]) for r in no_xy}
+                no_xy = list(no_xy) + [r for r in extra if str(r[cols["collision_id"]["id"]]) not in ids]
         log["no_coords_read"] += len(no_xy)
         # cities a no-GPS report may come from (#142): those the line enters, unincorporated county where it leaves
         # city limits, and any city with 2+ of its GPS crashes along the corridor (an OSM boundary can be missing)
@@ -698,43 +765,30 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                 allowed |= {"UNINCORPORATED"} | {city_key(x) for x in corridor_cities["counties"]}
         for r in no_xy:
             c = cc.crash_record(r, cols)
-            if allowed is not None and _city_allowed(c.get("city"), allowed, corridor_cities["outside"]) is False:
-                log["no_coords_other_city"] += 1
-                other_city[c["city"]] += 1
-                continue
-            log["implausible_coords"] += c["bad_coords"]
-            roads = [c["primary_road"], c["secondary_road"]]
-            on_idx = [i for i, rd in enumerate(roads) if _names_street(rd, corridor_keys)]
-            on = [roads[i] for i in on_idx]
-            other = [street_key(rd) for i, rd in enumerate(roads) if i not in on_idx and street_key(rd)]
-            if not on:
-                log["no_coords_not_corridor_street"] += 1
-            elif grade.on_crossing_road(c, corridor_keys, gs_keys):
-                # On a road passing over or under the corridor: never meets it (N7, #67). Kept and listed.
-                log["no_coords_grade_separated"] += 1
-                c["exclude_rule"] = "grade_separated_crossing"
-                recs.append((c, "unmatched"))
-            elif _no_cross_street(roads, on_idx):
-                # The report gives no usable cross street ('NOT STATED', blank, 'PRIVATE PROPERTY', junk): where on
-                # the corridor it happened is unknown. Not a side street (#82): its own rule and count.
-                rule = "private_property" if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd) \
-                    else "no_cross_street"
-                log[f"no_coords_{rule}"] = log.get(f"no_coords_{rule}", 0) + 1
-                if rule == "private_property":
-                    c["exclude_rule"] = rule        # not on the corridor
-                else:
-                    c["review_reason"] = rule       # user, 2026-10-19 (#94): on the corridor, place unknown -> review
-                recs.append((c, "unmatched"))
-            else:
-                at_crossing = any(grade.same_road(k, x) for k in other for x in gs_keys)   # corridor, by an overpass
-                if cross_keys and not at_crossing and not any(same_core(k, x) for k in other for x in cross_keys):
-                    # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
-                    # listed under its rule (#39, docs/03).
-                    log["no_coords_off_study_stretch"] += 1
-                    c["exclude_rule"] = "cross_street_not_on_corridor"
-                recs.append((c, "unmatched"))
+            if c["crash_id"] in ignored:
+                c["gps_ignored"] = ignored[c["crash_id"]]
+            no_gps(c, allowed, recs)
+        last_allowed[0] = allowed
         log["rows_read"] += len(with_xy) + len(no_xy)
         raw_by_year[y] = recs
+
+    # Default / dispatch points inside the box (#218): one exact point shared by many crashes and street pairs, most
+    # of which it doesn't fit. Counted over all years read; the Tester's statewide list adds points seen elsewhere.
+    fits = lambda c: _dms_check(c, line, studies, corridor_keys)
+    gps_recs = [c for recs in raw_by_year.values() for c, src in recs if src == "gps"]
+    piles = gps_rules.find_piles(gps_recs, fits)
+    for y, recs in raw_by_year.items():
+        keep = []
+        for c, src in recs:
+            why = gps_rules.ignored_reason(c["lat"], c["lon"], piles) if src == "gps" else None
+            if why and why[0] == "default_point" and not fits(c):
+                c["gps_ignored"] = {"lat": c["lat"], "lon": c["lon"], "reason": "default_point",
+                                    "shared_by": max(why[1], piles.get(gps_rules.point_key(c["lat"], c["lon"]), 0))}
+                c.update(lat=None, lon=None)
+                no_gps(c, last_allowed[0], keep)
+            else:
+                keep.append((c, src))
+        raw_by_year[y] = keep
 
     # cleaning: window, CHP-deleted, duplicate report versions (keep the highest), preliminary flagged
     crashes: dict[str, dict] = {}
@@ -833,7 +887,13 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
             "No area could be identified for this corridor: no GPS crash in the corridor box, and no report names "
             "the corridor street with one of its study cross streets." if not log["area_source"]
             else "Reports from this area exist, but none name this street on the study stretch."))
-    log["with_coords"] = sum(c["location_source"] in ("gps", "gps_dms_corrected") for c in out)
+    gi = [c for c in out if c.get("gps_ignored")]
+    log["gps_default_ignored"] = sum(c["gps_ignored"]["reason"] == "default_point" for c in gi)
+    log["gps_coarse_ignored"] = sum(c["gps_ignored"]["reason"] == "coarse" for c in gi)
+    log["gps_default_ignored_by_agency"] = dict(Counter(c.get("agency") or "?" for c in gi
+                                                        if c["gps_ignored"]["reason"] == "default_point").most_common())
+    log["gps_ignored_found_by_name"] = sum(bool(c["gps_ignored"].get("found_by_name")) for c in gi)
+    log["with_coords"] = sum(c["location_source"] in GPS_SOURCES for c in out)
     log["without_coords"] = sum(c["location_source"] == "unmatched" for c in out)
     log["excluded_listed"] = sum(bool(c.get("exclude_rule")) for c in out)
     return {"crashes": out, "cleaning": log, "source": SOURCE, "years": years,

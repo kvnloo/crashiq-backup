@@ -97,8 +97,10 @@ def test_crenshaw_screen_findings_pass_the_validator(client):
     r = client.post(f"/api/studies/{sid}/findings/screen").json()
     assert r["rejected"] == [] and len(r["shown"]) >= 2
     top = r["shown"][0]
-    assert top["text"] == ("Crashes after dark under street lights are over-represented at West 135th Street: "
-                           "12 of 21 crashes here (57.1%) vs 39.8% across the corridor intersections.")  # +1 placed (#35)
+    # #218: GPS snapped to an intersection while the report states a distance is moved by it; several West 135th
+    # Street crashes are on the segments now, so West 147th Street leads (was 12 of 21 at West 135th)
+    assert top["text"] == ("Crashes after dark under street lights are over-represented at West 147th Street: "
+                           "5 of 8 crashes here (62.5%) vs 35.5% across the corridor intersections.")
     assert top["source"] == "screen" and top["meta"]["strength"] == "Moderate" and top["evidence_refs"]["tables"] == ["T12"]
     assert top["meta"]["method"].startswith("Binomial") and "not a probability" in top["meta"]["method"]
     assert top["pattern_ref"] and top["meta"]["library_status"] == "draft"
@@ -128,8 +130,8 @@ def test_tampered_screen_numbers_are_rejected(client):
     sid = _study(client)
     prof, tables, _ = findings.context(client.app.state.db, sid)
     f = findings.screen_findings(prof, tables)[0]
-    f.text = f.text.replace("12 of 21", "14 of 21")
-    assert any("14" in r for r in findings.validate(f, tables, findings.context(client.app.state.db, sid)[2], (2021, 2025)))
+    f.text = f.text.replace("5 of 8", "7 of 8")
+    assert any("7" in r for r in findings.validate(f, tables, findings.context(client.app.state.db, sid)[2], (2021, 2025)))
 
 
 def test_accepted_findings_print_in_the_pdf(client):
@@ -138,7 +140,7 @@ def test_accepted_findings_print_in_the_pdf(client):
     client.patch(f"/api/studies/{sid}/findings/{shown[0]['id']}?status=accepted")
     pdf = PdfReader(io.BytesIO(client.get(f"/api/studies/{sid}/export.pdf").content))
     text = " ".join(pg.extract_text() for pg in pdf.pages)
-    assert "F1. Crashes after dark under street lights over-represented at West 135th Street" in text
+    assert "F1. Crashes after dark under street lights over-represented at West 147th Street" in text
     assert shown[1]["title"] not in text                                           # not accepted → not printed
     assert "no AI narrative" in text and "(draft)" in text
 

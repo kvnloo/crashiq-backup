@@ -269,7 +269,11 @@ def methodology(d: dict) -> str:
             "both names match exactly, or where the two streets can meet at only one place when a direction or suffix "
             "the report leaves out may differ (AVENUE J & 20TH ST W can only be West Avenue J & 20th Street West); a "
             "direction the report writes must match. Street pairs that meet in more than one place, and looser "
-            f"matches, go to the review list for the engineer. Excluded: {excl}. "
+            "matches, go to the review list for the engineer. Police GPS at the intersection the report names, when the "
+            "report states a distance and direction from it, is moved by that distance along the named road. GPS on a "
+            "default point (one exact point shared by 10 or more reports naming 5 or more different street pairs, "
+            "most of which it doesn't fit) or written with 2 decimals or fewer is not used; those reports are placed "
+            f"by their street names. Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed" + (f" ({ncs} of them name the corridor but give no cross street, so where on the corridor "
                             "is unknown; they are on the review list for the engineer to place)" if ncs else "")

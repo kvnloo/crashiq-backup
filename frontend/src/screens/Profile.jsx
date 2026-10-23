@@ -12,6 +12,7 @@ import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
 
 const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from the report, converted from degrees-minutes-seconds',
+  gps_offset_applied: 'GPS from the report, moved by the distance and direction the report states', unique_pair: 'Matched by street names (they meet at only one place)',
   fars: 'FARS (NHTSA) point, checked against the report\'s streets', exact: 'Matched by street names', fuzzy: 'Fuzzy name match',
   user: 'Placed by you', unmatched: 'Not placed yet (no coordinates)' }
 const provLabel = (k) => PROV_LABEL[k] || (k.startsWith('jev') ? `Jev suggestion ${k.slice(3)}` : k)

@@ -47,7 +47,7 @@ def overlay(crashes: list[dict], decs: dict[str, dict]) -> list[dict]:
     out = []
     for c in crashes:
         d = decs.get(c["crash_id"])
-        if d is None or c.get("location_source") in ("gps", "gps_dms_corrected", "fars"):
+        if d is None or c.get("location_source") in ("gps", "gps_dms_corrected", "gps_offset_applied", "fars"):
             out.append(c)
         elif d["report_version"] is not None and d["report_version"] != c.get("report_version"):
             out.append({**c, "review_reason": "report_changed", "stale_decision": d["action"]})

@@ -42,7 +42,7 @@ def test_background_pull_reports_progress_then_the_summary(client, sid):
     r = client.post(f"/api/studies/{sid}/crashes/pull?background=true")
     assert r.status_code == 202 and r.json()["job"]["state"] == "running"
     st = wait(client, sid)
-    assert st["state"] == "done" and st["summary"]["count"] == 125 and st["summary"]["from_cache"] is False
+    assert st["state"] == "done" and st["summary"]["count"] == 126 and st["summary"]["from_cache"] is False
     again = client.post(f"/api/studies/{sid}/crashes/pull?background=true")      # cached now: answered at once
     assert again.status_code == 200 and again.json()["from_cache"] is True
 
