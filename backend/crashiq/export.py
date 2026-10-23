@@ -265,7 +265,11 @@ def methodology(d: dict) -> str:
             "where the corridor leaves city limits. Only intersections the corridor "
             "meets at grade count; a road passing over or under it (an overcrossing, undercrossing or freeway, found "
             "from OpenStreetMap where the roads cross without a shared node) is not an intersection, and crashes on "
-            f"that road are excluded. Excluded: {excl}. "
+            "that road are excluded. A report without GPS is placed from its two street names on OpenStreetMap: where "
+            "both names match exactly, or where the two streets can meet at only one place when a direction or suffix "
+            "the report leaves out may differ (AVENUE J & 20TH ST W can only be West Avenue J & 20th Street West); a "
+            "direction the report writes must match. Street pairs that meet in more than one place, and looser "
+            f"matches, go to the review list for the engineer. Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed" + (f" ({ncs} of them name the corridor but give no cross street, so where on the corridor "
                             "is unknown; they are on the review list for the engineer to place)" if ncs else "")

@@ -363,8 +363,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
              value=sum(1 for c in placed if c.get("location_provenance") == "fars")),
         _row("located_exact", "Placed by exact street-name match",
              value=sum(1 for c in placed if c.get("location_provenance") == "exact")),
-        # the report's two streets can meet at only one place (#203); auto-placed only when the gate allows it
-        _row("located_unique_pair", "Placed where the report's two streets meet at only one place",
+        # the report's two streets can meet at only one place (#203); auto-placed since the user's decision 2026-10-22
+        _row("located_unique_pair", "Placed where the report's two streets meet at only one place (a direction or "
+             "suffix the report leaves out may differ)",
              value=sum(1 for c in placed if c.get("location_provenance") == "unique_pair")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
              value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "fars", "exact",

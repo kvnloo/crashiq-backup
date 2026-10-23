@@ -4,7 +4,7 @@ Tiers, cheapest first (each crash records which one placed it):
   exact  – both streets match an OSM street key exactly (after normalization)
   unique_pair – the two streets, allowing only what the report leaves out (a leading or trailing direction, a
            suffix), meet at exactly one intersection: AVENUE J & 20TH ST W can only be West Avenue J & 20th Street
-           West in Lancaster (#203; auto-places only when the gate allows it)
+           West in Lancaster (#203; auto-places since the user's decision of 2026-10-22)
   fuzzy  – best-scoring key per street, above a threshold and clearly ahead of the runner-up
   jev    – leftovers only: Jev picks one of the top code-generated candidates, or "none"
   review – nothing confident; a person decides
@@ -304,9 +304,8 @@ def configured_tiers() -> frozenset:
 @dataclass
 class Gate:
     """Seam 1 (docs/04 §2): which placements may auto-place. Thresholds are user decisions, kept as config.
-    Default = only tiers proven >=98% (95% Wilson lower bound) on held-out data, and Jev never auto-places.
-    The tiers come from config/placement.json: `unique_pair` joins only after the Tester's #201 measurement clears
-    the bar and the user confirms (docs/03, 2026-10-22); until then it is a one-click suggestion on the review list."""
+    The tiers come from config/placement.json, each one a user decision (docs/03): `exact`, proven >= 98% (95% Wilson
+    lower bound) on held-out data, and `unique_pair` (user, 2026-10-22: on statewide). Jev never auto-places."""
     auto_tiers: frozenset = field(default_factory=lambda: configured_tiers())
     jev_tau: float | None = None     # Jev pick probability needed to auto-place; None = never
     jev_margin: float = 0.0          # and its lead over the runner-up
