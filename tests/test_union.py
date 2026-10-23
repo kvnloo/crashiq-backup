@@ -139,7 +139,7 @@ def test_a_diverging_tiger_copy_adds_no_second_meeting_point():
               {"type": "way", "id": 11, "nodes": [5, 2, 4], "tags": {"name": "Oak Avenue"}}]}
     stray = edge(701, ["Oak Ave"], [(33.9990, -117.99655), (34.0, -117.99655)], 11, 12)
     els, counts = union.union(osm, [stray], [(34.0, -118.001), (34.0, -117.995)], 40)
-    assert counts["join_refused_osm_meets"] == 1
+    assert counts.get("join_refused_osm_meets", 0) + counts.get("same_name_as_osm_street", 0) == 1
     p = locate.place(Network(els), crash("MAIN ST", "OAK AVE"))
     assert p.tier == "exact" and p.node == 2 and not p.tiger_road
 
@@ -150,3 +150,34 @@ def test_a_loose_tiger_copy_of_a_named_osm_street_adds_nothing():
     els, counts = union.union(OSM, [copy], LINE, 40)
     assert counts.get("copy_of_osm_street") == 1 and not counts.get("added_from_tiger")
     assert sum(e["type"] == "way" for e in els["elements"]) == 2
+
+
+def test_tiger_never_gives_an_osm_street_another_osm_streets_name():
+    # #243, SF: TIGER's "Market St" along OSM's Clayton Street gave Clayton the name Market, and Market "met"
+    # Clayton all along it. A name another OSM street has stays with that street
+    misnamed = edge(703, ["Main St", "Oak Ave"], [(34.00002, -118.0010), (34.00002, -117.9990)])
+    els, counts = union.union(OSM, [misnamed], LINE, 40)
+    oak = next(e for e in els["elements"] if e.get("id") == 11)
+    main = next(e for e in els["elements"] if e.get("id") == 10)
+    assert "Oak" not in main["tags"].get("tiger:name", "") and counts["names_refused_osm_has"] == 1
+    assert oak["tags"].get("crashiq:source") == "osm"
+
+
+def test_a_tiger_road_under_a_name_osm_has_elsewhere_is_not_added():
+    # #243, LA: TIGER's Hill St (Santa Monica) beat OSM's South Hill Street (downtown) for HILL ST & 7TH ST
+    other = edge(704, ["Oak Ave"], [(34.0, -117.9990), (34.0010, -117.9990)], 15, 16)
+    els, counts = union.union(OSM, [other], LINE, 40)
+    assert counts.get("same_name_as_osm_street") == 1 and not counts.get("added_from_tiger")
+
+
+def test_a_tiger_name_with_another_street_type_isnt_given_to_the_wrong_osm_way():
+    # #243, LA: TIGER's "Griffith Park Dr" ran along OSM's Griffith Park Road; OSM's Griffith Park Drive is elsewhere
+    osm = {"elements": OSM["elements"][:5] + [
+        {"type": "node", "id": 6, "lat": 34.0020, "lon": -118.0010}, {"type": "node", "id": 7, "lat": 34.0020, "lon": -117.9990},
+        {"type": "way", "id": 10, "nodes": [1, 2, 3], "tags": {"name": "Oak Road"}},
+        {"type": "way", "id": 11, "nodes": [5, 2, 4], "tags": {"name": "Elm Street"}},
+        {"type": "way", "id": 12, "nodes": [6, 7], "tags": {"name": "Oak Drive"}}]}
+    tiger = [edge(705, ["Oak Dr"], [(34.00002, -118.0010), (34.00002, -117.9990)])]
+    els, counts = union.union(osm, tiger, LINE, 40)
+    oak_rd = next(e for e in els["elements"] if e.get("id") == 10)
+    assert "Oak Dr" not in oak_rd["tags"].get("tiger:name", "") and counts["names_refused_osm_has"] == 1
