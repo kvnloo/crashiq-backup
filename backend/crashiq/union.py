@@ -22,6 +22,8 @@ from .geo import LocalProjection
 
 CONFIG = json.loads((Path(__file__).parent / "config" / "tiger.json").read_text())
 SAMPLE_M = 10.0
+PARALLEL_DEG = 20.0        # a TIGER road runs along an OSM way only in the same direction: a cross street next to a
+                           # divided road's far carriageway (Masonic at Geary) is near it, not along it
 END_M = 15.0               # a segment's ends touch the streets that cross it: not evidence of running along them
 TIGER_NODE = 10 ** 12      # TIGER topology node ids live above OSM's
 POINT_NODE = 2 * 10 ** 12  # a TIGER segment's inner points
@@ -65,7 +67,7 @@ class _Grid:
 
 
 def _samples(pts_xy, step_ft, end_ft):
-    """Points every step along the polyline, leaving out end_ft at each end."""
+    """(point, direction in degrees) every step along the polyline, leaving out end_ft at each end."""
     seglens = [math.hypot(b[0] - a[0], b[1] - a[1]) for a, b in zip(pts_xy, pts_xy[1:])]
     total = sum(seglens)
     out, s = [], end_ft
@@ -74,29 +76,40 @@ def _samples(pts_xy, step_ft, end_ft):
         for (a, b), L in zip(zip(pts_xy, pts_xy[1:]), seglens):
             if acc + L >= s and L > 0:
                 t = (s - acc) / L
-                out.append((a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])))
+                out.append(((a[0] + t * (b[0] - a[0]), a[1] + t * (b[1] - a[1])), _dir(a, b)))
                 break
             acc += L
         s += step_ft
     if not out and total > 0:                     # a short segment: its middle
-        out.append(((pts_xy[0][0] + pts_xy[-1][0]) / 2, (pts_xy[0][1] + pts_xy[-1][1]) / 2))
+        out.append((((pts_xy[0][0] + pts_xy[-1][0]) / 2, (pts_xy[0][1] + pts_xy[-1][1]) / 2), _dir(pts_xy[0], pts_xy[-1])))
     return out
 
 
-def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]], near_m: float) -> tuple[dict, dict]:
+def _dir(a, b) -> float:
+    return math.degrees(math.atan2(b[1] - a[1], b[0] - a[0])) % 180
+
+
+def _parallel(d1: float, d2: float) -> bool:
+    return min(abs(d1 - d2), 180 - abs(d1 - d2)) <= PARALLEL_DEG
+
+
+def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]] | None, near_m: float) -> tuple[dict, dict]:
     """(elements, counts). `near_m`: TIGER segments with a point this close to the drawn line are used (the same reach
-    as the corridor's Overpass query)."""
+    as the corridor's Overpass query). `line` None: every segment given (a whole city, validate_geocode)."""
     M = 3.28084
-    proj = LocalProjection.around(line)
+    first = [(e["lat"], e["lon"]) for e in osm_raw.get("elements", []) if e["type"] == "node"][:1]
+    proj = LocalProjection.around(line or first or [tuple(tiger_edges[0]["pts"][0])])
     co, cs, sm = CONFIG["coincide_m"] * M, CONFIG["coincide_share"], CONFIG["snap_m"] * M
     nodes = {e["id"]: (e["lat"], e["lon"]) for e in osm_raw.get("elements", []) if e["type"] == "node"}
     ways = [dict(e, nodes=list(e["nodes"]), tags=dict(e.get("tags") or {}))
             for e in osm_raw.get("elements", []) if e["type"] == "way"]
     xy = {n: proj.to_xy(*p) for n, p in nodes.items()}
-    lxy = [proj.to_xy(*p) for p in line]
+    lxy = [proj.to_xy(*p) for p in line] if line else []
     reach = near_m * M
 
     def near_line(p):
+        if not line:
+            return True
         return any(_seg_dist(p, a, b)[0] <= reach for a, b in zip(lxy, lxy[1:])) if len(lxy) > 1 else False
 
     grid = _Grid(max(co, sm) * 2)
@@ -110,11 +123,13 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
         if n in xy:
             node_grid.items[node_grid.key(*xy[n])].append(n)
 
-    def nearest_way(p, within):
+    def nearest_way(p, within, direction=None):
         best = None
         for wi, i in grid.near(*p):
             w = ways[wi]
             a, b = w["nodes"][i], w["nodes"][i + 1]
+            if direction is not None and not _parallel(direction, _dir(xy[a], xy[b])):
+                continue
             d, q, t = _seg_dist(p, xy[a], xy[b])
             if d <= within and (best is None or d < best[0]):
                 best = (d, wi, i, q)
@@ -159,12 +174,12 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
             continue
         counts["tiger_segments"] += 1
         samples = _samples(pxy, SAMPLE_M * M, END_M * M)
-        hits = [nearest_way(p, co) for p in samples]
+        hits = [nearest_way(p, co, d) for p, d in samples]
         matched = [h for h in hits if h]
         if samples and len(matched) / len(samples) >= cs:
             per_way = Counter(h[1] for h in matched)
             for wi, k in per_way.items():
-                if k / len(samples) >= 0.3:
+                if k / len(samples) >= 0.5 or k >= 3:       # the way(s) it runs along, not one it brushes
                     extra_names[wi] += e["names"]
             counts["coincide_with_osm"] += 1
             continue

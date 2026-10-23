@@ -76,3 +76,28 @@ def test_tiger_far_from_the_corridor_is_left_out():
     far = edge(505, ["Pine St"], [(34.01, -118.0), (34.011, -118.0)])
     els, counts = union.union(OSM, [far], LINE, 40)
     assert counts == {} and sum(e["type"] == "way" for e in els["elements"]) == 2
+
+
+def test_a_cross_street_beside_a_divided_roads_far_carriageway_doesnt_name_it():
+    # SF validation: TIGER's Masonic Ave (one centerline through Geary's median) ran within 12 m of Geary's far
+    # carriageway for a few samples; Geary's way took the name and Geary "met" Masonic all along it
+    d = 0.00012                                            # ~13 m: Geary's carriageways either side of the median
+    osm = {"elements": [
+        {"type": "node", "id": 1, "lat": 37.7830 + d, "lon": -122.4480}, {"type": "node", "id": 2, "lat": 37.7830 + d, "lon": -122.4460},
+        {"type": "node", "id": 3, "lat": 37.7830 + d, "lon": -122.4440},
+        {"type": "node", "id": 4, "lat": 37.7830 - d, "lon": -122.4480}, {"type": "node", "id": 5, "lat": 37.7830 - d, "lon": -122.4460},
+        {"type": "node", "id": 6, "lat": 37.7830 - d, "lon": -122.4440},
+        {"type": "node", "id": 7, "lat": 37.7850, "lon": -122.4460}, {"type": "node", "id": 8, "lat": 37.7810, "lon": -122.4460},
+        {"type": "way", "id": 20, "nodes": [1, 2, 3], "tags": {"name": "Geary Boulevard"}},
+        {"type": "way", "id": 21, "nodes": [6, 5, 4], "tags": {"name": "Geary Boulevard"}},
+        {"type": "way", "id": 22, "nodes": [7, 2, 5, 8], "tags": {"name": "Masonic Avenue"}},
+    ]}
+    # short TIGER pieces (~40 m, an alley or a slip lane ends them): every sample left sits beside a carriageway
+    # and TIGER's centerline 8 m east of OSM's: beside the carriageway, Geary's way is nearer than Masonic's own
+    tiger = [edge(601, ["Masonic Ave"], [(37.7830, -122.44591), (37.78336, -122.44591)]),
+             edge(602, ["Masonic Ave"], [(37.78264, -122.44591), (37.7830, -122.44591)])]
+    els, counts = union.union(osm, tiger, [(37.783, -122.448), (37.783, -122.444)], 40)
+    geary = [e for e in els["elements"] if e.get("id") in (20, 21)]
+    assert all("Masonic" not in e["tags"].get("tiger:name", "") for e in geary)
+    p = locate.place(Network(els), crash("MASONIC AV", "GEARY BL"))
+    assert p.tier == "exact" and p.node in (2, 5)

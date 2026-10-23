@@ -312,7 +312,8 @@ def main():
     ap.add_argument("--jev-model", default="jev-1.13.0")
     ap.add_argument("--no-address", action="store_true", help="skip the OSM address tier (large cities)")
     ap.add_argument("--method", choices=["tiers", "scored"], default="tiers", help="tiers = current rules; scored = weighted clues")
-    ap.add_argument("--network", choices=["osm", "tiger", "both"], default="osm", help="street network: OSM or Census TIGER")
+    ap.add_argument("--network", choices=["osm", "tiger", "both", "union"], default="osm",
+                    help="street network: OSM, Census TIGER, both side by side, or the app's OSM + TIGER union (#229)")
     ap.add_argument("--direction-tier", action="store_true",
                     help="#116: measure 'exact except a leading direction' (a subset of relaxed), incl. East/West ambiguity")
     ap.add_argument("--normalizer", default="ours", help="ours | ours_usps | usaddress | libpostal (bake-off)")
@@ -321,7 +322,8 @@ def main():
     cname, ncic, wikidata, years, _ = CITIES[a.city]
     from crashiq import names
     names.use(a.normalizer)  # before the network is built: OSM names go through the same normalizer
-    osm_net = osm.Network(osm.fetch(wikidata, CACHE))
+    osm_raw = osm.fetch(wikidata, CACHE)
+    osm_net = osm.Network(osm_raw)
     if a.network in ("tiger", "both"):
         # Same jurisdiction as the OSM run: keep TIGER segments whose midpoint is within ~150 m of an OSM road node.
         from crashiq import tiger
@@ -336,6 +338,23 @@ def main():
         tiger_net = net
         if a.network == "both":
             net = osm_net
+    elif a.network == "union":
+        # the app's network (#229): the city's OSM joined with the county's TIGER/Line (current vintage, the app's cache)
+        from crashiq import union
+        from crashiq.sources.tiger_files import TigerCache
+        tc = TigerCache(CACHE / "tiger", background=False)
+        fips = COUNTY_FIPS[a.city][2:]
+        if not tc.ready(fips):
+            raise SystemExit(f"TIGER {tc.vintage} county {fips} didn't download: {tc.error(fips)}")
+        cell = lambda la, lo: (round(la / 0.0015), round(lo / 0.0015))   # noqa: E731
+        inside = {cell(*p) for p in osm_net.coord.values()}
+        las, los = [p[0] for p in osm_net.coord.values()], [p[1] for p in osm_net.coord.values()]
+        edges = [e for e in tc.edges_in(fips, (min(las), min(los), max(las), max(los)))
+                 if cell(*e["pts"][len(e["pts"]) // 2]) in inside]
+        raw, counts = union.union(osm_raw, edges, None, 0)
+        net = osm.Network(raw)
+        print(f"union network (TIGER {tc.vintage}): {counts}; {len(net.streets)} street names "
+              f"(OSM {len(osm_net.streets)}), {len(net.intersections)} intersections (OSM {len(osm_net.intersections)})")
     else:
         net = osm_net
     addresses = None if a.no_address else locate.AddressIndex(osm.fetch_addresses(wikidata, CACHE))
@@ -355,7 +374,7 @@ def main():
         pl = locate.place(net, c, addresses=addresses, aliases=aliases)
         err = score(net, pl, c, a.city)
         rows.append({"report": c["report_number"], "primary": c["primary_road"], "secondary": c["secondary_road"],
-                     "offset_ft": c["offset_ft"], "dir": c["offset_dir"], "tier": pl.tier, "note": pl.note,
+                     "offset_ft": c["offset_ft"], "dir": c["offset_dir"], "tier": pl.tier, "note": pl.note, "tiger": pl.tiger,
                      "err_m": err, "ok": err is not None and err <= TOL_M, "node": pl.node,
                      "int_ok": int_ok(net, pl.node, c),
                      "offset_lost": bool(c.get("truth_offset")) and not c.get("offset_ft")})
@@ -377,6 +396,9 @@ def main():
         print("jev spend:", json.dumps(spend))
 
     print(f"offset in the agency's record but missing in CCRS: {sum(r['offset_lost'] for r in rows)} of {len(rows)}")
+    if a.network == "union":
+        tg = [r for r in rows if r.get("tiger")]
+        print(f"placed with a TIGER-only name or road: {len(tg)} ({sum(r['ok'] for r in tg)} right)")
     print("\nBy code tier         placed   accuracy  Wilson 95% low | right intersection")
     for t in CODE_TIERS:
         rs = [r for r in rows if r["tier"] == t]
