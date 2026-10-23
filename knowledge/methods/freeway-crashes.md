@@ -35,10 +35,10 @@ The user misread two of these at first (S read as N; connector read as mainline)
 direction is literal, and "X TO Y" names a connector.
 
 ## Measured evidence (Tester, 2026-10-23)
-**GPS repair** (bin 2, 24,309 crashes with off-road GPS; "repaired" = exactly one repair fits the report, 400 ft + offset):
+**GPS repair** (bin 2: 34,062 crashes with off-road GPS, 24,309 checked after 9,753 fit under the looser name check; "repaired" = exactly one repair fits the report, 400 ft + offset):
 | Repair | Fixed | Repair fits | Chance control | Verdict |
 |---|---|---|---|---|
-| Degrees-minutes-seconds read as decimal (all agencies, mostly CHP areas) | 4,111 (D1 3,738) | 55.6% | 0.7% | real → #247 |
+| Degrees-minutes-seconds read as decimal (all agencies, mostly CHP areas) | 4,111 (D1 3,057) | 55.6% | 0.7% | real → #247 |
 | Missing minus on longitude | 432 | 74% | 0.78% | real → #247 |
 | Latitude ±1/2/3 whole degrees | ~980 "fits" | ±1°: 1.5% | wrong-way 2.1% | **chance; don't use** |
 | Lat/lon swapped | 1 | | | not worth a rule |
@@ -48,9 +48,17 @@ freeway or a link joined to it, but the 2 km random-shift control fits 1,263 (7.
 fits is chance. Accept GPS only when it agrees with the **spot the report describes** (within 400 ft).
 
 ## The D1 waterfall (each crash stops at the first step that places it)
-1. GPS repaired (#247). 2. GPS within 400 ft of the report's spot. 3. Report spot found → place by the report (#246).
-4. Spot not found, GPS on the named freeway → review only. 5. Unplaced.
-Per-step counts and the step-3 hidden-GPS accuracy: Tester, on #246.
+Measured on all 24,076 D1 crashes (Tester, 2026-10-23, run 9A basis):
+| Step | Crashes | Fatal | KSI | Chance control |
+|---|---|---|---|---|
+| 1 GPS repaired (#247) | 3,139 | 1 | 88 | |
+| 2 GPS within 400 ft of the report's spot | 1,925 | 8 | 56 | 0 |
+| 3 Report spot found → placed by the report (#246) | 8,657 | 13 | 217 | |
+| 4 Spot not found, GPS on the named freeway → review only | 2,247 | 17 | 67 | 395 |
+| 5 Unplaced | 8,108 | 24 | 318 | |
+Steps 1–3 place 13,721 (57%). Why step 3 fails: the cross street meets the route more than once or not at all (3,799),
+route or street not on the map (2,134), no compass direction (1,784); ramps: no route number (981), terminals too far
+apart (561). Step-3 hidden-GPS accuracy: on #246.
 
 ## Reuse in another state
 Look first for the state's own route/postmile (or milepost) field and a public linear-reference layer; if crashes carry

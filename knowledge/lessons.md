@@ -19,7 +19,8 @@
 - 2026-10-22 · Name the leftovers. Sorting the difficult bin into buckets (D1–D9) and having the user place 3–20 real
   records by hand turned a vague 7% into concrete rules (playbook step 5).
 - 2026-10-22 · A second street map can lose correct placements: the OSM + TIGER union added TIGER copies that created
-  false meeting points (SF −35/+11, LA −66/+22 correct placements, #243). Gate a new source by "no correct placement
+  false meeting points (SF lost 35 placements, 33 of them right, and gained 11; LA lost 66, 63 right, gained 22, 19
+  right; statewide −525 net, #243). TIGER-only road matches are 74.9% right vs OSM 90.0%: review only. Gate a new source by "no correct placement
   lost", not by net gain.
 - 2026-10-22 · unique_pair (the two streets meet exactly once, allowing only what the report leaves out) placed
   +108,547 crashes at 92.4% vs exact 90.4% on hidden GPS, and 97.0% vs 95.7% on LAPD open data. Biggest single win.

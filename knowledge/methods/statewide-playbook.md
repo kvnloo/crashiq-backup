@@ -40,9 +40,10 @@ Check, per agency and year:
 - Claims that reach the website go in `knowledge/claims.md` with their run and basis.
 
 ## 5. Sort what's left into named buckets, largest first
-CA after run 9A (145,237 difficult crashes): D3 street not on the map 29,207 · D2 streets don't meet 25,720 ·
-D1 freeway 24,076 · D6 one street only 16,145 · D7 vague name 15,026 · D5 house number / landmark 12,819 ·
-D4 several matches 11,734 · D8 blank / junk 7,987 · D9 other 2,523.
+CA after run 9A (145,237 difficult crashes): D3 street missing from the map 29,207 · D2 no cross street 25,720 ·
+D1 freeway / ramp reference 24,076 · D6 named streets don't cross 16,145 · D7 spelling held (not auto-placed) 15,026 ·
+D5 house number as location 12,819 · D4 near-miss streets 11,734 · D8 streets meet in more than one place 7,987 ·
+D9 no street map for the area 2,523.
 For each bucket: pull 5–20 real records, have the user place them by hand and explain the clues, turn that into a
 rule, build it behind a gate, measure, then the user approves.
 
@@ -53,7 +54,8 @@ rule, build it behind a gate, measure, then the user approves.
 | Auto-placing `fuzzy` (spelling) | 75.0% |
 | Offset direction to pick between meeting points | 49.3%, a coin toss |
 | Jev (LLM) as an auto-placer | 88.1% vs fuzzy 92.5% at the same review rate |
-| OSM + TIGER union as built (#17) | lost correct OSM placements (SF −35/+11, LA −66/+22); off (#245), redo in #243 |
+| OSM + TIGER union as built (#17) | lost correct OSM placements (SF lost 35, 33 of them right, gained 11; LA lost 66, 63 right, gained 22, 19 right); statewide −525 net; off (#245), redo in #243 |
+| TIGER-only road matches (`tiger_road`) as auto | 74.9% (low 70.3%, n=386) vs OSM 90.0%; review only |
 | "GPS right, names wrong" | 2 of 200 (1%); not a pattern |
 | Whole-degree latitude repair | chance |
 | Accepting GPS that is merely on the named freeway | ~1 in 5 by chance |
