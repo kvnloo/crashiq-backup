@@ -377,9 +377,13 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("located_unique_pair", "Placed where the report's two streets meet at only one place (a direction or "
              "suffix the report leaves out may differ)",
              value=sum(1 for c in placed if c.get("location_provenance") == "unique_pair")),
+        # a name 1-2 letters off one map street, confirmed by its cross street (#233); auto-places only on the user's OK
+        _row("located_verified_typo", "Placed after correcting a small typo in a street name (one possible street, "
+             "confirmed by the cross street)",
+             value=sum(1 for c in placed if c.get("location_provenance") == "verified_typo")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
              value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_offset_applied", "fars", "exact",
-                                                                                 "unique_pair", "user"))),
+                                                                                 "unique_pair", "verified_typo", "user"))),
         # placed by street names using a name or road only Census TIGER/Line has (#229); already in the rows above
         _row("located_tiger", "Of the crashes placed by street names, placed with a street name or road only "
              "TIGER/Line has", value=sum(1 for c in placed if c.get("placed_on") == "tiger")),

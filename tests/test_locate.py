@@ -37,8 +37,9 @@ def test_wrong_suffix_is_relaxed_not_exact():
     assert locate.place(NET, crash("MAIN AVE", "OAKLAND AV")).tier == "relaxed"
 
 
-def test_typo_goes_to_fuzzy():
-    assert locate.place(NET, crash("MAIN ST", "OAKLANDD AVE")).tier == "fuzzy"
+def test_typo_goes_to_verified_typo_before_fuzzy():
+    # #233: one possible street, confirmed by the cross street; a suggestion until the user approves auto-placement
+    assert locate.place(NET, crash("MAIN ST", "OAKLANDD AVE")).tier == "verified_typo"
 
 
 def test_streets_meeting_twice_go_to_review():
