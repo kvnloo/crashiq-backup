@@ -1,0 +1,850 @@
+{
+ "source": "Tester, tests/statewide/gps_profile.py --piles (#219, posted on #218 2026-10-22): CCRS mirror 2026-10-19, 2021-25, 1,554,835 crashes with police GPS",
+ "rule": {
+  "min_crashes": 10,
+  "min_street_pairs": 5,
+  "max_fit_share": 0.5,
+  "point": "exact to 5 decimals (~1 m)"
+ },
+ "points": [
+  {
+   "lat": 38.8198,
+   "lon": -121.0276,
+   "crashes": 333,
+   "street_pairs": 294,
+   "fit_share": 0.0,
+   "n_agencies": 59,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": [
+    "Pilot View Drive (82 ft)",
+    "Pilot Peak Road (612 ft)"
+   ]
+  },
+  {
+   "lat": 38.59684,
+   "lon": -121.49004,
+   "crashes": 256,
+   "street_pairs": 240,
+   "fit_share": 0.008,
+   "n_agencies": 51,
+   "years": [
+    "2025"
+   ],
+   "nearest_streets": [
+    "Signature Street (60 ft)",
+    "North 7th Street (172 ft)"
+   ]
+  },
+  {
+   "lat": 38.5824,
+   "lon": -121.4954,
+   "crashes": 225,
+   "street_pairs": 202,
+   "fit_share": 0.004,
+   "n_agencies": 59,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": [
+    "8th Street (94 ft)",
+    "I Street (123 ft)"
+   ]
+  },
+  {
+   "lat": 34.953,
+   "lon": -120.4155,
+   "crashes": 103,
+   "street_pairs": 81,
+   "fit_share": 0.039,
+   "n_agencies": 21,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": [
+    "East Main Street (55 ft)",
+    "Nicholson Avenue (268 ft)"
+   ]
+  },
+  {
+   "lat": 34.23992,
+   "lon": -118.52625,
+   "crashes": 65,
+   "street_pairs": 47,
+   "fit_share": 0.108,
+   "n_agencies": 2,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Vincennes Street (374 ft)",
+    "Bertrand Avenue (387 ft)"
+   ]
+  },
+  {
+   "lat": 38.12346,
+   "lon": -121.12346,
+   "crashes": 60,
+   "street_pairs": 45,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 34,
+   "lon": -118,
+   "crashes": 46,
+   "street_pairs": 43,
+   "fit_share": 0.0,
+   "n_agencies": 6,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Athel Drive (160 ft)",
+    "East Oak Canyon Drive (176 ft)"
+   ]
+  },
+  {
+   "lat": 33,
+   "lon": -117,
+   "crashes": 39,
+   "street_pairs": 38,
+   "fit_share": 0.0,
+   "n_agencies": 7,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024"
+   ],
+   "nearest_streets": [
+    "Oak Canyon Road (388 ft)"
+   ]
+  },
+  {
+   "lat": 38.581,
+   "lon": -121.4946,
+   "crashes": 37,
+   "street_pairs": 33,
+   "fit_share": 0.0,
+   "n_agencies": 17,
+   "years": [
+    "2021"
+   ],
+   "nearest_streets": [
+    "9th Street (104 ft)",
+    "J Street (133 ft)"
+   ]
+  },
+  {
+   "lat": 38,
+   "lon": -121,
+   "crashes": 32,
+   "street_pairs": 29,
+   "fit_share": 0.0,
+   "n_agencies": 3,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": [
+    "Escalon Bellota Road (24 ft)"
+   ]
+  },
+  {
+   "lat": 33,
+   "lon": -118,
+   "crashes": 32,
+   "street_pairs": 31,
+   "fit_share": 0.0,
+   "n_agencies": 3,
+   "years": [
+    "2021",
+    "2022",
+    "2023"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 34,
+   "lon": -117,
+   "crashes": 30,
+   "street_pairs": 25,
+   "fit_share": 0.0,
+   "n_agencies": 5,
+   "years": [
+    "2021",
+    "2022",
+    "2023"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 33.8942,
+   "lon": -118.2982,
+   "crashes": 28,
+   "street_pairs": 27,
+   "fit_share": 0.0,
+   "n_agencies": 15,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": [
+    "Raymond Avenue (34 ft)",
+    "Marine Avenue (162 ft)"
+   ]
+  },
+  {
+   "lat": 37.6093,
+   "lon": -120.9388,
+   "crashes": 26,
+   "street_pairs": 10,
+   "fit_share": 0.038,
+   "n_agencies": 2,
+   "years": [
+    "2021",
+    "2022",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "East Hatch Road (7 ft)",
+    "Mitchell Road (7 ft)"
+   ]
+  },
+  {
+   "lat": 34.135,
+   "lon": -117.27642,
+   "crashes": 26,
+   "street_pairs": 21,
+   "fit_share": 0.385,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "East 21st Street (334 ft)",
+    "North Kenwood Avenue (334 ft)"
+   ]
+  },
+  {
+   "lat": 32.77563,
+   "lon": -117.07472,
+   "crashes": 23,
+   "street_pairs": 6,
+   "fit_share": 0.217,
+   "n_agencies": 3,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Canyon Crest Drive (173 ft)",
+    "Scripps Terrace (221 ft)"
+   ]
+  },
+  {
+   "lat": 33.9004,
+   "lon": -118.0079,
+   "crashes": 22,
+   "street_pairs": 22,
+   "fit_share": 0.0,
+   "n_agencies": 10,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": [
+    "Manzanares Road (52 ft)",
+    "Jalon Road (208 ft)"
+   ]
+  },
+  {
+   "lat": 37.3403,
+   "lon": -120.60938,
+   "crashes": 20,
+   "street_pairs": 9,
+   "fit_share": 0.15,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Golden State Highway (935 ft)",
+    "Progress Avenue (1226 ft)"
+   ]
+  },
+  {
+   "lat": 37.45296,
+   "lon": -122.18172,
+   "crashes": 19,
+   "street_pairs": 16,
+   "fit_share": 0.053,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2023",
+    "2024"
+   ],
+   "nearest_streets": [
+    "El Camino Real (18 ft)",
+    "Menlo Avenue (18 ft)"
+   ]
+  },
+  {
+   "lat": 35.7775,
+   "lon": -120.605,
+   "crashes": 19,
+   "street_pairs": 18,
+   "fit_share": 0.0,
+   "n_agencies": 9,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": [
+    "Via Escondida (28 ft)",
+    "Ranchita Vista Way (283 ft)"
+   ]
+  },
+  {
+   "lat": 37.57787,
+   "lon": -122.34809,
+   "crashes": 19,
+   "street_pairs": 6,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Burlingame Avenue (8 ft)",
+    "Primrose Road (19 ft)"
+   ]
+  },
+  {
+   "lat": 37.34828,
+   "lon": -120.61105,
+   "crashes": 18,
+   "street_pairs": 15,
+   "fit_share": 0.278,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Cedar Avenue (130 ft)",
+    "5th Street (160 ft)"
+   ]
+  },
+  {
+   "lat": 36.32745,
+   "lon": -119.64568,
+   "crashes": 17,
+   "street_pairs": 16,
+   "fit_share": 0.059,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "North Douty Street (95 ft)",
+    "East 8th Street (123 ft)"
+   ]
+  },
+  {
+   "lat": 35.13993,
+   "lon": -118.46848,
+   "crashes": 16,
+   "street_pairs": 6,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "West Tehachapi Boulevard (23 ft)",
+    "Bakersfield\u2013Tehachapi Highway (588 ft)"
+   ]
+  },
+  {
+   "lat": 34.09798,
+   "lon": -117.80608,
+   "crashes": 16,
+   "street_pairs": 6,
+   "fit_share": 0.062,
+   "n_agencies": 1,
+   "years": [
+    "2022",
+    "2023",
+    "2024"
+   ],
+   "nearest_streets": [
+    "Ironbark Lane (14 ft)",
+    "Tanglewood Drive (14 ft)"
+   ]
+  },
+  {
+   "lat": 38.12345,
+   "lon": -121.12345,
+   "crashes": 15,
+   "street_pairs": 11,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 34.12346,
+   "lon": -121.12346,
+   "crashes": 14,
+   "street_pairs": 13,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 35,
+   "lon": -119,
+   "crashes": 14,
+   "street_pairs": 14,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 37.55248,
+   "lon": -122.28008,
+   "crashes": 14,
+   "street_pairs": 9,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024"
+   ],
+   "nearest_streets": [
+    "East Hillsdale Boulevard (48 ft)",
+    "Sea Spray Lane (159 ft)"
+   ]
+  },
+  {
+   "lat": 37.38688,
+   "lon": -120.72353,
+   "crashes": 14,
+   "street_pairs": 5,
+   "fit_share": 0.286,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Main Street (90 ft)",
+    "2nd Street (246 ft)"
+   ]
+  },
+  {
+   "lat": 40.77996,
+   "lon": -124.18974,
+   "crashes": 14,
+   "street_pairs": 8,
+   "fit_share": 0.429,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Broadway Street (621 ft)"
+   ]
+  },
+  {
+   "lat": 34.22496,
+   "lon": -119.22113,
+   "crashes": 14,
+   "street_pairs": 5,
+   "fit_share": 0.071,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "North Victoria Avenue (19 ft)"
+   ]
+  },
+  {
+   "lat": 37.55855,
+   "lon": -122.27108,
+   "crashes": 14,
+   "street_pairs": 7,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Shell Boulevard (36 ft)",
+    "East Hillsdale Boulevard (63 ft)"
+   ]
+  },
+  {
+   "lat": 37.68792,
+   "lon": -122.47021,
+   "crashes": 13,
+   "street_pairs": 7,
+   "fit_share": 0.231,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Junipero Serra Boulevard (34 ft)",
+    "Washington Street (34 ft)"
+   ]
+  },
+  {
+   "lat": 35.0774,
+   "lon": -120.6291,
+   "crashes": 13,
+   "street_pairs": 11,
+   "fit_share": 0.077,
+   "n_agencies": 1,
+   "years": [
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 36.77826,
+   "lon": -119.41793,
+   "crashes": 12,
+   "street_pairs": 12,
+   "fit_share": 0.0,
+   "n_agencies": 7,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "North Piedra Road (1984 ft)",
+    "East Trimmer Springs Road (3611 ft)"
+   ]
+  },
+  {
+   "lat": 36.09282,
+   "lon": -119.57354,
+   "crashes": 12,
+   "street_pairs": 6,
+   "fit_share": 0.083,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Dairy Avenue (423 ft)",
+    "Stanley Avenue (445 ft)"
+   ]
+  },
+  {
+   "lat": 38.6311,
+   "lon": -121.3305,
+   "crashes": 12,
+   "street_pairs": 11,
+   "fit_share": 0.0,
+   "n_agencies": 7,
+   "years": [
+    "2022"
+   ],
+   "nearest_streets": [
+    "Hallelujah Court (32 ft)",
+    "Engle Road (223 ft)"
+   ]
+  },
+  {
+   "lat": 32.87536,
+   "lon": -117.23586,
+   "crashes": 12,
+   "street_pairs": 12,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2022",
+    "2023",
+    "2024"
+   ],
+   "nearest_streets": [
+    "Biomedical Sciences Way (207 ft)",
+    "Pharmacy Lane (214 ft)"
+   ]
+  },
+  {
+   "lat": 37.52966,
+   "lon": -122.04024,
+   "crashes": 11,
+   "street_pairs": 8,
+   "fit_share": 0.182,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022"
+   ],
+   "nearest_streets": [
+    "Thornton Avenue (92 ft)",
+    "Dairy Avenue (216 ft)"
+   ]
+  },
+  {
+   "lat": 37.97353,
+   "lon": -122.53109,
+   "crashes": 11,
+   "street_pairs": 11,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Fourth Street (39 ft)",
+    "C Street (112 ft)"
+   ]
+  },
+  {
+   "lat": 37.69336,
+   "lon": -122.07243,
+   "crashes": 11,
+   "street_pairs": 10,
+   "fit_share": 0.182,
+   "n_agencies": 1,
+   "years": [
+    "2022"
+   ],
+   "nearest_streets": [
+    "Norbridge Avenue (254 ft)",
+    "Elm Street (271 ft)"
+   ]
+  },
+  {
+   "lat": 35.12792,
+   "lon": -118.451,
+   "crashes": 11,
+   "street_pairs": 11,
+   "fit_share": 0.364,
+   "n_agencies": 1,
+   "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "West C Street (144 ft)",
+    "South Pauley Street (196 ft)"
+   ]
+  },
+  {
+   "lat": 37.36075,
+   "lon": -120.63072,
+   "crashes": 10,
+   "street_pairs": 5,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "West Bellevue Road (142 ft)",
+    "Vine Avenue (439 ft)"
+   ]
+  },
+  {
+   "lat": 34.21635,
+   "lon": -119.1559,
+   "crashes": 10,
+   "street_pairs": 8,
+   "fit_share": 0.1,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2025"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 35.21024,
+   "lon": -118.83285,
+   "crashes": 10,
+   "street_pairs": 10,
+   "fit_share": 0.2,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "4th Street (169 ft)",
+    "Campus Drive (190 ft)"
+   ]
+  },
+  {
+   "lat": 38.79073,
+   "lon": -121.23579,
+   "crashes": 10,
+   "street_pairs": 6,
+   "fit_share": 0.1,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2022",
+    "2023",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Rocklin Road (19 ft)",
+    "Pacific Street (39 ft)"
+   ]
+  },
+  {
+   "lat": 36.81766,
+   "lon": -119.67892,
+   "crashes": 10,
+   "street_pairs": 5,
+   "fit_share": 0.2,
+   "n_agencies": 1,
+   "years": [
+    "2021",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": []
+  },
+  {
+   "lat": 34.22525,
+   "lon": -119.14271,
+   "crashes": 10,
+   "street_pairs": 5,
+   "fit_share": 0.0,
+   "n_agencies": 1,
+   "years": [
+    "2022",
+    "2023",
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Auto Center Drive (63 ft)",
+    "Santa Clara Avenue (604 ft)"
+   ]
+  },
+  {
+   "lat": 34.0272,
+   "lon": -117.11907,
+   "crashes": 10,
+   "street_pairs": 10,
+   "fit_share": 0.2,
+   "n_agencies": 4,
+   "years": [
+    "2024",
+    "2025"
+   ],
+   "nearest_streets": [
+    "Yucaipa Boulevard (41 ft)",
+    "Pearl Harbor Memorial Highway (196 ft)"
+   ]
+  }
+ ]
+}

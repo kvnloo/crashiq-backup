@@ -320,6 +320,17 @@
           ""
         ]
       ]
+    },
+    {
+      "topic": "Police GPS vs the report's description",
+      "status": "decision",
+      "what": "GPS at the intersection the report names (within 50 ft), when the report states a distance over 50 ft and a direction, is moved to that intersection plus the distance, along the named road (provenance gps_offset_applied). GPS on a default or dispatch point (one exact point, to 5 decimals, shared by 10 or more reports naming 5 or more street pairs, under half of which it fits; pooled across agencies, from a statewide scan of CCRS 2021-25) or written with 2 decimals or fewer (about 1 km) in both coordinates, or in one where the point doesn't fit the report's streets, is not a location: the report is placed by its street names, and reports whose GPS sits on such a point elsewhere are found by name too. Wrong-format (degrees-minutes-seconds) GPS is converted. User decision 2026-10-22.",
+      "cite": [
+        [
+          "osm",
+          ""
+        ]
+      ]
     }
   ]
 }
