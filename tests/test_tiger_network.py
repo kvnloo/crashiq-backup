@@ -15,6 +15,13 @@ from conftest import FIXTURES
 LINE = [[33.8953, -118.32662], [33.9123, -118.32662]]
 
 
+@pytest.fixture
+def union_on(monkeypatch):
+    """The union is switched off since run 9 (#243); these tests exercise it switched on."""
+    from crashiq import union
+    monkeypatch.setitem(union.CONFIG, "union", True)
+
+
 def _zip(name: str, writer_fn) -> bytes:
     """A TIGER-shaped zip (shapefile parts) written with pyshp."""
     shapefile = pytest.importorskip("shapefile")
@@ -115,7 +122,7 @@ def _pull(client, tiger, extra_rows=()):
     return log, got, asg
 
 
-def test_a_cross_street_named_as_only_tiger_names_it_is_kept_and_placed(client, tmp_path):
+def test_a_cross_street_named_as_only_tiger_names_it_is_kept_and_placed(client, tmp_path, union_on):
     rows = [("CRENSHAW BLVD", "HAWTHORNE PLAZA DR")]
     log, got, asg = _pull(client, None, rows)                                       # OSM only: off the stretch
     assert got["87000001"].get("exclude_rule") == "cross_street_not_on_corridor"
@@ -128,7 +135,7 @@ def test_a_cross_street_named_as_only_tiger_names_it_is_kept_and_placed(client, 
     assert log["network"]["coincide_with_osm"] == 1 and log["network"].get("added_from_tiger", 0) == 0
 
 
-def test_a_county_still_downloading_leaves_the_network_osm_only(client, tmp_path):
+def test_a_county_still_downloading_leaves_the_network_osm_only(client, tmp_path, union_on):
     tc = tiger_files.TigerCache(tmp_path / "tiger", vintage=2026, opener=Opener({}), background=True)
     tc._start = lambda fips: None                                                   # "downloading"
     log, got, _ = _pull(client, tc, [("CRENSHAW BLVD", "HAWTHORNE PLAZA DR")])
@@ -142,4 +149,17 @@ def test_fake_ckan_never_downloads_tiger(client):
     from crashiq import crashes
     client.app.state.ckan = FakeCkan(FIXTURES / "ckan_crenshaw.json")
     client.app.state.tiger = None
+    assert crashes.tiger_for(client.app.state) is None
+
+
+def test_switched_off_the_network_is_osm_only_and_nothing_downloads(client, tmp_path):
+    # #243: run 9 found the union losing correct OSM placements; config/tiger.json union = false until it's fixed
+    from crashiq import crashes, union
+    assert union.enabled() is False
+    tc = _cache(tmp_path)
+    log, got, _ = _pull(client, tc, [("CRENSHAW BLVD", "HAWTHORNE PLAZA DR")])
+    assert "network" not in log or log["network"]["sources"] == ["osm"]
+    assert got["87000001"].get("exclude_rule") == "cross_street_not_on_corridor"      # TIGER's name not used
+    assert tc.opener.urls == []                                                       # nothing downloaded
+    client.app.state.ckan, client.app.state.tiger = None, None
     assert crashes.tiger_for(client.app.state) is None

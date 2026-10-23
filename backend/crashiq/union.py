@@ -21,6 +21,11 @@ from pathlib import Path
 from .geo import LocalProjection
 
 CONFIG = json.loads((Path(__file__).parent / "config" / "tiger.json").read_text())
+
+
+def enabled() -> bool:
+    """The OSM + TIGER union is on (config/tiger.json `union`). Off since run 9 (#243): OSM only."""
+    return bool(CONFIG.get("union"))
 SAMPLE_M = 10.0
 PARALLEL_DEG = 20.0        # a TIGER road runs along an OSM way only in the same direction: a cross street next to a
                            # divided road's far carriageway (Masonic at Geary) is near it, not along it

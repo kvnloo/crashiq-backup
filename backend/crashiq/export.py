@@ -21,6 +21,7 @@ import math
 from reportlab.graphics.shapes import Circle, Drawing, Group, PolyLine, Polygon, Rect, String
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from . import union as union_mod
 from . import profile as profile_mod
 from .severity import COLORS as SEV_COLORS
 from .assign import for_study
@@ -277,10 +278,13 @@ def methodology(d: dict) -> str:
             "default point (one exact point shared by 10 or more reports naming 5 or more different street pairs, "
             "most of which it doesn't fit), or written with 2 decimals or fewer (both coordinates, or one where the point doesn't "
             "fit the report's streets), is not used; those reports are placed "
-            "by their street names. The street network is OpenStreetMap joined with the US Census TIGER/Line roads: a "
-            "TIGER road that runs along an OpenStreetMap street adds its names to it, and one OpenStreetMap lacks is "
-            "added; a placement that needs a name or road only TIGER/Line has is marked, and one that needs a road "
-            "only TIGER/Line has goes to the review list as a suggestion. "
+            "by their street names. "
+            + ("The street network is OpenStreetMap joined with the US Census TIGER/Line roads: a TIGER road that runs "
+               "along an OpenStreetMap street adds its names to it, and one OpenStreetMap lacks is added; a placement "
+               "that needs a name or road only TIGER/Line has is marked, and one that needs a road only TIGER/Line has "
+               "goes to the review list as a suggestion. " if union_mod.enabled() else "The street network is "
+               "OpenStreetMap. ")
+            + 
             f"Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed" + (f" ({ncs} of them name the corridor but give no cross street, so where on the corridor "
