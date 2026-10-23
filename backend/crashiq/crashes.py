@@ -48,7 +48,9 @@ class PullError(RuntimeError):
     pass
 
 
-GPS_SOURCES = ("gps", "gps_dms_corrected", "gps_offset_applied")     # police GPS, as written or corrected (#143, #218)
+# police GPS, as written or corrected: DMS read as decimal (#143, #247), the longitude's lost minus (#247), the
+# report's offset (#218)
+GPS_SOURCES = ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied")
 
 
 def margin_ft(study: dict) -> float:
@@ -64,7 +66,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 26    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243)
+PULL_FORMAT = 27    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -477,6 +479,23 @@ def _dms_share(ckan: Ckan, rid: str, cols: dict, agency: str, cache: dict) -> fl
     return cache[key]
 
 
+def _lon_sign_fix(c: dict, raw_lat, raw_lon, line: Polyline, studies, corridor_keys, margin: float) -> bool:
+    """A point outside California only because the longitude lost its minus (118.3 for -118.3, #247): used, in place,
+    when the corrected point is the only reading that fits the report's streets. Never a whole-degree shift or a
+    latitude/longitude swap."""
+    la, lo = cc._num(raw_lat), cc._num(raw_lon)
+    if la is None or lo is None or lo <= 0:
+        return False
+    if not (cc.CA_LAT[0] <= la <= cc.CA_LAT[1] and cc.CA_LON[0] <= -lo <= cc.CA_LON[1]):
+        return False
+    if line.project(la, -lo).offset_ft > margin:
+        return False
+    if not _dms_check({**c, "lat": la, "lon": -lo}, line, studies, corridor_keys):
+        return False
+    c.update(lat=la, lon=-lo, bad_coords=False, gps_as_written=[raw_lat, raw_lon], gps_repair="lon_sign")
+    return True
+
+
 def point_fits_streets(c: dict, net: dict) -> bool:
     """The street check for a point from another source (DMS-converted GPS #143, FARS #174): see `_dms_check`."""
     line = Polyline([tuple(p) for p in net["line"]])
@@ -710,8 +729,8 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
             for r in dms_rows:
                 agency = str(r.get(cols["ncic"]["id"]) or "").strip()
                 share = _dms_share(ckan, rid, cols, agency, dms_cache) if agency else 0.0
-                if share < DMS_SHARE_MIXED:
-                    continue
+                # every agency, per crash (#247): any agency's point read as DMS, kept only if that reading fits
+                dms_agency = share >= DMS_SHARE_MIXED
                 clear = share >= DMS_SHARE
                 c = _record(r, cols)
                 la, lo = (dms_decode(c["lat"]), dms_decode(c["lon"])) if c["lat"] is not None else (None, None)
@@ -724,13 +743,16 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                 if written_fits:              # fits its streets as written (mixed years): left alone
                     continue
                 if _dms_check(c, line, studies, corridor_keys):
+                    c["gps_repair"] = "dms"
                     recs.append((c, "gps_dms_corrected"))
                     dms_ids["corrected"].add(c["crash_id"])
-                else:                         # fits neither as written nor converted: treated as having no GPS,
+                elif dms_agency:              # fits neither as written nor converted: treated as having no GPS,
                     dms_no_gps.append({**r, la_id: None, lo_id: None})      # never left ~30 km away (PM review 2)
                     dms_ids["unconfirmed"].add(c["crash_id"])
-                log["gps_dms_agencies"] = sorted(set(log["gps_dms_agencies"])
-                                                 | {f"{agency} ({y}{'' if clear else ', mixed'})"})
+                else:
+                    continue                  # another agency's point that reads as DMS but fits nothing: left alone
+                log["gps_dms_agencies"] = sorted(set(log["gps_dms_agencies"]) | {
+                    f"{agency} ({y}{'' if clear else ', mixed' if dms_agency else ', per crash'})"})
         log["cities"] = sorted(set(log["cities"]) | {r["city"] for r, _ in recs if r["city"]})
         # Crashes with no usable coordinates: same county (or city) as the GPS crashes, on the corridor street by
         # name; then, in code, only those whose cross street is one of the study intersections (the study stretch).
@@ -803,6 +825,9 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
             c = _record(r, cols)
             if c["crash_id"] in ignored:
                 c["gps_ignored"] = ignored[c["crash_id"]]
+            elif _lon_sign_fix(c, r.get(la_id), r.get(lo_id), line, studies, corridor_keys, margin):
+                recs.append((c, "gps_sign_corrected"))     # the longitude's minus was missing (#247): GPS after all
+                continue
             no_gps(c, allowed, recs)
         last_allowed[0] = allowed
         log["rows_read"] += len(with_xy) + len(no_xy)
@@ -916,6 +941,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         out.append(c)
     log["unknown_injury_values"] = sorted(unknown)
     log["gps_dms_corrected"] = len(dms_ids["corrected"] & set(crashes))          # crashes, not report versions (#143)
+    log["gps_sign_corrected"] = sum(1 for c in crashes.values() if c.get("gps_repair") == "lon_sign")      # #247
     log["gps_dms_unconfirmed"] = len(dms_ids["unconfirmed"] - dms_ids["corrected"])
     log["other_cities"] = dict(other_city.most_common())        # no-GPS reports filed in cities off the corridor (#142)
     log["corridor_cities"] = corridor_cities                     # None: OSM couldn't say, so nothing was dropped

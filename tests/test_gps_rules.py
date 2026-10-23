@@ -109,7 +109,7 @@ def test_default_thresholds_are_the_testers():
     assert gps_rules.coarse("34.1", "-118.334", fits=lambda: False)                  # one, and it doesn't
     assert not gps_rules.coarse("34.123", "-118.334")
     assert gps_rules.decimals("34.120000") == 2          # trailing zeros don't count (the Tester's #219 definition)
-    assert crashes.GPS_SOURCES == ("gps", "gps_dms_corrected", "gps_offset_applied")
+    assert crashes.GPS_SOURCES == ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied")   # + #247
 
 
 def test_offset_across_the_primary_road_goes_along_the_cross_street(client):

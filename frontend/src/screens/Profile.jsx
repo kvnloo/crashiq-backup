@@ -12,6 +12,7 @@ import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
 
 const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from the report, converted from degrees-minutes-seconds',
+  gps_sign_corrected: "GPS from the report, the longitude's missing minus sign restored",
   gps_offset_applied: 'GPS from the report, moved by the distance and direction the report states', unique_pair: 'Matched by street names (they meet at only one place)',
   verified_typo: 'Matched after correcting a small typo (one possible street, confirmed by the cross street)',
   fars: 'FARS (NHTSA) point, checked against the report\'s streets', exact: 'Matched by street names', fuzzy: 'Fuzzy name match',
