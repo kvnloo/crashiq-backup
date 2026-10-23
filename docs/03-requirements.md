@@ -396,3 +396,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   GPS, and 97.0% (low 96.3%) vs exact 95.7% on LAPD open data; at or above exact in D4, D6, D7, D8, D10, D11, D12, lower
   in D5 (85.2% vs 89.2%), D1/D2 too small to judge. This supersedes the "behind the 98% bar" condition for this tier only;
   street pairs that meet in more than one place still go to review. Watch D5 in the next runs.
+- **OSM + TIGER street network DECIDED (user, 2026-10-22, PM session; builds the 2026-10-18 "two maps" decision):** the
+  placement network is the union of OpenStreetMap and Census TIGER/Line roads, to cover streets missing or named
+  differently in OSM. The user approved downloading TIGER (US Census, public domain) for California counties. Evidence
+  (#211, PR #215): up to ~18,100 difficult crashes; LA open data +2.9 pts placed; SF holds (low bound 98.0% → 97.9%).
+  Accuracy must be re-validated before and after; any tier change still follows the placement gate.
+- **Street alias / spelling table DECIDED (user, 2026-10-22, PM session):** draft one from the #211 audit (~11,100
+  difficult crashes). Per CLAUDE.md ("nothing is learned without user approval"), every entry is reviewed and approved
+  by the user before the app uses it; entries carry their evidence.
