@@ -412,3 +412,9 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   edits, no rival street, the corrected pair meets at exactly one intersection, GPS agrees where present) so one-off
   typos like MAONOLIA → Magnolia don't need a human ("I don't expect a human to check it all"). It ships switched off;
   it auto-places only after Tester's measurement (#233) and the user's OK.
+- **Street aliases, batch A APPROVED (user, 2026-10-22, PM session, "A"):** (1) every **abbreviation-kind** entry of the
+  #230 draft (137 more, e.g. JR = Junior, EXPWY/EX = Expressway, PW/PY/PKY = Parkway, TRL = Trail, CYN = Canyon,
+  HW = Highway, RT/RTE = Route) is approved, and these abbreviations plus the route-number suffix pattern ("PACIFIC COAST
+  HWY - SR1", "(N)") are to become general name-cleaner rules so they work in every city; (2) every **local spelling**
+  entry checked on hidden police GPS at ≥ 98% (338 entries) is approved as a batch. Entries below 98% on GPS (7) are not
+  approved. Local spellings with no GPS check (390) wait for the user's review, top entries first.
