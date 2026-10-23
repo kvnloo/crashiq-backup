@@ -25,6 +25,22 @@ def _get(action, **kw):
     return {"records": [{k: (None if v is None else str(v)) for k, v in zip(names, r)} for r in cur]}
 ca_ccrs._get = _get
 import validate_geocode as vg  # noqa: E402
+from crashiq import locate as _locate  # noqa: E402
+
+_place = _locate.place
+
+
+def _tagged(*a, **k):
+    """Run 9: mark placements that rely on a TIGER-only road in the row's note, so tiger_name and tiger_road can be
+    scored apart (the script's rows record only Placement.tiger)."""
+    pl = _place(*a, **k)
+    if getattr(pl, "tiger_road", False):
+        pl.note = (pl.note + " " if pl.note else "") + "[tiger_road]"
+    return pl
+
+
+_locate.place = _tagged
+vg.locate.place = _tagged
 vg.CITIES["la"] = vg.CITIES["la"][:3] + ((2024,),) + vg.CITIES["la"][4:]
 CITY = sys.argv.pop(1) if len(sys.argv) > 1 and sys.argv[1] in ("sf", "la") else "la"
 sys.argv = ["validate_geocode.py", "--city", CITY, "--split", "test", "--no-address"] + sys.argv[1:]
