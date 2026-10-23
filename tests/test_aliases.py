@@ -28,9 +28,12 @@ def crash(city, county, sec, prim="BROADWAY"):
     return {"city": city, "county_code": county, "primary_road": prim, "secondary_road": sec}
 
 
-def test_the_live_table_has_the_40_approved_entries():
+def test_the_live_table_is_read_approved_rows_only():
+    import csv
     aliases.table.cache_clear()
-    assert sum(len(v) for v in aliases.table().values()) == 40
+    rows = list(csv.DictReader(aliases.FILE.open(encoding="utf-8")))
+    approved = {(r["scope"], aliases.norm(r["raw"])) for r in rows if r["status"] == "approved"}
+    assert sum(len(v) for v in aliases.table().values()) == len(approved) >= 40
     c = aliases.apply(crash("OAKLAND", "1", "MARTIN LUTHER KING JR WY"))
     assert c["secondary_road"] == "MARTIN LUTHER KING JUNIOR WAY"
     assert c["roads_as_reported"] == {"secondary_road": "MARTIN LUTHER KING JR WY"}
