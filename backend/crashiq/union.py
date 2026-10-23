@@ -173,6 +173,11 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
         for c, suf in ks:
             by_core[c].append((suf, wi))
 
+    def own_name(name: str, wi: int) -> bool:
+        """The way's own name again, give or take a direction ("N Whitley Ave" on OSM's Whitley Avenue): it adds no
+        street, and as a different key it would make a node where two Whitleys merge look like a corner (#243)."""
+        return all(any(same(t, k) for k in way_keys[wi]) for t in keys_of([name]))
+
     def other_osm_street(name: str, wi: int) -> bool:
         """The name belongs to another OSM street here, so it is never added to this way (#243): Market St isn't
         given to OSM's Clayton Street, and Griffith Park Dr (OSM's Griffith Park Drive) isn't given to OSM's
@@ -212,6 +217,7 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
 
     counts = Counter()
     extra_names: dict[int, list[str]] = defaultdict(list)
+    along: set[int] = set()                 # OSM ways a TIGER segment runs along (geometry in both)
     new_ways, new_nodes = [], {}
     point_id = [POINT_NODE]
     spliced: dict[tuple, int] = {}
@@ -264,12 +270,15 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
             per_way = Counter(h[1] for h in matched)
             for wi, k in per_way.items():
                 if k / len(samples) >= 0.5 or k >= 3:       # the way(s) it runs along, not one it brushes
+                    along.add(wi)
                     # a name another OSM street has is never given to this one (#243: TIGER's "Market St" along
                     # OSM's Clayton Street made Market meet Clayton all along it)
-                    keep = [n for n in e["names"] if not other_osm_street(n, wi)]
-                    if len(keep) < len(e["names"]):
-                        counts["names_refused_osm_has"] += len(e["names"]) - len(keep)
-                    extra_names[wi] += keep
+                    new = [n for n in e["names"] if not own_name(n, wi)]
+                    keep = [n for n in new if not other_osm_street(n, wi)]
+                    if len(keep) < len(new):
+                        counts["names_refused_osm_has"] += len(new) - len(keep)
+                    if keep:
+                        extra_names[wi] += keep
             counts["coincide_with_osm"] += 1
             continue
         tcores = cores_of(e["names"])
@@ -302,7 +311,7 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
     for (wi, i) in sorted(by_seg, key=lambda k: (k[0], -k[1])):
         ways[wi]["nodes"][i + 1:i + 1] = [nid for _, nid in sorted(by_seg[(wi, i)])]
     for wi, w in enumerate(ways):
-        w["tags"]["crashiq:source"] = "both" if wi in extra_names else "osm"
+        w["tags"]["crashiq:source"] = "both" if wi in along else "osm"
         if wi in extra_names:
             w["tags"]["tiger:name"] = ";".join(dict.fromkeys(extra_names[wi]))
     els = [{"type": "node", "id": n, "lat": p[0], "lon": p[1]} for n, p in nodes.items()]

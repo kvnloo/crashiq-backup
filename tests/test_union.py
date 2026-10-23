@@ -181,3 +181,11 @@ def test_a_tiger_name_with_another_street_type_isnt_given_to_the_wrong_osm_way()
     els, counts = union.union(osm, tiger, LINE, 40)
     oak_rd = next(e for e in els["elements"] if e.get("id") == 10)
     assert "Oak Dr" not in oak_rd["tags"].get("tiger:name", "") and counts["names_refused_osm_has"] == 1
+
+
+def test_tigers_directional_copy_of_a_ways_own_name_isnt_added():
+    # #243, LA: "N Whitley Ave" on OSM's Whitley Avenue made the node where Whitley Ave and Whitley Ter merge a
+    # second Ave & Ter corner 145 m from the real one
+    els, counts = union.union(OSM, [edge(706, ["N Main St"], [(34.00002, -118.0010), (34.00002, -117.9990)])], LINE, 40)
+    main = next(e for e in els["elements"] if e.get("id") == 10)
+    assert "tiger:name" not in main["tags"] and not counts.get("names_refused_osm_has")
