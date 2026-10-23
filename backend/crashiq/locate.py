@@ -37,6 +37,7 @@ class Placement:
     note: str = ""
     p: float | None = None         # Jev probability of its pick when tier == jev
     p2: float | None = None        # Jev probability of the runner-up (for the margin check)
+    tiger: bool = False            # relies on a street name or road only TIGER/Line has (#229)
 
 
 def _keys_matching(net: Network, k: StreetKey) -> list[StreetKey]:
@@ -141,7 +142,13 @@ def _unique_pair(net: Network, crash: dict, kp: StreetKey, ks: StreetKey, aliase
     if node is None:
         return None
     lat, lon = offset(net, node, a, crash.get("offset_ft"), crash.get("offset_dir"))
-    return Placement("unique_pair", lat, lon, node)
+    return Placement("unique_pair", lat, lon, node, tiger=_tiger(net, node, a, b))
+
+
+def _tiger(net: Network, node: int, a, b) -> bool:
+    """Either street is known at this corner only from TIGER/Line (#229); the near tier's node may lie on one only."""
+    at = net.keys_at.get(node, set())
+    return any(net.tiger_only(node, [k for k in keys if k in at]) for keys in (a, b))
 
 
 def offset(net: Network, node: int, primary: list[StreetKey], dist_ft: float | None, direction: str | None) -> tuple[float, float]:
@@ -245,7 +252,7 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
                 return Placement("review", note=f"{tier}: streets meet in more than one place")
             continue
         lat, lon = offset(net, node, a, crash.get("offset_ft"), crash.get("offset_dir"))
-        return Placement(tier, lat, lon, node)
+        return Placement(tier, lat, lon, node, tiger=_tiger(net, node, a, b))
     return Placement("review", note="no intersection of the two named streets")
 
 

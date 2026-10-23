@@ -44,8 +44,14 @@ def keys_of(names: list[str]) -> list[StreetKey]:
 
 
 def corridor_keys(net: dict) -> list[StreetKey]:
-    """Every name and ref the corridor street carries (OSM `name` and `ref`: Nimitz Freeway = I 880)."""
-    return keys_of(net.get("corridor_names") or [net.get("corridor_name")])
+    """Every name and ref the corridor street carries (OSM `name` and `ref`: Nimitz Freeway = I 880), plus the names
+    TIGER/Line gives the same road (#229)."""
+    return keys_of((net.get("corridor_names") or [net.get("corridor_name")]) + (net.get("corridor_alt_names") or []))
+
+
+def intersection_keys(it: dict) -> list[StreetKey]:
+    """The cross street's names: OSM's, and TIGER/Line's when the pull found others (#229)."""
+    return keys_of([it.get("name")] + list(it.get("alt_names") or []))
 
 
 def crossing_keys(net: dict) -> list[StreetKey]:

@@ -96,19 +96,27 @@ class Network:
         # trailing direction of the ways of a key through a node ("20th Street West" -> W; None when not written).
         # The key drops it, so 20th St East and West share one; the unique-pair tier tells them apart (#203)
         self.trail_at: dict[tuple[int, StreetKey], set[str | None]] = defaultdict(set)
+        # where each name comes from (#229): OSM, TIGER/Line, or both; per street key and per node
+        self.key_source: dict[StreetKey, set[str]] = defaultdict(set)
+        self.src_at: dict[tuple[int, StreetKey], set[str]] = defaultdict(set)
         for w in ways:
+            tags = w.get("tags", {})
+            way_src = "tiger" if tags.get("crashiq:source") == "tiger" else "osm"
             names = []
-            for t in NAME_TAGS:
-                for v in str(w.get("tags", {}).get(t, "")).split(";"):
+            for t in NAME_TAGS + ("tiger:name",):
+                src = "tiger" if t == "tiger:name" else way_src
+                for v in str(tags.get(t, "")).split(";"):
                     k = street_key(v)
                     if k:
-                        names.append((k, directions(v)[1]))
+                        names.append((k, directions(v)[1], src))
                         self.label.setdefault(k, v.strip())
+                        self.key_source[k].add(src)
             nodes = w["nodes"]
             for i, n in enumerate(nodes):
-                for k, trail in names:
+                for k, trail, src in names:
                     self.keys_at[n].add(k)
                     self.trail_at[(n, k)].add(trail)
+                    self.src_at[(n, k)].add(src)
                     if i > 0:
                         self.neighbors[(n, k)].add(nodes[i - 1])
                     if i < len(nodes) - 1:
@@ -134,6 +142,11 @@ class Network:
         for n in self.intersections:
             for k in self.keys_at[n]:
                 self.nodes_of[k].append(n)
+
+    def tiger_only(self, node: int, keys) -> bool:
+        """The street (these keys) is at this node only by a TIGER/Line name or way (#229)."""
+        srcs = set().union(*(self.src_at.get((node, k), set()) for k in keys)) if keys else set()
+        return bool(srcs) and "osm" not in srcs
 
     def name(self, k: StreetKey) -> str:
         return self.label.get(k, k.core)

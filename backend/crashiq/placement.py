@@ -11,6 +11,7 @@ from __future__ import annotations
 
 from . import fars, gps_rules, grade, locate, osm
 from . import network as network_mod
+from . import union as union_mod
 from .db import Database
 
 
@@ -42,7 +43,7 @@ def _gps_usable(c: dict, net: dict) -> bool:
     return x.get("rule") != "not_on_corridor_street" and not x.get("gps_check")
 
 
-def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass=None) -> dict:
+def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass=None, tiger=None) -> dict:
     """Fatal crashes first (#174, user decision 2026-10-21): a fatal crash with no usable location (no GPS and no
     placement by the street-name locator, or GPS the assignment rejects or flags) takes its linked FARS point like GPS
     when the point lies on a road the report names
@@ -82,7 +83,8 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
         trial = {**c, "lat": p[0], "lon": p[1]}
         radius_m = (GPS_CHECK_FT + (c.get("offset_ft") or 0.0)) / 3.28084
         if not (_at_named_intersection(trial, net)
-                or fars.on_named_roads(network_mod.roads_near(db, p[0], p[1], radius_m, overpass), c)):
+                or fars.on_named_roads(network_mod.roads_near(db, p[0], p[1], radius_m, overpass)
+                                       + union_mod.tiger_roads_near(tiger, p[0], p[1], radius_m), c)):
             counts["point_not_on_named_road"] += 1
             c["fars_hint"] = {"fars_case": fars.case_key(row["year"], row["st_case"]), "lat": p[0], "lon": p[1],
                               "miles_from_corridor": round(line.project(p[0], p[1]).offset_ft / 5280, 1)}
@@ -94,7 +96,8 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
     return counts
 
 
-def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None) -> dict:
+def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
+                    raw: dict | None = None, tiger=None) -> dict:
     gate = gate or locate.Gate()
     # no cross street (#94): nothing for the locator to work with; the engineer places it from the review list
     todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")
@@ -105,7 +108,8 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
                     and (c.get("offset_ft") or 0) > gps_rules.CONFIG["offset_min_ft"] and c.get("offset_dir")]
     onet = None
     if (todo or offset_cands) and net.get("line"):
-        raw = network_mod.fetch_overpass(db, network_mod.overpass_query([tuple(p) for p in net["line"]]))
+        if raw is None:                   # OSM only (the caller passes the OSM + TIGER network when it has one, #229)
+            raw = network_mod.fetch_overpass(db, network_mod.overpass_query([tuple(p) for p in net["line"]]))
         onet = osm.Network(raw)
     result["cleaning"]["gps_offset_applied"] = gps_rules.apply_offsets(onet, net, offset_cands) if onet else 0
     if todo and onet is not None:
@@ -114,12 +118,15 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
             if gate.auto(pl):
                 c["lat"], c["lon"], c["location_source"] = pl.lat, pl.lon, pl.tier
                 counts["placed"][pl.tier] = counts["placed"].get(pl.tier, 0) + 1
+                if pl.tiger:              # a street name or road only TIGER/Line has (#229): visible on the crash
+                    c["placed_on"] = "tiger"
+                    counts["placed_on_tiger"] = counts.get("placed_on_tiger", 0) + 1
                 continue
             if pl.lat is not None:
-                c["suggestion"] = {"tier": pl.tier, "lat": pl.lat, "lon": pl.lon}
+                c["suggestion"] = {"tier": pl.tier, "lat": pl.lat, "lon": pl.lon, **({"tiger": True} if pl.tiger else {})}
                 counts["suggested"] += 1
             counts["still_unplaced"] += 1
     # FARS only after the locator: a fatal crash it placed exactly has a usable location (#191)
-    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass)
+    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass, tiger)
     result["cleaning"]["placement"] = counts
     return counts

@@ -274,7 +274,10 @@ def methodology(d: dict) -> str:
             "default point (one exact point shared by 10 or more reports naming 5 or more different street pairs, "
             "most of which it doesn't fit), or written with 2 decimals or fewer (both coordinates, or one where the point doesn't "
             "fit the report's streets), is not used; those reports are placed "
-            f"by their street names. Excluded: {excl}. "
+            "by their street names. The street network is OpenStreetMap joined with the US Census TIGER/Line roads: a "
+            "TIGER road that runs along an OpenStreetMap street adds its names to it, and one OpenStreetMap lacks is "
+            "added; a placement that needs a name or road only TIGER/Line has is marked. "
+            f"Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed" + (f" ({ncs} of them name the corridor but give no cross street, so where on the corridor "
                             "is unknown; they are on the review list for the engineer to place)" if ncs else "")

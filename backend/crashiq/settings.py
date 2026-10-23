@@ -33,6 +33,8 @@ class Settings:
     # CHP files for CCRS tables not in the data.ca.gov datastore (#196): ~50 MB each, never committed
     ccrs_files_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_FILES_DIR",
                                                                         ROOT / "data" / "cache" / "ccrs_files")))
+    # Census TIGER/Line roads per county (#229): a few MB each (Los Angeles ~60 MB), never committed
+    tiger_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_TIGER_DIR", ROOT / "data" / "cache" / "tiger")))
     # Frontend build served by the same process in production (single service, DemandIQ pattern).
     dist_dir: Path = field(default_factory=lambda: ROOT / "frontend" / "dist")
 

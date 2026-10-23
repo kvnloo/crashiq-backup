@@ -54,6 +54,9 @@ def is_unlit(c) -> bool:
 
 def _table(tid, title, columns, rows, crashes):
     prov = Counter(c.get("location_provenance", "gps") for c in crashes)
+    on_tiger = sum(1 for c in crashes if c.get("placed_on") == "tiger")
+    if on_tiger:                          # visible wherever the sources are listed (#229)
+        prov["of these, with a TIGER/Line-only street name or road"] = on_tiger
     return {"id": tid, "title": title, "columns": [{"key": k, "label": lbl} for k, lbl in columns],
             "rows": rows, "provenance": dict(sorted(prov.items()))}
 
@@ -377,6 +380,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
              value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_offset_applied", "fars", "exact",
                                                                                  "unique_pair", "user"))),
+        # placed by street names using a name or road only Census TIGER/Line has (#229); already in the rows above
+        _row("located_tiger", "Of the crashes placed by street names, placed with a street name or road only "
+             "TIGER/Line has", value=sum(1 for c in placed if c.get("placed_on") == "tiger")),
         _row("excluded", "Crashes outside the study area", value=excluded_n),
     ]
     if exclude:

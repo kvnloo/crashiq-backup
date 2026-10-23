@@ -30,6 +30,7 @@ from . import crashes as crashes_mod
 from . import grade
 from . import review as review_mod
 from . import network as network_mod
+from . import union as union_mod
 from . import study as study_mod
 from .geo import Polyline
 
@@ -49,7 +50,7 @@ def _stated_intersection(c: dict, studies: list[dict], corridor_keys) -> dict | 
     """The study intersection the report names (corridor street + that cross street), if exactly one."""
     if not _names(c, corridor_keys):
         return None
-    hits = [i for i in studies if _names(c, grade.keys_of([i["name"]]))]
+    hits = [i for i in studies if _names(c, grade.intersection_keys(i))]
     return hits[0] if len(hits) == 1 else None
 
 
@@ -101,7 +102,7 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
                     base["stated_location_id"] = st["id"]
         if cands:
             d, it, rule = _pick_intersection(cands)
-            if gps and _names(c, corridor_keys + grade.keys_of([it["name"]])) is False:
+            if gps and _names(c, corridor_keys + grade.intersection_keys(it)) is False:
                 # #53 / #39: GPS in the influence area, but the report names neither the corridor nor this cross
                 # street (a parking aisle, alley or parallel street)
                 out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": round(d, 1),
@@ -179,12 +180,13 @@ def for_study(db, sid: str) -> tuple[dict, dict, dict, dict]:
     if hit is None:
         pull = crashes_mod.get_cached(db, sid)
         pull = {**pull, "crashes": review_mod.overlay(pull["crashes"], decs)}
-        hit = (pull, assign(pull["crashes"], net, study["radius_ft"], study["buffer_ft"],
-                            bool(study.get("include_freeway"))))
+        anet = union_mod.with_alt(net, pull.get("network_alt"))      # the TIGER names the pull used (#229)
+        hit = (pull, assign(pull["crashes"], anet, study["radius_ft"], study["buffer_ft"],
+                            bool(study.get("include_freeway"))), anet)
     _MEMO[key] = hit                                  # most recently used last
     while len(_MEMO) > _MEMO_MAX:
         _MEMO.pop(next(iter(_MEMO)))
-    return study, net, hit[0], hit[1]
+    return study, hit[2], hit[0], hit[1]
 
 
 router = APIRouter()
