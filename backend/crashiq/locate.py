@@ -422,6 +422,9 @@ class Gate:
     # on an OSM way keep their tier's gate. The user decides after run 9's statewide accuracy (PM review of #232)
     tiger_only_auto: bool = field(default_factory=lambda: bool(json.loads(CONFIG.read_text()).get("tiger_only_auto")))
 
+    def allows(self, tier: str) -> bool:
+        return tier in self.auto_tiers
+
     def auto(self, pl: Placement) -> bool:
         if pl.lat is None:
             return False
