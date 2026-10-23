@@ -123,3 +123,14 @@ def test_the_default_point_query_stays_well_inside_the_url_limit():
     cond = gps_rules.sql_condition('CAST(NULLIF("Latitude", \'\') AS float)', 'CAST(NULLIF("Longitude", \'\') AS float)')
     assert len(urllib.parse.quote(cond)) < crashes.MAX_URL_SQL / 2
     assert len(gps_rules.listed_piles()) == 50
+
+
+def test_a_busy_intersection_past_the_stretch_is_not_a_pile(client):
+    # Brentwood, same basis: 24 crashes at Balfour Rd & Brentwood Bl, just past the study limits, mostly naming that
+    # corner. The corridor can't judge them: they count as fitting, so the point is no default point.
+    north = ("33.913600", "-118.326620")                    # on Crenshaw, ~470 ft past West 132nd Street
+    rows = [(88700000 + i, *north, "CRENSHAW BLVD", "EL SEGUNDO BL") for i in range(8)]
+    rows += [(88700100 + i, *north, f"{s} ST", "CRENSHAW BLVD") for i, s in enumerate(("A", "B", "C", "D", "E"))]
+    log, got, _ = _study(client, rows)
+    assert got["88700000"]["location_source"] == "gps" and got["88700100"]["location_source"] == "gps"
+    assert log["gps_default_ignored"] == 0

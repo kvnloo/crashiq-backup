@@ -485,6 +485,24 @@ def _dms_check(c: dict, line: Polyline, studies: list[dict], corridor_keys) -> b
     return names_corridor and line.project(c["lat"], c["lon"]).offset_ft <= tol
 
 
+def _pile_fits(c: dict, line: Polyline, studies: list[dict], corridor_keys) -> bool:
+    """Street check for the default-point rule (#218): False only when the point surely doesn't fit, i.e. the report
+    names a study intersection or the corridor on the stretch and the point is far from it. A report on other
+    streets, or past the stretch, can't be judged from the corridor alone: it counts as fitting, so a busy
+    intersection just past the study limits (Balfour Rd & Brentwood Bl) is never taken for a default point."""
+    from .assign import GPS_CHECK_FT, _stated_intersection
+    tol = GPS_CHECK_FT + (c.get("offset_ft") or 0.0)
+    st = _stated_intersection(c, studies, corridor_keys)
+    if st is not None:
+        x, y = line.proj.to_xy(c["lat"], c["lon"])
+        sx, sy = line.proj.to_xy(st["lat"], st["lon"])
+        return math.hypot(x - sx, y - sy) <= tol
+    if not any(_names_street(c.get(f), corridor_keys) for f in ("primary_road", "secondary_road")):
+        return True
+    p = line.project(c["lat"], c["lon"])
+    return p.station_ext < 0 or p.station_ext > line.length_ft or p.offset_ft <= tol
+
+
 def _refile_key(c: dict) -> tuple | None:
     """Same crash filed twice under two Collision Ids (#81): same agency, same report number (when CCRS gives one),
     same date-time and the same two roads. Report numbers alone are not unique (SFPD reuses them), hence the rest."""
@@ -774,7 +792,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
 
     # Default / dispatch points inside the box (#218): one exact point shared by many crashes and street pairs, most
     # of which it doesn't fit. Counted over all years read; the Tester's statewide list adds points seen elsewhere.
-    fits = lambda c: _dms_check(c, line, studies, corridor_keys)
+    fits = lambda c: _pile_fits(c, line, studies, corridor_keys)
     gps_recs = [c for recs in raw_by_year.values() for c, src in recs if src == "gps"]
     piles = gps_rules.find_piles(gps_recs, fits)
     for y, recs in raw_by_year.items():
