@@ -108,3 +108,15 @@ def test_arterial_corridors_are_untouched():
     placement.place_unmatched(None, {**FWY_NET, "is_freeway": False}, r, raw=raw("a_lawndale"), gate=gate)
     c = r["crashes"][0]
     assert c["location_source"] != "freeway_offset" and (c.get("suggestion") or {}).get("tier") != "freeway_offset"
+
+
+def test_a_crash_the_street_locator_places_keeps_that_placement(monkeypatch):
+    # PM review of #252: freeway.place must not pre-empt locate.place; with the gate off, a freeway crash that
+    # exact / unique_pair places today stays placed
+    from crashiq import locate, placement
+    monkeypatch.setattr(locate, "place", lambda net, c, **kw: locate.Placement("exact", 33.87, -118.34, 1))
+    called = []
+    monkeypatch.setattr(freeway, "place", lambda raw, c: called.append(c) or None)
+    r = _result(A)
+    placement.place_unmatched(None, FWY_NET, r, raw=raw("a_lawndale"))
+    assert r["crashes"][0]["location_source"] == "exact" and not called

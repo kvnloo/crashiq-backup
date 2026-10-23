@@ -96,7 +96,7 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
     return counts
 
 
-GPS_LIKE = ("gps", "gps_dms_corrected", "gps_offset_applied")
+GPS_LIKE = ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied")
 
 
 def _freeway_gps(raw: dict, crashes: list[dict]) -> int:
@@ -141,9 +141,12 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
     counts["freeway_gps_moved"] = _freeway_gps(raw, fwy_gps) if fwy_gps else 0
     if todo and onet is not None:
         for c in todo:
-            sp = freeway.place(raw, c) if fwy and c.get("is_freeway") else None
-            pl = (locate.Placement("freeway_offset", sp.lat, sp.lon, note=f"{sp.kind}: {sp.note}") if sp
-                  else locate.place(onet, c))
+            pl = locate.place(onet, c)
+            # the street-name locator first: a freeway crash it places today keeps that placement (PM review of #252);
+            # the report's freeway description is tried only when the locator doesn't auto-place
+            sp = freeway.place(raw, c) if fwy and c.get("is_freeway") and not gate.auto(pl) else None
+            if sp:
+                pl = locate.Placement("freeway_offset", sp.lat, sp.lon, note=f"{sp.kind}: {sp.note}")
             if gate.auto(pl):
                 c["lat"], c["lon"], c["location_source"] = pl.lat, pl.lon, pl.tier
                 counts["placed"][pl.tier] = counts["placed"].get(pl.tier, 0) + 1
