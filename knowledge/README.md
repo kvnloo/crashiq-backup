@@ -8,7 +8,7 @@ meant to become the "crash data guru" skill.
 | Folder | What goes in it |
 |---|---|
 | `sources/` | One file per data source: where it is, how to pull it, its fields, quirks, cleaning rules, licence |
-| `methods/` | How we do a job (geocoding, assignment, rates…): the method, its measured accuracy, what failed |
+| `methods/` | How we do a job (geocoding, assignment, rates…): the method, its measured accuracy, what failed. **Start a new state with `methods/statewide-playbook.md`** |
 | `lessons.md` | Dated one-line lessons, newest first. Every session adds to it |
 | `tools.md` | Public tools tested (libpostal, usaddress, USPS table, TIGER): results and what to keep |
 | `pain-points.md` | Every data problem as a client pain point: evidence, cost to the client, how CrashIQ fixes it. Pitch + roadmap source |

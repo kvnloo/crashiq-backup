@@ -1,7 +1,9 @@
 {
-  "_doc": "OSM + TIGER/Line street network (#229, user decision and download approval 2026-10-22, docs/03). vintage: the TIGER/Line year to use; a new vintage downloads into its own folder when first needed. coincide_m: a TIGER segment this close (most of its length) to an OSM way is that way, and only adds its names. snap_m: a TIGER segment end this close to an OSM node joins it there.",
+  "_doc": "OSM + TIGER/Line street network (#229, user decision and download approval 2026-10-22, docs/03). vintage: the TIGER/Line year to use; a new vintage downloads into its own folder when first needed. coincide_m: a TIGER segment this close (most of its length) to an OSM way is that way, and only adds its names. snap_m: a TIGER segment end this close to an OSM node joins it there. union: false = OSM only, TIGER neither downloaded nor used (the switch, #243: run 9 found the union losing correct OSM placements on SF/LA open data; off until that is fixed). copy_m (#243): a TIGER segment this close to an OSM way of the same name, in the same direction, along half its length, is a copy of it and adds nothing.",
+  "union": false,
   "vintage": 2026,
   "coincide_m": 12,
   "coincide_share": 0.8,
-  "snap_m": 12
+  "snap_m": 12,
+  "copy_m": 60
 }

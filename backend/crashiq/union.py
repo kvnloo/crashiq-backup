@@ -5,9 +5,13 @@ element shape `osm.Network` reads:
 - A TIGER segment that runs along an OSM way (sampled every SAMPLE_M along its length, ends left out; at least
   `coincide_share` of the samples within `coincide_m` of OSM) is that way: its names are added to the OSM way(s) it
   follows as `tiger:name`, and the way is marked `crashiq:source = both`. A street is never there twice.
+- OSM first (#243, run 9): a TIGER segment running loosely along an OSM way of the same name (within `copy_m`, same
+  direction, half its length) is TIGER's copy of that street and adds nothing: no way, node or meeting point. TIGER
+  never adds a name OSM already has on another street here, neither onto an OSM way nor as a road of its own.
 - Otherwise it is a new way (`crashiq:source = tiger`). Its ends join the OSM network: at an OSM node within
   `snap_m`, else spliced into the OSM way passing within `snap_m`; else at its own TIGER node (shared with the other
-  TIGER segments that end there). Its points get their own ids, so they are never intersections.
+  TIGER segments that end there). Its points get their own ids, so they are never intersections. A join never
+  makes a meeting point between two streets OSM already has meeting anywhere: TIGER adds only corners OSM lacks.
 Name provenance (osm / tiger / both) is kept by `osm.Network` per street key and per node.
 """
 
@@ -21,6 +25,11 @@ from pathlib import Path
 from .geo import LocalProjection
 
 CONFIG = json.loads((Path(__file__).parent / "config" / "tiger.json").read_text())
+
+
+def enabled() -> bool:
+    """The OSM + TIGER union is on (config/tiger.json `union`). Off since run 9 (#243): OSM only."""
+    return bool(CONFIG.get("union"))
 SAMPLE_M = 10.0
 PARALLEL_DEG = 20.0        # a TIGER road runs along an OSM way only in the same direction: a cross street next to a
                            # divided road's far carriageway (Masonic at Geary) is near it, not along it
@@ -135,20 +144,104 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
                 best = (d, wi, i, q)
         return best
 
+    # OSM first (#243): the street names on each OSM way and node, and the pairs of streets OSM already has meeting
+    from .names import _flat, drop_directional, street_key
+    from .osm import NAME_TAGS
+
+    def cores_of(names) -> set[str]:
+        """Street names as compared here: flat core, a leading direction dropped (South Hill Street = Hill St)."""
+        return {_flat(drop_directional(k).core) for k in (street_key(v) for nm in names for v in str(nm or "").split(";"))
+                if k}
+    way_cores = [cores_of((w.get("tags") or {}).get(t) for t in NAME_TAGS) for w in ways]
+    node_cores: dict[int, set[str]] = defaultdict(set)
+    for wi, w in enumerate(ways):
+        for n in w["nodes"]:
+            node_cores[n] |= way_cores[wi]
+    osm_pairs = {frozenset((x, y)) for cs in node_cores.values() for x in cs for y in cs if x != y}
+    osm_names = set().union(*way_cores) if way_cores else set()      # every street name OSM has here
+
+    def keys_of(names) -> set[tuple[str, str | None]]:
+        return {(_flat(drop_directional(k).core), k.suffix)
+                for k in (street_key(v) for nm in names for v in str(nm or "").split(";")) if k}
+    way_keys = [keys_of((w.get("tags") or {}).get(t) for t in NAME_TAGS) for w in ways]
+
+    def same(a, b) -> bool:
+        return a[0] == b[0] and (a[1] is None or b[1] is None or a[1] == b[1])
+
+    by_core: dict[str, list[tuple[str | None, int]]] = defaultdict(list)    # core -> (street type, OSM way)
+    for wi, ks in enumerate(way_keys):
+        for c, suf in ks:
+            by_core[c].append((suf, wi))
+
+    def own_name(name: str, wi: int) -> bool:
+        """The way's own name again, give or take a direction ("N Whitley Ave" on OSM's Whitley Avenue): it adds no
+        street, and as a different key it would make a node where two Whitleys merge look like a corner (#243)."""
+        return all(any(same(t, k) for k in way_keys[wi]) for t in keys_of([name]))
+
+    def other_osm_street(name: str, wi: int) -> bool:
+        """The name belongs to another OSM street here, so it is never added to this way (#243): Market St isn't
+        given to OSM's Clayton Street, and Griffith Park Dr (OSM's Griffith Park Drive) isn't given to OSM's
+        Griffith Park Road. A name OSM doesn't have, or this way's own name in another type, may be added."""
+        for t in keys_of([name]):
+            if any(same(t, k) for k in way_keys[wi]):
+                continue                                   # this way already carries it
+            if any(wj != wi and same(t, (t[0], suf)) for suf, wj in by_core.get(t[0], ())):
+                return True                                # another OSM way carries it
+        return False
+
+    def osm_meets(tcores: set[str], ocores: set[str]) -> bool:
+        return any(frozenset((t, o)) in osm_pairs for t in tcores for o in ocores if t != o)
+
+    def copy_of_osm(samples, tcores: set[str]) -> bool:
+        """The segment runs along an OSM way of the same name, if loosely (within COPY_M, same direction): TIGER's
+        copy of a street OSM has. It adds nothing, so it can't add a node or a meeting point (#243)."""
+        if not samples:
+            return False
+        hit = 0
+        for p, d in samples:
+            for wi, i in grid_copy.near(*p):
+                w = ways[wi]
+                a, b = w["nodes"][i], w["nodes"][i + 1]
+                if way_cores[wi] & tcores and _parallel(d, _dir(xy[a], xy[b])) \
+                        and _seg_dist(p, xy[a], xy[b])[0] <= copy_ft:
+                    hit += 1
+                    break
+        return hit / len(samples) >= 0.5
+
+    copy_ft = CONFIG.get("copy_m", 60) * M
+    grid_copy = _Grid(copy_ft)
+    for wi, w in enumerate(ways):
+        for i, (a, b) in enumerate(zip(w["nodes"], w["nodes"][1:])):
+            if a in xy and b in xy:
+                grid_copy.add_segment(xy[a], xy[b], (wi, i))
+
     counts = Counter()
     extra_names: dict[int, list[str]] = defaultdict(list)
+    along: set[int] = set()                 # OSM ways a TIGER segment runs along (geometry in both)
     new_ways, new_nodes = [], {}
     point_id = [POINT_NODE]
     spliced: dict[tuple, int] = {}
 
-    def join(tnid, p_ll):
+    def join(tnid, p_ll, tcores):
         p = proj.to_xy(*p_ll)
+        nid = TIGER_NODE + int(tnid)
+
+        def alone():
+            if nid not in new_nodes:
+                new_nodes[nid] = tuple(p_ll)
+                xy[nid] = p
+            return nid
         best_n = min((n for n in node_grid.near(*p) if math.hypot(xy[n][0] - p[0], xy[n][1] - p[1]) <= sm),
                      key=lambda n: math.hypot(xy[n][0] - p[0], xy[n][1] - p[1]), default=None)
         if best_n is not None:
+            if osm_meets(tcores, node_cores.get(best_n, set())):
+                counts["join_refused_osm_meets"] += 1     # OSM already has these two streets meeting (#243)
+                return alone()
             return best_n
         hit = nearest_way(p, sm)
-        nid = TIGER_NODE + int(tnid)
+        if hit is not None and osm_meets(tcores, way_cores[hit[1]]):
+            counts["join_refused_osm_meets"] += 1
+            return alone()
         if hit is not None:                       # splice into the OSM way (OSM lacks this corner)
             _, wi, i, q = hit
             key = (wi, i, round(q[0]), round(q[1]))
@@ -161,10 +254,7 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
             splices.append((wi, i, q, nid))
             counts["joined_by_splice"] += 1
             return nid
-        if nid not in new_nodes:
-            new_nodes[nid] = tuple(p_ll)
-            xy[nid] = p
-        return nid
+        return alone()
 
     splices: list[tuple] = []
     for e in tiger_edges:
@@ -180,15 +270,33 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
             per_way = Counter(h[1] for h in matched)
             for wi, k in per_way.items():
                 if k / len(samples) >= 0.5 or k >= 3:       # the way(s) it runs along, not one it brushes
-                    extra_names[wi] += e["names"]
+                    along.add(wi)
+                    # a name another OSM street has is never given to this one (#243: TIGER's "Market St" along
+                    # OSM's Clayton Street made Market meet Clayton all along it)
+                    new = [n for n in e["names"] if not own_name(n, wi)]
+                    keep = [n for n in new if not other_osm_street(n, wi)]
+                    if len(keep) < len(new):
+                        counts["names_refused_osm_has"] += len(new) - len(keep)
+                    if keep:
+                        extra_names[wi] += keep
             counts["coincide_with_osm"] += 1
             continue
-        ids = [join(e["tnidf"], pts[0])]
+        tcores = cores_of(e["names"])
+        if copy_of_osm(samples, tcores):
+            counts["copy_of_osm_street"] += 1
+            continue
+        if tcores & osm_names:
+            # a road under a name OSM already has here: a copy elsewhere or another street of that name; adding it
+            # would let it meet streets in a second place (#243: TIGER's Hill St in Santa Monica beat OSM's
+            # South Hill Street downtown). TIGER adds only streets OSM lacks
+            counts["same_name_as_osm_street"] += 1
+            continue
+        ids = [join(e["tnidf"], pts[0], tcores)]
         for p in pts[1:-1]:
             point_id[0] += 1
             new_nodes[point_id[0]] = p
             ids.append(point_id[0])
-        ids.append(join(e["tnidt"], pts[-1]))
+        ids.append(join(e["tnidt"], pts[-1], tcores))
         names = e["names"]
         new_ways.append({"type": "way", "id": -int(e["tlid"]), "nodes": ids,
                          "tags": {"name": names[0], **({"alt_name": ";".join(names[1:])} if names[1:] else {}),
@@ -203,7 +311,7 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
     for (wi, i) in sorted(by_seg, key=lambda k: (k[0], -k[1])):
         ways[wi]["nodes"][i + 1:i + 1] = [nid for _, nid in sorted(by_seg[(wi, i)])]
     for wi, w in enumerate(ways):
-        w["tags"]["crashiq:source"] = "both" if wi in extra_names else "osm"
+        w["tags"]["crashiq:source"] = "both" if wi in along else "osm"
         if wi in extra_names:
             w["tags"]["tiger:name"] = ";".join(dict.fromkeys(extra_names[wi]))
     els = [{"type": "node", "id": n, "lat": p[0], "lon": p[1]} for n, p in nodes.items()]

@@ -27,6 +27,14 @@ at runtime with `package_show` (code: `backend/crashiq/sources/ca_ccrs.py`).
   in DataSF), typos (`MISSINO`, `VALENICA`, `BUST ST`, `CAN NESS`), route numbers (`RT 101`, `I-280 S/B`), house
   addresses in the cross-street field (`GENEVA AV 1677`, `975 3RD ST`), landmarks (`MARX MEADOWS`, `GIANTS DR`),
   wrong suffix (`GEARY ST` where it's Geary Blvd), streets that don't meet (`15TH AV & MISSION ST`).
+- **GPS format errors (2026-10-23, #247):** degrees-minutes-seconds written as decimal in many agencies, not only
+  San Jose (4,111 difficult crashes, mostly CHP areas 9370, 9675, 9252, 9550, 9530); longitude missing its minus
+  (432); 1,676 raw points outside California. Whole-degree latitude errors exist but can't be told from chance.
+- **Default / dispatch GPS points** (1,755 crashes on 50 points) and coarse coordinates (≤ 2 decimals, 547). (#218)
+- **No route or postmile column** in Crashes, Parties or IWP. `IsFreeway` = freeway jurisdiction, including ramps and
+  connectors. Freeway crashes: `methods/freeway-crashes.md`.
+- **Parties_2025** was downloadable but not loaded in the datastore (`datastore_active = false`) from ~2026-09-30;
+  fallback = the file (docs/03, 2026-10-22).
 - Most recent ~12 months may be preliminary (`Is Preliminary`).
 - To check: LA City 2024 total (28.8k) looked low vs. historic SWITRS. (open, F2)
 
