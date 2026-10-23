@@ -421,3 +421,6 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Street aliases, the rest APPROVED (user, 2026-10-22, PM session, "approve the rest too"):** the remaining local
   spellings with no GPS check (390 entries, evidence rule: ≥ 3 crashes, ≥ 80% agreement, no rival street) are approved.
   The 7 entries that failed the hidden-GPS check (< 98%) remain unapproved. Live table: 905 entries.
+- **Street aliases, last 7 APPROVED (user, 2026-10-22, PM session, "approve all"):** the 7 entries that were narrowly
+  under the 98% hidden-GPS check (90.9–95.5%, e.g. ATLANTA AV → Atlantic Avenue, Long Beach) are approved too. Live
+  table: all 912 draft entries.

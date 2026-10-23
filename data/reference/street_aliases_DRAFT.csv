@@ -69,7 +69,7 @@ city,Woodside,41,CANADA RD,CAÑADA ROAD,Cañada Road,14,100.0,,0.83,15,13,12,0,0
 city,Los Angeles,19,MARTIN LUTHER KING BLVD,WEST MARTIN LUTHER KING JUNIOR BOULEVARD,West Martin Luther King Junior Boulevard,7,85.7,East Martin Luther King Junior Boulevard,0.76,39,13,11,0,0,,,4660411 4701402 4711482,local spelling or name,approved
 city,Long Beach,19,MARTIN LUTHER KING AV,MARTIN LUTHER KING JUNIOR AVENUE,Martin Luther King Junior Avenue,6,100.0,,0.84,17,11,11,3,3,100.0,43.8,2781472 2850729 2873703,local spelling or name,approved
 city,Long Beach,19,MARTIN LUTHER KING JR,MARTIN LUTHER KING JUNIOR AVENUE,Martin Luther King Junior Avenue,10,100.0,,0.9,13,11,11,1,1,100.0,20.7,2728381 2728377 2761801,local spelling or name,approved
-city,Long Beach,19,ATLANTA AV,ATLANTIC AVENUE,Atlantic Avenue,27,100.0,,0.8,42,12,11,21,22,95.5,78.2,2752021 2649989 2704093,local spelling or name,proposed
+city,Long Beach,19,ATLANTA AV,ATLANTIC AVENUE,Atlantic Avenue,27,100.0,,0.8,42,12,11,21,22,95.5,78.2,2752021 2649989 2704093,local spelling or name,approved
 city,Norwalk,19,PLUMA AV,PIUMA AVENUE,Piuma Avenue,12,100.0,,0.8,13,13,11,0,0,,,2741131 2820690 2867618,local spelling or name,approved
 city,Fullerton,30,ORANGEFAIR MALL,ORANGEFAIR AVENUE,Orangefair Avenue,13,100.0,,0.83,13,11,11,1,1,100.0,20.7,1528377 1683307 1815806,local spelling or name,approved
 city,Hesperia,36,KEY POINT DR,KEY POINTE DRIVE,Key Pointe Drive,11,100.0,,0.94,11,11,11,0,0,,,2767803 2831192 2554548,local spelling or name,approved
@@ -106,7 +106,7 @@ city,Cathedral City,33,WISHING WELL TRL,WISHING WELL TRAIL,Wishing Well Trail,8,
 city,Greenfield,27,CAMINO REAL,EL CAMINO REAL,El Camino Real,8,100.0,,0.91,8,8,8,0,0,,,2821182 2667873 2530545,local spelling or name,approved
 city,Oakland,1,INTERNATION BL,INTERNATIONAL BOULEVARD,International Boulevard,8,100.0,,0.92,8,8,8,0,0,,,2829305 2875866 2574581,local spelling or name,approved
 city,Fontana,36,HAWTHORN AV,HAWTHORNE AVENUE,Hawthorne Avenue,10,100.0,,0.94,10,8,8,2,2,100.0,34.2,2820436 2714929 2495695,local spelling or name,approved
-city,Temecula,33,PECHANGA PKY,PECHANGA PARKWAY,Pechanga Parkway,132,100.0,,0.84,132,8,8,102,110,92.7,86.3,1406433 1404771 1413998,local spelling or name,proposed
+city,Temecula,33,PECHANGA PKY,PECHANGA PARKWAY,Pechanga Parkway,132,100.0,,0.84,132,8,8,102,110,92.7,86.3,1406433 1404771 1413998,local spelling or name,approved
 city,Vista,37,FRANCES DR,FRANCIS DRIVE,Francis Drive,8,100.0,,0.86,8,8,8,0,0,,,2845653 2608299 2647533,local spelling or name,approved
 city,Gilroy,43,RT 101,US 101 BUSINESS,US 101 Business,11,100.0,,0.8,47,45,8,0,0,,,2726900 2756012 2755373,local spelling or name,approved
 city,Dinuba,54,RD 74,ROAD 74,Road 74,5,100.0,,0.8,9,9,8,0,0,,,2594402 2594355 2475680,abbreviation (cleaner rule),approved
@@ -148,7 +148,7 @@ city,San Diego,37,GENESSEE AV,GENESEE AVENUE,Genesee Avenue,6,100.0,,0.93,6,6,6,
 city,Oxnard,56,E GONZALEZ RD,EAST GONZALES ROAD,East Gonzales Road,6,100.0,,0.92,8,6,6,1,1,100.0,20.7,2757260 2553396 2584030,local spelling or name,approved
 city,Bellflower,19,ALONDA BL,ALONDRA BOULEVARD,Alondra Boulevard,6,100.0,,0.92,6,6,6,0,0,,,2684871 2698367 2509018,local spelling or name,approved
 city,Mission Viejo,30,WANDERING TRL,WANDERING TRAILS,Wandering Trails,6,100.0,,0.89,6,6,6,0,0,,,2728652 2791488 2709669,local spelling or name,approved
-city,Eureka,12,RT 101,US 101,US 101,22,100.0,,0.8,26,6,6,10,11,90.9,62.3,2739412 2732684 2750705,local spelling or name,proposed
+city,Eureka,12,RT 101,US 101,US 101,22,100.0,,0.8,26,6,6,10,11,90.9,62.3,2739412 2732684 2750705,local spelling or name,approved
 city,Red Bluff,52,SUTTER ST,JOHN SUTTER STREET,John Sutter Street,7,100.0,,0.75,9,6,6,1,1,100.0,20.7,2810066 2827607 2484852,local spelling or name,approved
 city,Rancho Santa Margarita,30,AVD EMPRESA,AVENIDA EMPRESA,Avenida Empresa,6,100.0,,0.83,6,6,6,0,0,,,2853286 2849505 2662512,local spelling or name,approved
 city,Rancho Santa Margarita,30,AVD D LAS FLORES,AVENIDA DE LAS FLORES,Avenida de las Flores,6,100.0,,0.84,6,6,6,0,0,,,2680541 2554110 2552211,local spelling or name,approved
@@ -194,7 +194,7 @@ city,Fontana,36,SIERRA LAKES PKY,SIERRA LAKES PARKWAY,Sierra Lakes Parkway,6,100
 city,Downey,19,HORELY AV,HORLEY AVENUE,Horley Avenue,5,100.0,,0.83,5,5,5,0,0,,,2812509 2672979 4533251,local spelling or name,approved
 city,Downey,19,DOWNEY SANFORD BRDG RD,DOWNEY & SANFORD BRIDGE ROAD,Downey & Sanford Bridge Road,5,100.0,,0.94,5,5,5,0,0,,,2694238 2499257 4412560,local spelling or name,approved
 city,Victorville,36,NATIONAL TRAILS HWY,NATIONAL OLD TRAILS HIGHWAY,National Old Trails Highway,9,100.0,,0.9,11,7,5,1,1,100.0,20.7,2814993 1951413 2620986,local spelling or name,approved
-city,Tracy,39,PAVILION PKWY,PAVILLION PARKWAY,Pavillion Parkway,20,100.0,,0.94,20,5,5,14,15,93.3,70.2,2732942 2598973 2613409,local spelling or name,proposed
+city,Tracy,39,PAVILION PKWY,PAVILLION PARKWAY,Pavillion Parkway,20,100.0,,0.94,20,5,5,14,15,93.3,70.2,2732942 2598973 2613409,local spelling or name,approved
 city,Lake Forest,30,TOWNE CENTER DR,TOWNE CENTRE DRIVE,Towne Centre Drive,7,100.0,,0.91,7,5,5,0,0,,,2803265 2718011 2457477,local spelling or name,approved
 city,Sacramento,34,HARDEN LN,ARDEN WAY,Arden Way,5,100.0,,0.81,5,5,5,0,0,,,2811770 2348041 4366825,local spelling or name,approved
 city,Sacramento,34,SUTTERVILLE RD BYP,SUTTERVILLE BYPASS,Sutterville Bypass,5,100.0,,0.85,5,5,5,0,0,,,2863152 2600728 2599435,local spelling or name,approved
@@ -325,7 +325,7 @@ city,Santa Rosa,49,HERN AV,HEARN AVENUE,Hearn Avenue,3,100.0,,0.89,3,3,3,0,0,,,2
 city,Madera,20,RD 28 1/4,ROAD 28 1/4,Road 28 1/4,3,100.0,,0.86,9,9,3,0,0,,,2615764 4974855 5009468,abbreviation (cleaner rule),approved
 city,Madera,20,RD 29,ROAD 29,Road 29,3,100.0,,0.8,4,4,3,0,0,,,2600891 4624491 4640219,abbreviation (cleaner rule),approved
 city,Alameda,1,RALPH APPEZZATO MEMORIAL PK,RALPH APPEZZATO MEMORIAL PARKWAY,Ralph Appezzato Memorial Parkway,48,100.0,,0.96,48,3,3,44,44,100.0,92.0,1514131 1579674 1579668,local spelling or name,approved
-city,West Hollywood,19,SAN VINCENTE BL,NORTH SAN VICENTE BOULEVARD,North San Vicente Boulevard,14,100.0,,0.77,15,3,3,10,11,90.9,62.3,2786131 2870275 2507271,local spelling or name,proposed
+city,West Hollywood,19,SAN VINCENTE BL,NORTH SAN VICENTE BOULEVARD,North San Vicente Boulevard,14,100.0,,0.77,15,3,3,10,11,90.9,62.3,2786131 2870275 2507271,local spelling or name,approved
 city,Pittsburg,7,JOHN HENRY JOHNSON PARKWAY,JOHN H JOHNSON PARKWAY,John H Johnson Parkway,4,100.0,,0.86,4,3,3,0,0,,,1490133 1517308 2784178,local spelling or name,approved
 city,South San Francisco,41,BELLE AIR RD,BELLE AIRE ROAD,Belle Aire Road,12,100.0,,0.94,12,3,3,5,5,100.0,56.6,1617597 1774175 1793931,local spelling or name,approved
 city,San Clemente,30,CALLE ALICANTE,CALLE ALICANTA,Calle Alicanta,3,100.0,,0.92,3,3,3,0,0,,,2755800 2655230 2466877,local spelling or name,approved
@@ -461,7 +461,7 @@ city,Santa Rosa,49,BAY VILLAGE CI,BAY VILLAGE AVENUE,Bay Village Avenue,3,100.0,
 city,El Monte,19,MT VIEW RD,MOUNTAIN VIEW ROAD,Mountain View Road,3,100.0,,0.86,3,2,2,1,1,100.0,20.7,2754886 2774176 4645522,local spelling or name,approved
 city,Santa Barbara,42,S CANADA ST,SOUTH CAÑADA STREET,South Cañada Street,7,100.0,,0.91,7,2,2,5,5,100.0,56.6,2778142 2653929 2489362,local spelling or name,approved
 city,Palm Desert,33,WARNER TRL,WARNER TRAIL,Warner Trail,49,100.0,,0.9,49,2,2,46,46,100.0,92.3,1630952 1627870 1627860,abbreviation (cleaner rule),approved
-city,Alameda,1,MARINA VILLAGE PK,MARINA VILLAGE PARKWAY,Marina Village Parkway,18,100.0,,0.93,25,2,2,15,16,93.8,71.7,2400679 2397680 2370169,local spelling or name,proposed
+city,Alameda,1,MARINA VILLAGE PK,MARINA VILLAGE PARKWAY,Marina Village Parkway,18,100.0,,0.93,25,2,2,15,16,93.8,71.7,2400679 2397680 2370169,local spelling or name,approved
 city,Irwindale,19,SALVATIERRA ST,SALVATIERA STREET,Salvatiera Street,4,100.0,,0.95,4,2,2,2,2,100.0,34.2,2867943 2867769 2662171,local spelling or name,approved
 city,Napa,28,SHELTER AV,SHETLER AVENUE,Shetler Avenue,3,100.0,,0.86,3,2,2,0,0,,,2772264 2632687 2557913,local spelling or name,approved
 city,Napa,28,HENNESSEY DR,HENNESSY DRIVE,Hennessy Drive,3,100.0,,0.94,3,2,2,1,1,100.0,20.7,2693697 2389030 4849246,local spelling or name,approved
@@ -570,7 +570,7 @@ city,San Ramon,7,WINDMERE PKWY,WINDEMERE PARKWAY,Windemere Parkway,3,100.0,,0.94
 city,San Ramon,7,CANYON LAKE DR,CANYON LAKES DRIVE,Canyon Lakes Drive,3,100.0,,0.95,3,1,1,1,1,100.0,20.7,2631900 4554628 4854499,local spelling or name,approved
 city,Dublin,1,BARNET BL,BARNER BOULEVARD,Barner Boulevard,3,100.0,,0.83,3,1,1,2,2,100.0,34.2,2489673 2508338 2557949,local spelling or name,approved
 city,Brentwood,7,VINEYARDS PKWY,VINEYARD PARKWAY,Vineyard Parkway,11,100.0,,0.94,11,1,1,9,9,100.0,70.1,2741742 2797283 2816813,local spelling or name,approved
-city,Brentwood,7,GARIN PKY,GARIN PARKWAY,Garin Parkway,15,100.0,,0.77,18,1,1,12,13,92.3,66.7,2780111 2836619 2614287,local spelling or name,proposed
+city,Brentwood,7,GARIN PKY,GARIN PARKWAY,Garin Parkway,15,100.0,,0.77,18,1,1,12,13,92.3,66.7,2780111 2836619 2614287,local spelling or name,approved
 city,Brentwood,7,MEDALLION DR,MEDALION DRIVE,Medalion Drive,6,100.0,,0.94,6,1,1,4,4,100.0,51.0,2837099 2676781 2682540,local spelling or name,approved
 city,Brentwood,7,JOHN MUIR PKY,JOHN MUIR PARKWAY,John Muir Parkway,8,100.0,,0.84,8,1,1,4,4,100.0,51.0,2543718 2469539 4444182,local spelling or name,approved
 city,Bell Gardens,19,ECL OF EASTERN AVENUE,EASTERN AVENUE,Eastern Avenue,3,100.0,,0.82,3,1,1,2,2,100.0,34.2,1485911 2096170 2093058,local spelling or name,approved
