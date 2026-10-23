@@ -351,6 +351,17 @@
           ""
         ]
       ]
+    },
+    {
+      "topic": "Correcting small typos in street names",
+      "status": "decision",
+      "what": "A report name with no exact or one-place match is corrected to a map street only when it isn't a guess: at most 2 character edits (1 for names of 4 letters or fewer; a swap of two neighbouring letters counts as one), never a change of digits, no other street within the same number of edits or one more, the corrected pair of streets meeting at exactly one intersection, and police GPS, where the crash has it, within 400 ft (plus the stated offset) of that corner. Until the accuracy is measured on hidden police GPS and the user approves, such a crash is a suggestion on the review list (user decision 2026-10-22, #233).",
+      "cite": [
+        [
+          "osm",
+          ""
+        ]
+      ]
     }
   ]
 }

@@ -1,8 +1,15 @@
 {
-  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only by a user decision (docs/03): exact (>= 98% Wilson 95% lower bound on hidden-truth tests); unique_pair (user 2026-10-22, #211 evidence: at or above exact on hidden police GPS and LAPD open data). Street pairs that meet in more than one place still go to review. tiger_only_auto (#229): false = a placement that needs a road only TIGER/Line has goes to review with the suggestion; TIGER names on an OSM way keep their tier's gate. The user decides after run 9.",
+  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only by a user decision (docs/03): exact (>= 98% Wilson 95% lower bound on hidden-truth tests); unique_pair (user 2026-10-22, #211 evidence: at or above exact on hidden police GPS and LAPD open data). Street pairs that meet in more than one place still go to review. tiger_only_auto (#229): false = a placement that needs a road only TIGER/Line has goes to review with the suggestion; TIGER names on an OSM way keep their tier's gate. The user decides after run 9. verified_typo (#233, user 2026-10-22): a misspelled name corrected to the one map street within max_edits (short_max_edits for names of short_core letters or fewer; names under min_core letters and digits never changed), no rival within one more edit, the corrected pair meeting at one intersection, police GPS (when present) within gps_check_ft. Not in auto_tiers: a suggestion until the Tester measures it and the user approves.",
   "auto_tiers": [
     "exact",
     "unique_pair"
   ],
-  "tiger_only_auto": false
+  "tiger_only_auto": false,
+  "verified_typo": {
+    "max_edits": 2,
+    "short_core": 4,
+    "short_max_edits": 1,
+    "min_core": 4,
+    "gps_check_ft": 400
+  }
 }

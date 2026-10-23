@@ -2,6 +2,8 @@
 
 Tiers, cheapest first (each crash records which one placed it):
   exact  – both streets match an OSM street key exactly (after normalization)
+  verified_typo – a name 1-2 letters off one map street, with no rival as close, and the corrected pair meets at
+           exactly one intersection (#233; a suggestion until the user approves auto-placement)
   unique_pair – the two streets, allowing only what the report leaves out (a leading or trailing direction, a
            suffix), meet at exactly one intersection: AVENUE J & 20TH ST W can only be West Avenue J & 20th Street
            West in Lancaster (#203; auto-places since the user's decision of 2026-10-22)
@@ -19,7 +21,8 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .names import StreetKey, _flat, directions, drop_directional, same_core, same_street, similarity, street_key
+from .names import (StreetKey, _flat, directions, drop_directional, route_number, same_core, same_street, similarity,
+                    street_key)
 from .osm import Network, bearing, metres, move
 
 FT = 0.3048
@@ -30,7 +33,7 @@ NEAR_M = 30.0     # streets that never share a node (ramps, medians, plazas) but
 
 @dataclass
 class Placement:
-    tier: str                      # address | exact | unique_pair | relaxed | near | fuzzy | jev | review
+    tier: str                      # address | exact | unique_pair | relaxed | near | verified_typo | fuzzy | jev | review
     lat: float | None = None
     lon: float | None = None
     node: int | None = None
@@ -154,6 +157,84 @@ def _tiger(net: Network, node: int, a, b, road: bool = False) -> bool:
     return any(net.tiger_only(node, [k for k in keys if k in at], road) for keys in (a, b))
 
 
+def _edits(a: str, b: str) -> int:
+    """Character edits between two names: insert, delete, substitute, or swap two neighbours (optimal string
+    alignment)."""
+    la, lb = len(a), len(b)
+    d = [[0] * (lb + 1) for _ in range(la + 1)]
+    for i in range(la + 1):
+        d[i][0] = i
+    for j in range(lb + 1):
+        d[0][j] = j
+    for i in range(1, la + 1):
+        for j in range(1, lb + 1):
+            cost = a[i - 1] != b[j - 1]
+            d[i][j] = min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + cost)
+            if i > 1 and j > 1 and a[i - 1] == b[j - 2] and a[i - 2] == b[j - 1]:
+                d[i][j] = min(d[i][j], d[i - 2][j - 2] + 1)
+    return d[la][lb]
+
+
+def _typo_fix(net: Network, k: StreetKey) -> list[StreetKey]:
+    """The one map street a misspelled name can be (#233): within the allowed edits, no other street as close or one
+    edit further, and never a change of digits (4TH is not a typo of 5TH). [] when it would be a guess."""
+    rule = TYPO
+    core = _flat(k.core)
+    if any(ch.isdigit() for ch in core) or route_number(k) is not None or len(core) < rule["min_core"]:
+        return []                     # a short name is too easy to mistake, either way (OAKK for OAK, test_locate)
+    most = rule["short_max_edits"] if len(core) <= rule["short_core"] else rule["max_edits"]
+    by_core: dict[str, list[StreetKey]] = {}
+    for s in net.streets:
+        sc = _flat(s.core)
+        if abs(len(sc) - len(core)) > most + 1 or any(ch.isdigit() for ch in sc) or len(sc) < rule["min_core"]:
+            continue
+        if k.suffix and s.suffix and k.suffix != s.suffix:
+            continue
+        by_core.setdefault(sc, []).append(s)
+    scored = sorted((_edits(core, sc), sc) for sc in by_core if sc != core)
+    if not scored or scored[0][0] > most:
+        return []
+    best, fix = scored[0]
+    if any(d <= best + 1 for d, sc in scored[1:]):
+        return []                     # a rival street as close, or one edit further: a guess
+    return by_core[fix]
+
+
+def _verified_typo(net: Network, crash: dict, kp: StreetKey, ks: StreetKey, tp, ts) -> Placement | None:
+    """Tier verified_typo (#233; user 2026-10-22, gate off until measured): one or both names corrected by
+    `_typo_fix`, and the corrected pair meets at exactly one intersection; where the crash has police GPS, the
+    corner must fit it."""
+    fixed = []
+    sides = []
+    for k in (kp, ks):
+        own = _variants(net, k)
+        if own:
+            sides.append(own)
+            continue
+        fix = _typo_fix(net, k)
+        if not fix:
+            return None
+        fixed.append(f"{k.core} -> {net.name(fix[0])}")
+        sides.append(fix)
+    if not fixed:
+        return None
+    a, b = sides
+    b = [s for s in b if s not in a]
+    if not a or not b:
+        return None
+    nodes = [n for n in _shared_nodes(net, a, b) if _trail_fits(net, n, a, tp) and _trail_fits(net, n, b, ts)]
+    node = _one_intersection(net, nodes)
+    if node is None:
+        return None
+    if crash.get("lat") is not None and crash.get("lon") is not None:      # police GPS: the corner must fit it
+        reach = (TYPO["gps_check_ft"] + (crash.get("offset_ft") or 0.0)) * FT
+        if metres(net.coord[node], (crash["lat"], crash["lon"])) > reach:
+            return None
+    lat, lon = offset(net, node, a, crash.get("offset_ft"), crash.get("offset_dir"))
+    return Placement("verified_typo", lat, lon, node, note="; ".join(fixed), tiger=_tiger(net, node, a, b),
+                     tiger_road=_tiger(net, node, a, b, road=True))
+
+
 def offset(net: Network, node: int, primary: list[StreetKey], dist_ft: float | None, direction: str | None) -> tuple[float, float]:
     """Move dist_ft from the intersection along the primary road, toward the reported direction."""
     p0 = net.coord[node]
@@ -236,6 +317,10 @@ def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: floa
                              ("relaxed", relaxed, _shared_nodes),
                              ("near", relaxed, _near_nodes),
                              ("fuzzy", fuzzy, _shared_nodes)):
+        if tier == "fuzzy":           # a small typo, corrected only when it isn't a guess (#233), before plain fuzzy
+            vt = _verified_typo(net, crash, kp, ks, tp, ts)
+            if vt:
+                return vt
         a, b = find(kp), find(ks)
         b = [s for s in b if s not in a]   # the two streets of a crash are never the same street
         if not a or not b:
@@ -306,6 +391,7 @@ def place_with_jev(net: Network, crash: dict, picker, city: str, k: int = 5,
 
 
 CONFIG = Path(__file__).parent / "config" / "placement.json"
+TYPO = json.loads(CONFIG.read_text())["verified_typo"]
 
 
 def configured_tiers() -> frozenset:
