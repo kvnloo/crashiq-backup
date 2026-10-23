@@ -57,6 +57,9 @@ def _table(tid, title, columns, rows, crashes):
     on_tiger = sum(1 for c in crashes if c.get("placed_on") == "tiger")
     if on_tiger:                          # visible wherever the sources are listed (#229)
         prov["of these, with a TIGER/Line-only street name or road"] = on_tiger
+    by_alias = sum(1 for c in crashes if c.get("aliases_used"))
+    if by_alias:                          # #235
+        prov["of these, with a street name read through an approved alias"] = by_alias
     return {"id": tid, "title": title, "columns": [{"key": k, "label": lbl} for k, lbl in columns],
             "rows": rows, "provenance": dict(sorted(prov.items()))}
 
@@ -387,6 +390,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         # placed by street names using a name or road only Census TIGER/Line has (#229); already in the rows above
         _row("located_tiger", "Of the crashes placed by street names, placed with a street name or road only "
              "TIGER/Line has", value=sum(1 for c in placed if c.get("placed_on") == "tiger")),
+        # a road name read through a user-approved alias of its city (#235); already in the rows above
+        _row("located_alias", "Of the crashes counted, those whose street name was read through an approved alias",
+             value=sum(1 for c in placed if c.get("aliases_used"))),
         _row("excluded", "Crashes outside the study area", value=excluded_n),
     ]
     if exclude:

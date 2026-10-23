@@ -362,6 +362,17 @@
           ""
         ]
       ]
+    },
+    {
+      "topic": "Local street spellings (approved aliases)",
+      "status": "decision",
+      "what": "Some cities' reports spell a street their own way (MARTIN LUTHER KING JR WY for Martin Luther King Junior Way in Oakland). A table of such spellings, each with its evidence and approved by the user one by one, is applied in its own city only: the report's street name is read as the map street's name in every check and placement, the name as reported is kept, and each crash lists the entries used. Entries not approved are never used. User decisions 2026-10-22.",
+      "cite": [
+        [
+          "osm",
+          ""
+        ]
+      ]
     }
   ]
 }
