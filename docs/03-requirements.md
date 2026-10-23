@@ -418,3 +418,6 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   HWY - SR1", "(N)") are to become general name-cleaner rules so they work in every city; (2) every **local spelling**
   entry checked on hidden police GPS at ≥ 98% (338 entries) is approved as a batch. Entries below 98% on GPS (7) are not
   approved. Local spellings with no GPS check (390) wait for the user's review, top entries first.
+- **Street aliases, the rest APPROVED (user, 2026-10-22, PM session, "approve the rest too"):** the remaining local
+  spellings with no GPS check (390 entries, evidence rule: ≥ 3 crashes, ≥ 80% agreement, no rival street) are approved.
+  The 7 entries that failed the hidden-GPS check (< 98%) remain unapproved. Live table: 905 entries.
