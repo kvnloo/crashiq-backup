@@ -676,12 +676,14 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         recs = []
         ignored_rows: list[dict] = []          # coarse or default-point GPS (#218): read again as no-GPS reports
         for r in with_xy:
-            if gps_rules.coarse(r.get(la_id), r.get(lo_id)):
-                ignored[str(r[cols["collision_id"]["id"]])] = {"lat": cc._num(r.get(la_id)), "lon": cc._num(r.get(lo_id)),
-                                                               "reason": "coarse", "shared_by": 0}
+            c = cc.crash_record(r, cols)
+            on_pile = c["lat"] is not None and gps_rules.point_key(c["lat"], c["lon"]) in gps_rules.listed_piles()
+            if not on_pile and gps_rules.coarse(r.get(la_id), r.get(lo_id), lambda: c["lat"] is not None
+                                                and _pile_fits(c, line, studies, corridor_keys)):
+                ignored[c["crash_id"]] = {"lat": cc._num(r.get(la_id)), "lon": cc._num(r.get(lo_id)),
+                                          "reason": "coarse", "shared_by": 0}
                 ignored_rows.append({**r, la_id: None, lo_id: None})
                 continue
-            c = cc.crash_record(r, cols)
             # The box is a rectangle; on a diagonal corridor most of it is far from the line. Rows beyond the
             # margin can't be in the study at any radius/buffer the margin allows, so they stop here (#54).
             if c["lat"] is not None and c["lon"] is not None and line.project(c["lat"], c["lon"]).offset_ft > margin:
@@ -761,7 +763,9 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                    f"WHERE NOT ({bad_xy}) AND NOT {box} AND {gps_rules.sql_condition(lat, lon)} "
                    f"AND {cc.q(cols[area_col]['id'])} IN ({area_in})")
             for r in _paged(ckan, f"SELECT * FROM ({far}) q WHERE ({names})", cid):
-                why = gps_rules.ignored_reason(r.get(la_id), r.get(lo_id), {})
+                rc = cc.crash_record(r, cols)
+                why = gps_rules.ignored_reason(r.get(la_id), r.get(lo_id), {}, lambda: rc["lat"] is not None
+                                               and _pile_fits(rc, line, studies, corridor_keys))
                 if why:
                     ignored[str(r[cols["collision_id"]["id"]])] = {
                         "lat": cc._num(r.get(la_id)), "lon": cc._num(r.get(lo_id)), "reason": why[0],
@@ -799,8 +803,10 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         keep = []
         for c, src in recs:
             why = gps_rules.ignored_reason(c["lat"], c["lon"], piles) if src == "gps" else None
-            if why and why[0] == "default_point" and not fits(c):
-                c["gps_ignored"] = {"lat": c["lat"], "lon": c["lon"], "reason": "default_point",
+            if why and why[0] == "default_point" and gps_rules.coarse(c["lat"], c["lon"]) and fits(c):
+                why = ("coarse", 0)                     # on a listed point it fits, but both coordinates coarse
+            if why and (not fits(c) or why[0] == "coarse"):
+                c["gps_ignored"] = {"lat": c["lat"], "lon": c["lon"], "reason": why[0],
                                     "shared_by": max(why[1], piles.get(gps_rules.point_key(c["lat"], c["lon"]), 0))}
                 c.update(lat=None, lon=None)
                 no_gps(c, last_allowed[0], keep)

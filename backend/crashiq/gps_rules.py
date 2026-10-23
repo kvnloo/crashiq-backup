@@ -8,7 +8,7 @@
    - A pile: one exact point (5 decimals) shared by >= 10 crashes naming >= 5 street pairs, < 50% of which fit it
      (the Tester's statewide rule, pooled across agencies, #219). Known piles statewide are listed in
      data/reference/gps_piles.json; piles inside a corridor's search box are also found from the pull itself.
-   - Coarse: 2 decimals or fewer in latitude or longitude (~1 km).
+   - Coarse: 2 decimals or fewer (~1 km) in both coordinates, or in one when the point fails the street check.
 Thresholds: config/gps.json."""
 
 from __future__ import annotations
@@ -32,12 +32,19 @@ def decimals(v) -> int:
     return len(t.split(".", 1)[1].rstrip("0")) if "." in t else 0
 
 
-def coarse(lat, lon) -> bool:
-    """A coordinate written with too few decimals to be a location (2 or fewer, ~1 km)."""
+def coarse_level(lat, lon) -> int:
+    """How many of the two coordinates are written with too few decimals to be a location (2 or fewer, ~1 km)."""
     if lat in (None, "") or lon in (None, ""):
-        return False
+        return 0
     n = CONFIG["coarse_max_decimals"]
-    return decimals(lat) <= n or decimals(lon) <= n
+    return (decimals(lat) <= n) + (decimals(lon) <= n)
+
+
+def coarse(lat, lon, fits=lambda: True) -> bool:
+    """No location: both coordinates coarse, or one of them and the point fails the street check. Good GPS that
+    happens to end in zeros (34.100000 reads 34.1) fits its streets and is kept (PM review of #225)."""
+    level = coarse_level(lat, lon)
+    return level == 2 or (level == 1 and not fits())
 
 
 def point_key(lat, lon) -> tuple[float, float]:
@@ -85,16 +92,19 @@ def sql_condition(lat_expr: str, lon_expr: str) -> str:
     return f"({pile} OR {crs})"
 
 
-def ignored_reason(lat, lon, piles: dict) -> tuple[str, int] | None:
-    """('coarse', 0) | ('default_point', crashes on it) | None for one raw coordinate."""
-    if coarse(lat, lon):
-        return "coarse", 0
+def ignored_reason(lat, lon, piles: dict, fits=lambda: True) -> tuple[str, int] | None:
+    """('default_point', crashes on it) | ('coarse', 0) | None for one raw coordinate. One reason per crash, a default
+    point first: whole-degree points (34, -118) are both (PM review of #225)."""
     try:
         pt = point_key(lat, lon)
     except (TypeError, ValueError):
-        return None
-    n = piles.get(pt) or listed_piles().get(pt)
-    return ("default_point", n) if n else None
+        pt = None
+    n = pt is not None and (piles.get(pt) or listed_piles().get(pt))
+    if n:
+        return "default_point", n
+    if coarse(lat, lon, fits):
+        return "coarse", 0
+    return None
 
 
 # -- 1. snapped GPS + the report's offset -------------------------------------------------------------------------

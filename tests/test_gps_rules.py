@@ -104,7 +104,9 @@ def test_coarse_coordinates_are_no_gps(client, monkeypatch):
 def test_default_thresholds_are_the_testers():
     assert gps_rules.CONFIG["pile"] == {"decimals": 5, "min_crashes": 10, "min_street_pairs": 5, "max_fit_share": 0.5}
     assert gps_rules.CONFIG["coarse_max_decimals"] == 2
-    assert gps_rules.coarse("34.1", "-118.334") and gps_rules.coarse("34.123", "-118.33")
+    assert gps_rules.coarse("34.1", "-118.33")                                       # both coordinates
+    assert not gps_rules.coarse("34.1", "-118.334")                                  # one, and it fits its streets
+    assert gps_rules.coarse("34.1", "-118.334", fits=lambda: False)                  # one, and it doesn't
     assert not gps_rules.coarse("34.123", "-118.334")
     assert gps_rules.decimals("34.120000") == 2          # trailing zeros don't count (the Tester's #219 definition)
     assert crashes.GPS_SOURCES == ("gps", "gps_dms_corrected", "gps_offset_applied")
@@ -134,3 +136,22 @@ def test_a_busy_intersection_past_the_stretch_is_not_a_pile(client):
     log, got, _ = _study(client, rows)
     assert got["88700000"]["location_source"] == "gps" and got["88700100"]["location_source"] == "gps"
     assert log["gps_default_ignored"] == 0
+
+
+def test_precise_gps_that_ends_in_zeros_is_kept_when_it_fits(client, monkeypatch):
+    # PM review of #225: 33.901600 / -118.326620 read 33.9016 / -118.32662; with a 4-decimal setting the latitude
+    # looks coarse, but the point sits at the corner the report names, so it is kept. Both coarse: not kept.
+    monkeypatch.setitem(gps_rules.CONFIG, "coarse_max_decimals", 4)
+    log, got, _ = _study(client, [(88800001, "33.901600", "-118.326620", "CRENSHAW BLVD", "ROSECRANS AV"),
+                                  (88800002, "33.901600", "-118.326620", "CRENSHAW BLVD", "144TH ST")])
+    assert got["88800001"]["location_source"] == "gps" and "gps_ignored" not in got["88800001"]
+    assert got["88800002"]["gps_ignored"]["reason"] == "coarse"    # one coarse coordinate, ~900 ft from 144th St
+
+
+def test_a_whole_degree_point_is_counted_once_as_a_default_point(client):
+    # 34, -118 is both coarse and a listed default point (193 such crashes statewide): one reason, the pile first
+    log, got, _ = _study(client, [(88900001, "34", "-118", "CRENSHAW BLVD", "ROSECRANS AV")])
+    c = got["88900001"]
+    assert c["gps_ignored"]["reason"] == "default_point" and c["gps_ignored"].get("found_by_name")
+    assert c["location_source"] in ("exact", "unique_pair")
+    assert log["gps_default_ignored"] == 1 and log["gps_coarse_ignored"] == 1    # the fixture's own 33.95, -118.4 only

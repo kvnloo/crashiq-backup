@@ -15,5 +15,7 @@ The pull also finds piles inside a corridor's own search box from the reports it
 points elsewhere: reports naming the corridor whose GPS sits on a listed point anywhere in the area are found by
 name. Refresh once a year with the CCRS year, or when the Tester's scan changes.
 
-**Coarse coordinates:** 2 decimals or fewer in latitude or longitude (~1 km; trailing zeros don't count) are no
-location either: 2,136 crash rows in 2021–25.
+**Coarse coordinates:** 2 decimals or fewer (~1 km; trailing zeros don't count) in both latitude and longitude are
+no location either; in one of them, only when the point also fails the street check, because good GPS can end in
+zeros (34.100000 reads 34.1; PM review of #225). The Tester counts 2,136 rows with 2 or fewer decimals in either
+coordinate in 2021–25.

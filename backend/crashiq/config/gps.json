@@ -1,5 +1,5 @@
 {
-  "_doc": "GPS rules (#218, user decision 2026-10-22, docs/03). Thresholds from the Tester's statewide scan (#219, posted on #218): a pile (default / dispatch) point is an exact point (5 decimals) shared by >= min_crashes crashes naming >= min_street_pairs street pairs, of which < max_fit_share fit the point; pooled across agencies. Coordinates with <= coarse_max_decimals decimals in latitude or longitude are no location. Snapped GPS: within snap_ft of the intersection the report names, while the report states more than offset_min_ft and a direction.",
+  "_doc": "GPS rules (#218, user decision 2026-10-22, docs/03). Thresholds from the Tester's statewide scan (#219, posted on #218): a pile (default / dispatch) point is an exact point (5 decimals) shared by >= min_crashes crashes naming >= min_street_pairs street pairs, of which < max_fit_share fit the point; pooled across agencies. Coordinates with <= coarse_max_decimals decimals in both latitude and longitude, or in one when the point fails the street check, are no location. Snapped GPS: within snap_ft of the intersection the report names, while the report states more than offset_min_ft and a direction.",
   "pile": {"decimals": 5, "min_crashes": 10, "min_street_pairs": 5, "max_fit_share": 0.5},
   "coarse_max_decimals": 2,
   "snap_ft": 50,
