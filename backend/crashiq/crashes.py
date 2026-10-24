@@ -1168,4 +1168,23 @@ def get_crashes(sid: str, request: Request, full: bool = False) -> dict:
     if not cached:
         raise HTTPException(404, "No crashes pulled yet for this study.")
     rows = cached["crashes"] if full else [{k: v for k, v in c.items() if k != "parties"} for c in cached["crashes"]]
+    pm = postmile_for(request.app.state)
+    if pm is not None:                    # the derived Caltrans postmile of a crash on a state route (#248)
+        rows = [{**c, "postmile": p} if (p := pm.for_crash(c)) else c for c in rows]
     return {**summary(cached, True), "crashes": rows}
+
+
+_PM_CACHES: dict[str, object] = {}
+
+
+def postmile_for(st):
+    """The Caltrans postmile layer (#248). Live data.ca.gov only, unless a test or harness sets `app.state.postmiles`:
+    a fake or recorded CKAN never starts the download."""
+    from .postmile import PostmileCache
+    if getattr(st, "postmiles", None) is not None:
+        return st.postmiles
+    if getattr(st, "ckan", None) is not None:
+        return None
+    folder = str(st.settings.postmile_dir)
+    with _LOCKS_GUARD:
+        return _PM_CACHES.setdefault(folder, PostmileCache(folder))

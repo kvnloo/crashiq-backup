@@ -76,6 +76,11 @@
       "title": "TIGER/Line Shapefiles: Roads (EDGES, FEATNAMES), California counties",
       "publisher": "U.S. Census Bureau (public domain)",
       "url": "https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+    },
+    "caltrans_pm": {
+      "title": "SHN Postmiles Tenth (state highway postmiles every 0.1 mile)",
+      "publisher": "Caltrans (public)",
+      "url": "https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/SHN_Postmiles_Tenth/FeatureServer/0"
     }
   },
   "methods": [
@@ -381,6 +386,17 @@
       "cite": [
         [
           "osm",
+          ""
+        ]
+      ]
+    },
+    {
+      "topic": "Caltrans postmile (derived)",
+      "status": "decision",
+      "what": "Each counted crash on a state route gets its Caltrans postmile (county-route-PM, e.g. LA-405 PM 12.345), interpolated between the two 0.1-mile postmile points that bracket where CrashIQ placed it, on the side of the stated travel direction when the report gives one. It is derived from the placement, not from CHP, and doesn't change it. User decision 2026-10-23 (#248).",
+      "cite": [
+        [
+          "caltrans_pm",
           ""
         ]
       ]
