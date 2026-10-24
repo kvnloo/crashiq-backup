@@ -32,7 +32,25 @@ CREDITS = ("Crash data: CCRS, California Highway Patrol (data.ca.gov, public dom
 NO_AI = ("This report has no AI narrative. Findings are written by code from the over-representation screen (table T12, HSM excess-proportion test) and appear only after you accept them.")
 
 
-def gather(db, sid: str) -> dict:
+def _postmiles(pull: dict, a: dict, pm) -> list[dict]:
+    """Counted crashes on a state route with their derived Caltrans postmile (#248)."""
+    if pm is None:
+        return []
+    by_id = {c["crash_id"]: c for c in pull["crashes"]}
+    out = []
+    for x in a["assignments"]:
+        if x["kind"] not in ("intersection", "segment"):
+            continue
+        c = by_id[x["crash_id"]]
+        p = pm.for_crash(c)
+        if p:
+            out.append({"crash_id": c["crash_id"], "roads": f"{c.get('primary_road') or ''} / {c.get('secondary_road') or ''}",
+                        "date": c.get("date"), "postmile": p["label"], "align": p["align"], "direction": p["direction"],
+                        "distance_ft": round(p["distance_m"] * 3.28084), "assigned_to": x["location_id"]})
+    return out
+
+
+def gather(db, sid: str, postmiles=None) -> dict:
     study, net, pull, a = for_study(db, sid)
     from .findings import check_stored        # local import: findings imports profile, which export also uses
     accepted = [f for f in check_stored(db, sid) if f["status"] == "accepted"]
@@ -43,6 +61,7 @@ def gather(db, sid: str) -> dict:
                            "unmatched_by_rule": a.get("unmatched_by_rule", {})},
             "pulled_at": pull.get("pulled_at"),
             "decisions": _decisions(db, sid, pull, a), "diagrams": _diagrams(net, pull, a), "fars": _fars_placed(pull, a),
+            "postmiles": _postmiles(pull, a, postmiles),
             "generated": datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M UTC")}
 
 
@@ -223,6 +242,20 @@ def to_xlsx(d: dict) -> bytes:
             sh.append([r["crash_id"], r["roads"], r["date"], r["fars_case"], r["lat"], r["lon"],
                        ", ".join(str(v) for v in r["replaced_gps"]) if r["replaced_gps"] else "", r["assigned_to"] or ""])
         sh.column_dimensions["B"].width = 44
+    if d.get("postmiles"):
+        sh = wb.create_sheet("State-highway postmiles")
+        sh.append(["Caltrans postmile of each counted crash on a state route, derived from where CrashIQ placed it "
+                   "(public SHN Postmiles Tenth layer, interpolated between its 0.1-mile points; not from CHP)."])
+        sh["A1"].font = Font(bold=True, size=12)
+        sh.append(["Collision Id", "Roads (as reported)", "Date", "Postmile (derived)", "Side", "Direction",
+                   "Distance to the route (ft)", "Assigned to"])
+        for cell in sh[2]:
+            cell.font = Font(bold=True)
+        for r in d["postmiles"]:
+            sh.append([r["crash_id"], r["roads"], r["date"], r["postmile"], r["align"], r["direction"],
+                       r["distance_ft"], r["assigned_to"] or ""])
+        sh.column_dimensions["B"].width = 44
+        sh.column_dimensions["D"].width = 22
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()
@@ -465,7 +498,8 @@ router = APIRouter()
 
 @router.get("/studies/{sid}/export.xlsx")
 def export_xlsx(sid: str, request: Request):
-    d = gather(request.app.state.db, sid)
+    from .crashes import postmile_for
+    d = gather(request.app.state.db, sid, postmile_for(request.app.state))
     return Response(to_xlsx(d), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": f'attachment; filename="{_fname(d["study"], "xlsx")}"'})
 

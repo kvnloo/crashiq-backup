@@ -658,7 +658,10 @@ def get_location_profile(sid: str, lid: str, request: Request) -> dict:
         diagram = diagram_mod.build(net, it, placed)
         tables.append(diagram_table(lid, diagram, placed))
     annotate(tables, missing_notes(missing_detail(pull, placed)))
+    from .crashes import postmile_for
+    pm = postmile_for(request.app.state)
     return {"location_id": lid, "tables": tables, "diagram": diagram,
-            "crashes": [{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
-                                               "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",
-                                               "location_provenance")} for c in placed]}
+            "crashes": [{**{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
+                                                  "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",
+                                                  "location_provenance")},
+                         **({"postmile": p} if pm is not None and (p := pm.for_crash(c)) else {})} for c in placed]}

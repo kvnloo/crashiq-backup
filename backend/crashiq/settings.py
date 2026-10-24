@@ -35,6 +35,9 @@ class Settings:
                                                                         ROOT / "data" / "cache" / "ccrs_files")))
     # Census TIGER/Line roads per county (#229): a few MB each (Los Angeles ~60 MB), never committed
     tiger_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_TIGER_DIR", ROOT / "data" / "cache" / "tiger")))
+    # Caltrans SHN Postmiles Tenth (#248): ~30 MB, never committed
+    postmile_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_POSTMILE_DIR",
+                                                                        ROOT / "data" / "cache" / "postmiles")))
     # Frontend build served by the same process in production (single service, DemandIQ pattern).
     dist_dir: Path = field(default_factory=lambda: ROOT / "frontend" / "dist")
 
