@@ -109,6 +109,15 @@ class Outside:
             names, segs = self._way(wid)
             if names and fatal_mod.road_match(roads, names) and any(cw._seg_ft((lat, lon), a, b) <= tol for a, b in segs):
                 return True
+        if TIGER is not None:                       # run 9B: TIGER/Line names count too, as in the app's union
+            from crashiq.sources import tiger_files
+            for fips in tiger_files.counties_for([(lat, lon)]):
+                if not TIGER.path(fips).exists():
+                    continue
+                for e in TIGER.edges_in(fips, (lat - dlat, lon - dlon, lat + dlat, lon + dlon)):
+                    if fatal_mod.road_match(roads, e["names"]) and any(
+                            cw._seg_ft((lat, lon), tuple(a), tuple(b)) <= tol for a, b in zip(e["pts"], e["pts"][1:])):
+                        return True
         return False
 
     def _names(self, county: int) -> dict[str, list[int]]:
@@ -142,8 +151,11 @@ class Outside:
         ids = set()
         for k in keys:
             ids |= set(names.get(k.core.replace(" ", ""), ()))
-        if not ids:
+        if not ids and TIGER is None:
             return None
+        if not ids:
+            raw = tiger_named({"elements": []}, county, keys)
+            return osm.Network(raw) if raw["elements"] else None
         ways, nodes = [], {}
         for wid, tags, nids, coords in self.local.db.execute(
                 f"SELECT id, tags, nodes, coords FROM ways WHERE id IN ({','.join('?' * len(ids))})", list(ids)):
@@ -151,7 +163,10 @@ class Outside:
             ways.append({"type": "way", "id": wid, "nodes": nl, "tags": json.loads(tags)})
             for n, (la, lo) in zip(nl, cl):
                 nodes[n] = {"type": "node", "id": n, "lat": la, "lon": lo}
-        return osm.Network({"elements": ways + list(nodes.values())})
+        raw = {"elements": ways + list(nodes.values())}
+        if TIGER is not None:
+            raw = tiger_named(raw, county, keys)
+        return osm.Network(raw)
 
 
 NETWORK, GATE_TIERS = "clipped", []          # set from the command line
@@ -165,6 +180,45 @@ def usable(road) -> bool:
     """A road name the locator can use: not blank and not a placeholder (the app's street_key keeps 'NOT STATED')."""
     core = fatal_mod.checks.indep_core(road)
     return bool(street_key(road)) and core not in fatal_mod.UNUSABLE and len(core) > 2
+
+
+_TIGER_IDX: dict[str, dict[str, list[int]]] = {}
+
+
+def tiger_named(raw: dict, county: int, keys) -> dict:
+    """Outside city maps (run 9B): the OSM roads the report names + the TIGER/Line segments of the crash's county that
+    carry those names, joined by the app's union (#229). CCRS county code n is Census FIPS 2n - 1."""
+    import sqlite3 as _sq
+
+    from crashiq import union
+    from crashiq.names import drop_directional
+    fips = f"{2 * county - 1:03d}"
+    if not county or not TIGER.ready(fips):
+        return raw
+    if fips not in _TIGER_IDX:
+        if len(_TIGER_IDX) >= 3:
+            _TIGER_IDX.clear()
+        idx = defaultdict(list)
+        with _sq.connect(f"file:{TIGER.path(fips)}?mode=ro", uri=True) as con:
+            for tlid, nm in con.execute("SELECT tlid, names FROM edge"):
+                for v in json.loads(nm):
+                    k = street_key(v)
+                    if k:
+                        idx[drop_directional(k).core.replace(" ", "")].append(tlid)
+        _TIGER_IDX[fips] = idx
+    tl = sorted({t for k in keys for t in _TIGER_IDX[fips].get(drop_directional(k).core.replace(" ", ""), ())})
+    if not tl:
+        return raw
+    edges = []
+    with _sq.connect(f"file:{TIGER.path(fips)}?mode=ro", uri=True) as con:
+        for i in range(0, len(tl), 900):
+            ch = tl[i:i + 900]
+            for r in con.execute(f"SELECT tlid, mtfcc, names, pts, tnidf, tnidt FROM edge WHERE tlid IN "
+                                 f"({','.join('?' * len(ch))})", ch):
+                edges.append({"tlid": r[0], "mtfcc": r[1], "names": json.loads(r[2]), "pts": json.loads(r[3]),
+                              "tnidf": r[4], "tnidt": r[5], "county": fips})
+    out, _ = union.union(raw, edges, None, 0)
+    return out
 
 
 def with_tiger(raw: dict) -> dict:
