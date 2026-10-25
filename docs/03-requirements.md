@@ -451,3 +451,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   connector placements ("X TO Y") measured 81.5% within 0.5 mi (Wilson low 70.4%, n=65; 12% within 400 ft; run 10),
   below the 88–92% the 2026-10-24 decision was based on. They are no longer auto-placed as approximate. They go to
   review with the suggestion. Mainline and ramp crashes stay approximate. The user will review connector examples.
+- **Keep the officer's GPS when it fits DECIDED (user, 2026-10-25, PM session):** "when it is in the right place and it's
+  making sense, you should be going with that." When police GPS fits the report's named roads, it is used as is and
+  is **not** moved to the spot the report's distance describes. This **replaces** rule 4 of the 2026-10-23 freeway
+  decision ("the report beats the officer's GPS"); `freeway_move_gps` stays off. Evidence: the CHP postmile
+  tie-breaker sided with the GPS and with the report about equally (568 vs 514). In the user's review of three
+  freeway-to-freeway connector crashes (4630945, 1392922, 1818216), the officer GPS was right every time, and the stated
+  distance and direction were loose clues (on a curving ramp, "W" is the travel direction). Unchanged: GPS that doesn't
+  fit the named roads is still not used (400 ft rule), and the #218 snapped-to-intersection offset rule still applies.
