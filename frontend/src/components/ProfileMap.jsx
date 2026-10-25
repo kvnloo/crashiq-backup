@@ -108,7 +108,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
       const p = e.features?.[0]?.properties
       if (!p) return
       map.getCanvas().style.cursor = 'pointer'
-      popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.type)}</b><br>${esc(p.date)}${p.hour ? ` · ${esc(p.hour)}` : ''} · ${esc(p.sev)}${p.road ? `<br>${esc(p.road)} involved` : ''}${p.approx ? '<br>Approximate location (within about 0.5 mi)' : ''}`).addTo(map)
+      popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.type)}</b><br>${esc(p.date)}${p.hour ? ` · ${esc(p.hour)}` : ''} · ${esc(p.sev)}${p.road ? `<br>${esc(p.road)} involved` : ''}${p.approx ? '<br>Approximate location (usually within 0.5 mi)' : ''}`).addTo(map)
     })
     map.on('mousemove', 'columns', (e) => {
       const p = e.features?.[0]?.properties

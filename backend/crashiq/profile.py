@@ -388,7 +388,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
              "confirmed by the cross street)",
              value=sum(1 for c in placed if c.get("location_provenance") == "verified_typo")),
         # freeway crashes placed by the report (#246, D1): crossing + offset, ramp terminal, connector; gated
-        _row("located_freeway", "Freeway crashes with no usable GPS, placed approximately (within about 0.5 mi) by the "
+        _row("located_freeway", "Freeway crashes with no usable GPS, placed approximately (usually within 0.5 mi) by the "
              "report: where the reference street crosses, the ramp terminal, or along the connector, plus the stated "
              "distance. Counted on segments only",
              value=sum(1 for c in placed if c.get("location_provenance") in ("approximate", "freeway_offset"))),
@@ -525,7 +525,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if approx:                             # #255: say what the precise-point analyses leave out
         caveats.append({"key": "approximate_freeway", "count": approx,
                         "text": f"{approx} freeway crash{'es have' if approx != 1 else ' has'} no usable GPS and "
-                                f"{'are' if approx != 1 else 'is'} placed approximately (within about 0.5 mi) from the "
+                                f"{'are' if approx != 1 else 'is'} placed approximately (usually within 0.5 mi) from the "
                                 "report's description. They count on the corridor segments, never at an intersection, so "
                                 "intersection tables and collision diagrams leave them out."})
     u = sum(c["severity"] == "U" for c in placed)
