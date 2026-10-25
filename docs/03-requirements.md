@@ -463,10 +463,10 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   review of Crash profile and Findings on the Crenshaw study (main @ 4623ed7). Ranked, cheapest and highest value first:
   (1) show the safety tables already computed (PCF, hit-and-run/DUI/speed, left-turn vs right-angle, movement,
   conditions) #265; (2) display fixes #266; (3) findings ordered by fatal, KSI and strength, with street names and
-  one-line cards #267; (4) small-number rule; (5) the N10 collision diagram of the finding's crashes replaces the
+  one-line cards #267; (4) small-number rule #271; (5) the N10 collision diagram of the finding's crashes replaces the
   autoplay replay, which plays only on tap #268; (6) tab 3 summary first, details folded, hour and day bars instead of the
-  heatmap #269; (7) the 3D map fixed; (8) a Findings corridor summary with a map #270; (9) ranking by crash cost;
-  (10) KSI and fatal findings. Later: (11) statewide-average comparison on state highways (D3, needs AADT);
+  heatmap #269; (7) the 3D map fixed #272; (8) a Findings corridor summary with a map #270; (9) ranking by crash cost #273;
+  (10) KSI and fatal findings #274. Later: (11) statewide-average comparison on state highways (D3, needs AADT);
   (12) LRSM countermeasure hints and before/after (v3).
 - **Small numbers DECIDED (user, 2026-10-25):** a group with fewer than 10 crashes shows its count only ("1 of 6"), with
   a "too few to compare" note, never a percentage bar.
