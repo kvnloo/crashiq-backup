@@ -44,7 +44,8 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DATA = ROOT / "data" / "statewide"
 YEARS = cw.YEARS
-BIN1 = ("gps_usable", "gps_usable_dms", "placed_exact", "placed_unique_pair", "placed_fars")
+BIN1 = ("gps_usable", "gps_usable_dms", "placed_exact", "placed_unique_pair", "placed_fars", "placed_verified_typo",
+        "placed_relaxed", "placed_near", "placed_fuzzy")
 GROUPS = ("statewide", "district", "county", "city", "agency", "road_type", "district_road_type")
 
 
@@ -108,6 +109,15 @@ class Outside:
             names, segs = self._way(wid)
             if names and fatal_mod.road_match(roads, names) and any(cw._seg_ft((lat, lon), a, b) <= tol for a, b in segs):
                 return True
+        if TIGER is not None:                       # run 9B: TIGER/Line names count too, as in the app's union
+            from crashiq.sources import tiger_files
+            for fips in tiger_files.counties_for([(lat, lon)]):
+                if not TIGER.path(fips).exists():
+                    continue
+                for e in TIGER.edges_in(fips, (lat - dlat, lon - dlon, lat + dlat, lon + dlon)):
+                    if fatal_mod.road_match(roads, e["names"]) and any(
+                            cw._seg_ft((lat, lon), tuple(a), tuple(b)) <= tol for a, b in zip(e["pts"], e["pts"][1:])):
+                        return True
         return False
 
     def _names(self, county: int) -> dict[str, list[int]]:
@@ -141,8 +151,11 @@ class Outside:
         ids = set()
         for k in keys:
             ids |= set(names.get(k.core.replace(" ", ""), ()))
-        if not ids:
+        if not ids and TIGER is None:
             return None
+        if not ids:
+            raw = tiger_named({"elements": []}, county, keys)
+            return osm.Network(raw) if raw["elements"] else None
         ways, nodes = [], {}
         for wid, tags, nids, coords in self.local.db.execute(
                 f"SELECT id, tags, nodes, coords FROM ways WHERE id IN ({','.join('?' * len(ids))})", list(ids)):
@@ -150,10 +163,14 @@ class Outside:
             ways.append({"type": "way", "id": wid, "nodes": nl, "tags": json.loads(tags)})
             for n, (la, lo) in zip(nl, cl):
                 nodes[n] = {"type": "node", "id": n, "lat": la, "lon": lo}
-        return osm.Network({"elements": ways + list(nodes.values())})
+        raw = {"elements": ways + list(nodes.values())}
+        if TIGER is not None:
+            raw = tiger_named(raw, county, keys)
+        return osm.Network(raw)
 
 
 NETWORK, GATE_TIERS = "clipped", []          # set from the command line
+ALIASES, RULE2, TIGER = False, False, None
 AUTO_TIERS = ("exact", "unique_pair")          # the tiers the app auto-places (config/placement.json since #222)
 
 NO_CROSS = "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)"
@@ -165,10 +182,79 @@ def usable(road) -> bool:
     return bool(street_key(road)) and core not in fatal_mod.UNUSABLE and len(core) > 2
 
 
+_TIGER_IDX: dict[str, dict[str, list[int]]] = {}
+
+
+def tiger_named(raw: dict, county: int, keys) -> dict:
+    """Outside city maps (run 9B): the OSM roads the report names + the TIGER/Line segments of the crash's county that
+    carry those names, joined by the app's union (#229). CCRS county code n is Census FIPS 2n - 1."""
+    import sqlite3 as _sq
+
+    from crashiq import union
+    from crashiq.names import drop_directional
+    fips = f"{2 * county - 1:03d}"
+    if not county or not TIGER.ready(fips):
+        return raw
+    if fips not in _TIGER_IDX:
+        if len(_TIGER_IDX) >= 3:
+            _TIGER_IDX.clear()
+        idx = defaultdict(list)
+        with _sq.connect(f"file:{TIGER.path(fips)}?mode=ro", uri=True) as con:
+            for tlid, nm in con.execute("SELECT tlid, names FROM edge"):
+                for v in json.loads(nm):
+                    k = street_key(v)
+                    if k:
+                        idx[drop_directional(k).core.replace(" ", "")].append(tlid)
+        _TIGER_IDX[fips] = idx
+    tl = sorted({t for k in keys for t in _TIGER_IDX[fips].get(drop_directional(k).core.replace(" ", ""), ())})
+    if not tl:
+        return raw
+    edges = []
+    with _sq.connect(f"file:{TIGER.path(fips)}?mode=ro", uri=True) as con:
+        for i in range(0, len(tl), 900):
+            ch = tl[i:i + 900]
+            for r in con.execute(f"SELECT tlid, mtfcc, names, pts, tnidf, tnidt FROM edge WHERE tlid IN "
+                                 f"({','.join('?' * len(ch))})", ch):
+                edges.append({"tlid": r[0], "mtfcc": r[1], "names": json.loads(r[2]), "pts": json.loads(r[3]),
+                              "tnidf": r[4], "tnidt": r[5], "county": fips})
+    out, _ = union.union(raw, edges, None, 0)
+    return out
+
+
+def with_tiger(raw: dict) -> dict:
+    """The city's OSM ways + the TIGER/Line roads in the same box, joined by the app's own union (#229, run 9)."""
+    from crashiq import union
+    from crashiq.sources import tiger_files
+    pts = [(e["lat"], e["lon"]) for e in raw["elements"] if e["type"] == "node"]
+    if not pts:
+        return raw
+    box = (min(p[0] for p in pts), min(p[1] for p in pts), max(p[0] for p in pts), max(p[1] for p in pts))
+    corners = [(box[0], box[1]), (box[0], box[3]), (box[2], box[1]), (box[2], box[3]),
+               ((box[0] + box[2]) / 2, (box[1] + box[3]) / 2)]
+    # as validate_geocode's union and the app's corridor network: TIGER only where the OSM network is (cells of
+    # ~150 m holding an OSM node), never a far street of the same name the box happens to reach (SF's box crosses
+    # the bay to Oakland's Harrison St & 13th St)
+    cell = lambda la, lo: (round(la / 0.0015), round(lo / 0.0015))      # noqa: E731
+    inside = {cell(*p) for p in pts}
+    edges = []
+    for fips in tiger_files.counties_for(corners):
+        if TIGER.ready(fips):
+            edges += [e for e in TIGER.edges_in(fips, box) if cell(*e["pts"][len(e["pts"]) // 2]) in inside]
+    if not edges:
+        return raw
+    out, _ = union.union(raw, edges, None, 0)
+    return out
+
+
 def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db, gate) -> tuple[str, str | None]:
     fits = city.fits if city else outside.fits
     gps_note = None
-    if c.get("lat") is not None and c.get("lon") is not None:
+    ignored = None
+    if c.get("lat") is not None and c.get("lon") is not None and RULE2:
+        from crashiq import gps_rules           # #218 rule 2: default points and coarse GPS are no location
+        ignored = gps_rules.ignored_reason(c["lat"], c["lon"], {}, fits=lambda: fits(c["lat"], c["lon"], c))
+    c["_gps_ignored"] = ignored[0] if ignored else ""
+    if c.get("lat") is not None and c.get("lon") is not None and not ignored:
         if fits(c["lat"], c["lon"], c):
             return "gps_usable", None
         if c["year"] in dms:
@@ -179,8 +265,10 @@ def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db
     net = city.net if city else outside.network(c)
     pl = locate.place(net, c) if net is not None else locate.Placement("review", note="no street map")
     c["_tier"], c["_note"] = pl.tier, pl.note or ""          # recorded per crash (run 8: effects derived from tiers)
+    c["_tiger"] = "road" if getattr(pl, "tiger_road", False) else ("name" if getattr(pl, "tiger", False) else "")
     if gate.auto(pl):
-        return ("placed_unique_pair" if pl.tier == "unique_pair" else "placed_exact"), None
+        return ("placed_unique_pair" if pl.tier == "unique_pair" else
+                "placed_exact" if pl.tier == "exact" else f"placed_{pl.tier}"), None
     if (c.get("killed") or 0) > 0 and fars_db is not None:
         status, row = fars.link(fars_db, c)
         p = fars.point(fars_db, row) if status == "linked" else None
@@ -271,7 +359,7 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
     out_csv = open(DATA / (f"coverage_crashes_{part}.csv" if part else "coverage_crashes.csv"), "w", newline="")
     w = csv.writer(out_csv)
     w.writerow(["collision_id", "year", "county_code", "district", "city", "agency", "road_type", "killed", "ksi", "bin",
-                "outcome", "reason", "tier", "note"])
+                "outcome", "reason", "tier", "note", "tiger", "gps_ignored", "outcome_without_alias"])
     for i, (nm, n) in enumerate(names.most_common(), 1):
         if only_city is not None:
             if nm != only_city:
@@ -283,6 +371,8 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
         if b:
             raw = (osm_local.network_in_box(local, b["rel"]) if NETWORK == "box1km" else
                    osm_local.network_in_area(local, b["rel"]))
+            if TIGER is not None:
+                raw = with_tiger(raw)
             city = City(osm.Network(raw))
         else:
             city = None
@@ -295,6 +385,14 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
             ag = str(c.get("agency") or "")
             if ag not in dms_cache:
                 dms_cache[ag] = cw.dms_years(con, ag)
+            no_alias = ""
+            if ALIASES:
+                from crashiq import aliases as aliases_mod
+                ca = aliases_mod.apply(dict(c))
+                if ca.get("aliases_used"):
+                    o0, _ = outcome(dict(c), city, outside, dms_cache[ag], fars_db, gate)
+                    no_alias = o0                  # the same crash read without the approved aliases
+                    c = ca
             out, why = outcome(c, city, outside, dms_cache[ag], fars_db, gate)
             rt = road_type(c, city is not None)
             killed = (c.get("killed") or 0) > 0
@@ -305,7 +403,8 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
                     ("agency", ag), ("road_type", rt), ("district_road_type", f"District {d} · {rt}")]
             agg.add(keys, out, why, killed, is_ksi)
             w.writerow([c["crash_id"], c["year"], county, d, nm, ag, rt, int(killed), int(is_ksi),
-                        1 if out in BIN1 else 2, out, why or "", c.get("_tier", ""), c.get("_note", "")])
+                        1 if out in BIN1 else 2, out, why or "", c.get("_tier", ""), c.get("_note", ""),
+                        c.get("_tiger", ""), c.get("_gps_ignored", ""), no_alias])
         print(f"[{i}/{len(names)} {time.time() - t0:.0f}s] {nm or '(blank)'}: {n} crashes "
               f"({'city map' if city else 'outside cities'})", flush=True)
         if i % 25 == 0 and not part:
@@ -463,9 +562,17 @@ if __name__ == "__main__":
     ap.add_argument("--network", choices=["clipped", "box1km"], default="clipped",
                     help="city street map: clipped to the city outline (#199) or its box + 1 km (run 8)")
     ap.add_argument("--gate-tiers", default="", help="comma-separated auto tiers (default: the app's config)")
+    ap.add_argument("--aliases", action="store_true", help="read road fields through the approved aliases (#235), "
+                    "recording each changed crash's outcome without them too")
+    ap.add_argument("--rule2", action="store_true", help="#218 rule 2: default points and coarse GPS are no location")
+    ap.add_argument("--tiger", action="store_true", help="OSM + TIGER/Line network per city (#229)")
     a = ap.parse_args()
     NETWORK = a.network
     GATE_TIERS = [x for x in a.gate_tiers.split(",") if x]
+    ALIASES, RULE2 = a.aliases, a.rule2
+    if a.tiger:
+        from crashiq.sources import tiger_files
+        TIGER = tiger_files.TigerCache(ROOT / "data" / "cache" / "tiger", background=False)
     if a.merge:
         merge([Path(x) for x in a.merge])
     else:
