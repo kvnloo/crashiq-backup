@@ -1,5 +1,15 @@
 # Lessons (newest first)
 
+- 2026-10-25 · CHP's manual (HPM 110.5 ch. 3, Apr 2021) makes GPS the main crash location and the postmile a fallback
+  "if GPS coordinates cannot be collected"; not required on ramps or connectors. An empty `Milepost*` is expected, not a
+  quality signal. Source: `sources/ca-police-gps-capture.md`.
+- 2026-10-25 · CHP GPS may be a scene fix or a point picked later on a map (MDC, Streets and Trips, Google Earth "upon
+  return to their local Area office"). A GPS sitting exactly on the reference crossing is likely a map click: trust the
+  report's measured offset there.
+- 2026-10-25 · CHP replaced its report software (CARS → Crash Manager) in 2020–21. Our biggest statewide pile points
+  (Auburn, downtown Sacramento) appear only in 2021–22: likely software defaults (unconfirmed). Find piles by rule each year.
+- 2026-10-25 · SFPD and San Jose place crashes from street names/intersections in their own systems; their open data
+  (DataSF, San Jose `crash-locations` with `TCRNUMBER`) is better truth than CCRS lat/long for them.
 - 2026-10-23 · Freeway crashes are described by a reference street that crosses over or under the freeway, plus a
   distance along it. They never "intersect", so 24,076 sat unplaced (D1). Method: `methods/freeway-crashes.md`.
 - 2026-10-23 · `IsFreeway = True` is freeway jurisdiction, not the main lanes. "I-680 S/B TO SR-4" is a crash on the
