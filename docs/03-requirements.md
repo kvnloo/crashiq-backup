@@ -459,3 +459,25 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   freeway-to-freeway connector crashes (4630945, 1392922, 1818216), the officer GPS was right every time, and the stated
   distance and direction were loose clues (on a curving ramp, "W" is the travel direction). Unchanged: GPS that doesn't
   fit the named roads is still not used (400 ft rule), and the #218 snapped-to-intersection offset rule still applies.
+- **Tabs 3–4 improvement list AGREED (user, 2026-10-25, Tabs 3–4 design session, "ok i get it. push to PM and do it"):**
+  review of Crash profile and Findings on the Crenshaw study (main @ 4623ed7). Ranked, cheapest and highest value first:
+  (1) show the safety tables already computed (PCF, hit-and-run/DUI/speed, left-turn vs right-angle, movement,
+  conditions) #265; (2) display fixes #266; (3) findings ordered by fatal, KSI and strength, with street names and
+  one-line cards #267; (4) small-number rule; (5) the N10 collision diagram of the finding's crashes replaces the
+  autoplay replay, which plays only on tap #268; (6) tab 3 summary first, details folded, hour and day bars instead of the
+  heatmap #269; (7) the 3D map fixed; (8) a Findings corridor summary with a map #270; (9) ranking by crash cost;
+  (10) KSI and fatal findings. Later: (11) statewide-average comparison on state highways (D3, needs AADT);
+  (12) LRSM countermeasure hints and before/after (v3).
+- **Small numbers DECIDED (user, 2026-10-25):** a group with fewer than 10 crashes shows its count only ("1 of 6"), with
+  a "too few to compare" note, never a percentage bar.
+- **Tab 3 map DECIDED (user, 2026-10-25):** keep the 3D column map as the default and fix it: KSI drawn at the base
+  of each column in red, so it is never hidden by property-damage crashes; the corridor fits the frame; labels on the
+  top 5 locations only.
+- **Ranking by crash cost DECIDED (user, 2026-10-25):** locations can be ranked by the cost of their crashes, each crash
+  priced by its K/A/B/C/O level with Caltrans' published crash costs (LRSM), the same basis as HSIP B/C later. Added as
+  a "Rank by cost" option; the count ranking stays. Cost values come from the current LRSM table, stored in
+  `data/reference/` with the source cited, never typed from memory.
+- **KSI and fatal findings DECIDED (user, 2026-10-25):** Findings adds (a) a test of whether KSI crashes are
+  over-represented at a location, with the same method and thresholds as the other crash types (#34: ≥ 5 crashes at
+  the location, ≥ 3 of the type, P ≥ 0.80), and (b) every fatal crash always appears as its own finding, whatever the
+  statistics (fatal crashes first, 2026-10-21).
