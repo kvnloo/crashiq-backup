@@ -124,8 +124,11 @@ def mirror_rows(con: sqlite3.Connection, col: str, value: str):
                           (value,))
         names = [d[0] for d in cur.description]
         for row in cur:
-            c = cc.crash_record(dict(zip(names, row)), cols)
+            rec = dict(zip(names, row))
+            c = cc.crash_record(rec, cols)
             c["year"] = year
+            if c.get("lat") is None:                 # the raw values, for the lost-minus repair (#251, run 10)
+                c["_raw_ll"] = (rec.get("Latitude"), rec.get("Longitude"))
             yield c
 
 

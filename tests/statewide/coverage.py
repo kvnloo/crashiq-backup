@@ -37,6 +37,7 @@ import corridors
 import fatal as fatal_mod
 import osm_local
 from citywide import City, dms_decode, fars, locate, osm, street_key
+from crashiq import freeway as freeway_mod
 from crashiq.db import Database
 from crashiq.names import route_numbers
 
@@ -44,7 +45,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DATA = ROOT / "data" / "statewide"
 YEARS = cw.YEARS
-BIN1 = ("gps_usable", "gps_usable_dms", "placed_exact", "placed_unique_pair", "placed_fars", "placed_verified_typo",
+BIN1 = ("gps_usable", "gps_usable_dms", "gps_usable_sign", "placed_approximate", "placed_exact", "placed_unique_pair", "placed_fars", "placed_verified_typo",
         "placed_relaxed", "placed_near", "placed_fuzzy")
 GROUPS = ("statewide", "district", "county", "city", "agency", "road_type", "district_road_type")
 
@@ -171,6 +172,7 @@ class Outside:
 
 NETWORK, GATE_TIERS = "clipped", []          # set from the command line
 ALIASES, RULE2, TIGER = False, False, None
+RUN10, FWY = False, None       # run 10: #251 GPS repair for every agency + lost longitude minus; #258 approximate freeways
 AUTO_TIERS = ("exact", "unique_pair")          # the tiers the app auto-places (config/placement.json since #222)
 
 NO_CROSS = "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)"
@@ -257,11 +259,19 @@ def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db
     if c.get("lat") is not None and c.get("lon") is not None and not ignored:
         if fits(c["lat"], c["lon"], c):
             return "gps_usable", None
-        if c["year"] in dms:
+        if c["year"] in dms or RUN10:            # #251: every agency's point read as DMS, per crash
             la, lo = dms_decode(c["lat"]), dms_decode(c["lon"])
             if la is not None and lo is not None and fits(la, lo, c):
+                c["_repair"] = "dms_listed" if c["year"] in dms else "dms_new"
                 return "gps_usable_dms", None
         gps_note = "police GPS off the report's roads; "
+    elif RUN10 and c.get("lat") is None and c.get("_raw_ll") and not ignored:
+        la, lo = c["_raw_ll"]                   # #251: a point outside California only because the minus was lost
+        if (isinstance(la, (int, float)) and isinstance(lo, (int, float)) and lo > 0
+                and cw.cc.CA_LAT[0] <= la <= cw.cc.CA_LAT[1] and cw.cc.CA_LON[0] <= -lo <= cw.cc.CA_LON[1]
+                and fits(la, -lo, c)):
+            c["_repair"] = "lon_sign"
+            return "gps_usable_sign", None
     net = city.net if city else outside.network(c)
     pl = locate.place(net, c) if net is not None else locate.Placement("review", note="no street map")
     c["_tier"], c["_note"] = pl.tier, pl.note or ""          # recorded per crash (run 8: effects derived from tiers)
@@ -269,6 +279,10 @@ def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db
     if gate.auto(pl):
         return ("placed_unique_pair" if pl.tier == "unique_pair" else
                 "placed_exact" if pl.tier == "exact" else f"placed_{pl.tier}"), None
+    if RUN10 and FWY is not None and c.get("is_freeway") and freeway_mod.parse(c) is not None:
+        # #258: the report's freeway description, tried after the locator (main loop, county by county); the outcome
+        # below is the fallback when it finds no spot
+        c["_fwy_try"] = "gps_off_roads" if gps_note else "no_gps"
     if (c.get("killed") or 0) > 0 and fars_db is not None:
         status, row = fars.link(fars_db, c)
         p = fars.point(fars_db, row) if status == "linked" else None
@@ -343,6 +357,10 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
         if r:
             county_box[code] = r
     outside = Outside(local, county_box)
+    global FWY
+    if RUN10:
+        from fwy_raw import FwyRaw
+        FWY = FwyRaw(local, county_box, outside)
     agencies = {a["ncic"]: a for a in json.loads((DATA / "agencies.json").read_text())}
     con = sqlite3.connect(DATA / "ccrs_mirror.sqlite")
     ksi = ksi_ids(con)
@@ -359,7 +377,7 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
     out_csv = open(DATA / (f"coverage_crashes_{part}.csv" if part else "coverage_crashes.csv"), "w", newline="")
     w = csv.writer(out_csv)
     w.writerow(["collision_id", "year", "county_code", "district", "city", "agency", "road_type", "killed", "ksi", "bin",
-                "outcome", "reason", "tier", "note", "tiger", "gps_ignored", "outcome_without_alias"])
+                "outcome", "reason", "tier", "note", "tiger", "gps_ignored", "outcome_without_alias", "repair", "approx"])
     for i, (nm, n) in enumerate(names.most_common(), 1):
         if only_city is not None:
             if nm != only_city:
@@ -374,8 +392,28 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
             if TIGER is not None:
                 raw = with_tiger(raw)
             city = City(osm.Network(raw))
+            pts = [(e["lat"], e["lon"]) for e in raw["elements"] if e["type"] == "node"]
+            cbox = (min(p[0] for p in pts), min(p[1] for p in pts), max(p[0] for p in pts),
+                    max(p[1] for p in pts)) if pts else None
         else:
-            city = None
+            city, cbox = None, None
+        deferred = []
+
+        def emit(c, out, why, no_alias):
+            county = int(c.get("county_code") or 0)
+            ag = str(c.get("agency") or "")
+            rt = road_type(c, city is not None)
+            killed = (c.get("killed") or 0) > 0
+            is_ksi = killed or str(c["crash_id"]) in ksi
+            d = dist.get(county)
+            keys = [("statewide", "California"), ("district", f"District {d}" if d else "unknown"),
+                    ("county", cname.get(county, "unknown")), ("city", nm or "(blank)"),
+                    ("agency", ag), ("road_type", rt), ("district_road_type", f"District {d} · {rt}")]
+            agg.add(keys, out, why, killed, is_ksi)
+            w.writerow([c["crash_id"], c["year"], county, d, nm, ag, rt, int(killed), int(is_ksi),
+                        1 if out in BIN1 else 2, out, why or "", c.get("_tier", ""), c.get("_note", ""),
+                        c.get("_tiger", ""), c.get("_gps_ignored", ""), no_alias, c.get("_repair", ""),
+                        c.get("_approx", "")])
         for c in cw.mirror_rows(con, "City Name", nm):
             county = int(c.get("county_code") or 0)
             if split[1] > 1 and int(c["crash_id"]) % split[1] != split[0]:
@@ -394,17 +432,17 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
                     no_alias = o0                  # the same crash read without the approved aliases
                     c = ca
             out, why = outcome(c, city, outside, dms_cache[ag], fars_db, gate)
-            rt = road_type(c, city is not None)
-            killed = (c.get("killed") or 0) > 0
-            is_ksi = killed or str(c["crash_id"]) in ksi
-            d = dist.get(county)
-            keys = [("statewide", "California"), ("district", f"District {d}" if d else "unknown"),
-                    ("county", cname.get(county, "unknown")), ("city", nm or "(blank)"),
-                    ("agency", ag), ("road_type", rt), ("district_road_type", f"District {d} · {rt}")]
-            agg.add(keys, out, why, killed, is_ksi)
-            w.writerow([c["crash_id"], c["year"], county, d, nm, ag, rt, int(killed), int(is_ksi),
-                        1 if out in BIN1 else 2, out, why or "", c.get("_tier", ""), c.get("_note", ""),
-                        c.get("_tiger", ""), c.get("_gps_ignored", ""), no_alias])
+            if c.get("_fwy_try"):
+                deferred.append((c, out, why, no_alias))
+                continue
+            emit(c, out, why, no_alias)
+        for c, out, why, no_alias in sorted(deferred, key=lambda t: int(t[0].get("county_code") or 0)):
+            raw_f = FWY.raw(c, cbox)
+            sp = freeway_mod.place(raw_f, c) if raw_f else None
+            if sp is not None:
+                out, why = "placed_approximate", None
+                c["_approx"] = f"{c['_fwy_try']}:{sp.kind}"
+            emit(c, out, why, no_alias)
         print(f"[{i}/{len(names)} {time.time() - t0:.0f}s] {nm or '(blank)'}: {n} crashes "
               f"({'city map' if city else 'outside cities'})", flush=True)
         if i % 25 == 0 and not part:
@@ -566,7 +604,10 @@ if __name__ == "__main__":
                     "recording each changed crash's outcome without them too")
     ap.add_argument("--rule2", action="store_true", help="#218 rule 2: default points and coarse GPS are no location")
     ap.add_argument("--tiger", action="store_true", help="OSM + TIGER/Line network per city (#229)")
+    ap.add_argument("--run10", action="store_true", help="#251 GPS repair (every agency, lost minus) and #258 "
+                    "approximate freeway placement")
     a = ap.parse_args()
+    RUN10 = a.run10
     NETWORK = a.network
     GATE_TIERS = [x for x in a.gate_tiers.split(",") if x]
     ALIASES, RULE2 = a.aliases, a.rule2
