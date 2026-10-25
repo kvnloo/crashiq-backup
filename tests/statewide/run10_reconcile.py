@@ -73,7 +73,11 @@ def coverage(st: dict) -> dict:
 
 
 def main() -> None:
-    c9, r10_all = parts("r9c"), parts("r10")
+    import argparse
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--prefix", default="r10", help="r10, or r10b (the freeway step redone with the fixed fwy_raw)")
+    pre = ap.parse_args().prefix
+    c9, r10_all = parts("r9c"), parts(pre)
     r10 = app_view(r10_all, c9)
     if set(c9) != set(r10):
         raise SystemExit(f"completeness guard: run 10 {len(r10)} vs 9C {len(c9)} crashes")
@@ -113,7 +117,8 @@ def main() -> None:
            "approximate_by_kind": dict(approx_kind),
            "not_in_app_gps_off_roads_approximate": not_in_app,
            "coverage_9C": coverage(c9), "coverage_10": coverage(r10)}
-    (DATA / "run10_reconcile.json").write_text(json.dumps(res, indent=1))
+    res["basis"] += f" (parts {pre})"
+    (DATA / ("run10_reconcile.json" if pre == "r10" else f"run10_reconcile_{pre}.json")).write_text(json.dumps(res, indent=1))
     a, b = res["coverage_9C"]["all"], res["coverage_10"]["all"]
     print(json.dumps({k: res[k] for k in ("effects", "gps_repair", "approximate_by_kind")}, indent=1))
     print("9C", a["crashes_on_map_pct"], a["fatal_on_map_pct"], a["ksi_on_map_pct"])

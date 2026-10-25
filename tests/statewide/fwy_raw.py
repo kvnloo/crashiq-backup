@@ -6,10 +6,14 @@ takes, from its county:
   - the main lanes (motorway / trunk) carrying the report's route number(s), both routes for a connector;
   - every motorway / trunk link reachable from those lanes in at most LINK_HOPS link-to-link steps (freeway._linked
     walks 6 hops);
-  - the ways named like the reference street (name or ref, the same street core; route numbers for a state route),
-    inside `box` when given (a city's box + 1 km) else the county box.
+  - the ways named like the reference street (name, alt_name or ref; indexed by street core and by the core without a
+    leading direction word, so "Normandie Ave" finds "South Normandie Avenue" as the app's same_core does; route
+    numbers for a state route), inside `box` when given (a city's box + 1 km) else the county box. The app's own
+    `named()` then decides which of them is the street.
 The geometry and every decision are the app's: this only chooses which elements it sees. Not included: TIGER/Line
-names on the reference street, and `alt_name` (the county name index reads name and ref).
+names on the reference street.
+2026-10-25 fix (Engineering, #259): the first version looked streets up by exact core in Outside's name+ref index, so
+a reference street mapped with a leading direction word or only as alt_name was missing from the raw.
 """
 
 from __future__ import annotations
@@ -18,7 +22,7 @@ import json
 from collections import OrderedDict, defaultdict
 
 from crashiq.freeway import LINK, MOTORWAY, parse
-from crashiq.names import route_numbers, street_key
+from crashiq.names import drop_directional, route_numbers, street_key
 
 LINK_HOPS = 6
 KEEP_COUNTIES = 3
@@ -36,12 +40,18 @@ class FwyRaw:
         box = self.box[county]
         lanes, links, coords = defaultdict(list), {}, {}
         node_ways = defaultdict(set)
+        named = defaultdict(set)
         for wid, tags, nids, cs in self.local.db.execute(
                 "SELECT w.id, w.tags, w.nodes, w.coords FROM way_box b JOIN ways w ON w.id = b.id WHERE b.maxlat >= ? "
                 "AND b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ?", (box[0], box[2], box[1], box[3])):
             t = json.loads(tags)
             hw = t.get("highway")
             if hw not in MOTORWAY + LINK:
+                if hw:
+                    for key in ("name", "alt_name", "ref"):
+                        for v in str(t.get(key) or "").split(";"):
+                            for k in self.keys(v):
+                                named[k].add(wid)
                 continue
             nl, cl = json.loads(nids), json.loads(cs)
             w = {"type": "way", "id": wid, "nodes": nl, "tags": t}
@@ -55,8 +65,15 @@ class FwyRaw:
                     node_ways[n].add(wid)
         if len(self.cache) >= KEEP_COUNTIES:
             self.cache.popitem(last=False)
-        self.cache[county] = {"lanes": lanes, "links": links, "coords": coords, "node_ways": node_ways}
+        self.cache[county] = {"lanes": lanes, "links": links, "coords": coords, "node_ways": node_ways, "named": named}
         return self.cache[county]
+
+    @staticmethod
+    def keys(v: str) -> set[str]:
+        k = street_key(v)
+        if not k:
+            return set()
+        return {k.core.replace(" ", ""), drop_directional(k).core.replace(" ", "")}
 
     def _reach(self, cty: dict, start_ways: list[dict]) -> set[int]:
         """Links joined to the lanes, then to each other, up to LINK_HOPS steps (by shared end or inner node)."""
@@ -90,8 +107,9 @@ class FwyRaw:
             ways[wid] = cty["links"][wid]
         coords = {wid: cty["coords"][wid] for wid in ways}
         if r.get("street"):
-            k = street_key(r["street"])
-            ids = set(self.outside._names(county).get(k.core.replace(" ", ""), ())) if k else set()
+            ids = set()
+            for k in self.keys(r["street"]):
+                ids |= cty["named"].get(k, set())
             for rt in route_numbers(r["street"]):
                 ids |= {w["id"] for w in cty["lanes"].get(rt, ())}
             ids -= set(ways)
