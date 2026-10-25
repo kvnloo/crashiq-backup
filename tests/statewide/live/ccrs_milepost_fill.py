@@ -1,5 +1,9 @@
 """Fill rates of CCRS crash fields the mirror doesn't keep (live datastore, aggregate SQL only)."""
-import json, sqlite3, time, urllib.parse, urllib.request
+import json
+import sqlite3
+import time
+import urllib.parse
+import urllib.request
 MIRROR = "/Users/Ak47/Desktop/Crash-tester/data/statewide/ccrs_mirror.sqlite"
 FIELDS = ["MilepostMarker", "MilepostDistance", "MilepostDirection", "MilepostUnitOfMeasure", "IsLocationReferToNarrative"]
 def sql(q):
@@ -10,7 +14,8 @@ def sql(q):
             with urllib.request.urlopen(req, timeout=300) as r:
                 return json.load(r)["result"]["records"]
         except Exception as e:
-            time.sleep(5 * (a + 1)); err = e
+            time.sleep(5 * (a + 1))
+            err = e
     raise err
 con = sqlite3.connect(MIRROR)
 out = {}

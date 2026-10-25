@@ -1,5 +1,10 @@
 """CHP 2021-22 crashes with a non-blank MilepostMarker, from the live CCRS datastore (public)."""
-import csv, json, sqlite3, time, urllib.parse, urllib.request
+import csv
+import json
+import sqlite3
+import time
+import urllib.parse
+import urllib.request
 MIRROR = "/Users/Ak47/Desktop/Crash-tester/data/statewide/ccrs_mirror.sqlite"
 OUT = "/Users/Ak47/Desktop/Crash-tester/data/statewide/ccrs_postmile_chp.csv"
 COLS = ["Collision Id", "NCIC Code", "IsFreeway", "PrimaryRoad", "SecondaryRoad", "SecondaryDistance", "SecondaryDirection",
@@ -13,10 +18,12 @@ def sql(q):
             with urllib.request.urlopen(req, timeout=300) as r:
                 return json.load(r)["result"]["records"]
         except Exception as e:
-            time.sleep(5 * (a + 1)); err = e
+            time.sleep(5 * (a + 1))
+            err = e
     raise err
 con = sqlite3.connect(MIRROR)
-w = csv.writer(open(OUT, "w", newline="")); w.writerow(["year"] + COLS)
+w = csv.writer(open(OUT, "w", newline=""))
+w.writerow(["year"] + COLS)
 for rid, year in con.execute("SELECT rid, year FROM _meta WHERE tbl='crashes' AND year IN (2021, 2022) ORDER BY year"):
     off = 0
     while True:

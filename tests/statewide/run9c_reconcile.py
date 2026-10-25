@@ -10,7 +10,6 @@ from __future__ import annotations
 import csv
 import json
 from collections import Counter, defaultdict
-from pathlib import Path
 
 from run8_reconcile import moves, stats
 from run9_reconcile import BIN1, DATA, parts

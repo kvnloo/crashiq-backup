@@ -1,4 +1,7 @@
-import json, sqlite3, csv, sys
+import json
+import sqlite3
+import csv
+import sys
 sys.path.insert(0, '.')
 from ccrs_milepost_fill import sql, MIRROR  # note: importing runs the fill aggregate first
 con = sqlite3.connect(MIRROR)
