@@ -79,23 +79,45 @@ def _result(*crashes):
 FWY_NET = {"line": [(33.8700, -118.3418), (33.8760, -118.3420)], "is_freeway": True}
 
 
-def test_off_by_default_a_suggestion_on_a_freeway_corridor():
+def test_no_gps_freeway_crashes_are_placed_approximately_by_default():
+    # user decision 2026-10-24 (#255): on, as provenance approximate (+-0.5 mi)
     from crashiq import locate, placement
-    assert "freeway_offset" not in locate.configured_tiers()
+    assert "freeway_offset" in locate.configured_tiers()
     r = _result(A)
     placement.place_unmatched(None, FWY_NET, r, raw=raw("a_lawndale"))
+    c = r["crashes"][0]
+    assert c["location_source"] == "approximate"
+    assert c["approximate"] == {"method": "freeway_offset", "kind": "mainline", "plus_minus_mi": 0.5}
+
+
+def test_with_the_gate_off_it_stays_a_suggestion():
+    from crashiq import locate, placement
+    r = _result(A)
+    placement.place_unmatched(None, FWY_NET, r, raw=raw("a_lawndale"), gate=locate.Gate(auto_tiers=frozenset({"exact"})))
     c = r["crashes"][0]
     assert c["location_source"] == "unmatched" and c["suggestion"]["tier"] == "freeway_offset"
 
 
-def test_with_the_gate_on_it_places_and_the_report_beats_disagreeing_gps():
+def test_officer_gps_is_never_moved_unless_its_own_switch_is_on(monkeypatch):
+    # #255: moving GPS that disagrees with the report waits for the user's "keep the GPS" answer
+    from crashiq import placement
+    assert placement.MOVE_GPS is False
+    gps = {**A, "crash_id": "g", "lat": 33.8732, "lon": -118.3433, "location_source": "gps"}
+    r = _result()
+    r["crashes"].append(gps)
+    counts = placement.place_unmatched(None, FWY_NET, r, raw=raw("a_lawndale"))
+    assert r["crashes"][0]["location_source"] == "gps" and counts["freeway_gps_moved"] == 0
+
+
+def test_with_the_gps_switch_on_the_report_beats_disagreeing_gps(monkeypatch):
     from crashiq import locate, placement
+    monkeypatch.setattr(placement, "MOVE_GPS", True)
     gate = locate.Gate(auto_tiers=frozenset({"exact", "unique_pair", "freeway_offset"}))
     gps = {**A, "crash_id": "g", "lat": 33.8732, "lon": -118.3433, "location_source": "gps"}   # the NW-corner GPS
     r = _result(A)
     r["crashes"].append(gps)
     counts = placement.place_unmatched(None, FWY_NET, r, raw=raw("a_lawndale"), gate=gate)
-    assert r["crashes"][0]["location_source"] == "freeway_offset"
+    assert r["crashes"][0]["location_source"] == "approximate"
     g = r["crashes"][1]
     assert g["location_source"] == "freeway_offset" and g["gps_as_reported"] == [33.8732, -118.3433]
     assert counts["freeway_gps_moved"] == 1

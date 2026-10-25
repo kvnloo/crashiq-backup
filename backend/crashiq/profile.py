@@ -388,12 +388,13 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
              "confirmed by the cross street)",
              value=sum(1 for c in placed if c.get("location_provenance") == "verified_typo")),
         # freeway crashes placed by the report (#246, D1): crossing + offset, ramp terminal, connector; gated
-        _row("located_freeway", "Freeway crashes placed by the report (where the reference street crosses, the ramp "
-             "terminal, or along the connector, plus the stated distance)",
-             value=sum(1 for c in placed if c.get("location_provenance") == "freeway_offset")),
+        _row("located_freeway", "Freeway crashes with no usable GPS, placed approximately (within about 0.5 mi) by the "
+             "report: where the reference street crosses, the ramp terminal, or along the connector, plus the stated "
+             "distance. Counted on segments only",
+             value=sum(1 for c in placed if c.get("location_provenance") in ("approximate", "freeway_offset"))),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
              value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied", "fars", "exact",
-                                                                                 "unique_pair", "verified_typo", "freeway_offset", "user"))),
+                                                                                 "unique_pair", "verified_typo", "freeway_offset", "approximate", "user"))),
         # placed by street names using a name or road only Census TIGER/Line has (#229); already in the rows above
         _row("located_tiger", "Of the crashes placed by street names, placed with a street name or road only "
              "TIGER/Line has", value=sum(1 for c in placed if c.get("placed_on") == "tiger")),
@@ -520,6 +521,13 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                     "serious-injury crash(es) not in the KSI count"
                                     if any(c["severity"] in ("K", "A") for c in unmatched) else "")
                                  + (". This is a data limitation for this study." if share > UNPLACED_LIMIT else "."))})
+    approx = sum(1 for c in placed if c.get("location_provenance") == "approximate")
+    if approx:                             # #255: say what the precise-point analyses leave out
+        caveats.append({"key": "approximate_freeway", "count": approx,
+                        "text": f"{approx} freeway crash{'es have' if approx != 1 else ' has'} no usable GPS and "
+                                f"{'are' if approx != 1 else 'is'} placed approximately (within about 0.5 mi) from the "
+                                "report's description. They count on the corridor segments, never at an intersection, so "
+                                "intersection tables and collision diagrams leave them out."})
     u = sum(c["severity"] == "U" for c in placed)
     if u:
         caveats.append({"key": "injury_level_unknown", "count": u,
@@ -564,7 +572,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             "kpis": {"crashes": "T1/crashes/value", "ksi_crashes": "T1/ksi_crashes/value",
                      "injury_crashes": "T1/injury_crashes/value", "crashes_per_mi_yr": "T1/crashes_per_mi_yr/value"},
             "tables": tables, "signals": scr["signals"], "screen_tests": scr["tests_run"], "caveats": caveats, "location_provenance": dict(sorted(prov.items())),
-            "source": pull["source"], "pulled_at": pull["pulled_at"], "excluded_provenance": sorted(exclude)}
+            "source": pull["source"], "pulled_at": pull["pulled_at"], "excluded_provenance": sorted(exclude),
+            # where approximate freeway placements are counted (#255): the findings say so
+            "approximate_locations": sorted({c["location_id"] for c in placed
+                                             if c.get("location_provenance") == "approximate" and c.get("location_id")})}
 
 
 # Tables built from CCRS Parties (road users, trucks, movement, the diagram) or InjuredWitnessPassengers (injury level):

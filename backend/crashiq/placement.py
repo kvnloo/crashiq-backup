@@ -9,6 +9,9 @@ any change to the gate is the user's decision (docs/03, PR #16 decision 2).
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
+
 from . import fars, freeway, gps_rules, grade, locate, osm
 from . import network as network_mod
 from . import union as union_mod
@@ -96,13 +99,16 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
     return counts
 
 
+# moving officer GPS that disagrees with the report (D1 rule 4) has its own switch, off until the user confirms it (#255)
+MOVE_GPS = bool(json.loads((Path(__file__).parent / "config" / "placement.json").read_text()).get("freeway_move_gps"))
+APPROX_MI = json.loads((Path(__file__).parent / "config" / "placement.json").read_text()).get("approximate_mi", 0.5)
 GPS_LIKE = ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied")
 
 
 def _freeway_gps(raw: dict, crashes: list[dict]) -> int:
     """The report beats the officer's GPS on a freeway when they disagree (#246, docs/03 D1 rule 4): a GPS point more
     than the GPS-check distance from the spot the report describes moves there; the GPS stays as provenance.
-    Only when the gate allows freeway_offset."""
+    Only when config/placement.json freeway_move_gps is on (#255: off until the user confirms)."""
     from .assign import GPS_CHECK_FT
     from .osm import metres
     moved = 0
@@ -131,7 +137,7 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
     # freeway crashes on a freeway corridor (#246, D1): placed by the report; GPS that disagrees with it is moved, gated
     fwy = bool(net.get("is_freeway"))
     fwy_gps = [c for c in result["crashes"] if fwy and c.get("is_freeway") and not c.get("exclude_rule")
-               and c.get("location_source") in GPS_LIKE and c.get("lat") is not None] if gate.allows("freeway_offset") else []
+               and c.get("location_source") in GPS_LIKE and c.get("lat") is not None] if MOVE_GPS else []
     onet = None
     if (todo or offset_cands or fwy_gps) and net.get("line"):
         if raw is None:                   # OSM only (the caller passes the OSM + TIGER network when it has one, #229)
@@ -150,6 +156,12 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
             if gate.auto(pl):
                 c["lat"], c["lon"], c["location_source"] = pl.lat, pl.lon, pl.tier
                 counts["placed"][pl.tier] = counts["placed"].get(pl.tier, 0) + 1
+                if pl.tier == "freeway_offset":
+                    # no usable GPS, placed by the report's freeway description: approximate (user 2026-10-24, #255),
+                    # never at an intersection, labelled everywhere
+                    c["location_source"] = "approximate"
+                    c["approximate"] = {"method": "freeway_offset", "kind": pl.note.split(":", 1)[0],
+                                        "plus_minus_mi": APPROX_MI}
                 if pl.tiger:              # a street name or road only TIGER/Line has (#229): visible on the crash
                     c["placed_on"] = "tiger"
                     counts["placed_on_tiger"] = counts.get("placed_on_tiger", 0) + 1
