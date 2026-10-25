@@ -4,33 +4,8 @@
     {
       "name": "mockups",
       "runtimeExecutable": "python3",
-      "runtimeArgs": [
-        "-m",
-        "http.server",
-        "8765",
-        "--directory",
-        "design/mockups"
-      ],
+      "runtimeArgs": ["-m", "http.server", "8765", "--directory", "design/mockups"],
       "port": 8765
-    },
-    {
-      "name": "tabs34-api",
-      "runtimeExecutable": "/private/tmp/claude-502/-Users-Ak47-Desktop-Crash--claude-worktrees-visualization-analysis-0e4f27/68f0ac68-111d-4be4-a8bc-2f7e91c460b1/scratchpad/backend.sh",
-      "runtimeArgs": [],
-      "port": 8002
-    },
-    {
-      "name": "tabs34-app",
-      "runtimeExecutable": "npx",
-      "runtimeArgs": [
-        "--prefix",
-        "frontend",
-        "vite",
-        "--config",
-        "frontend/vite.tabs34.config.js",
-        "frontend"
-      ],
-      "port": 3102
     }
   ]
 }
