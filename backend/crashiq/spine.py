@@ -151,7 +151,7 @@ def crashiq_view(db, sid: str) -> dict:
     out["safety"] = {
         "window": {"from_year": study["from_year"], "to_year": study["to_year"],
                    "preliminary_included": any(c["key"] == "preliminary" for c in p["caveats"])},
-        "locate_summary": {"gps": prov.get("gps", 0) + prov.get("gps_dms_corrected", 0) + prov.get("gps_offset_applied", 0), "exact": prov.get("exact", 0), "fuzzy": prov.get("fuzzy", 0),
+        "locate_summary": {"gps": prov.get("gps", 0) + prov.get("gps_dms_corrected", 0) + prov.get("gps_sign_corrected", 0) + prov.get("gps_offset_applied", 0), "exact": prov.get("exact", 0), "fuzzy": prov.get("fuzzy", 0),
                            "jev": sum(v for k, v in prov.items() if k.startswith("jev")), "user": prov.get("user", 0),
                            "unmatched": prov.get("unmatched", 0)},
         "locations": [{"id": r["key"], "name": r["label"], "kind": r["values"]["kind"], "crashes": r["values"]["crashes"],

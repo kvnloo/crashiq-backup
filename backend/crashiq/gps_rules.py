@@ -125,7 +125,7 @@ def apply_offsets(onet, net: dict, crashes: list[dict]) -> int:
     ck = grade.corridor_keys(net)
     moved = 0
     for c in crashes:
-        if c.get("location_source") not in ("gps", "gps_dms_corrected") or c.get("lat") is None or c.get("exclude_rule"):
+        if c.get("location_source") not in ("gps", "gps_dms_corrected", "gps_sign_corrected") or c.get("lat") is None or c.get("exclude_rule"):
             continue
         off, d = c.get("offset_ft") or 0.0, str(c.get("offset_dir") or "").strip()[:1].upper()
         if off <= CONFIG["offset_min_ft"] or d not in CARDINAL:

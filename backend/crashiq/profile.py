@@ -362,7 +362,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         # how the counted crashes were located (#104 data-quality strip): GPS + exact + other tiers + you = Crashes
         _row("located_gps", "Located by the officer's GPS",
              value=sum(1 for c in placed if c.get("location_provenance") in ("gps", "gps_dms_corrected",
-                                                                                 "gps_offset_applied"))),
+                                                                                 "gps_sign_corrected", "gps_offset_applied"))),
+        # the longitude's lost minus restored (#247); already in located_gps
+        _row("located_gps_sign", "Of these, GPS whose longitude had lost its minus sign",
+             value=sum(1 for c in placed if c.get("location_provenance") == "gps_sign_corrected")),
         # GPS at the named intersection while the report states a distance from it: moved by it (#218); in located_gps
         _row("located_gps_offset", "Of these, GPS moved by the distance and direction the report states",
              value=sum(1 for c in placed if c.get("location_provenance") == "gps_offset_applied")),
@@ -384,9 +387,13 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         _row("located_verified_typo", "Placed after correcting a small typo in a street name (one possible street, "
              "confirmed by the cross street)",
              value=sum(1 for c in placed if c.get("location_provenance") == "verified_typo")),
+        # freeway crashes placed by the report (#246, D1): crossing + offset, ramp terminal, connector; gated
+        _row("located_freeway", "Freeway crashes placed by the report (where the reference street crosses, the ramp "
+             "terminal, or along the connector, plus the stated distance)",
+             value=sum(1 for c in placed if c.get("location_provenance") == "freeway_offset")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
-             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_offset_applied", "fars", "exact",
-                                                                                 "unique_pair", "verified_typo", "user"))),
+             value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied", "fars", "exact",
+                                                                                 "unique_pair", "verified_typo", "freeway_offset", "user"))),
         # placed by street names using a name or road only Census TIGER/Line has (#229); already in the rows above
         _row("located_tiger", "Of the crashes placed by street names, placed with a street name or road only "
              "TIGER/Line has", value=sum(1 for c in placed if c.get("placed_on") == "tiger")),
@@ -651,7 +658,10 @@ def get_location_profile(sid: str, lid: str, request: Request) -> dict:
         diagram = diagram_mod.build(net, it, placed)
         tables.append(diagram_table(lid, diagram, placed))
     annotate(tables, missing_notes(missing_detail(pull, placed)))
+    from .crashes import postmile_for
+    pm = postmile_for(request.app.state)
     return {"location_id": lid, "tables": tables, "diagram": diagram,
-            "crashes": [{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
-                                               "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",
-                                               "location_provenance")} for c in placed]}
+            "crashes": [{**{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
+                                                  "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",
+                                                  "location_provenance")},
+                         **({"postmile": p} if pm is not None and (p := pm.for_crash(c)) else {})} for c in placed]}

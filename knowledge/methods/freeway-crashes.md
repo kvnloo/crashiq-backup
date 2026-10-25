@@ -10,8 +10,10 @@ output). Measurements: Tester, run 9A basis (CCRS mirror 2026-10-19, OSM 2026-10
 intersection matcher finds nothing. That's why 24,076 crashes (2021–25) sat in the difficult bin.
 
 - `IsFreeway = True` means freeway **jurisdiction**, not the main lanes: ramps and freeway-to-freeway connectors carry it too.
-- The public CCRS tables have **no route or postmile column** (all 30 crash columns checked). Since CHP moved to CCRS
-  (2015), Caltrans postmiles are no longer returned to SWITRS. Caltrans assigns postmiles afterwards in TASAS, from the
+- CCRS has `Milepost*` fields, and CHP filled them with real Caltrans postmiles, but only on 2–4% of 2021–22 freeway
+  crashes and almost never since 2023 (D1: 830 of 24,076; `sources/ca-ccrs.md`). Too rare to place D1; useful as an
+  independent third source to check the report against the GPS. Since CHP moved to CCRS (2015), Caltrans postmiles are
+  no longer returned to SWITRS. Caltrans assigns postmiles afterwards in TASAS, from the
   same road-name description (`sources/ca-caltrans-tasas.md`).
 
 ## The user's method (2026-10-23, worked through three real crashes)

@@ -76,6 +76,11 @@
       "title": "TIGER/Line Shapefiles: Roads (EDGES, FEATNAMES), California counties",
       "publisher": "U.S. Census Bureau (public domain)",
       "url": "https://www.census.gov/geographies/mapping-files/time-series/geo/tiger-line-file.html"
+    },
+    "caltrans_pm": {
+      "title": "SHN Postmiles Tenth (state highway postmiles every 0.1 mile)",
+      "publisher": "Caltrans (public)",
+      "url": "https://caltrans-gis.dot.ca.gov/arcgis/rest/services/CHhighway/SHN_Postmiles_Tenth/FeatureServer/0"
     }
   },
   "methods": [
@@ -370,6 +375,28 @@
       "cite": [
         [
           "osm",
+          ""
+        ]
+      ]
+    },
+    {
+      "topic": "Freeway crashes (placed by the report)",
+      "status": "decision",
+      "what": "A freeway report names the freeway (or a ramp, or a connector 'X TO Y'), a reference street that usually crosses over or under it, and a distance and compass direction from it, read as written. Mainline: from where the reference street crosses the lanes of the stated travel direction, the stated distance along those lanes. Ramp: at the ramp terminal on the reference street (under 400 ft), else along the ramp. Connector: from where it reaches the second freeway, the stated distance along the connector. A description that fits more than one place is never guessed. Where the officer's GPS is more than 400 ft from that spot, the report's spot is used and the GPS kept. Until it is measured on hidden police GPS and the user approves, these placements are suggestions on the review list and GPS is left as it is (user decision 2026-10-23, #246).",
+      "cite": [
+        [
+          "osm",
+          ""
+        ]
+      ]
+    },
+    {
+      "topic": "Caltrans postmile (derived)",
+      "status": "decision",
+      "what": "Each counted crash on a state route gets its Caltrans postmile (county-route-PM, e.g. LA-405 PM 12.345), interpolated between the two 0.1-mile postmile points that bracket where CrashIQ placed it, on the side of the stated travel direction when the report gives one. It is derived from the placement, not from CHP, and doesn't change it. User decision 2026-10-23 (#248).",
+      "cite": [
+        [
+          "caltrans_pm",
           ""
         ]
       ]
