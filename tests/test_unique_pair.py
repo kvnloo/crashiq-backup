@@ -67,7 +67,7 @@ def _pull(monkeypatch, *crashes):
 
 
 def test_on_by_default_since_the_users_decision(monkeypatch):
-    assert locate.configured_tiers() == frozenset({"exact", "unique_pair"})        # docs/03, 2026-10-22
+    assert {"exact", "unique_pair"} <= locate.configured_tiers()                     # docs/03, 2026-10-22
     r = _pull(monkeypatch, crash("AVENUE J", "20TH ST W"))
     counts = placement.place_unmatched(None, {"line": [(34.69, -118.17), (34.69, -118.10)]}, r)
     c = r["crashes"][0]

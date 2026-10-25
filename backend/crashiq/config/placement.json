@@ -1,8 +1,9 @@
 {
-  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only by a user decision (docs/03): exact (>= 98% Wilson 95% lower bound on hidden-truth tests); unique_pair (user 2026-10-22, #211 evidence: at or above exact on hidden police GPS and LAPD open data). Street pairs that meet in more than one place still go to review. tiger_only_auto (#229): false = a placement that needs a road only TIGER/Line has goes to review with the suggestion; TIGER names on an OSM way keep their tier's gate. The user decides after run 9. verified_typo (#233, user 2026-10-22): a misspelled name corrected to the one map street within max_edits (short_max_edits for names of short_core letters or fewer; names under min_core letters and digits never changed), no rival within one more edit, the corrected pair meeting at one intersection, police GPS (when present) within gps_check_ft. Not in auto_tiers: a suggestion until the Tester measures it and the user approves. freeway_offset (#246, D1, user 2026-10-23): freeway crashes on a freeway corridor placed by the report (mainline from the reference street's crossing, ramp terminal, connector from the second freeway); not in auto_tiers until the Tester measures it and the user approves; while off it's a suggestion and GPS is left as it is.",
+  "_doc": "Placement tiers that auto-place a crash without GPS (locate.Gate). A tier is added only by a user decision (docs/03): exact (>= 98% Wilson 95% lower bound on hidden-truth tests); unique_pair (user 2026-10-22, #211 evidence: at or above exact on hidden police GPS and LAPD open data). Street pairs that meet in more than one place still go to review. tiger_only_auto (#229): false = a placement that needs a road only TIGER/Line has goes to review with the suggestion; TIGER names on an OSM way keep their tier's gate. The user decides after run 9. verified_typo (#233, user 2026-10-22): a misspelled name corrected to the one map street within max_edits (short_max_edits for names of short_core letters or fewer; names under min_core letters and digits never changed), no rival within one more edit, the corrected pair meeting at one intersection, police GPS (when present) within gps_check_ft. Not in auto_tiers: a suggestion until the Tester measures it and the user approves. freeway_offset (#246, D1, user 2026-10-23): freeway crashes on a freeway corridor placed by the report (mainline from the reference street's crossing, ramp terminal, connector from the second freeway); not in auto_tiers until the Tester measures it and the user approves; while off it's a suggestion and GPS is left as it is. 2026-10-24 (user, #255): freeway_offset auto-places freeway crashes with no usable GPS, as provenance approximate (approximate_mi); approximate crashes are never assigned to an intersection, so intersection tables and collision diagrams leave them out and say how many. freeway_move_gps: moving officer GPS that disagrees with the report, its own switch, off until the user confirms.",
   "auto_tiers": [
     "exact",
-    "unique_pair"
+    "unique_pair",
+    "freeway_offset"
   ],
   "tiger_only_auto": false,
   "verified_typo": {
@@ -11,5 +12,7 @@
     "short_max_edits": 1,
     "min_core": 4,
     "gps_check_ft": 400
-  }
+  },
+  "freeway_move_gps": false,
+  "approximate_mi": 0.5
 }

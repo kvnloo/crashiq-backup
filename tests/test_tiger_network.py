@@ -152,10 +152,11 @@ def test_fake_ckan_never_downloads_tiger(client):
     assert crashes.tiger_for(client.app.state) is None
 
 
-def test_switched_off_the_network_is_osm_only_and_nothing_downloads(client, tmp_path):
-    # #243: run 9 found the union losing correct OSM placements; config/tiger.json union = false until it's fixed
+def test_switched_off_the_network_is_osm_only_and_nothing_downloads(client, tmp_path, monkeypatch):
+    # #243 switched it off; the user turned it on statewide 2026-10-24 (#255). The switch still works
     from crashiq import crashes, union
-    assert union.enabled() is False
+    assert union.enabled() is True
+    monkeypatch.setitem(union.CONFIG, "union", False)
     tc = _cache(tmp_path)
     log, got, _ = _pull(client, tc, [("CRENSHAW BLVD", "HAWTHORNE PLAZA DR")])
     assert "network" not in log or log["network"]["sources"] == ["osm"]

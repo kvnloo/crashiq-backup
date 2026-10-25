@@ -317,6 +317,11 @@ def methodology(d: dict) -> str:
                "that needs a name or road only TIGER/Line has is marked, and one that needs a road only TIGER/Line has "
                "goes to the review list as a suggestion. " if union_mod.enabled() else "The street network is "
                "OpenStreetMap. ")
+            + "A freeway crash with no usable GPS is placed approximately (usually within 0.5 mi: about 95% of tested crashes) from the "
+            "report: where "
+            "the reference street crosses the freeway, at the ramp terminal, or along the connector, plus the stated "
+            "distance. Such crashes count on the corridor segments, never at an intersection, and intersection tables "
+            "and collision diagrams leave them out. "
             + 
             f"Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "

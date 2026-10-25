@@ -277,6 +277,8 @@ def screen_findings(prof: dict, tables: list[dict]) -> list[Finding]:
         text = (f"{sg['noun']} are over-represented at {sg['location']}: {v['target_crashes']} of "
                 f"{v['location_crashes']} crashes here ({_num(v['share_pct'])}%) vs "
                 f"{_num(v['reference_share_pct'])}% across the {v['reference']}.")
+        if sg["location_id"] in (prof.get("approximate_locations") or []):     # #255, no number: nothing to cite
+            text += " Some crashes here are freeway crashes placed approximately from the report (no usable GPS)."
         cells = ("target_crashes", "location_crashes", "share_pct", "reference_share_pct")
         out.append(Finding(
             id="c7-" + signals_mod.slug(sg["row"]), location_id=sg["location_id"], text=text,

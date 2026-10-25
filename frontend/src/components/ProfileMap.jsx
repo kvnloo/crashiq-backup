@@ -38,6 +38,10 @@ function style() {
         'circle-opacity': ['case', ['get', 'hollow'], 0, ['get', 'dim'], 0.15, 0.9],
         'circle-stroke-color': ['case', ['get', 'hollow'], ['get', 'color'], '#0D1013'],
         'circle-stroke-width': 1.5, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.2, 1], 'circle-pitch-alignment': 'map' } },
+      // placed approximately from a freeway report (#255, +-0.5 mi): a wide faint ring says "about here", not "here"
+      { id: 'approx', type: 'circle', source: 'crashes', filter: ['==', ['get', 'approx'], true], paint: {
+        'circle-radius': 13, 'circle-opacity': 0.06, 'circle-color': '#C9D1D9', 'circle-stroke-color': '#C9D1D9',
+        'circle-stroke-width': 1, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.15, 0.55], 'circle-pitch-alignment': 'map' } },
       // pedestrian or bicyclist involved (#136): a light ring around the severity dot, always on, any colour mode
       { id: 'vru', type: 'circle', source: 'crashes', filter: ['==', ['get', 'vru'], true], paint: {
         'circle-radius': ['case', ['get', 'big'], 9, 7.5], 'circle-opacity': 0, 'circle-stroke-color': VRU_RING,
@@ -104,7 +108,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
       const p = e.features?.[0]?.properties
       if (!p) return
       map.getCanvas().style.cursor = 'pointer'
-      popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.type)}</b><br>${esc(p.date)}${p.hour ? ` · ${esc(p.hour)}` : ''} · ${esc(p.sev)}${p.road ? `<br>${esc(p.road)} involved` : ''}`).addTo(map)
+      popup.setLngLat(e.lngLat).setHTML(`<b>${esc(p.type)}</b><br>${esc(p.date)}${p.hour ? ` · ${esc(p.hour)}` : ''} · ${esc(p.sev)}${p.road ? `<br>${esc(p.road)} involved` : ''}${p.approx ? '<br>Approximate location (usually within 0.5 mi)' : ''}`).addTo(map)
     })
     map.on('mousemove', 'columns', (e) => {
       const p = e.features?.[0]?.properties
@@ -147,7 +151,8 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
       type: 'Feature', geometry: { type: 'Point', coordinates: [c.lon, c.lat] },
       properties: { color: colorOf.get(catOf(dim, c)) || '#6B7682', dim: Boolean(highlight && !highlight.has(c.crash_id)),
         hollow: dim === 'severity' && HOLLOW.has(catOf(dim, c)), vru: isVru(c), road: vruWho(c), big: c.severity === 'K' || c.severity === 'A', type: (c.collision_type || 'Crash').toLowerCase(), date: c.date || '',
-        hour: c.hour != null ? `${String(c.hour).padStart(2, '0')}:00` : '', sev: c.severity },
+        hour: c.hour != null ? `${String(c.hour).padStart(2, '0')}:00` : '', sev: c.severity,
+        approx: c.location_source === 'approximate' },
     })) })
     map.getSource('columns').setData(is3d ? columns(locations, shown, dim, cats, scale.h, scale.r) : EMPTY)
   }, [ready, shown, dim, cats, colorOf, locations, is3d, highlight, scale])
