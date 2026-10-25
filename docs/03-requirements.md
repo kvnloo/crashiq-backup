@@ -442,7 +442,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   Evidence, run 9C: +4,965 crashes on the map (58 fatal, 374 KSI), 0 lost and 0 flipped on hidden police GPS, TIGER-name
   placements 90.9% right (Wilson low 83.1%, n=88).
 - **Approximate freeway placement DECIDED (user, 2026-10-24, PM session, "2. B"; #255):** freeway crashes with no usable
-  police GPS are placed by the report (the D1 method, #252) and labelled **approximate (±0.5 mi)**. Evidence: mainline
+  police GPS are placed by the report (the D1 method, #252) and labelled **approximate** (about 95% within 0.5 mi, a band not a bound: ~5% of mainline and ~8% of connector spots miss by more, 2.3% of mainline by over 1 mi). Evidence: mainline
   94.6% within 0.5 mi of police GPS (low 93.9%), 95.4% in the same or an adjacent Caltrans 0.5-mi segment;
   freeway-to-freeway 92.1% / 87.6%. **Not decided:** whether to drop the 2026-10-23 rule "the report beats the
   officer's GPS when they disagree". The CHP postmile tie-breaker sided with each about equally (568 vs 514), so the PM
