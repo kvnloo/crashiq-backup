@@ -37,6 +37,7 @@ from crashiq.sources import ca_ccrs as cc  # noqa: E402
 DATA = ROOT / "data" / "statewide"
 MIN_N, SAMPLE, SEED = 200, 400, 88
 TOL_M, CONSIST_M = 250 * 0.3048, 400 * 0.3048
+TIGER = False
 TIERS = ("exact", "unique_pair", "relaxed", "near", "fuzzy")   # unique_pair: #203, auto-places since 2026-10-22
 COLS = ("Collision Id", "Report Version", "NCIC Code", "Crash Date Time", "Latitude", "Longitude", "PrimaryRoad",
         "SecondaryRoad", "SecondaryDistance", "SecondaryDirection", "SecondaryUnitOfMeasure", "IsFreeway", "IsDeleted")
@@ -118,7 +119,11 @@ def run(out_name: str = "accuracy_by_agency.json") -> list[dict]:
             continue
         random.Random(SEED).shuffle(crashes)
         sample = crashes[:SAMPLE]
-        net = osm.Network(osm_local.network_in_area(local, b["rel"]))
+        raw = osm_local.network_in_area(local, b["rel"])
+        if TIGER:                          # run 10: the OSM + TIGER union the app uses since #258 (union on)
+            import coverage
+            raw = coverage.with_tiger(raw)
+        net = osm.Network(raw)
         grid = Grid(net)
         t = Counter()
         for c in sample:
@@ -167,4 +172,11 @@ if __name__ == "__main__":
     import argparse
     ap = argparse.ArgumentParser()
     ap.add_argument("--out", default="accuracy_by_agency.json")
-    run(ap.parse_args().out)
+    ap.add_argument("--tiger", action="store_true", help="OSM + TIGER/Line union (#229/#250, on since #258)")
+    a = ap.parse_args()
+    if a.tiger:
+        import coverage
+        from crashiq.sources import tiger_files
+        TIGER = True
+        coverage.TIGER = tiger_files.TigerCache(ROOT / "data" / "cache" / "tiger", background=False)
+    run(a.out)
