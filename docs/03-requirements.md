@@ -447,3 +447,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   freeway-to-freeway 92.1% / 87.6%. **Not decided:** whether to drop the 2026-10-23 rule "the report beats the
   officer's GPS when they disagree". The CHP postmile tie-breaker sided with each about equally (568 vs 514), so the PM
   proposed keeping the GPS. Until the user answers, no GPS point is moved.
+- **Freeway-to-freeway connectors held for review DECIDED (user, 2026-10-25, PM session; #259):** in the app,
+  connector placements ("X TO Y") measured 81.5% within 0.5 mi (Wilson low 70.4%, n=65; 12% within 400 ft; run 10),
+  below the 88–92% the 2026-10-24 decision was based on. They are no longer auto-placed as approximate. They go to
+  review with the suggestion. Mainline and ramp crashes stay approximate. The user will review connector examples.
