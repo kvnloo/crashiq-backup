@@ -486,5 +486,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   street is a **local street** (e.g. SR-60 W/B TO I-10 / EUCLID AVENUE / 55 ft W, record 4630945) describes a crash on
   X's main lanes: the local street passes under or over X. With no usable GPS, it is placed automatically as
   **approximate**, measured along X from that street (#259), like other mainline crashes. Only true connector reports,
-  where the cross street is X or Y itself, stay in review (2026-10-25 decision). Evidence before the #259 fixes: 81
-  crashes, 81.5% within 0.5 mi; Tester re-measures on the fixed code.
+  where the cross street is X or Y itself, stay in review (2026-10-25 decision). Evidence before the #259 fixes (Tester,
+  seed-246 sample): all "X TO Y" placements 53 of 65 (81.5%, Wilson low 70.4%) within 0.5 mi; the local-street subgroup
+  132 reports, 39 placed by the old connector logic, 34 of those within 0.5 mi (87%, small n). Tester re-measures the
+  new rule on the fixed code.
