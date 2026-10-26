@@ -500,3 +500,17 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   never at an intersection. Because 86% is below the 98% bar for precise placement, they are labelled **approximate**
   ("usually within 400 ft"), like the freeway approximate placements, and counted on the approximate side of coverage.
   (PM, applying the existing 98% rule; the user may revisit.)
+- **State-highway crash rates from Caltrans AADT DECIDED (user, 2026-10-26, PM session, "BUILD IT"):** exposure for
+  crash rates on the State Highway System comes from the **Caltrans Traffic Census Program**: AADT by route, county and
+  postmile (back/ahead legs), plus truck AADT by axle class and ramp volumes by district. Annual .xlsx files, and the
+  ArcGIS layers CHhighway/Traffic_AADT (14,080 points) and Truck_Volumes_AADT (6,865). Each crash joins through its
+  derived postmile (#248). The tool shows:
+  - per segment: crashes per million vehicle-miles (fatal, fatal + injury, all);
+  - ramps: crashes per million vehicles;
+  - truck-involved crash rates using 3+ axle truck AADT;
+  - each compared with (1) Caltrans' statewide average for the same highway type, once its published source is
+    confirmed, (2) the corridor's own average, and (3) year over year.
+
+  The AADT year and source are cited on every row, and findings cite the rate table. Any comparison with Caltrans
+  averages uses Caltrans' on-highway counting rule or is labelled approximate. This settles the "rate exposure" part of
+  #34 for state highways. Local streets still need local counts.
