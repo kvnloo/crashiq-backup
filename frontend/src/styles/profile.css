@@ -255,3 +255,18 @@
 
 /* #188 a table missing a year of CCRS party / injury details */
 .src-note { color: var(--stop); }
+
+/* #265 safety tables: T14 rows carry KSI and share beside the count; "of which" rows indented; T17 one line */
+.flags { margin-top: 16px; }
+.flags .bar { grid-template-columns: 200px minmax(0, 1fr) 44px 112px; }
+.flags .bar > :last-child { white-space: nowrap; text-align: right; }
+.flags .bar.sub .lab { padding-left: 14px; color: var(--muted); }
+.broadside { margin-top: 8px; color: var(--muted); }
+.broadside b { color: var(--fg); }
+.flags .bar .tr i { display: block; height: 100%; background: var(--muted); border-radius: 0 4px 4px 0; }
+details.conditions section { margin-top: 12px; }
+@media (max-width: 640px) { .flags .bar { grid-template-columns: 120px minmax(0, 1fr) 36px; } .flags .bar > :last-child { display: none; } }
+/* the folded Conditions block is a details.adv: its own "Show table" links keep their link style */
+details.conditions .showtable summary { font: 600 12px var(--font-body); color: var(--info); list-style: revert; }
+details.conditions .showtable summary::after { content: none; }
+.flags .bar.nobar { grid-template-columns: 200px 72px 112px; }
