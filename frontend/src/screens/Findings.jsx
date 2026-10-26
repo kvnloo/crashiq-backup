@@ -109,7 +109,7 @@ function Detail({ f, i, lib, records, corridor, study, onDecide }) {
         <button type="button" className="sf-btn sf-btn--go" disabled={f.status === 'accepted' || f.stale} onClick={() => onDecide(f.id, 'accepted')}>✓ Accept</button>
         <button type="button" className="sf-btn sf-btn--stop" disabled={f.status === 'rejected'} onClick={() => onDecide(f.id, 'rejected')}>✗ Reject</button>
         <span className="sp" />
-        <span className="muted mono small">validator: all numbers traced ✓</span>
+        <span className="muted mono small">{f.stale ? 'validator: out of date' : 'validator: all numbers traced ✓'}</span>
       </div>
     </div>
   )

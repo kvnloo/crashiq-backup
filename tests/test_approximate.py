@@ -56,7 +56,7 @@ def test_the_profile_says_how_many_the_precise_point_analyses_leave_out(client):
     a = assign.assign(pull["crashes"], net, st["radius_ft"], st["buffer_ft"])
     p = profile.build(st, net, pull, a)
     cav = next(c for c in p["caveats"] if c["key"] == "approximate_freeway")
-    assert cav["count"] == 1 and "intersection tables and collision diagrams leave them out" in cav["text"]
+    assert cav["count"] == 1 and "intersection tables and collision diagrams leave it out" in cav["text"]
     t1 = {r["key"]: r["values"]["value"] for r in p["tables"][0]["rows"]}
     assert t1["located_freeway"] == 1 and p["location_provenance"].get("approximate") == 1
     assert p["approximate_locations"] and all(lid.startswith("seg") for lid in p["approximate_locations"])

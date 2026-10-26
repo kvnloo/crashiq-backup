@@ -316,6 +316,33 @@ def intersection_rate(crashes: int, years: float, major_aadt: float | None, mino
     return crashes * 1e6 / (365 * years * tev)
 
 
+def unplaced_text(n: int, share_pct, ksi: int, limitation: bool) -> str:
+    """The unplaced-crashes caveat, singular or plural by count (#266)."""
+    one = n == 1
+    text = (f"{n} crash{'' if one else 'es'} on this corridor ({share_pct}%) "
+            f"{'has' if one else 'have'} no coordinates and {'is' if one else 'are'}n't placed yet")
+    if ksi:
+        text += f", including {ksi} fatal or serious-injury crash{'' if ksi == 1 else 'es'} not in the KSI count"
+    return text + (". This is a data limitation for this study." if limitation else ".")
+
+
+def approximate_text(n: int) -> str:
+    """The approximate-freeway caveat, singular or plural by count (#266)."""
+    one = n == 1
+    return (f"{n} freeway crash{' has' if one else 'es have'} no usable GPS and {'is' if one else 'are'} placed "
+            "approximately (usually within 0.5 mi) from the report's description. "
+            f"{'It counts' if one else 'They count'} on the corridor segments, never at an intersection, so intersection "
+            f"tables and collision diagrams leave {'it' if one else 'them'} out.")
+
+
+def gps_far_text(n: int, check_ft: float) -> str:
+    """The GPS-far-from-stated caveat, singular or plural by count (#266)."""
+    one = n == 1
+    return (f"{n} crash{' has' if one else 'es have'} a GPS point more than {check_ft:g} ft (plus the reported distance) "
+            f"from the intersection named in the report. {'It is' if one else 'They are'} counted where the GPS puts "
+            f"{'it' if one else 'them'}; check {'it' if one else 'them'} on the map.")
+
+
 def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str] | None = None) -> dict:
     exclude = exclude or set()
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
@@ -515,19 +542,12 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         caveats.append({"key": "unplaced", "count": len(unmatched), "share_pct": pct(len(unmatched), total_known),
                         "limitation": share > UNPLACED_LIMIT,
                         "ksi": sum(c["severity"] in ("K", "A") for c in unmatched),
-                        "text": (f"{len(unmatched)} crash{'es' if len(unmatched) != 1 else ''} on this corridor "
-                                 f"({pct(len(unmatched), total_known)}%) have no coordinates and aren't placed yet"
-                                 + (f", including {sum(c['severity'] in ('K', 'A') for c in unmatched)} fatal or "
-                                    "serious-injury crash(es) not in the KSI count"
-                                    if any(c["severity"] in ("K", "A") for c in unmatched) else "")
-                                 + (". This is a data limitation for this study." if share > UNPLACED_LIMIT else "."))})
+                        "text": unplaced_text(len(unmatched), pct(len(unmatched), total_known),
+                                              sum(c["severity"] in ("K", "A") for c in unmatched), share > UNPLACED_LIMIT)})
     approx = sum(1 for c in placed if c.get("location_provenance") == "approximate")
     if approx:                             # #255: say what the precise-point analyses leave out
         caveats.append({"key": "approximate_freeway", "count": approx,
-                        "text": f"{approx} freeway crash{'es have' if approx != 1 else ' has'} no usable GPS and "
-                                f"{'are' if approx != 1 else 'is'} placed approximately (usually within 0.5 mi) from the "
-                                "report's description. They count on the corridor segments, never at an intersection, so "
-                                "intersection tables and collision diagrams leave them out."})
+                        "text": approximate_text(approx)})
     u = sum(c["severity"] == "U" for c in placed)
     if u:
         caveats.append({"key": "injury_level_unknown", "count": u,
@@ -558,10 +578,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                 f"{sum(1 for r in loc_rows if r['values'].get('critical_rate') is not None)}."})
     if gps_far:
         caveats.append({"key": "gps_far_from_stated", "count": gps_far,
-                        "text": f"{gps_far} crash{'es have' if gps_far != 1 else ' has'} a GPS point more than "
-                                f"{assign_mod.GPS_CHECK_FT:g} ft (plus the reported distance) "
-                                "from the intersection named in the report. They are counted where the GPS puts them; "
-                                "check them on the map."})
+                        "text": gps_far_text(gps_far, assign_mod.GPS_CHECK_FT)})
     if exclude:
         caveats.append({"key": "excluded_provenance", "text": f"Crashes placed by {', '.join(sorted(exclude))} are left out of this run."})
 
