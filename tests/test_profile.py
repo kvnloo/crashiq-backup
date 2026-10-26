@@ -252,3 +252,14 @@ def test_the_stale_findings_note_agrees_in_number():
     assert stale_text(1) == ("1 accepted finding no longer matches the data after a study change and is left out "
                              "until reviewed again.")
     assert stale_text(2).startswith("2 accepted findings no longer match the data") and "and are left out" in stale_text(2)
+
+
+def test_the_approximate_and_gps_far_caveats_agree_in_number():
+    # PM review of #284: "1 crash has a GPS point ... They are counted where the GPS puts them"
+    from crashiq.profile import approximate_text, gps_far_text
+    one, two = gps_far_text(1, 400), gps_far_text(2, 400)
+    assert one.startswith("1 crash has a GPS point more than 400 ft") and "It is counted where the GPS puts it; check it" in one
+    assert two.startswith("2 crashes have") and "They are counted where the GPS puts them; check them" in two
+    one, two = approximate_text(1), approximate_text(3)
+    assert one.startswith("1 freeway crash has no usable GPS and is placed") and "It counts" in one and "leave it out" in one
+    assert two.startswith("3 freeway crashes have") and "They count" in two and "leave them out" in two
