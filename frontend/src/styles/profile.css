@@ -269,3 +269,4 @@ details.conditions section { margin-top: 12px; }
 /* the folded Conditions block is a details.adv: its own "Show table" links keep their link style */
 details.conditions .showtable summary { font: 600 12px var(--font-body); color: var(--info); list-style: revert; }
 details.conditions .showtable summary::after { content: none; }
+.flags .bar.nobar { grid-template-columns: 200px 72px 112px; }

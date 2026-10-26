@@ -85,23 +85,31 @@ function CountTable({ t }) {
   )
 }
 
-// hit and run, DUI and speed (T14): one compact row each; "of which" rows indented
-function Flags({ t, p, n, label }) {
+// small numbers (user decision 2026-10-25, docs/03): a group of fewer than SMALL_N crashes shows counts only
+// ("1 of 6") with a "too few to compare" note, never a percentage or a bar
+const SMALL_N = 10
+const TooFew = ({ n }) => <p className="muted small-note">Too few to compare ({fmt(n)} crashes; shares need {SMALL_N} or more).</p>
+
+// hit and run, DUI and speed (T14): one compact row each; "of which" rows indented; zero rows hidden in a drill-in
+function Flags({ t, p, n, label, hideZero }) {
   if (!hasRows(t)) return null
-  const max = Math.max(1, ...t.rows.map((r) => r.values.crashes))
+  const small = n < SMALL_N
+  const rows = hideZero ? t.rows.filter((r) => r.values.crashes) : t.rows
+  const max = Math.max(1, ...rows.map((r) => r.values.crashes))
   return (
     <div className="flags" aria-label={label} role="group">
       <div className="sect-h"><h3 className="h3">Hit and run, DUI and speed</h3><Src tid={t.id} n={n} p={p} /></div>
       <div className="bars">
-        {t.rows.map((r) => (
-          <div className={`bar${r.label.startsWith(' ') ? ' sub' : ''}`} key={r.key} data-testid="flag-row">
+        {rows.map((r) => (
+          <div className={`bar${r.label.startsWith(' ') ? ' sub' : ''}${small ? ' nobar' : ''}`} key={r.key} data-testid="flag-row">
             <span className="lab">{r.label.trim()}</span>
-            <span className="tr" aria-hidden="true"><i style={{ width: `${(100 * r.values.crashes) / max}%` }} /></span>
-            <span className="v mono">{fmt(r.values.crashes)}</span>
-            <span className="muted mono small">{fmt(r.values.ksi_crashes)} KSI · {fmt(r.values.share_pct)}%</span>
+            {small ? null : <span className="tr" aria-hidden="true"><i style={{ width: `${(100 * r.values.crashes) / max}%` }} /></span>}
+            <span className="v mono">{small ? `${fmt(r.values.crashes)} of ${fmt(n)}` : fmt(r.values.crashes)}</span>
+            <span className="muted mono small">{fmt(r.values.ksi_crashes)} KSI{small ? '' : ` · ${fmt(r.values.share_pct)}%`}</span>
           </div>
         ))}
       </div>
+      {small ? <TooFew n={n} /> : null}
     </div>
   )
 }
@@ -121,7 +129,8 @@ function Why({ p, suffix = '', n, label = 'Why did they crash?', h = 'h2' }) {
         {sevLegend(pcf)}
         <CountTable t={pcf} />
       </>) : null}
-      <Flags t={flags} p={p} n={n} label={suffix ? 'Hit and run, DUI and speed (this location)' : 'Hit and run, DUI and speed'} />
+      <Flags t={flags} p={p} n={n} hideZero={Boolean(suffix)}
+        label={suffix ? 'Hit and run, DUI and speed (this location)' : 'Hit and run, DUI and speed'} />
     </section>
   )
 }
@@ -130,11 +139,14 @@ function Why({ p, suffix = '', n, label = 'Why did they crash?', h = 'h2' }) {
 function Broadside({ p, n }) {
   const t = p.tables.find((x) => x.id === 'T17')
   if (!hasRows(t)) return null
+  const base = t.rows.reduce((a, r) => a + r.values.crashes, 0)           // the broadside crashes the shares are of
   return (
     <div className="broadside small" role="group" aria-label="Broadside: left turn vs right angle">
       Broadside crashes: {t.rows.map((r, i) => (
-        <span key={r.key}>{i ? ' · ' : ''}{r.label.split(' (')[0].toLowerCase()} <b className="mono">{fmt(r.values.crashes)}</b> ({fmt(r.values.share_pct)}%)</span>
+        <span key={r.key}>{i ? ' · ' : ''}{r.label.split(' (')[0].toLowerCase()} <b className="mono">{fmt(r.values.crashes)}</b>
+          {base < SMALL_N ? ` of ${fmt(base)}` : ` (${fmt(r.values.share_pct)}%)`}</span>
       ))} <Src tid="T17" n={n} p={p} />
+      {base < SMALL_N ? <TooFew n={base} /> : null}
     </div>
   )
 }

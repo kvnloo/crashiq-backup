@@ -550,3 +550,41 @@ describe('Safety tables on tab 3 (#265)', () => {
     expect(screen.getByLabelText('Hit and run, DUI and speed (this location)')).toBeInTheDocument()
   })
 })
+
+describe('Small numbers on the safety blocks (#265, user decision 2026-10-25)', () => {
+  it('a base under 10 crashes shows counts only, "2 of 4", a too-few note, no share and no bar; zero rows hidden in the drill-in', async () => {
+    const first = table(profile, 'T2').rows[0]
+    const t14 = safety.location.find((x) => x.id.startsWith('T14@'))
+    const small = { ...t14, id: `T14@${first.key}`, rows: [
+      { key: 'hit_and_run', label: 'Hit and run (felony or misdemeanor)', values: { crashes: 2, ksi_crashes: 0, share_pct: 50 } },
+      { key: 'dui', label: 'Driving under the influence (PCF VC 23152 / 23153)', values: { crashes: 0, ksi_crashes: 0, share_pct: 0 } }] }
+    const sloc = { ...location, tables: [...location.tables.filter((x) => !x.id.startsWith('T14@')), small] }
+    const sp = { ...profile, tables: [...profile.tables, ...safety.profile] }
+    const T2 = { ...table(profile, 'T2') }
+    const p4 = { ...sp, tables: sp.tables.map((x) => (x.id === 'T2' ? { ...T2, rows: T2.rows.map((r, i) => (i ? r : { ...r, values: { ...r.values, crashes: 4 } })) } : x)) }
+    mockApi({ ...routes, 'GET /studies/:id/profile': p4, 'GET /studies/:id/profile/locations/:lid': sloc })
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    fireEvent.click(within(screen.getByLabelText('Location ranking')).getAllByRole('button', { name: first.label })[0])
+    const blk = await screen.findByLabelText('Hit and run, DUI and speed (this location)')
+    const rows = within(blk).getAllByTestId('flag-row')
+    expect(rows).toHaveLength(1)                                      // the zero DUI row is hidden here
+    expect(rows[0]).toHaveTextContent('2 of 4')
+    expect(blk).not.toHaveTextContent('%')
+    expect(rows[0].querySelector('.tr')).toBeNull()
+    expect(blk).toHaveTextContent('Too few to compare')
+  })
+
+  it('the broadside split under 10 broadside crashes shows "x of n", no percentages', async () => {
+    const sp = { ...profile, tables: [...profile.tables, ...safety.profile] }
+    const few = sp.tables.map((x) => (x.id === 'T17' ? { ...x, rows: [
+      { key: 'left_turn', label: 'Left turn (a party was making a left turn)', values: { crashes: 3, ksi_crashes: 0, share_pct: 75 } },
+      { key: 'right_angle', label: 'Right angle (no party turning left)', values: { crashes: 1, ksi_crashes: 0, share_pct: 25 } }] } : x))
+    mockApi({ ...routes, 'GET /studies/:id/profile': { ...sp, tables: few } })
+    renderAt('/s/s1/profile')
+    const blk = await screen.findByLabelText('Broadside: left turn vs right angle')
+    expect(blk).toHaveTextContent('left turn 3 of 4')
+    expect(blk).not.toHaveTextContent('%')
+    expect(blk).toHaveTextContent('Too few to compare')
+  })
+})
