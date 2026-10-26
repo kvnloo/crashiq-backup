@@ -30,11 +30,12 @@ function Claim({ f }) {
 // #267: a location by name, never an id (the server sends T2's label as location_name)
 const ID_LIKE = /^(SEG|INT|LOC):|^osm-?\d/i
 const locName = (f) => [f.location_name, f.meta?.location].find((x) => x && !ID_LIKE.test(String(x).trim())) || 'This location'
-// the card's one line: the title without the location the card already shows
+// the card's one line: the title without the trailing " at <location>" the card already shows; any other title
+// (or a finding's text, when it has no title) stays whole and is ellipsised (PM review of #290)
 const shortTitle = (f) => {
-  const t = f.title || f.text
-  const at = t.lastIndexOf(' at ')
-  return at > 0 ? t.slice(0, at) : t
+  const t = (f.title || f.text).trim()
+  const tail = [f.location_name, f.meta?.location].filter(Boolean).map((x) => ` at ${x}`).find((x) => t.endsWith(x))
+  return tail ? t.slice(0, -tail.length) : t
 }
 // the library entry by the finding's pattern, or by its reference when the pattern key is missing
 const libEntry = (lib, f) => lib?.entries?.[f.meta?.pattern]

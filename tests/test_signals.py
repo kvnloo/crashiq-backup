@@ -161,9 +161,10 @@ def test_findings_are_ordered_fatal_ksi_strength_crashes_with_stale_last_and_nam
     fs = client.get(f"/api/studies/{sid}/findings").json()["findings"]
     for f in fs:                                       # the rank counts are the finding's own records
         recs = client.get(f"/api/studies/{sid}/findings/{f['id']}/records").json()["records"]
-        assert f["rank"] == {"fatal_crashes": sum(r["severity"] == "K" for r in recs),
-                             "ksi_crashes": sum(r["severity"] in "KA" for r in recs), "crashes": len(recs)}
-    key = [(f["stale"], -(f["rank"]["fatal_crashes"] > 0), -f["rank"]["ksi_crashes"],
+        assert {k: v for k, v in f["rank"].items() if k != "location_fatal_crashes"} == {
+            "fatal_crashes": sum(r["severity"] == "K" for r in recs),
+            "ksi_crashes": sum(r["severity"] in "KA" for r in recs), "crashes": len(recs)}
+    key = [(f["stale"], -(f["rank"]["location_fatal_crashes"] > 0), -f["rank"]["ksi_crashes"],
             -float(f["meta"].get("probability") or 0), -f["rank"]["crashes"]) for f in fs]
     assert key == sorted(key) and fs[-1]["id"] == "c7-old" and fs[-1]["stale"]
     assert sum(f["rank"]["ksi_crashes"] > 0 for f in fs) >= 1 and fs[0]["rank"]["ksi_crashes"] > 0
@@ -171,3 +172,31 @@ def test_findings_are_ordered_fatal_ksi_strength_crashes_with_stale_last_and_nam
     assert all(f["location_name"] and not f["location_name"].upper().startswith(("SEG:", "INT:", "OSM-")) for f in fs)
     screen_order = [f["id"] for f in client.post(f"/api/studies/{sid}/findings/screen").json()["shown"]]
     assert screen_order != [f["id"] for f in fs if not f["stale"]]                    # the order really changed
+
+
+
+def test_a_location_with_a_fatal_crash_leads_even_when_the_finding_s_own_records_have_none(client):
+    # PM review of #290: "fatal first" is the location's fatal crashes (T2 sev_k), as #267 says; the finding's own
+    # records only set the "Fatal crash" chip
+    from crashiq import profile as profile_mod
+    sid = _study(client)
+    client.post(f"/api/studies/{sid}/findings/screen")
+    fs = client.get(f"/api/studies/{sid}/findings").json()["findings"]
+    last = fs[-1]
+    real = profile_mod.build
+    def build(*a, **k):
+        prof = real(*a, **k)
+        for t in prof["tables"]:
+            if t["id"] == "T2":
+                for r in t["rows"]:
+                    r["values"]["sev_k"] = 1 if r["key"] == last["location_id"] else 0
+        return prof
+    import pytest
+    mp = pytest.MonkeyPatch()
+    mp.setattr(profile_mod, "build", build)
+    try:
+        again = client.get(f"/api/studies/{sid}/findings").json()["findings"]
+    finally:
+        mp.undo()
+    assert again[0]["location_id"] == last["location_id"] and again[0]["rank"]["location_fatal_crashes"] == 1
+    assert again[0]["rank"]["fatal_crashes"] == 0                                    # no "Fatal crash" chip for it

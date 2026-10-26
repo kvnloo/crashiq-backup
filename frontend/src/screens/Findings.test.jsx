@@ -143,4 +143,14 @@ describe('Findings list (#267)', () => {
     renderAt('/s/s1/findings')
     expect(await screen.findByText('Poor visibility or lighting')).toBeInTheDocument()
   })
+
+  it('trims only a trailing " at <location>"; an untitled finding keeps its text whole', async () => {
+    const T = { ...M, id: 't', title: 'Crashes with poor delineation at night over-represented at Marine Avenue – West 147th Street' }
+    const U = { ...S, id: 'u', title: null, text: 'Hit object crashes from poor delineation at night.' }
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [T, U], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    const list = await screen.findByRole('complementary', { name: 'Findings list' })
+    const tt = within(list).getAllByTestId('fcard').map((c) => c.querySelector('.tt').textContent)
+    expect(tt).toEqual(['Crashes with poor delineation at night over-represented', 'Hit object crashes from poor delineation at night.'])
+  })
 })
