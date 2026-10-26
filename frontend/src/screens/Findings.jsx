@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import CollisionDiagram from '../components/CollisionDiagram'
 import Replay from '../components/Replay'
@@ -27,6 +27,20 @@ function Claim({ f }) {
   return <p className="claim">{parts}</p>
 }
 
+// #267: a location by name, never an id (the server sends T2's label as location_name)
+const ID_LIKE = /^(SEG|INT|LOC):|^osm-?\d/i
+const locName = (f) => [f.location_name, f.meta?.location].find((x) => x && !ID_LIKE.test(String(x).trim())) || 'This location'
+// the card's one line: the title without the trailing " at <location>" the card already shows; any other title
+// (or a finding's text, when it has no title) stays whole and is ellipsised (PM review of #290)
+const shortTitle = (f) => {
+  const t = (f.title || f.text).trim()
+  const tail = [f.location_name, f.meta?.location].filter(Boolean).map((x) => ` at ${x}`).find((x) => t.endsWith(x))
+  return tail ? t.slice(0, -tail.length) : t
+}
+// the library entry by the finding's pattern, or by its reference when the pattern key is missing
+const libEntry = (lib, f) => lib?.entries?.[f.meta?.pattern]
+  || Object.values(lib?.entries || {}).find((e) => f.pattern_ref && e.ref === f.pattern_ref)
+
 function Status({ s }) {
   if (s === 'accepted') return <span className="st acc">Accepted</span>
   if (s === 'rejected') return <span className="st rej">Rejected</span>
@@ -35,22 +49,23 @@ function Status({ s }) {
 
 function Detail({ f, i, lib, records, corridor, study, onDecide }) {
   const [tab, setTab] = useState('records')
-  const entry = lib?.entries?.[f.meta?.pattern]
+  const entry = libEntry(lib, f)
   const segment = f.meta?.kind === 'segment'
   const m = f.meta || {}
+  const own = !entry && Array.isArray(m.factors) && m.factors.length ? m.factors : null   // factors the finding carries
   return (
     <div className="fdetail">
-      <div className="sf-eyebrow">F{i + 1} · {m.location || f.location_id}</div>
+      <div className="sf-eyebrow">F{i + 1} · {locName(f)}</div>
       <Replay anim={entry?.anim || 'generic'} segment={segment} records={records || []} />
       <Claim f={f} />
       <div className="why">
         <div>
           <span className="k">Pattern library{lib?.status === 'draft' && entry ? ' · draft' : ''}</span>
-          <span>{entry ? entry.ref : 'No library entry for this crash type yet.'}</span>
+          <span>{entry ? entry.ref : own ? 'Factors from this finding' : 'No library entry for this crash type yet.'}</span>
         </div>
         <div>
           <span className="k">Possible contributing factors</span>
-          <span>{entry ? entry.factors.join(' · ') : '—'}</span>
+          <span>{entry ? entry.factors.join(' · ') : own ? own.join(' · ') : '—'}</span>
         </div>
         <div>
           <span className="k">Verify in the field</span>
@@ -85,7 +100,7 @@ function Detail({ f, i, lib, records, corridor, study, onDecide }) {
           )}
           {tab === 'diagram' && (
             <div className="card-pad">
-              <CollisionDiagram records={records || []} corridor={corridor} cross={m.location} segment={segment} />
+              <CollisionDiagram records={records || []} corridor={corridor} cross={locName(f)} segment={segment} />
             </div>
           )}
           {tab === 'audit' && (
@@ -175,13 +190,19 @@ export default function Findings() {
     <section className="findings-screen" aria-label="Findings">
       <aside className="flist" aria-label="Findings list">
         <div className="sf-eyebrow">{findings.length} findings · {nAcc} accepted</div>
+        {/* the server's order (#267): fatal, KSI, strength, crashes; stale ones last, under a divider */}
         {findings.map((f, i) => (
-          <button key={f.id} type="button" className={`fcard${f === cur ? ' sel' : ''}`} onClick={() => setSel(i)} aria-pressed={f === cur}>
-            <span className="loc-l">{f.meta?.location || f.location_id}</span>
-            <span className="tt">{f.title || f.text}</span>
-            <span className="meta"><Status s={f.status} /><span>{f.meta?.strength}</span>
-              {f.stale ? <span className="st rej" title={(f.stale_reasons || []).join('; ')}>Stale</span> : null}</span>
-          </button>
+          <Fragment key={f.id}>
+            {f.stale && !findings[i - 1]?.stale ? <div className="fdivider" role="separator">Out of date</div> : null}
+            <button type="button" data-testid="fcard" className={`fcard${f === cur ? ' sel' : ''}`} onClick={() => setSel(i)}
+              aria-pressed={f === cur} title={f.title || ''}>
+              <span className="loc-l">{locName(f)}</span>
+              <span className="tt">{shortTitle(f)}</span>
+              <span className="meta"><Status s={f.status} /><span>{f.meta?.strength}</span>
+                {f.rank?.fatal_crashes ? <span className="st fatal">Fatal crash</span> : null}
+                {f.stale ? <span className="st rej" title={(f.stale_reasons || []).join('; ')}>Stale</span> : null}</span>
+            </button>
+          </Fragment>
         ))}
         <p className="muted small">Findings are suggestions. Only accepted findings go in the report.</p>
         <button type="button" className={`sf-btn${nAcc ? ' sf-btn--go' : ''}`} onClick={() => navigate(`/s/${studyId}/export`)}>Go to export →</button>

@@ -61,3 +61,8 @@
   .findings-screen.pad { padding: 24px 16px; }
   .replay .sf-chip small { display: none; }
 }
+/* #267: one-line cards; stale findings under a divider */
+.fcard .tt { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.fdivider { font: 600 11px var(--font-mono); color: var(--muted); letter-spacing: .04em; text-transform: uppercase;
+  border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; }
+.st.fatal { color: var(--sev-k); border-color: var(--sev-k); }

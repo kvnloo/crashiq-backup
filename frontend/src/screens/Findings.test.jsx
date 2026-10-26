@@ -97,3 +97,60 @@ describe('Findings screen', () => {
     expect(screen.getByText('validator: out of date')).toBeInTheDocument()
   })
 })
+
+describe('Findings list (#267)', () => {
+  const K = { ...F1, id: 'k', location_name: 'West 135th Street', rank: { fatal_crashes: 1, ksi_crashes: 2, crashes: 12 },
+    meta: { ...F1.meta, location: 'SEG:OSM-1029:OSM-1035' } }
+  const M = { ...F2, id: 'm', location_name: 'Marine Avenue – West 147th Street', rank: { fatal_crashes: 0, ksi_crashes: 0, crashes: 12 } }
+  const S = { ...F1, id: 's', stale: true, stale_reasons: ['x'], location_name: 'West 132nd Street', title: 'Old claim at West 132nd Street',
+    rank: { fatal_crashes: 0, ksi_crashes: 0, crashes: 0 } }
+
+  it('keeps the order the server ranks (fatal, KSI, strength, crashes), stale ones under "Out of date"', async () => {
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [K, M, S], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    const list = await screen.findByRole('complementary', { name: 'Findings list' })
+    const cards = within(list).getAllByTestId('fcard')
+    expect(cards.map((c) => c.querySelector('.loc-l').textContent)).toEqual(['West 135th Street', 'Marine Avenue – West 147th Street', 'West 132nd Street'])
+    const sep = within(list).getByRole('separator')
+    expect(sep).toHaveTextContent('Out of date')
+    expect(sep.compareDocumentPosition(cards[2]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    expect(sep.compareDocumentPosition(cards[1]) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy()
+    expect(within(cards[0]).getByText('Fatal crash')).toBeInTheDocument()
+  })
+
+  it('cards are one line: location, title without the repeated location, chips; never the paragraph or an id', async () => {
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [K, M], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    const list = await screen.findByRole('complementary', { name: 'Findings list' })
+    const card = within(list).getAllByTestId('fcard')[0]
+    expect(card.querySelector('.tt').textContent).toBe('Crashes after dark over-represented')
+    expect(list).not.toHaveTextContent(K.text)
+    expect(document.body.textContent).not.toMatch(/SEG:|INT:|osm-\d/i)
+    expect(screen.getByText('F1 · West 135th Street')).toBeInTheDocument()
+  })
+
+  it('a finding with its own factors but no library entry shows them, not "No library entry"', async () => {
+    const X = { ...K, pattern_ref: null, meta: { ...K.meta, pattern: 'ksi', factors: ['Excessive speed', 'Left-turn conflicts'] } }
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [X], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    expect(await screen.findByText('Excessive speed · Left-turn conflicts')).toBeInTheDocument()
+    expect(screen.queryByText(/No library entry/)).toBeNull()
+  })
+
+  it('a finding whose pattern key is missing still finds its library entry by its reference', async () => {
+    const X = { ...K, meta: { ...K.meta, pattern: undefined } }
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [X], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    expect(await screen.findByText('Poor visibility or lighting')).toBeInTheDocument()
+  })
+
+  it('trims only a trailing " at <location>"; an untitled finding keeps its text whole', async () => {
+    const T = { ...M, id: 't', title: 'Crashes with poor delineation at night over-represented at Marine Avenue – West 147th Street' }
+    const U = { ...S, id: 'u', title: null, text: 'Hit object crashes from poor delineation at night.' }
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [T, U], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    const list = await screen.findByRole('complementary', { name: 'Findings list' })
+    const tt = within(list).getAllByTestId('fcard').map((c) => c.querySelector('.tt').textContent)
+    expect(tt).toEqual(['Crashes with poor delineation at night over-represented', 'Hit object crashes from poor delineation at night.'])
+  })
+})
