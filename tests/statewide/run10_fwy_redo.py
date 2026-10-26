@@ -25,6 +25,7 @@ DATA = ROOT / "data" / "statewide"
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(HERE))
 PREFIX = sys.argv[1] if len(sys.argv) > 1 else "r10b"
+FARS_AFTER = "--fars-after" in sys.argv          # #281: FARS replaces an approximate spot that it fits
 AUTO = ("gps_usable", "gps_usable_dms", "gps_usable_sign", "placed_exact", "placed_unique_pair")
 
 
@@ -57,7 +58,15 @@ def main() -> None:
                              (f"{name} County",)).fetchone()
         if x:
             box[code] = x
-    fr = FwyRaw(local, box, Outside(local, box))
+    outside = Outside(local, box)
+    fr = FwyRaw(local, box, outside)
+    import coverage
+    from citywide import fars
+    from crashiq.db import Database
+    from crashiq.sources import tiger_files
+    coverage.TIGER = tiger_files.TigerCache(ROOT / "data" / "cache" / "tiger", background=False)  # union on, as run 10
+    fars_db = Database(ROOT / "data" / "tester.sqlite")
+    fars_ids = []
     con = sqlite3.connect(DATA / "ccrs_mirror.sqlite")
     new, tally = {}, Counter()
     for city, ids in sorted(by_city.items(), key=lambda kv: -len(kv[1])):
@@ -86,9 +95,20 @@ def main() -> None:
             if sp is not None and sp.report not in FWY_AUTO_KINDS:
                 tally[f"held for review ({sp.report})"] += 1
                 sp = None                         # true connectors stay in review (#261, #278)
+            if sp is not None and FARS_AFTER and (c.get("killed") or 0) > 0:
+                # #280/#281: FARS runs after the freeway step; its point, when it fits the named roads, replaces the
+                # approximate spot (the coverage harness's FARS check: fars.link + fars.point + fits)
+                status, row = fars.link(fars_db, c)
+                p = fars.point(fars_db, row) if status == "linked" else None
+                if p is not None and outside.fits(p[0], p[1], c):
+                    new[cid] = {"outcome": "placed_fars", "bin": "1", "reason": "", "approx": ""}
+                    tally["FARS replaces the approximate spot"] += 1
+                    fars_ids.append((cid, r["approx"].split(":")[0] if r["outcome"] == "placed_approximate" else
+                                     "gps_off_roads" if r["reason"].startswith("police GPS off") else "no_gps"))
+                    continue
             was = r["outcome"] == "placed_approximate"
             if sp is not None:
-                how = (r["approx"].split(":")[0] if was else
+                how = (r["approx"].split(":")[0] if r["outcome"] == "placed_approximate" else
                        "gps_off_roads" if r["reason"].startswith("police GPS off") else "no_gps")
                 new[cid] = {"outcome": "placed_approximate", "bin": "1", "reason": "", "approx": f"{how}:{sp.report}"}
                 tally["still approximate" if was else f"newly approximate ({how})"] += 1
@@ -106,6 +126,8 @@ def main() -> None:
             for r in rd:
                 w.writerow({**r, **new.get(r["collision_id"], {})})
     print(dict(tally))
+    if FARS_AFTER:
+        (DATA / f"{PREFIX}_fars_replaced.csv").write_text("collision_id,group\n" + "".join(f"{a},{b}\n" for a, b in fars_ids))
     print("EXIT: finished", flush=True)
 
 
