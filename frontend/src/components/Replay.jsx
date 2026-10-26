@@ -142,9 +142,8 @@ function draw(ctx, W, H, t, anim, segment, records) {
 
 export default function Replay({ anim = 'generic', segment = false, records = [] }) {
   const ref = useRef(null)
-  const st = useRef({ t: 0, paused: false })
+  const st = useRef({ t: 0 })   // plays only once the user asks for it (#268: no Pause / Replay)
   const [phase, setPhase] = useState(0)
-  const [paused, setPaused] = useState(false)
   const kind = LABELS[anim] ? anim : 'generic'
 
   useEffect(() => {
@@ -156,7 +155,7 @@ export default function Replay({ anim = 'generic', segment = false, records = []
     let raf = 0, last = performance.now(), shownPhase = -1
     const frame = (now) => {
       const dt = Math.min(0.05, (now - last) / 1000); last = now
-      if (!st.current.paused && !still) st.current.t = (st.current.t + dt) % LOOP
+      if (!still) st.current.t = (st.current.t + dt) % LOOP
       const r = cv.getBoundingClientRect()
       const dpr = Math.min(window.devicePixelRatio || 1, 2)
       if (cv.width !== Math.round(r.width * dpr)) { cv.width = Math.round(r.width * dpr); cv.height = Math.round(r.height * dpr) }
@@ -175,12 +174,6 @@ export default function Replay({ anim = 'generic', segment = false, records = []
       <div className="sf-chip">
         <span className="sf-sig" data-s="r"><i /><i /><i /></span>
         <span>Pattern replay<small>{LABELS[kind]} · schematic</small></span>
-      </div>
-      <div className="ctrl">
-        <button type="button" onClick={() => { st.current.paused = !st.current.paused; setPaused(st.current.paused) }}>
-          {paused ? '▶ Play' : '❚❚ Pause'}
-        </button>
-        <button type="button" onClick={() => { st.current.t = 0; st.current.paused = false; setPaused(false) }}>↺ Replay</button>
       </div>
       <div className="phases">
         {PHASES.map((p, i) => <span key={p} className={i === phase ? 'on' : ''}>{p}</span>)}

@@ -200,3 +200,28 @@ def test_a_location_with_a_fatal_crash_leads_even_when_the_finding_s_own_records
         mp.undo()
     assert again[0]["location_id"] == last["location_id"] and again[0]["rank"]["location_fatal_crashes"] == 1
     assert again[0]["rank"]["fatal_crashes"] == 0                                    # no "Fatal crash" chip for it
+
+
+def test_a_finding_s_collision_diagram_draws_only_its_records(client):
+    # #268: the N10 diagram of the finding's crashes (not the whole intersection's); numbers and "not drawn" by code
+    import re
+    sid = _study(client)
+    client.post(f"/api/studies/{sid}/findings/screen")
+    fs = client.get(f"/api/studies/{sid}/findings").json()["findings"]
+    seen = set()
+    for f in fs:
+        recs = client.get(f"/api/studies/{sid}/findings/{f['id']}/records").json()["records"]
+        d = client.get(f"/api/studies/{sid}/findings/{f['id']}/diagram").json()
+        seen.add(d["kind"])
+        assert d["kind"] == f["meta"]["kind"] and d["records"] == len(recs)
+        if d["kind"] != "intersection":
+            assert d["diagram"] is None and d["strip"]["location_id"] == f["location_id"]
+            assert 0 <= d["strip"]["from_ft"] < d["strip"]["to_ft"] <= d["strip"]["length_ft"]
+            continue
+        dg = d["diagram"]
+        assert sorted(c["crash_id"] for c in dg["crashes"]) == sorted(r["crash_id"] for r in recs)
+        numbers = [int(x) for s in dg["steps"] if s["op"] == "text" and re.fullmatch(r"[\d, ]+", s["t"])
+                   for x in s["t"].split(",")]
+        assert len(numbers) == len(recs) - sum(dg["not_drawn"].values())
+        assert d["table"]["id"] == f"T21@{f['id']}" and len(d["table"]["rows"]) == len(recs)
+    assert "intersection" in seen

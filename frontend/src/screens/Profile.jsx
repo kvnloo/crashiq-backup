@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import IntersectionDiagram from '../components/IntersectionDiagram'
+import N10Diagram from '../components/N10Diagram'
 import ProfileMap from '../components/ProfileMap'
 import ReviewList from '../components/ReviewList'
 import StripDiagram from '../components/StripDiagram'
@@ -621,34 +621,6 @@ function DataSources({ p, pull, onRefresh, busy }) {
   )
 }
 
-// G. Collision diagram (#106, N10): drawn from the backend's steps; the numbers key to T21 (date order)
-function LegendIcon({ steps }) {
-  return <svg viewBox="0 0 48 48" width="36" height="36" aria-hidden="true"><IntersectionDiagram.Steps steps={steps} /></svg>
-}
-
-function Diagram({ d, t, label }) {
-  const nd = d.not_drawn || {}
-  const notes = [nd.no_party_data ? `${fmt(nd.no_party_data)} with no party data for their year in this pull, so no direction of travel` : null,
-    nd.no_direction ? `${fmt(nd.no_direction)} with no direction of travel in the report` : null,
-    nd.no_room ? `${fmt(nd.no_room)} more than the diagram has room for on their approach` : null].filter(Boolean)
-  return (
-    <section aria-label="Collision diagram">
-      <div className="sect-h"><h3 className="h3">Collision diagram</h3>{t ? <Src tid={t.id} n={t.rows.length} /> : null}</div>
-      <IntersectionDiagram diagram={d} label={label} />
-      {notes.length ? <p className="muted small-note">Not drawn, listed below: {notes.join('; ')}.</p> : null}
-      <div className="cdiag-legend">
-        {[...d.legend.symbols, ...d.legend.marks].map((x) => <span key={x.key}><LegendIcon steps={x.steps} />{x.label}</span>)}
-      </div>
-      {t ? <details className="showtable"><summary>Crash list (numbers on the diagram)</summary>
-        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>#</th><th>Date, time</th><th>Approach</th><th>Type</th><th>Sev.</th><th title="Road surface + light (HSM): C dry, W wet, S snow/ice, O other · D day, N dark without street lights, L dark with street lights">Code</th></tr></thead>
-          <tbody>{t.rows.map((r) => <tr key={r.key}><td className="mono">{r.key}</td><td className="mono">{r.label}</td><td className="mono">{r.values.approach}</td>
-            <td>{r.values.type}</td><td className="mono">{r.values.severity}</td><td className="mono">{r.values.code}</td></tr>)}</tbody></table></div>
-        <p className="muted small-note">Code = road surface + light (HSM): C dry, W wet, S snow/ice, O other · D daylight, N dark without street lights, L dark with street lights.</p>
-      </details> : null}
-    </section>
-  )
-}
-
 function Drill({ row, data, onClose }) {
   if (!data) return <div className="muted">Loading {row.label}…</div>
   const sev = table(data, `T3@${row.key}`)
@@ -665,7 +637,10 @@ function Drill({ row, data, onClose }) {
       <Why p={data} suffix={`@${row.key}`} n={row.values.crashes} label="Why did they crash? (this location)" h="h3" />
       <section><div className="sect-h"><h3 className="h3">Lighting</h3><Src tid={light.id} n={row.values.crashes} /></div>
         <ul className="kv">{light.rows.map((r) => <li key={r.key}><span>{r.label}</span><span className="mono">{fmt(r.values.crashes)}</span></li>)}</ul></section>
-      {data.diagram ? <Diagram d={data.diagram} t={data.tables.find((x) => x.id.startsWith('T21@'))} label={row.label} /> : null}
+      {data.diagram ? (() => {
+        const t21 = data.tables.find((x) => x.id.startsWith('T21@'))
+        return <N10Diagram d={data.diagram} t={t21} label={row.label} src={t21 ? <Src tid={t21.id} n={t21.rows.length} /> : null} />
+      })() : null}
       <section><h3 className="h3">Crash records</h3>
         <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Date</th><th>Type</th><th>Sev.</th><th>Roads</th></tr></thead>
           <tbody>{data.crashes.map((c) => (

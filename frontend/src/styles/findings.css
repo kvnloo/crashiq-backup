@@ -66,3 +66,8 @@
 .fdivider { font: 600 11px var(--font-mono); color: var(--muted); letter-spacing: .04em; text-transform: uppercase;
   border-top: 1px solid var(--line); padding-top: 10px; margin-top: 4px; }
 .st.fatal { color: var(--sev-k); border-color: var(--sev-k); }
+/* #268: a segment finding's place along the corridor */
+.fstrip { position: relative; height: 10px; background: var(--surface-2); border-radius: 5px; margin: 6px 0; }
+.fstrip i { position: absolute; top: 0; bottom: 0; background: var(--info); border-radius: 5px; min-width: 4px; }
+/* #268: the finding's diagram leads but leaves the claim in view */
+.fdetail .cdiag { max-height: 420px; width: auto; max-width: 100%; margin: 0 auto; }

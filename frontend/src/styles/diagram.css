@@ -1,0 +1,5 @@
+/* N10 collision diagram (#106), shared by tab 3 and Findings (#268) */
+.cdiag { width: 100%; height: auto; display: block; border-radius: var(--radius); --diag-ink: #22282E; --diag-muted: #57636F; --diag-paper: #FFFFFF; }
+.cdiag-legend { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 12px; font-size: 12px; margin: 8px 0; --diag-ink: var(--fg); --diag-muted: var(--muted); --diag-paper: var(--surface); }
+.cdiag-legend span { display: flex; align-items: center; gap: 6px; }
+@media (max-width: 900px) { .cdiag-legend { grid-template-columns: 1fr; } }
