@@ -148,3 +148,26 @@ def test_accepted_findings_print_in_the_pdf(client):
 def test_patterns_library_is_marked_draft(client):
     lib = client.get("/api/patterns").json()
     assert lib["status"] == "draft" and "type_broadside" in lib["entries"]
+
+
+def test_findings_are_ordered_fatal_ksi_strength_crashes_with_stale_last_and_named_by_location(client):
+    # #267: the most important finding first; a stale one under "Out of date"; a name, never an id
+    sid = _study(client)
+    client.post(f"/api/studies/{sid}/findings/screen")
+    client.app.state.db.execute(
+        "INSERT INTO finding (study_id, id, body, status) VALUES (?, 'c7-old', ?, 'proposed')",
+        (sid, findings.Finding(id="c7-old", location_id="osm-1035", text="Old claim 99 of 7.",
+                               meta={"location": "SEG:OSM-1029:OSM-1035"}).model_dump_json()))
+    fs = client.get(f"/api/studies/{sid}/findings").json()["findings"]
+    for f in fs:                                       # the rank counts are the finding's own records
+        recs = client.get(f"/api/studies/{sid}/findings/{f['id']}/records").json()["records"]
+        assert f["rank"] == {"fatal_crashes": sum(r["severity"] == "K" for r in recs),
+                             "ksi_crashes": sum(r["severity"] in "KA" for r in recs), "crashes": len(recs)}
+    key = [(f["stale"], -(f["rank"]["fatal_crashes"] > 0), -f["rank"]["ksi_crashes"],
+            -float(f["meta"].get("probability") or 0), -f["rank"]["crashes"]) for f in fs]
+    assert key == sorted(key) and fs[-1]["id"] == "c7-old" and fs[-1]["stale"]
+    assert sum(f["rank"]["ksi_crashes"] > 0 for f in fs) >= 1 and fs[0]["rank"]["ksi_crashes"] > 0
+    assert fs[-1]["location_name"] == "West 132nd Street"                              # T2's label, not the old id
+    assert all(f["location_name"] and not f["location_name"].upper().startswith(("SEG:", "INT:", "OSM-")) for f in fs)
+    screen_order = [f["id"] for f in client.post(f"/api/studies/{sid}/findings/screen").json()["shown"]]
+    assert screen_order != [f["id"] for f in fs if not f["stale"]]                    # the order really changed

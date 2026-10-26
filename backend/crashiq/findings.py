@@ -346,12 +346,33 @@ def check_stored(db, sid: str) -> list[dict]:
     except HTTPException:
         return [{**json.loads(r["body"]), "stale": True, "stale_reasons": ["the study's crashes need re-pulling"]}
                 for r in rows]
+    names = {r["key"]: r["label"] for t in tables if t["id"] == "T2" for r in t["rows"]}
     out = []
     for r in rows:
         f = json.loads(r["body"])
-        reasons = validate(Finding(**f), tables, placed, window)
-        out.append({**f, "stale": bool(reasons), "stale_reasons": reasons})
-    return out
+        model = Finding(**f)
+        reasons = validate(model, tables, placed, window)
+        recs = select_records(placed, model.evidence_refs.records)
+        out.append({**f, "stale": bool(reasons), "stale_reasons": reasons,
+                    # #267: the location by its current name (T2), never an id; and what the list is ordered by
+                    "location_name": names.get(f.get("location_id")) or _named((f.get("meta") or {}).get("location")),
+                    "rank": {"fatal_crashes": sum(c.get("severity") == "K" for c in recs),
+                             "ksi_crashes": sum(c.get("severity") in ("K", "A") for c in recs), "crashes": len(recs)}})
+    return sorted(out, key=_order)
+
+
+def _named(label) -> str | None:
+    """A stored label that is a name, or None when it is an id (SEG:OSM-1029:OSM-1035, osm-1029)."""
+    s = str(label or "").strip()
+    return None if not s or re.match(r"^(SEG|INT|LOC)?:?\s*OSM-?\d", s.upper()) or re.match(r"^(SEG|INT):", s.upper()) else s
+
+
+def _order(f: dict):
+    """#267: findings at locations with a fatal crash first, then by KSI crashes in the finding's records, then by
+    test strength (probability), then by crash count; stale findings last. Ties keep the screen's order."""
+    rk = f.get("rank") or {}
+    return (bool(f.get("stale")), -(rk.get("fatal_crashes", 0) > 0), -rk.get("ksi_crashes", 0),
+            -float((f.get("meta") or {}).get("probability") or 0), -rk.get("crashes", 0))
 
 
 @router.get("/studies/{sid}/findings")
