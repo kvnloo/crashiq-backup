@@ -70,9 +70,11 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
         if (c.get("killed") or 0) <= 0 or c.get("exclude_rule"):
             continue
         src = c.get("location_source")
-        if src not in ("unmatched", "gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied"):
+        if src not in ("unmatched", "approximate", "gps", "gps_dms_corrected", "gps_sign_corrected",
+                       "gps_offset_applied"):
             continue                       # placed by the locator (exact) or by hand: a usable location (#191)
-        if src != "unmatched" and (c.get("lat") is None or _gps_usable(c, net)):
+        # an approximate freeway spot is an estimate: a FARS point that fits the named roads replaces it (#280)
+        if src not in ("unmatched", "approximate") and (c.get("lat") is None or _gps_usable(c, net)):
             continue                                       # its own GPS checks out
         counts["tried"] += 1
         status, row = fars.link(db, c)
@@ -83,6 +85,7 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
         if p is None:
             counts["no_point"] += 1
             continue
+        trial_from = (c.get("lat"), c.get("lon"))
         trial = {**c, "lat": p[0], "lon": p[1]}
         radius_m = (GPS_CHECK_FT + (c.get("offset_ft") or 0.0)) / 3.28084
         if not (_at_named_intersection(trial, net)
@@ -94,7 +97,9 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
             continue
         c.update(lat=p[0], lon=p[1], location_source="fars", fars_case=fars.case_key(row["year"], row["st_case"]),
                  review_reason=None, suggestion=None,
-                 gps_replaced=[c["lat"], c["lon"]] if src != "unmatched" else None)
+                 gps_replaced=[c["lat"], c["lon"]] if src not in ("unmatched", "approximate") else None)
+        if src == "approximate":
+            c["approximate_replaced"] = {**c.pop("approximate"), "lat_lon": [trial_from[0], trial_from[1]]}
         counts["placed"] += 1
     return counts
 
@@ -152,5 +157,9 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
             counts["still_unplaced"] += 1
     # FARS only after the locator: a fatal crash it placed exactly has a usable location (#191)
     result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass, tiger)
+    replaced = sum(1 for c in result["crashes"] if c.get("approximate_replaced"))
+    if replaced:                          # approximate freeway spots FARS replaced (#280) are counted as FARS
+        counts["placed"]["freeway_offset"] -= replaced
+        counts["approximate_replaced_by_fars"] = replaced
     result["cleaning"]["placement"] = counts
     return counts
