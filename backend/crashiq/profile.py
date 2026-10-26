@@ -52,6 +52,12 @@ def is_unlit(c) -> bool:
     return is_dark(c) and ("NO STREET" in t or "NOT FUNCTION" in t)
 
 
+# small numbers (user decision 2026-10-25, docs/03): a share on fewer crashes than this shows as a count only on screen;
+# tables and the export keep every value and mark those rows (#271)
+MIN_SHARE_N = 10
+SMALL_MARK = "n < 10"
+
+
 def _table(tid, title, columns, rows, crashes):
     prov = Counter(c.get("location_provenance", "gps") for c in crashes)
     on_tiger = sum(1 for c in crashes if c.get("placed_on") == "tiger")
@@ -60,6 +66,11 @@ def _table(tid, title, columns, rows, crashes):
     by_alias = sum(1 for c in crashes if c.get("aliases_used"))
     if by_alias:                          # #235
         prov["of these, with a street name read through an approved alias"] = by_alias
+    if any(k.endswith("_pct") for k, _ in columns) and not tid.startswith("T12") and len(crashes) < MIN_SHARE_N:
+        for r in rows:                     # every share in this table is of the same few crashes
+            r["values"]["small_base"] = SMALL_MARK
+    if any("small_base" in r["values"] for r in rows) and "small_base" not in [k for k, _ in columns]:
+        columns = [*columns, ("small_base", "Base")]
     return {"id": tid, "title": title, "columns": [{"key": k, "label": lbl} for k, lbl in columns],
             "rows": rows, "provenance": dict(sorted(prov.items()))}
 
@@ -119,6 +130,14 @@ LIGHT_GROUPS = [("daylight", "Daylight"), ("dusk_dawn", "Dusk or dawn"), ("dark_
                 ("dark_unlit", "Dark, no street lights or not working"), ("not_stated", "Not stated")]
 
 
+def _t19_mark(group: int, crashes: int, ksi_all: int) -> dict:
+    """T19's shares have three bases (#271): the group's crashes (KSI % of group), all crashes and all KSI crashes;
+    the mark names each share whose base is under MIN_SHARE_N."""
+    parts = [name for name, base in (("KSI % of group", group), ("share of crashes", crashes), ("share of KSI", ksi_all))
+             if 0 < base < MIN_SHARE_N]
+    return {"small_base": f"{SMALL_MARK}: {', '.join(parts)}"} if parts else {}
+
+
 def _vru_tables(crashes: list[dict], s: str) -> list[dict]:
     """T19: pedestrian and bicycle crashes, their share of all crashes and of KSI crashes, and how often each group's
     crashes are KSI next to all other crashes ("how dangerous", #136). T20: pedestrian crashes by lighting."""
@@ -138,7 +157,8 @@ def _vru_tables(crashes: list[dict], s: str) -> list[dict]:
         ksi = sum(c["severity"] in "KA" for c in sub)
         rows.append(_row(key, label, crashes=len(sub), ksi_crashes=ksi, fatal_crashes=sum(c["severity"] == "K" for c in sub),
                          ksi_pct=pct(ksi, len(sub)) if sub else None, share_of_crashes_pct=pct(len(sub), n),
-                         share_of_ksi_pct=pct(ksi, ksi_all)))
+                         share_of_ksi_pct=pct(ksi, ksi_all),
+                         **_t19_mark(len(sub), n, ksi_all)))
     t19 = _table(f"T19{s}", "Pedestrians and bicyclists", [
         ("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"), ("fatal_crashes", "Fatal crashes"),
         ("ksi_pct", "KSI % of the group's crashes"), ("share_of_crashes_pct", "Share of all crashes %"),
@@ -584,7 +604,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
 
     prov = Counter(c["location_provenance"] for c in placed)
     prov["unmatched"] = len(unmatched)
-    return {"study_id": study["id"], "window": {"from_year": study["from_year"], "to_year": study["to_year"],
+    return {"study_id": study["id"], "min_share_n": MIN_SHARE_N,
+            "window": {"from_year": study["from_year"], "to_year": study["to_year"],
                                                  "years_with_data": years},
             "kpis": {"crashes": "T1/crashes/value", "ksi_crashes": "T1/ksi_crashes/value",
                      "injury_crashes": "T1/injury_crashes/value", "crashes_per_mi_yr": "T1/crashes_per_mi_yr/value"},
@@ -688,7 +709,7 @@ def get_location_profile(sid: str, lid: str, request: Request) -> dict:
     annotate(tables, missing_notes(missing_detail(pull, placed)))
     from .crashes import postmile_for
     pm = postmile_for(request.app.state)
-    return {"location_id": lid, "tables": tables, "diagram": diagram,
+    return {"location_id": lid, "min_share_n": MIN_SHARE_N, "tables": tables, "diagram": diagram,
             "crashes": [{**{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
                                                   "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",
                                                   "location_provenance")},

@@ -369,15 +369,19 @@ describe('Crash profile screen', () => {
     }
     const head = within(v).getByTestId('vru-headline').textContent
     expect(head).toContain(`${nf.format(val('ped').crashes)} pedestrian and ${nf.format(val('bike').crashes)} bicycle`)
-    if (val('all').ksi_crashes && val('ped_or_bike').crashes) {
+    const min = profile.min_share_n                                       // small numbers (#271): counts only below it
+    if (val('all').ksi_crashes >= min && val('ped_or_bike').crashes) {
       expect(head).toContain(`${nf.format(val('ped_or_bike').share_of_ksi_pct)}%`)
       expect(head).toContain(`(${nf.format(val('ped_or_bike').ksi_crashes)} of ${nf.format(val('all').ksi_crashes)})`)
+    } else if (val('ped_or_bike').crashes) {
+      expect(head).toContain(`${nf.format(val('ped_or_bike').ksi_crashes)} of the ${nf.format(val('all').ksi_crashes)} crashes`)
     }
     for (const k of ['ped', 'other']) {
       if (!val(k).crashes) continue
       const row = within(v).getByTestId(`danger-${k}`)
-      expect(row.querySelector('.v').textContent).toBe(`${nf.format(val(k).ksi_pct)}%`)
       expect(row.querySelector('.nn').textContent).toBe(`${nf.format(val(k).ksi_crashes)} of ${nf.format(val(k).crashes)}`)
+      if (val(k).crashes < min) { expect(row.querySelector('.tr')).toBeNull(); continue }
+      expect(row.querySelector('.v').textContent).toBe(`${nf.format(val(k).ksi_pct)}%`)
       expect(row.querySelector('.tr i').style.width).toBe(`${val(k).ksi_pct}%`)      // fixed 0-100% scale
     }
     const map = screen.getByTestId('map')
@@ -586,5 +590,56 @@ describe('Small numbers on the safety blocks (#265, user decision 2026-10-25)', 
     expect(blk).toHaveTextContent('left turn 3 of 4')
     expect(blk).not.toHaveTextContent('%')
     expect(blk).toHaveTextContent('Too few to compare')
+  })
+})
+
+// #271, user decision 2026-10-25: a share on fewer than min_share_n crashes (from the server) is a count only
+describe('Small numbers on tab 3 (#271)', () => {
+  const withN = (p) => ({ ...p, min_share_n: 10 })
+  const setT = (p, id, f) => ({ ...p, tables: p.tables.map((t) => (t.id === id ? f(t) : t)) })
+  const setRow = (t, key, vals) => ({ ...t, rows: t.rows.map((r) => (r.key === key ? { ...r, values: { ...r.values, ...vals } } : r)) })
+  const render = async (p) => {
+    mockApi({ ...routes, 'GET /studies/:id/profile': withN(p) })
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+  }
+
+  it('danger bars: base 9 is a count with no bar and no %; base 10 has its bar', async () => {
+    await render(setT(setT(profile, 'T19', (t) => setRow(setRow(t, 'ped', { crashes: 9, ksi_crashes: 1, ksi_pct: 11.1 }),
+      'motorcycle', { crashes: 10, ksi_crashes: 1, ksi_pct: 10 })), 'T1', (t) => t))
+    const ped = screen.getByTestId('danger-ped'), moto = screen.getByTestId('danger-motorcycle')
+    expect(ped.querySelector('.tr')).toBeNull()
+    expect(ped).not.toHaveTextContent('%')
+    expect(ped).toHaveTextContent('1 of 9')
+    expect(moto.querySelector('.tr')).not.toBeNull()
+    expect(moto).toHaveTextContent('10%')
+    expect(screen.getByTestId('danger')).toHaveTextContent('Too few to compare')
+  })
+
+  it('the headline percentage needs 10 KSI crashes; with 7 it says the counts only', async () => {
+    await render(profile)                                                  // the fixture has 7 KSI crashes
+    const h = screen.getByTestId('vru-headline')
+    expect(h.querySelector('b')).toBeNull()
+    expect(h).not.toHaveTextContent(/\d%.*of all crashes that killed/)
+  })
+
+  it('severity: a total of 9 is counts only ("2 of 9"), no bars', async () => {
+    const t3rows = [['K', 0], ['A', 2], ['B', 2], ['C', 1], ['U', 0], ['O', 4]]
+    await render(setT(profile, 'T3', (t) => t3rows.reduce((acc, [k, n]) => setRow(acc, k, { crashes: n }), t)))
+    const sec = screen.getByLabelText('Severity')
+    expect(sec.querySelectorAll('.sevsum .tr')).toHaveLength(0)
+    expect(sec).toHaveTextContent('2 of 9')
+    expect(sec).toHaveTextContent('Too few to compare')
+  })
+
+  it('pedestrian day/night: 2 pedestrian crashes are counts only; the table behind marks them n < 10', async () => {
+    const p = setT(profile, 'T20', (t) => ({ ...t, columns: [...t.columns, { key: 'small_base', label: 'Base' }],
+      rows: t.rows.map((r) => ({ ...r, values: { ...r.values, small_base: 'n < 10' } })) }))
+    await render(p)
+    const ctx = screen.getByTestId('ped-daynight')
+    expect(ctx.querySelectorAll('.tr')).toHaveLength(0)
+    expect(ctx).toHaveTextContent('1 of 2')
+    const sec = screen.getByLabelText('Pedestrians and bicyclists')
+    expect(within(sec.querySelector('details.showtable')).getAllByText('n < 10').length).toBeGreaterThan(0)
   })
 })

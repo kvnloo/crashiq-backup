@@ -263,3 +263,27 @@ def test_the_approximate_and_gps_far_caveats_agree_in_number():
     one, two = approximate_text(1), approximate_text(3)
     assert one.startswith("1 freeway crash has no usable GPS and is placed") and "It counts" in one and "leave it out" in one
     assert two.startswith("3 freeway crashes have") and "They count" in two and "leave them out" in two
+
+
+def test_shares_on_fewer_than_10_crashes_are_marked_n_under_10():
+    # #271, user decision 2026-10-25 (docs/03): small groups show counts only; tables keep every value and mark the row
+    p = P()
+    assert p["min_share_n"] == profile.MIN_SHARE_N == 10
+    t = {x["id"]: x for x in p["tables"]}
+    assert "small_base" not in [c["key"] for c in t["T3"]["columns"]]                 # 50 crashes: no mark
+    assert [r["values"].get("small_base") for r in t["T20"]["rows"]] == ["n < 10"] * len(t["T20"]["rows"])   # 2 peds
+    t19 = {r["key"]: r["values"] for r in t["T19"]["rows"]}
+    # the golden set has 4 KSI crashes: every row's share of KSI is on too few (PM review of #291); the 2 peds also
+    # make the pedestrian row's KSI % of group too few
+    assert t19["ped"]["small_base"] == "n < 10: KSI % of group, share of KSI"
+    assert t19["all"]["small_base"] == "n < 10: share of KSI"
+    nine, ten = (profile.tables_for([{**c, "severity": "O"} for c in golden()[2]["crashes"][:k]], 5) for k in (9, 10))
+    assert [r["values"].get("small_base") for r in nine[1]["rows"]] == ["n < 10"] * len(nine[1]["rows"])     # T4
+    assert "small_base" not in [c["key"] for c in ten[1]["columns"]]
+
+
+
+def test_t19_share_of_ksi_is_unmarked_with_10_or_more_ksi_crashes():
+    from crashiq.profile import _t19_mark
+    assert _t19_mark(50, 50, 10) == {} and _t19_mark(50, 50, 9) == {"small_base": "n < 10: share of KSI"}
+    assert _t19_mark(9, 50, 4) == {"small_base": "n < 10: KSI % of group, share of KSI"}

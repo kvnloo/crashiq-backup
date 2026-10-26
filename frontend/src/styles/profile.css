@@ -270,3 +270,8 @@ details.conditions section { margin-top: 12px; }
 details.conditions .showtable summary { font: 600 12px var(--font-body); color: var(--info); list-style: revert; }
 details.conditions .showtable summary::after { content: none; }
 .flags .bar.nobar { grid-template-columns: 200px 72px 112px; }
+
+/* #271 small numbers: a group under the threshold has no bar; its dash sits where the bar and share were */
+.dg.few .v { grid-column: 2 / 4; text-align: left; }
+.counts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
+.counts li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
