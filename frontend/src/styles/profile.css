@@ -275,3 +275,6 @@ details.conditions .showtable summary::after { content: none; }
 .dg.few .v { grid-column: 2 / 4; text-align: left; }
 .counts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
 .counts li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+
+/* #287 state-highway rates: a segment above the corridor average */
+[data-testid="shs-rates"] tr.over th, [data-testid="shs-rates"] tr.over td:nth-last-child(1) { color: var(--stop); font-weight: 700; }

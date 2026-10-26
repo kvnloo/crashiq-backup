@@ -29,3 +29,14 @@
   (#248) and its count year: the AHEAD leg of the point behind it in the first half of the segment, the BACK leg of
   the point ahead in the second half. A year after the newest file uses the newest, labelled "latest available".
   Rates: crashes per million vehicle-miles = crashes / (AADT x length mi x 365 x years) x 10^6.
+- **Hand checks (#287 point 4, Engineering, 2026-10-26, 2024 counts):**
+  - BUT-99, the 51k → 86k jump is in Caltrans' counts: Chico's freeway section runs East 20th St (R31.498)
+    47,500 back / 65,000 ahead, Jct Rte 32 East (R32.445) 65,000 / 86,000, East First Ave (R33.282) 86,000 / 60,000,
+    Cohasset Hwy (R34.245) 60,000 / 49,500. The join reproduces the source; the jump is real traffic.
+  - SR-9: 2,100 to 7,400 AADT outside Saratoga, Los Gatos and Felton (SCR-9 R20.858 Waterman Gap 2,100 / 2,500), so
+    rates per million vehicle-miles are high on low volume; the AADT side matches the workbook. A sharp step at its
+    south end: SCR-9 0.046 (Jct Rte 1) 25,500 ahead, then 0.63 (Santa Cruz north city limits) 5,700 back; with the
+    nearer-leg rule a short segment there gets 25,500 or 5,700 depending on its half.
+- **Use in rates (#287 PR 2):** each study segment is sampled every 0.05 mi; a calendar year is 0.75 x its count year +
+  0.25 x the next (count years run October to September). A segment-year has exposure only when every sample has a
+  count. Lengths come from the study geometry, never from postmiles, so a prefix change doesn't distort them.

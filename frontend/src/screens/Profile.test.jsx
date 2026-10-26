@@ -643,3 +643,42 @@ describe('Small numbers on tab 3 (#271)', () => {
     expect(within(sec.querySelector('details.showtable')).getAllByText('n < 10').length).toBeGreaterThan(0)
   })
 })
+
+// #287: state-highway crash rates from Caltrans AADT (T22 by segment, T23 by year), every row citing its count years
+describe('State-highway crash rates (#287)', () => {
+  const T22 = { id: 'T22', title: 'State-highway crash rates (Caltrans AADT; crashes per million vehicle-miles)', columns: [],
+    provenance: {}, rows: [
+      { key: 'seg-a', label: 'A – B', values: { crashes: 30, fi_crashes: 12, fatal_crashes: 1, length_mi: 0.6, aadt: 120000, mvm: 131.4,
+        rate_all: 0.23, rate_fi: 0.09, rate_fatal: 0.01, corridor_rate_all: 0.2, ratio_to_corridor: 1.15,
+        count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program, count years 2021–2024' } },
+      { key: 'seg-b', label: 'B – C', values: { crashes: 10, fi_crashes: 3, fatal_crashes: 0, length_mi: 0.4, aadt: 110000, mvm: 80.3,
+        rate_all: 0.12, rate_fi: 0.04, rate_fatal: 0, corridor_rate_all: 0.2, ratio_to_corridor: 0.6,
+        count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program, count years 2021–2024' } }] }
+  const T23 = { id: 'T23', title: 'State-highway crash rate by year', columns: [], provenance: {}, rows: [
+    { key: '2021', label: '2021', values: { crashes: 9, fi_crashes: 3, mvm: 42.1, rate_all: 0.21, rate_fi: 0.07 } },
+    { key: '2022', label: '2022', values: { crashes: 8, fi_crashes: 2, mvm: 42.3, rate_all: 0.19, rate_fi: 0.05 } }] }
+
+  it('shows each segment\'s rates from T22 against the corridor average, with the AADT years and source', async () => {
+    mockApi({ ...routes, 'GET /studies/:id/profile': { ...profile, tables: [...profile.tables, T22, T23] } })
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('State-highway crash rates')
+    const rows = within(sec.querySelector('[data-testid="shs-rates"]')).getAllByRole('row').slice(1)
+    expect(rows).toHaveLength(2)
+    expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent))
+      .toEqual(['30', '131.4', '0.23', '0.09', '0.01', '0.2', '1.15'])
+    expect(rows[0]).toHaveClass('over')                                           // above the corridor average
+    expect(rows[1]).not.toHaveClass('over')
+    expect(sec).toHaveTextContent('Caltrans Traffic Census Program, count years 2021–2024')
+    expect(sec).toHaveTextContent('2021–2024; later count years use 2024')
+    expect(within(sec).getAllByLabelText('Source: table T22').length).toBeGreaterThan(0)
+    const by = within(sec.querySelector('[data-testid="shs-by-year"]')).getAllByRole('row').slice(1)
+    expect(by.map((r) => r.firstChild.textContent)).toEqual(['2021', '2022'])
+  })
+
+  it('a corridor without T22 shows no state-highway rates', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    expect(screen.queryByLabelText('State-highway crash rates')).toBeNull()
+  })
+})

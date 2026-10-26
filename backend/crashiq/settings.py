@@ -38,6 +38,8 @@ class Settings:
     # Caltrans SHN Postmiles Tenth (#248): ~30 MB, never committed
     postmile_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_POSTMILE_DIR",
                                                                         ROOT / "data" / "cache" / "postmiles")))
+    # Caltrans Traffic Census AADT (#287): the annual workbooks as one SQLite per download date, never committed
+    aadt_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_AADT_DIR", ROOT / "data" / "cache" / "aadt")))
     # Frontend build served by the same process in production (single service, DemandIQ pattern).
     dist_dir: Path = field(default_factory=lambda: ROOT / "frontend" / "dist")
 

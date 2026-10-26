@@ -323,6 +323,50 @@ function Ranking({ p, onOpen }) {
 }
 
 // C. How bad, not just how many? (#103) K/A/B/C/(U)/O bars from T3, direct-labelled; KSI called out from T1.
+// State-highway crash rates (#287, user decision 2026-10-26): Caltrans Traffic Census AADT on each study segment of a
+// state-route corridor (T22) and the corridor's rate year by year (T23). Every number is a cell; a row above the
+// corridor average is marked. Caltrans' statewide averages wait for #294 (rate groups, engineer-confirmed).
+function ShsRates({ p }) {
+  const t = p.tables.find((x) => x.id === 'T22')
+  const by = p.tables.find((x) => x.id === 'T23')
+  if (!t?.rows?.length) return null
+  const n = t.rows.reduce((a, r) => a + r.values.crashes, 0)
+  const sources = [...new Set(t.rows.map((r) => r.values.source))]
+  const years = [...new Set(t.rows.map((r) => r.values.count_years))]
+  return (
+    <section aria-label="State-highway crash rates">
+      <div className="sect-h"><h2 className="h3">State-highway crash rates</h2><Src tid="T22" n={n} p={p} /></div>
+      <p className="muted small-note">Crashes per million vehicle-miles (MVM). AADT: {sources.join('; ')} (count years {years.join('; ')}).
+        Compared with this corridor&apos;s own average; Caltrans&apos; statewide averages are not shown yet.</p>
+      <div className="sf-table-wrap"><table className="sf-table" data-testid="shs-rates">
+        <thead><tr><th>Segment</th><th className="sf-num">Crashes</th><th className="sf-num">MVM</th><th className="sf-num">All / MVM</th>
+          <th className="sf-num">Fatal + injury / MVM</th><th className="sf-num">Fatal / MVM</th><th className="sf-num">Corridor average</th>
+          <th className="sf-num">÷ average</th></tr></thead>
+        <tbody>{t.rows.map((r) => {
+          const v = r.values
+          return (
+            <tr key={r.key} className={v.ratio_to_corridor > 1 ? 'over' : ''} title={`AADT ${fmt(v.aadt)} (window average) · count years ${v.count_years} · ${v.source}`}>
+              <th scope="row">{r.label}</th>
+              {['crashes', 'mvm', 'rate_all', 'rate_fi', 'rate_fatal', 'corridor_rate_all', 'ratio_to_corridor'].map((k) => (
+                <td key={k} className="sf-num mono">{fmt(v[k])}</td>))}
+            </tr>
+          )
+        })}</tbody>
+      </table></div>
+      {by?.rows?.length ? (
+        <details className="showtable"><summary>By year</summary>
+          <div className="sf-table-wrap"><table className="sf-table" data-testid="shs-by-year">
+            <thead><tr><th>Year</th><th className="sf-num">Crashes</th><th className="sf-num">MVM</th><th className="sf-num">All / MVM</th><th className="sf-num">Fatal + injury / MVM</th></tr></thead>
+            <tbody>{by.rows.map((r) => <tr key={r.key}><td className="mono">{r.label}</td>
+              {['crashes', 'mvm', 'rate_all', 'rate_fi'].map((k) => <td key={k} className="sf-num mono">{fmt(r.values[k])}</td>)}</tr>)}</tbody>
+          </table></div>
+          <Src tid="T23" n={n} p={p} />
+        </details>
+      ) : null}
+    </section>
+  )
+}
+
 function Severity({ p }) {
   const t = table(p, 'T3')
   const rows = t.rows.filter((r) => r.key !== 'U' || r.values.crashes)
@@ -821,6 +865,7 @@ export default function Profile() {
             <Vru p={p} onMap={setMapMode} mapMode={mapMode} />
             <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
             <Ranking p={p} onOpen={openLocation} />
+            <ShsRates p={p} />
             <Severity p={p} />
             <Trend p={p} />
             <Grid p={p} onOpen={openLocation} />

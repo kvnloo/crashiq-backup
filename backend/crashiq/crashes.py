@@ -1188,3 +1188,19 @@ def postmile_for(st):
     folder = str(st.settings.postmile_dir)
     with _LOCKS_GUARD:
         return _PM_CACHES.setdefault(folder, PostmileCache(folder))
+
+
+_AADT_CACHES: dict[str, object] = {}
+
+
+def aadt_for(st):
+    """The Caltrans Traffic Census AADT (#287). Live dot.ca.gov only, unless a test or harness sets `app.state.aadt`:
+    a fake or recorded CKAN never starts the download."""
+    from .aadt import AadtCache
+    if getattr(st, "aadt", None) is not None:
+        return st.aadt
+    if getattr(st, "ckan", None) is not None:
+        return None
+    folder = str(st.settings.aadt_dir)
+    with _LOCKS_GUARD:
+        return _AADT_CACHES.setdefault(folder, AadtCache(folder))
