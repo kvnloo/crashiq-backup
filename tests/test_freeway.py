@@ -276,3 +276,26 @@ def test_connector_crashes_without_gps_go_to_review_never_an_automatic_spot(cras
     c = r["crashes"][0]
     assert c["location_source"] == "unmatched" and c["lat"] is None and "approximate" not in c
     assert (c.get("suggestion") or {}).get("freeway_kind", "connector") == "connector"
+
+
+def test_a_fars_point_that_fits_the_named_roads_beats_the_approximate_freeway_spot(tmp_path):
+    # #280 (Tester, re-measure of #278): fatal freeway crashes with no usable GPS lost their FARS point to the
+    # approximate spot. Fatal first (2026-10-21); FARS fills when it fits the named roads (2026-10-22)
+    import json as _json
+    from crashiq import placement
+    from test_fars import _db, _fars_row
+
+    def roads(url, data, timeout):          # the roads at the FARS point: the I-405 and Artesia Blvd
+        return _json.dumps({"elements": [{"type": "way", "id": 1, "nodes": [], "tags": {"highway": "motorway",
+                                          "ref": "I 405", "name": "San Diego Freeway"}},
+                                         {"type": "way", "id": 2, "nodes": [], "tags": {"highway": "primary",
+                                          "name": "Artesia Boulevard"}}]}).encode()
+
+    fatal = {**A, "killed": 1, "severity": "K", "county_code": "19", "reported_at": "2023-03-04T02:15:00"}
+    r = _result(fatal)
+    db = _db(tmp_path, [_fars_row(fatal, 33.8728, -118.3426)])
+    counts = placement.place_unmatched(db, FWY_NET, r, raw=raw("a_lawndale"), overpass=roads)
+    assert counts["placed"].get("freeway_offset") == 0 and counts["approximate_replaced_by_fars"] == 1
+    c = r["crashes"][0]
+    assert c["location_source"] == "fars" and (c["lat"], c["lon"]) == (33.8728, -118.3426)
+    assert "approximate" not in c and c["fars_case"].endswith("-60077")
