@@ -497,4 +497,6 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   the crash goes to **review**, with the Census Geocoder / TIGER address-range point as the suggestion. Evidence (Tester,
   PR #277): NAD 86.1% within 400 ft of police GPS (Wilson low 84.4%), 74.3% within 250 ft, 647 of 12,568 D5 crashes;
   Census 64.7% and TIGER 65.4% within 400 ft. NAD placements are mid-block address points, so they count on segments and
-  never at an intersection.
+  never at an intersection. Because 86% is below the 98% bar for precise placement, they are labelled **approximate**
+  ("usually within 400 ft"), like the freeway approximate placements, and counted on the approximate side of coverage.
+  (PM, applying the existing 98% rule; the user may revisit.)
