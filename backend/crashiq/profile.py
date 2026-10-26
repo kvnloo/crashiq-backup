@@ -130,6 +130,14 @@ LIGHT_GROUPS = [("daylight", "Daylight"), ("dusk_dawn", "Dusk or dawn"), ("dark_
                 ("dark_unlit", "Dark, no street lights or not working"), ("not_stated", "Not stated")]
 
 
+def _t19_mark(group: int, crashes: int, ksi_all: int) -> dict:
+    """T19's shares have three bases (#271): the group's crashes (KSI % of group), all crashes and all KSI crashes;
+    the mark names each share whose base is under MIN_SHARE_N."""
+    parts = [name for name, base in (("KSI % of group", group), ("share of crashes", crashes), ("share of KSI", ksi_all))
+             if 0 < base < MIN_SHARE_N]
+    return {"small_base": f"{SMALL_MARK}: {', '.join(parts)}"} if parts else {}
+
+
 def _vru_tables(crashes: list[dict], s: str) -> list[dict]:
     """T19: pedestrian and bicycle crashes, their share of all crashes and of KSI crashes, and how often each group's
     crashes are KSI next to all other crashes ("how dangerous", #136). T20: pedestrian crashes by lighting."""
@@ -150,8 +158,7 @@ def _vru_tables(crashes: list[dict], s: str) -> list[dict]:
         rows.append(_row(key, label, crashes=len(sub), ksi_crashes=ksi, fatal_crashes=sum(c["severity"] == "K" for c in sub),
                          ksi_pct=pct(ksi, len(sub)) if sub else None, share_of_crashes_pct=pct(len(sub), n),
                          share_of_ksi_pct=pct(ksi, ksi_all),
-                         # the KSI % of a group is of that group's crashes (#271)
-                         **({"small_base": SMALL_MARK} if 0 < len(sub) < MIN_SHARE_N else {})))
+                         **_t19_mark(len(sub), n, ksi_all)))
     t19 = _table(f"T19{s}", "Pedestrians and bicyclists", [
         ("crashes", "Crashes"), ("ksi_crashes", "KSI crashes"), ("fatal_crashes", "Fatal crashes"),
         ("ksi_pct", "KSI % of the group's crashes"), ("share_of_crashes_pct", "Share of all crashes %"),
