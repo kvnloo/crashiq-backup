@@ -100,9 +100,10 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
 
 
 APPROX_MI = json.loads((Path(__file__).parent / "config" / "placement.json").read_text()).get("approximate_mi", 0.5)
-# the freeway descriptions that auto-place (user 2026-10-25, #259): connectors ("X TO Y") are held for review
+# the freeway descriptions that auto-place (user 2026-10-25, #259): true connectors ("X TO Y" whose cross street is
+# X or Y) are held for review; an "X TO Y" naming a local street is placed on X's lanes like mainline
 FWY_AUTO_KINDS = frozenset(json.loads((Path(__file__).parent / "config" / "placement.json").read_text())
-                           .get("freeway_auto_kinds", ["mainline", "ramp"]))
+                           .get("freeway_auto_kinds", ["mainline", "ramp", "connector_local"]))
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
                     raw: dict | None = None, tiger=None) -> dict:
     gate = gate or locate.Gate()

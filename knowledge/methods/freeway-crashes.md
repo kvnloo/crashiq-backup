@@ -62,6 +62,31 @@ Steps 1–3 place 13,721 (57%). Why step 3 fails: the cross street meets the rou
 route or street not on the map (2,134), no compass direction (1,784); ramps: no route number (981), terminals too far
 apart (561). Step-3 hidden-GPS accuracy: on #246.
 
+## How the app finds the spot (#259, 2026-10-25)
+`backend/crashiq/freeway.py`, aligned with the Tester's reference method (`tests/statewide/freeway_report_point.py`):
+- **Meeting point.** Where the reference street crosses the stated-direction lanes (crossings within 600 ft are one
+  place). If it never crosses them (the map often draws an overpass without a crossing segment), where it passes within
+  300 ft. A street that meets either carriageway in two places more than 3,300 ft apart is ambiguous and never guessed.
+  A reference road that is another freeway (`I-5` / `SR-91`) meets the route where their main lanes cross.
+- **Walk.** From the meeting point, snapped onto the lanes, the stated distance: the first step toward the stated
+  compass direction, then along the freeway as it bends.
+- **"X TO Y" by its cross street.** A local street: mainline on X from that street (user worked example 4630945),
+  placed as approximate (user 2026-10-25). Y: along the connector from Y, Y's stated direction picking the connector
+  (Martinez). X: along the connector from where it leaves X. True connectors (cross street X or Y) are held for review
+  (user 2026-10-25).
+- **Officer GPS that fits the named roads is kept** (user 2026-10-25, replacing "report beats GPS" above).
+
+Measured (Engineering scratch run on the Tester's run-10 accuracy sample, 6,000 freeway crashes whose police GPS fits
+the report, GPS hidden, the Tester's fixed `fwy_raw` street lookup):
+| Method | Placed | Within 0.5 mi of the officer's GPS |
+|---|---|---|
+| Reference (`freeway_report_point`) | 4,203 | 3,971 (94.5%) |
+| App before #259 | 4,073 | 3,783 (92.9%) |
+| App after #259 | 4,285 | 4,055 (94.6%) |
+| of which auto-placed (mainline, ramp, local-street "X TO Y") | 4,248 | 4,024 (94.7%) |
+| of which local-street "X TO Y" | 74 | 64 (86.5%) |
+| of which true connectors (held for review) | 37 | 31 (83.8%) |
+
 ## Reuse in another state
 Look first for the state's own route/postmile (or milepost) field and a public linear-reference layer; if crashes carry
 a milepost, place by it and skip most of this. Otherwise apply the three rules above, then check them with the

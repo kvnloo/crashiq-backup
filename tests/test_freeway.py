@@ -178,7 +178,6 @@ def test_a_street_farther_than_300_ft_from_the_lanes_does_not_meet_them():
 def test_a_connector_crash_is_held_for_review_with_its_suggestion():
     # user decision 2026-10-25 (#259): connectors ("X TO Y") go to review; mainline and ramps stay approximate
     from crashiq import placement
-    assert placement.FWY_AUTO_KINDS == {"mainline", "ramp"}
     r = _result(C, B)
     placement.place_unmatched(None, FWY_NET, r, raw={"elements": raw("c_martinez")["elements"]
                                                       + raw("b_stockton")["elements"]})
@@ -196,7 +195,7 @@ E = {"primary_road": "SR-60 W/B (POF) TO I-10 (SMF)", "secondary_road": "EUCLID 
 
 def test_a_connector_report_naming_a_local_street_is_placed_on_the_first_route_from_its_crossing():
     s = freeway.place(raw("e_euclid"), E)
-    assert s.kind == "mainline" and s.report == "connector"
+    assert s.kind == "mainline" and s.report == "connector_local"
     assert ft((s.lat, s.lon), (34.028450, -118.209045)) < 100                     # the officer's GPS
     assert ft((s.lat, s.lon), (34.031930, -118.222612)) > 2640                    # not the old SR-60/I-10 join spot
 
@@ -209,11 +208,71 @@ def test_what_a_connector_report_is_measured_from():
     assert o["from"] == "x" and o["to_travel"] == "W"
 
 
-def test_a_connector_report_on_a_local_street_is_still_held_for_review():
-    # placed on X's lanes, but it is a connector report: user decision 2026-10-25 holds connector reports
+def test_a_connector_report_on_a_local_street_is_placed_approximately_like_mainline():
+    # user decision 2026-10-25 (docs/03): only true connectors (cross street = X or Y) are held for review
     from crashiq import placement
+    assert placement.FWY_AUTO_KINDS == {"mainline", "ramp", "connector_local"}
     r = _result(E)
     placement.place_unmatched(None, FWY_NET, r, raw=raw("e_euclid"))
     c = r["crashes"][0]
-    assert c["location_source"] == "unmatched" and c["suggestion"]["freeway_kind"] == "connector"
-    assert c["suggestion"]["freeway_spot"] == "mainline"
+    assert c["location_source"] == "approximate" and c["approximate"]["kind"] == "mainline"
+    assert ft((c["lat"], c["lon"]), (34.028450, -118.209045)) < 400                # the officer's GPS
+
+
+def test_a_long_offset_follows_the_freeway_round_a_bend():
+    # #259: the walk used to stop where the road turned away from the stated direction, leaving long offsets short
+    els, nid = [], [0]
+
+    def way(pts, tags):
+        ids = []
+        for lat, lon in pts:
+            nid[0] += 1
+            els.append({"type": "node", "id": nid[0], "lat": lat, "lon": lon})
+            ids.append(nid[0])
+        els.append({"type": "way", "id": 1000 + len(els), "nodes": ids, "tags": tags})
+
+    # southbound lanes: 0.5 mi south from the street, then bending west for 1 mi
+    south = [(37.9 - i * 0.00145, -122.30) for i in range(6)]
+    west = [(south[-1][0], -122.30 - i * 0.0036) for i in range(1, 6)]
+    way(south + west, {"highway": "motorway", "ref": "I 80", "oneway": "yes"})
+    way([(37.9, -122.31), (37.9, -122.29)], {"highway": "secondary", "name": "Buchanan Street"})
+    s = freeway.place({"elements": els}, {"primary_road": "I-80 S/B", "secondary_road": "BUCHANAN ST",
+                                          "offset_ft": 5280, "offset_dir": "S", "is_freeway": True})
+    want = (south[-1][0], -122.30 - 2640 / (364_000 * math.cos(math.radians(37.9))))   # 0.5 mi on past the bend
+    assert ft((s.lat, s.lon), want) < 100
+
+
+def test_a_reference_road_that_is_another_freeway_meets_the_route_where_their_lanes_cross():
+    # #259: 214 of Tester's run-10 crashes name another freeway as the reference road ("I-80 W/B" / "I-580")
+    g = _net([])
+    g["elements"] += [{"type": "node", "id": 9001, "lat": 37.89, "lon": -122.30},
+                      {"type": "node", "id": 9002, "lat": 37.91, "lon": -122.30},
+                      {"type": "way", "id": 9100, "nodes": [9001, 9002], "tags": {"highway": "motorway", "ref": "I 580"}}]
+    s = freeway.place(g, {**W, "secondary_road": "I-580"})
+    assert s is not None and ft((s.lat, s.lon), (37.9, -122.30)) < 60
+
+
+def test_the_walk_starts_on_the_lanes_when_the_crossings_middle_is_between_them():
+    # #259: two carriageways (no travel direction stated): the crossings' middle lies between them, off both
+    g = _net([("Buchanan Street", [(37.89, -122.30), (37.91, -122.30)])])
+    g["elements"] += [{"type": "node", "id": 9001, "lat": 37.9006, "lon": -122.24},
+                      {"type": "node", "id": 9002, "lat": 37.9006, "lon": -122.34},
+                      {"type": "way", "id": 9100, "nodes": [9001, 9002], "tags": {"highway": "motorway", "ref": "I 80"}}]
+    s = freeway.place(g, {**W, "primary_road": "I-80", "offset_ft": 2000, "offset_dir": "W"})
+    assert s is not None and ft((s.lat, s.lon), (37.9, -122.30)) > 1900
+
+
+@pytest.mark.parametrize("crash, fixture", [
+    # user ruling 2026-10-25: on the connector, the stated 1,000 ft unreliable, the officer's GPS right
+    ({"primary_road": "I-15 N/B TO I-10 W/B", "secondary_road": "I-15", "offset_ft": 1000, "offset_dir": "W",
+      "is_freeway": True}, "f_ontario"),                                         # 1392922 Ontario (cross street = X)
+    ({"primary_road": "SR-91 W/B TO I-110 S/B", "secondary_road": "I-110", "offset_ft": 192, "offset_dir": "W",
+      "is_freeway": True}, "g_harbor"),                                          # 1818216 Los Angeles (cross street = Y)
+])
+def test_connector_crashes_without_gps_go_to_review_never_an_automatic_spot(crash, fixture):
+    from crashiq import placement
+    r = _result(crash)
+    placement.place_unmatched(None, FWY_NET, r, raw=raw(fixture))
+    c = r["crashes"][0]
+    assert c["location_source"] == "unmatched" and c["lat"] is None and "approximate" not in c
+    assert (c.get("suggestion") or {}).get("freeway_kind", "connector") == "connector"
