@@ -70,25 +70,34 @@ def main() -> None:
                 batch.append(aliases_mod.apply(dict(c)))
     for c in sorted(batch, key=lambda x: int(x.get("county_code") or 0)):
         r = freeway.parse(c)
-        kind = r["kind"] if r else "not a freeway description"
-        k = t[kind]
-        k["sample"] += 1
         raw = fr.raw(c) if r else None
         sp = freeway.place(raw, c) if raw else None
+        # by what the report describes (#278: an X TO Y naming a local street is connector_local); a report the rule
+        # doesn't place is counted under its parsed kind
+        kind = sp.report if sp else (("connector" if r["kind"] == "connector" and r.get("from") != "street" else
+                                      "connector_local" if r["kind"] == "connector" else r["kind"])
+                                     if r else "not a freeway description")
+        k = t[kind]
+        k["sample"] += 1
         if sp is None:
             continue
         d = metres((sp.lat, sp.lon), (c["lat"], c["lon"])) * 3.28084
         k["placed"] += 1
         for lab, ft in BANDS:
             k[lab] += d <= ft
-        rows.append({"collision_id": str(c["crash_id"]), "kind": sp.kind, "dist_ft": round(d)})
+        rows.append({"collision_id": str(c["crash_id"]), "kind": sp.report, "dist_ft": round(d)})
     out = {"truth": f"run 9A freeway crashes whose police GPS fits the report, seeded sample of {SAMPLE} (seed {SEED}); "
                     "the app's freeway.place with the GPS hidden", "by_kind": {}}
-    tot = Counter()
+    from crashiq.placement import FWY_AUTO_KINDS
+    tot, auto = Counter(), Counter()
     for kind, k in sorted(t.items()):
         tot.update(k)
+        if kind in FWY_AUTO_KINDS:
+            auto.update(k)
         out["by_kind"][kind] = summary(k, wilson_low)
     out["all"] = summary(tot, wilson_low)
+    out["auto_placed_kinds"] = sorted(FWY_AUTO_KINDS)
+    out["auto"] = summary(auto, wilson_low)
     with open(DATA / "approx_accuracy_rows.csv", "w", newline="") as f:
         w = csv.DictWriter(f, ["collision_id", "kind", "dist_ft"])
         w.writeheader()

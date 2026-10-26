@@ -24,6 +24,7 @@ ROOT = HERE.parents[1]
 DATA = ROOT / "data" / "statewide"
 sys.path.insert(0, str(ROOT / "backend"))
 sys.path.insert(0, str(HERE))
+PREFIX = sys.argv[1] if len(sys.argv) > 1 else "r10b"
 AUTO = ("gps_usable", "gps_usable_dms", "gps_usable_sign", "placed_exact", "placed_unique_pair")
 
 
@@ -36,6 +37,7 @@ def main() -> None:
     import osm_local
     from coverage import Outside, districts
     from fwy_raw import FwyRaw
+    from crashiq.placement import FWY_AUTO_KINDS
     from run9_reconcile import parts
     c9 = parts("r9c")
     files = sorted(DATA.glob("coverage_crashes_r10_*.csv"))
@@ -81,11 +83,14 @@ def main() -> None:
                 continue
             raw = fr.raw(c, cbox)
             sp = freeway.place(raw, c) if raw else None
+            if sp is not None and sp.report not in FWY_AUTO_KINDS:
+                tally[f"held for review ({sp.report})"] += 1
+                sp = None                         # true connectors stay in review (#261, #278)
             was = r["outcome"] == "placed_approximate"
             if sp is not None:
                 how = (r["approx"].split(":")[0] if was else
                        "gps_off_roads" if r["reason"].startswith("police GPS off") else "no_gps")
-                new[cid] = {"outcome": "placed_approximate", "bin": "1", "reason": "", "approx": f"{how}:{sp.kind}"}
+                new[cid] = {"outcome": "placed_approximate", "bin": "1", "reason": "", "approx": f"{how}:{sp.report}"}
                 tally["still approximate" if was else f"newly approximate ({how})"] += 1
             elif was:
                 b9 = c9[cid]
@@ -93,7 +98,7 @@ def main() -> None:
                 tally["no longer approximate"] += 1
         print(f"{city or '(blank)'}: {len(batch)}", flush=True)
     for p in files:
-        out = DATA / p.name.replace("_r10_", "_r10b_")
+        out = DATA / p.name.replace("_r10_", f"_{PREFIX}_")
         with open(p) as fi, open(out, "w", newline="") as fo:
             rd = csv.DictReader(fi)
             w = csv.DictWriter(fo, rd.fieldnames)
