@@ -1,0 +1,21 @@
+{
+  "_doc": "Caltrans Traffic Census Program annual workbooks (public), by count year (October to September), for state-highway crash rates (#287, user decision 2026-10-26). Page: https://dot.ca.gov/programs/traffic-operations/census. A new year is added here when Caltrans publishes it; aadt.py downloads them into data/cache/aadt (never committed).",
+  "years": {
+    "2021": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2021/2021-traffic-volumes-ca-v2-a11y.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2021/2021-truck-aadtt-ca.xlsx"
+    },
+    "2022": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2022/2022-traffic-volumes-ca-v2.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2022/2022-truck-aadt.xlsx"
+    },
+    "2023": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2023/2023-traffic-volumes-ca-a11y.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2023/2023-truck-aadt-a11y.xlsx"
+    },
+    "2024": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2024/2024-traffic-volumes-ca-a11y.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2024/2024-truck-aadt-a11y.xlsx"
+    }
+  }
+}
