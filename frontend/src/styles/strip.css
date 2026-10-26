@@ -1,0 +1,25 @@
+/* Corridor strip diagram (#102), shared by tab 3 and a segment finding (#268, #293) */
+.strip { position: relative; display: grid; gap: 8px; }
+.strip svg { display: block; overflow: visible; }
+.strip-line { stroke: var(--line); stroke-width: 2; }
+.strip-end { font: 600 11px var(--font-mono); fill: var(--muted); }
+.strip-tick line { stroke: var(--muted); stroke-width: 1.5; }
+.strip-tick text { font: 11px var(--font-mono); fill: var(--muted); }
+.strip-tick, .strip-dot { cursor: pointer; }
+.strip-tick:hover text { fill: var(--fg); }
+.strip .hit { fill: transparent; }
+.strip-dot circle:not(.hit):not(.hollow):not(.vru-ring) { stroke: var(--bg); stroke-width: 1.5; }
+.strip-more { font: 10px var(--font-mono); fill: var(--muted); }
+.strip-tip { position: absolute; width: 180px; pointer-events: none; background: var(--surface); color: var(--fg);
+  border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font: 12px var(--font-body); }
+.strip-dim { display: inline-flex; justify-self: start; gap: 2px; background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 2px; }
+.strip-dim button { border: 0; background: none; color: var(--muted); font: 600 12px var(--font-body); padding: 4px 10px; border-radius: 6px; cursor: pointer; }
+.strip-dim button.on { background: var(--surface-2); color: var(--fg); }
+.strip .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font: 11px var(--font-mono); color: var(--muted); }
+.strip .legend span { display: inline-flex; gap: 6px; align-items: center; }
+.strip .legend i { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+.strip .vru-ring { fill: none; stroke: var(--fg); stroke-width: 1.5; }
+.strip .vru-key { display: inline-block; width: 10px; height: 10px; border-radius: 50%; box-shadow: inset 0 0 0 1.5px var(--fg); background: transparent; }
+/* a segment finding's stretch */
+.strip-hl rect { fill: color-mix(in srgb, var(--info) 28%, transparent); stroke: var(--info); stroke-width: 1; }
+.strip-hl text { font: 600 11px var(--font-body); fill: var(--fg); }

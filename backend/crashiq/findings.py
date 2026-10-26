@@ -415,8 +415,8 @@ def get_diagram(sid: str, fid: str, request: Request) -> dict:
     f = Finding(**json.loads(r["body"]))
     study, net, pull, a = assign_mod.for_study(db, sid)
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
-    placed = [{**by_id[x["crash_id"]], "location_id": x["location_id"], "location_provenance": x["location_provenance"]}
-              for x in a["assignments"] if x["kind"] in ("intersection", "segment")]
+    placed = [{**by_id[x["crash_id"]], "location_id": x["location_id"], "location_provenance": x["location_provenance"],
+               "station_ft": x.get("station_ft")} for x in a["assignments"] if x["kind"] in ("intersection", "segment")]
     recs = select_records(placed, f.evidence_refs.records)
     it = next((i for i in net["intersections"] if i["id"] == f.location_id and i.get("is_study")), None)
     if it is not None:
@@ -426,9 +426,16 @@ def get_diagram(sid: str, fid: str, request: Request) -> dict:
                 "table": profile_mod.diagram_table(fid, d, recs)}
     seg = next((g for g in net.get("segments", []) if g["id"] == f.location_id), None)
     length = max([g["to_station_ft"] for g in net.get("segments", [])] + [net.get("length_ft") or 0])
+    keys = ("crash_id", "date", "hour", "severity", "collision_type", "location_id", "station_ft", "ped", "bike",
+            "ebike", "escooter")
     return {"kind": "segment", "records": len(recs), "diagram": None,
-            "strip": {"location_id": f.location_id, "from_ft": seg["from_station_ft"] if seg else None,
-                      "to_ft": seg["to_station_ft"] if seg else None, "length_ft": length}}
+            "strip": {"location_id": f.location_id, "name": seg["name"] if seg else None,
+                      "from_ft": seg["from_station_ft"] if seg else None,
+                      "to_ft": seg["to_station_ft"] if seg else None, "length_ft": length,
+                      # the strip's labels (PM review of #293): the corridor's study intersections, by name
+                      "intersections": [{"id": i["id"], "name": i["name"], "station_ft": i["station_ft"]}
+                                        for i in net["intersections"] if i.get("is_study")],
+                      "crashes": [{k: c.get(k) for k in keys} for c in recs]}}
 
 
 @router.get("/patterns")

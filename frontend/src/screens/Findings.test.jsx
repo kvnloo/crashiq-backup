@@ -190,11 +190,16 @@ describe('Finding collision diagram (#268)', () => {
     const seg = { ...FD.finding, id: 'seg', location_id: 'seg-1', meta: { ...FD.finding.meta, kind: 'segment' } }
     mockApi(fdRoutes({ 'GET /studies/:id/findings': { findings: [seg], rejected_count: 0 },
       'GET /studies/:id/findings/:fid/diagram': { kind: 'segment', records: FD.records.length, diagram: null,
-        strip: { location_id: 'seg-1', from_ft: 1000, to_ft: 3000, length_ft: 10000 } } }))
+        strip: { location_id: 'seg-1', name: 'Marine Avenue – West 147th Street', from_ft: 1000, to_ft: 3000, length_ft: 10000,
+          intersections: [{ id: 'i1', name: 'Marine Avenue', station_ft: 1000 }, { id: 'i2', name: 'West 147th Street', station_ft: 3000 }],
+          crashes: FD.records.map((r, i) => ({ ...r, station_ft: 1200 + 100 * i, location_id: 'seg-1' })) } } }))
     renderAt('/s/s1/findings')
     const strip = await screen.findByTestId('finding-strip')
-    expect(strip.querySelector('i').style.left).toBe('10%')
-    expect(strip.querySelector('i').style.width).toBe('20%')
+    // PM review of #293: labelled with the segment's name and its end cross-streets; the finding's crashes as dots
+    expect(within(strip).getByTestId('strip-highlight')).toHaveTextContent('Marine Avenue – West 147th Street')
+    expect(within(strip).getByLabelText('Marine Avenue on the strip')).toBeInTheDocument()
+    expect(within(strip).getByLabelText('West 147th Street on the strip')).toBeInTheDocument()
+    expect(within(strip).getAllByTestId('strip-dot')).toHaveLength(FD.records.length)
     expect(screen.queryByTestId('collision-diagram')).toBeNull()
     expect(document.querySelectorAll('.tabbody tbody tr')).toHaveLength(FD.records.length)
   })

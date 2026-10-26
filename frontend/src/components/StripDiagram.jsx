@@ -6,6 +6,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { categories, catOf } from '../lib/mapcats'
 import { placeLabels, shortName } from '../lib/strip'
 import { RING_LEGEND, isVru, vruWho } from '../lib/vru'
+import '../styles/strip.css'
 
 const R = 4                  // dot radius (8 px marker)
 const STEP = 2 * R + 2       // one dot plus a 2 px surface gap
@@ -15,7 +16,8 @@ const RANK = { K: 0, A: 1, B: 2, C: 3, U: 4, O: 5 }
 const SEV = { K: 'Fatal', A: 'Serious injury', B: 'Minor injury', C: 'Possible injury', U: 'Injury, level not stated', O: 'Property damage' }
 const DIMS = [['severity', 'Severity'], ['collision_type', 'Collision type']]
 
-export default function StripDiagram({ crashes, intersections, lengthFt, onOpen }) {
+// highlight: { from_ft, to_ft, label } marks one stretch (a segment finding, #293)
+export default function StripDiagram({ crashes, intersections, lengthFt, onOpen, highlight = null }) {
   const box = useRef(null)
   const [width, setWidth] = useState(520)
   const [dim, setDim] = useState('severity')
@@ -58,7 +60,7 @@ export default function StripDiagram({ crashes, intersections, lengthFt, onOpen 
     .map((i) => ({ id: i.id, name: i.name, label: shortName(i.name), x: x(i.station_ft) })), width),
   [intersections, width, lengthFt]) // eslint-disable-line react-hooks/exhaustive-deps
 
-  const base = 20 + tall * STEP + (extra.length ? 14 : 0)     // the corridor line
+  const base = 20 + tall * STEP + (extra.length ? 14 : 0) + (highlight ? 14 : 0)     // the corridor line
   const height = base + 44
 
   return (
@@ -69,6 +71,12 @@ export default function StripDiagram({ crashes, intersections, lengthFt, onOpen 
         ))}
       </div>
       <svg width={width} height={height} role="img" aria-label={`Crashes along the corridor from A to B: ${dots.length} dots`}>
+        {highlight ? (
+          <g className="strip-hl" data-testid="strip-highlight">
+            <rect x={x(highlight.from_ft)} y={base - 7} width={Math.max(4, x(highlight.to_ft) - x(highlight.from_ft))} height={14} rx={4} />
+            <text x={(x(highlight.from_ft) + x(highlight.to_ft)) / 2} y={base - 11} textAnchor="middle">{highlight.label}</text>
+          </g>
+        ) : null}
         <line x1={PAD} x2={width - PAD} y1={base} y2={base} className="strip-line" />
         <text x={PAD - 4} y={base + 4} className="strip-end" textAnchor="end">A</text>
         <text x={width - PAD + 4} y={base + 4} className="strip-end">B</text>

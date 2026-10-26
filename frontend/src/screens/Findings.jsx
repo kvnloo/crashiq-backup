@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import N10Diagram from '../components/N10Diagram'
+import StripDiagram from '../components/StripDiagram'
 import Replay from '../components/Replay'
 import { api, errorText } from '../lib/api'
 import { fmtNum } from '../lib/tables'
@@ -47,16 +48,17 @@ function Status({ s }) {
   return <span className="st">Needs review</span>
 }
 
-// #268: where a segment finding lies along the corridor (stations from the server)
+// #268: where a segment finding lies along the corridor, on the corridor strip (#102) with the segment marked and its
+// end cross-streets labelled (PM review of #293); stations and names from the server
 function StripPos({ s }) {
-  const pct = (x) => `${Math.round((1000 * x) / s.length_ft) / 10}%`
   return (
     <section aria-label="Where on the corridor">
       <div className="sect-h"><h3 className="h3">Where on the corridor</h3></div>
-      <div className="fstrip" data-testid="finding-strip" aria-hidden="true">
-        <i style={{ left: pct(s.from_ft), width: pct(s.to_ft - s.from_ft) }} />
+      <div data-testid="finding-strip">
+        <StripDiagram crashes={s.crashes || []} intersections={s.intersections || []} lengthFt={s.length_ft}
+          highlight={{ from_ft: s.from_ft, to_ft: s.to_ft, label: s.name || 'This segment' }} />
       </div>
-      <p className="muted small-note">This segment, along the study corridor. A segment has no intersection diagram; its crashes are listed below.</p>
+      <p className="muted small-note">A segment has no intersection diagram; its crashes are the dots, and listed below.</p>
     </section>
   )
 }
