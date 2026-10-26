@@ -481,3 +481,12 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   over-represented at a location, with the same method and thresholds as the other crash types (#34: ≥ 5 crashes at
   the location, ≥ 3 of the type, P ≥ 0.80), and (b) every fatal crash always appears as its own finding, whatever the
   statistics (fatal crashes first, 2026-10-21).
+- **"X TO Y" with a local cross street placed as approximate DECIDED (user, 2026-10-25, PM session):** "when we have all
+  the clues, where the crash is and everything, why are we stressing more?" A freeway report "X TO Y" whose cross
+  street is a **local street** (e.g. SR-60 W/B TO I-10 / EUCLID AVENUE / 55 ft W, record 4630945) describes a crash on
+  X's main lanes: the local street passes under or over X. With no usable GPS, it is placed automatically as
+  **approximate**, measured along X from that street (#259), like other mainline crashes. Only true connector reports,
+  where the cross street is X or Y itself, stay in review (2026-10-25 decision). Evidence before the #259 fixes (Tester,
+  seed-246 sample): all "X TO Y" placements 53 of 65 (81.5%, Wilson low 70.4%) within 0.5 mi; the local-street subgroup
+  132 reports, 39 placed by the old connector logic, 34 of those within 0.5 mi (87%, small n). Tester re-measures the
+  new rule on the fixed code.
