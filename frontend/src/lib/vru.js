@@ -10,7 +10,8 @@ export const vruWho = (c) => {
 }
 export const RING_LEGEND = 'Ring: pedestrian, bicyclist, e-bike or e-scooter involved'
 
-export function vruHeadline(t19) {
+// min: the server's small-number threshold (#271): a share of fewer KSI crashes than this is said as counts only
+export function vruHeadline(t19, min = 0) {
   const v = (k) => t19.rows.find((r) => r.key === k)?.values || {}
   const ped = v('ped').crashes || 0, bike = v('bike').crashes || 0, both = v('ped_or_bike'), all = v('all')
   const e = (v('ebike').crashes || 0) + (v('escooter').crashes || 0)
@@ -20,6 +21,10 @@ export function vruHeadline(t19) {
   const crashes = `${parts.slice(0, -1).join(', ')} and ${parts[parts.length - 1]} crash${ped + bike + e === 1 ? '' : 'es'}`
   if (!both.crashes) return { lead: 'No pedestrian, bicycle, e-bike or e-scooter crashes in this window.', rest: '' }
   if (!all.ksi_crashes) return { lead: `${crashes}.`, rest: ' No crash on the corridor killed or seriously injured anyone.' }
+  const ofAll = all.crashes < min ? '' : `, and ${fmt(both.share_of_crashes_pct)}% of all crashes`
+  if (all.ksi_crashes < min) {
+    return { lead: `${crashes}: `, rest: `${fmt(both.ksi_crashes)} of the ${fmt(all.ksi_crashes)} crashes that killed or seriously injured someone (too few to compare as a share)${ofAll}.` }
+  }
   return { lead: `${crashes}: `, pct: both.share_of_ksi_pct,
-    rest: ` of all crashes that killed or seriously injured someone (${fmt(both.ksi_crashes)} of ${fmt(all.ksi_crashes)}), and ${fmt(both.share_of_crashes_pct)}% of all crashes.` }
+    rest: ` of all crashes that killed or seriously injured someone (${fmt(both.ksi_crashes)} of ${fmt(all.ksi_crashes)})${ofAll}.` }
 }

@@ -76,24 +76,39 @@ function CountTable({ t }) {
   return (
     <details className="showtable"><summary>Show table</summary>
       <div className="sf-table-wrap"><table className="sf-table">
-        <thead><tr><th>{t.title}</th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th><th className="sf-num">Share %</th></tr></thead>
+        <thead><tr><th>{t.title}</th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th><th className="sf-num">Share %</th><MarkTh t={t} /></tr></thead>
         <tbody>{t.rows.map((r) => (
           <tr key={r.key}><th scope="row">{r.label.trim()}</th>
-            {['crashes', 'ksi_crashes', 'share_pct'].map((k) => <td key={k} className="sf-num mono">{fmt(r.values[k])}</td>)}</tr>))}</tbody>
+            {['crashes', 'ksi_crashes', 'share_pct'].map((k) => <td key={k} className="sf-num mono">{fmt(r.values[k])}</td>)}<MarkTd t={t} r={r} /></tr>))}</tbody>
       </table></div>
     </details>
   )
 }
 
-// small numbers (user decision 2026-10-25, docs/03): a group of fewer than SMALL_N crashes shows counts only
+// small numbers (user decision 2026-10-25, docs/03): a group of fewer than min_share_n crashes shows counts only
 // ("1 of 6") with a "too few to compare" note, never a percentage or a bar
-const SMALL_N = 10
-const TooFew = ({ n }) => <p className="muted small-note">Too few to compare ({fmt(n)} crashes; shares need {SMALL_N} or more).</p>
+// the threshold comes from the server (profile.MIN_SHARE_N, #271)
+const minN = (p) => p?.min_share_n ?? 0
+const TooFew = ({ n, min }) => <p className="muted small-note">Too few to compare ({fmt(n)} crashes; shares need {fmt(min)} or more).</p>
+// the "n < 10" mark the server puts on rows whose share is of too few crashes; tables show every value (#271)
+const hasMark = (t) => t.rows.some((r) => r.values.small_base)
+const MarkTh = ({ t }) => (hasMark(t) ? <th>Base</th> : null)
+const MarkTd = ({ t, r }) => (hasMark(t) ? <td className="muted mono small">{r.values.small_base || ''}</td> : null)
+// counts only, "1 of 6", for a group too small for shares or bars
+function CountList({ rows, n, min, testid }) {
+  return (
+    <>
+      <ul className="kv counts" data-testid={testid}>{rows.map((r) => <li key={r.key}><span>{r.label.trim()}</span>
+        <span className="mono">{fmt(r.values.crashes)} of {fmt(n)}</span></li>)}</ul>
+      <TooFew n={n} min={min} />
+    </>
+  )
+}
 
 // hit and run, DUI and speed (T14): one compact row each; "of which" rows indented; zero rows hidden in a drill-in
 function Flags({ t, p, n, label, hideZero }) {
   if (!hasRows(t)) return null
-  const small = n < SMALL_N
+  const small = n < minN(p)
   const rows = hideZero ? t.rows.filter((r) => r.values.crashes) : t.rows
   const max = Math.max(1, ...rows.map((r) => r.values.crashes))
   return (
@@ -109,7 +124,7 @@ function Flags({ t, p, n, label, hideZero }) {
           </div>
         ))}
       </div>
-      {small ? <TooFew n={n} /> : null}
+      {small ? <TooFew n={n} min={minN(p)} /> : null}
     </div>
   )
 }
@@ -144,9 +159,9 @@ function Broadside({ p, n }) {
     <div className="broadside small" role="group" aria-label="Broadside: left turn vs right angle">
       Broadside crashes: {t.rows.map((r, i) => (
         <span key={r.key}>{i ? ' · ' : ''}{r.label.split(' (')[0].toLowerCase()} <b className="mono">{fmt(r.values.crashes)}</b>
-          {base < SMALL_N ? ` of ${fmt(base)}` : ` (${fmt(r.values.share_pct)}%)`}</span>
+          {base < minN(p) ? ` of ${fmt(base)}` : ` (${fmt(r.values.share_pct)}%)`}</span>
       ))} <Src tid="T17" n={n} p={p} />
-      {base < SMALL_N ? <TooFew n={base} /> : null}
+      {base < minN(p) ? <TooFew n={base} min={minN(p)} /> : null}
     </div>
   )
 }
@@ -312,22 +327,26 @@ function Severity({ p }) {
   const t = table(p, 'T3')
   const rows = t.rows.filter((r) => r.key !== 'U' || r.values.crashes)
   const max = Math.max(1, ...rows.map((r) => r.values.crashes))
+  const total = t.rows.reduce((a, r) => a + r.values.crashes, 0)
+  const small = total < minN(p)
   return (
     <section aria-label="Severity">
       <div className="sect-h"><h2 className="h3">How bad, not just how many?</h2><Src tid="T3" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       <p className="ksi-call"><b className="mono">{fmt(cell(p, 'T1/ksi_crashes/value'))}</b> crashes killed or seriously injured someone (KSI).</p>
-      <div className="bars sevsum">
-        {rows.map((r) => (
-          <div className="bar" key={r.key}>
-            <span className="lab" title={r.label}>{r.label}</span>
-            <span className="tr" aria-hidden="true"><i className={`sev-${r.key.toLowerCase()}`} style={{ width: `${(100 * r.values.crashes) / max}%` }} /></span>
-            <span className="v mono">{fmt(r.values.crashes)} · {fmt(r.values.share_pct)}%</span>
-          </div>
-        ))}
-      </div>
+      {small ? <CountList rows={rows} n={total} min={minN(p)} /> : (
+        <div className="bars sevsum">
+          {rows.map((r) => (
+            <div className="bar" key={r.key}>
+              <span className="lab" title={r.label}>{r.label}</span>
+              <span className="tr" aria-hidden="true"><i className={`sev-${r.key.toLowerCase()}`} style={{ width: `${(100 * r.values.crashes) / max}%` }} /></span>
+              <span className="v mono">{fmt(r.values.crashes)} · {fmt(r.values.share_pct)}%</span>
+            </div>
+          ))}
+        </div>
+      )}
       <details className="showtable"><summary>Show table</summary>
-        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Severity</th><th className="sf-num">Crashes</th><th className="sf-num">Share %</th></tr></thead>
-          <tbody>{t.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.share_pct)}</td></tr>)}</tbody></table></div>
+        <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Severity</th><th className="sf-num">Crashes</th><th className="sf-num">Share %</th><MarkTh t={t} /></tr></thead>
+          <tbody>{t.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.share_pct)}</td><MarkTd t={t} r={r} /></tr>)}</tbody></table></div>
       </details>
     </section>
   )
@@ -506,9 +525,11 @@ const DANGER = [['ped', 'Pedestrian crashes'], ['bike', 'Bicycle crashes'], ['eb
 function Vru({ p, onMap, mapMode }) {
   const t19 = table(p, 'T19'), t2 = table(p, 'T2'), t15 = table(p, 'T15'), t20 = table(p, 'T20')
   const v = (k) => t19.rows.find((r) => r.key === k)?.values || {}
-  const h = vruHeadline(t19)
+  const m = minN(p)
+  const h = vruHeadline(t19, m)
   const rows = DANGER.map(([k, label]) => ({ k, label, ...v(k) })).filter((r) => r.crashes)
   const n = cell(p, 'T1/crashes/value')
+  const peds = v('ped').crashes || 0
   return (
     <section className="vru-sect" aria-label="Pedestrians and bicyclists">
       <div className="sect-h"><h2 className="h3">Pedestrians and bicyclists</h2><Src tid="T19" n={n} p={p} /></div>
@@ -518,13 +539,15 @@ function Vru({ p, onMap, mapMode }) {
           <h3 className="h4">How dangerous is it? <span className="muted">share of each group&apos;s crashes that killed or seriously injured someone (bars on a 0–100% scale)</span></h3>
           <div className="danger" data-testid="danger">
             {rows.map((r) => (
-              <div className={`dg${r.k === 'other' ? ' ref' : ''}`} key={r.k} data-testid={`danger-${r.k}`}>
+              <div className={`dg${r.k === 'other' ? ' ref' : ''}${r.crashes < m ? ' few' : ''}`} key={r.k} data-testid={`danger-${r.k}`}>
                 <span className="lab">{r.label}</span>
-                <span className="tr" aria-hidden="true"><i style={{ width: `${Math.min(100, r.ksi_pct || 0)}%` }} /></span>
-                <span className="v mono">{fmt(r.ksi_pct)}%</span>
+                {r.crashes < m ? <span className="v mono muted">—</span> : <>
+                  <span className="tr" aria-hidden="true"><i style={{ width: `${Math.min(100, r.ksi_pct || 0)}%` }} /></span>
+                  <span className="v mono">{fmt(r.ksi_pct)}%</span></>}
                 <span className="nn mono muted">{fmt(r.ksi_crashes)} of {fmt(r.crashes)}</span>
               </div>
             ))}
+            {rows.some((r) => r.crashes < m) ? <p className="muted small-note">Too few to compare for groups under {fmt(m)} crashes: counts only.</p> : null}
           </div>
         </>
       ) : null}
@@ -543,27 +566,28 @@ function Vru({ p, onMap, mapMode }) {
           )
         })}
       </ul>
-      {v('ped').crashes ? (
-        <div className="ped-ctx">
+      {peds ? (
+        <div className="ped-ctx" data-testid="ped-daynight">
           <div>
             <div className="sect-h"><h3 className="h4">What the pedestrian was doing</h3><Src tid="T15" n={n} p={p} /></div>
-            <Bars t={t15} />
+            {peds < m ? <CountList rows={t15.rows.filter((r) => r.values.crashes)} n={peds} min={m} /> : <Bars t={t15} />}
           </div>
           <div>
             <div className="sect-h"><h3 className="h4">Day or night</h3><Src tid="T20" n={n} p={p} /></div>
-            <Bars t={{ ...t20, rows: t20.rows.filter((r) => r.values.crashes) }} />
+            {peds < m ? <CountList rows={t20.rows.filter((r) => r.values.crashes)} n={peds} min={m} />
+              : <Bars t={{ ...t20, rows: t20.rows.filter((r) => r.values.crashes) }} />}
           </div>
         </div>
       ) : null}
       <details className="showtable"><summary>Show table</summary>
         <div className="sf-table-wrap"><table className="sf-table"><thead><tr><th>Group</th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th>
-          <th className="sf-num">KSI % of group</th><th className="sf-num">Share of crashes %</th><th className="sf-num">Share of KSI %</th></tr></thead>
+          <th className="sf-num">KSI % of group</th><th className="sf-num">Share of crashes %</th><th className="sf-num">Share of KSI %</th><MarkTh t={t19} /></tr></thead>
           <tbody>{t19.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td>
             <td className="sf-num mono">{fmt(r.values.ksi_crashes)}</td><td className="sf-num mono">{r.values.ksi_pct == null ? '—' : fmt(r.values.ksi_pct)}</td>
-            <td className="sf-num mono">{fmt(r.values.share_of_crashes_pct)}</td><td className="sf-num mono">{fmt(r.values.share_of_ksi_pct)}</td></tr>)}</tbody></table></div>
+            <td className="sf-num mono">{fmt(r.values.share_of_crashes_pct)}</td><td className="sf-num mono">{fmt(r.values.share_of_ksi_pct)}</td><MarkTd t={t19} r={r} /></tr>)}</tbody></table></div>
         {[t15, t20].map((t) => (
-          <div className="sf-table-wrap" key={t.id}><table className="sf-table"><caption>{t.title}</caption><thead><tr><th></th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th><th className="sf-num">Share %</th></tr></thead>
-            <tbody>{t.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.ksi_crashes)}</td><td className="sf-num mono">{fmt(r.values.share_pct)}</td></tr>)}</tbody></table></div>
+          <div className="sf-table-wrap" key={t.id}><table className="sf-table"><caption>{t.title}</caption><thead><tr><th></th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th><th className="sf-num">Share %</th><MarkTh t={t} /></tr></thead>
+            <tbody>{t.rows.map((r) => <tr key={r.key}><td>{r.label}</td><td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.ksi_crashes)}</td><td className="sf-num mono">{fmt(r.values.share_pct)}</td><MarkTd t={t} r={r} /></tr>)}</tbody></table></div>
         ))}
       </details>
     </section>
