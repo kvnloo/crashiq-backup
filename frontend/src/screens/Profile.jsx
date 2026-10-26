@@ -48,12 +48,12 @@ function Kpis({ p }) {
   )
 }
 
-function Bars({ t }) {
+function Bars({ t, testid }) {
   const max = Math.max(1, ...t.rows.map((r) => r.values.crashes))
   return (
     <div className="bars">
       {t.rows.map((r) => (
-        <div className="bar" key={r.key}>
+        <div className="bar" key={r.key} data-testid={testid}>
           <span className="lab">{r.label}</span>
           <span className="tr" aria-hidden="true">
             {/* the one severity ramp, stacked (#119): orange means serious here as everywhere else */}
@@ -63,6 +63,98 @@ function Bars({ t }) {
         </div>
       ))}
     </div>
+  )
+}
+
+// #265: the standard safety-section tables (#52), drawn straight from their cells; only bar widths are computed here.
+const hasRows = (t) => Boolean(t?.rows?.some((r) => r.values.crashes))
+const sevLegend = (t) => (
+  <div className="legend small">{SEV_PARTS.filter(([k]) => t.rows.some((r) => r.values[`sev_${k}`])).map(([k, l]) => <span key={k}><i className={`sev-${k}`} />{l}</span>)}</div>
+)
+
+function CountTable({ t }) {
+  return (
+    <details className="showtable"><summary>Show table</summary>
+      <div className="sf-table-wrap"><table className="sf-table">
+        <thead><tr><th>{t.title}</th><th className="sf-num">Crashes</th><th className="sf-num">KSI</th><th className="sf-num">Share %</th></tr></thead>
+        <tbody>{t.rows.map((r) => (
+          <tr key={r.key}><th scope="row">{r.label.trim()}</th>
+            {['crashes', 'ksi_crashes', 'share_pct'].map((k) => <td key={k} className="sf-num mono">{fmt(r.values[k])}</td>)}</tr>))}</tbody>
+      </table></div>
+    </details>
+  )
+}
+
+// hit and run, DUI and speed (T14): one compact row each; "of which" rows indented
+function Flags({ t, p, n, label }) {
+  if (!hasRows(t)) return null
+  const max = Math.max(1, ...t.rows.map((r) => r.values.crashes))
+  return (
+    <div className="flags" aria-label={label} role="group">
+      <div className="sect-h"><h3 className="h3">Hit and run, DUI and speed</h3><Src tid={t.id} n={n} p={p} /></div>
+      <div className="bars">
+        {t.rows.map((r) => (
+          <div className={`bar${r.label.startsWith(' ') ? ' sub' : ''}`} key={r.key} data-testid="flag-row">
+            <span className="lab">{r.label.trim()}</span>
+            <span className="tr" aria-hidden="true"><i style={{ width: `${(100 * r.values.crashes) / max}%` }} /></span>
+            <span className="v mono">{fmt(r.values.crashes)}</span>
+            <span className="muted mono small">{fmt(r.values.ksi_crashes)} KSI · {fmt(r.values.share_pct)}%</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// E2. Why did they crash? (#265): the primary collision factor in the 24 SWITRS categories (T18), then T14
+function Why({ p, suffix = '', n, label = 'Why did they crash?', h = 'h2' }) {
+  const pcf = p.tables.find((x) => x.id === `T18${suffix}`)
+  const flags = p.tables.find((x) => x.id === `T14${suffix}`)
+  if (!hasRows(pcf) && !hasRows(flags)) return null
+  const H = h
+  return (
+    <section aria-label={label}>
+      {hasRows(pcf) ? (<>
+        <div className="sect-h"><H className="h3">Why did they crash?</H><Src tid={pcf.id} n={n} p={p} /></div>
+        <p className="muted small-note">Primary collision factor, in the 24 SWITRS categories.</p>
+        <Bars t={pcf} testid="pcf-bar" />
+        {sevLegend(pcf)}
+        <CountTable t={pcf} />
+      </>) : null}
+      <Flags t={flags} p={p} n={n} label={suffix ? 'Hit and run, DUI and speed (this location)' : 'Hit and run, DUI and speed'} />
+    </section>
+  )
+}
+
+// broadside split (T17), under Collision type: shares of broadside, as T17 states them
+function Broadside({ p, n }) {
+  const t = p.tables.find((x) => x.id === 'T17')
+  if (!hasRows(t)) return null
+  return (
+    <div className="broadside small" role="group" aria-label="Broadside: left turn vs right angle">
+      Broadside crashes: {t.rows.map((r, i) => (
+        <span key={r.key}>{i ? ' · ' : ''}{r.label.split(' (')[0].toLowerCase()} <b className="mono">{fmt(r.values.crashes)}</b> ({fmt(r.values.share_pct)}%)</span>
+      ))} <Src tid="T17" n={n} p={p} />
+    </div>
+  )
+}
+
+// Conditions (#265): movement of the party at fault, weather, road surface, lighting; folded by default
+const CONDITIONS = [['T16', 'Movement before the collision (party at fault)'], ['T7', 'Weather'], ['T8', 'Road surface'], ['T6', 'Lighting']]
+function Conditions({ p, n }) {
+  const blocks = CONDITIONS.map(([id, name]) => [p.tables.find((x) => x.id === id), name]).filter(([t]) => hasRows(t))
+  if (!blocks.length) return null
+  return (
+    <details className="adv conditions">
+      <summary>Conditions</summary>
+      {blocks.map(([t, name]) => (
+        <section key={t.id} aria-label={name}>
+          <div className="sect-h"><h3 className="h3">{name}</h3><Src tid={t.id} n={n} p={p} /></div>
+          <Bars t={{ ...t, rows: t.rows.map((r) => ({ ...r, label: r.label.trim() })) }} />
+          <CountTable t={t} />
+        </section>
+      ))}
+    </details>
   )
 }
 
@@ -534,6 +626,7 @@ function Drill({ row, data, onClose }) {
       <section><div className="sect-h"><h3 className="h3">Severity</h3><Src tid={sev.id} n={row.values.crashes} p={data} /></div>
         <ul className="kv">{sev.rows.filter((r) => r.values.crashes).map((r) => <li key={r.key}><span>{r.label}</span><span className="mono">{fmt(r.values.crashes)}</span></li>)}</ul></section>
       <section><div className="sect-h"><h3 className="h3">Collision type</h3><Src tid={types.id} n={row.values.crashes} /></div><Bars t={types} /></section>
+      <Why p={data} suffix={`@${row.key}`} n={row.values.crashes} label="Why did they crash? (this location)" h="h3" />
       <section><div className="sect-h"><h3 className="h3">Lighting</h3><Src tid={light.id} n={row.values.crashes} /></div>
         <ul className="kv">{light.rows.map((r) => <li key={r.key}><span>{r.label}</span><span className="mono">{fmt(r.values.crashes)}</span></li>)}</ul></section>
       {data.diagram ? <Diagram d={data.diagram} t={data.tables.find((x) => x.id.startsWith('T21@'))} label={row.label} /> : null}
@@ -704,11 +797,14 @@ export default function Profile() {
               <div className="sect-h"><h2 className="h3">Collision type</h2><Src tid="T4" n={cell(p, 'T1/crashes/value')} /></div>
               <Bars t={table(p, 'T4')} />
               <div className="legend small">{SEV_PARTS.filter(([k]) => table(p, 'T4').rows.some((r) => r.values[`sev_${k}`])).map(([k, l]) => <span key={k}><i className={`sev-${k}`} />{l}</span>)}</div>
+              <Broadside p={p} n={cell(p, 'T1/crashes/value')} />
             </section>
+            <Why p={p} n={cell(p, 'T1/crashes/value')} />
             <section>
               <div className="sect-h"><h2 className="h3">When crashes happen</h2><Src tid="T9" n={cell(p, 'T1/crashes/value')} /></div>
               <Heat t={table(p, 'T9')} />
             </section>
+            <Conditions p={p} n={cell(p, 'T1/crashes/value')} />
             <DataSources p={p} pull={state.pull} onRefresh={refresh} busy={refreshing} />
             {state.refreshError ? <div className="err" role="alert">{state.refreshError}</div> : null}
             <div className="cta-bar"><button type="button" className="sf-btn sf-btn--go" onClick={() => navigate(`/s/${studyId}/findings`)}>See findings →</button></div>

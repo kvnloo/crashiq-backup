@@ -453,3 +453,100 @@ describe('Profile display fixes (#266)', () => {
     restore()
   })
 })
+
+// #265: the safety tables the backend already computes. safety_tables.json holds T18 (PCF in the 24 SWITRS categories),
+// T14, T16, T17 and their @location tables as tests/fixtures/make_frontend_fixtures.py writes them at this commit; the
+// other fixtures predate them.
+import safety from '../__fixtures__/safety_tables.json'
+
+describe('Safety tables on tab 3 (#265)', () => {
+  const sp = { ...profile, tables: [...profile.tables, ...safety.profile] }
+  const sloc = { ...location, tables: [...location.tables, ...safety.location] }
+  const sroutes = { ...routes, 'GET /studies/:id/profile': sp, 'GET /studies/:id/profile/locations/:lid': sloc }
+  const t = (id) => table(sp, id)
+
+  it('"Why did they crash?": one PCF bar per T18 row, sorted as T18, numbers from its cells, a table on demand', async () => {
+    mockApi(sroutes)
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('Why did they crash?')
+    const bars = within(sec).getAllByTestId('pcf-bar')
+    expect(bars).toHaveLength(t('T18').rows.length)
+    t('T18').rows.forEach((r, i) => {
+      expect(bars[i]).toHaveTextContent(r.label)
+      expect(bars[i]).toHaveTextContent(nf.format(r.values.crashes))
+    })
+    expect(within(sec).getAllByLabelText('Source: table T18').length).toBeGreaterThan(0)
+    const tbl = within(sec).getByText('Show table').closest('details')
+    const rows = within(tbl).getAllByRole('row').slice(1)
+    expect(rows).toHaveLength(t('T18').rows.length)
+    expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent))
+      .toEqual(['crashes', 'ksi_crashes', 'share_pct'].map((k) => nf.format(t('T18').rows[0].values[k])))
+  })
+
+  it('hit and run, DUI and speed from T14, each with its source mark', async () => {
+    mockApi(sroutes)
+    renderAt('/s/s1/profile')
+    const blk = await screen.findByLabelText('Hit and run, DUI and speed')
+    for (const r of t('T14').rows) expect(blk).toHaveTextContent(`${r.label.trim()}`)
+    expect(within(blk).getAllByTestId('flag-row').map((e) => e.querySelector('.v').textContent))
+      .toEqual(t('T14').rows.map((r) => nf.format(r.values.crashes)))
+    expect(within(blk).getAllByLabelText('Source: table T14')).toHaveLength(1)
+  })
+
+  it('left turn vs right angle (T17) under Collision type, as shares of broadside', async () => {
+    mockApi(sroutes)
+    renderAt('/s/s1/profile')
+    const blk = await screen.findByLabelText('Broadside: left turn vs right angle')
+    for (const r of t('T17').rows) expect(blk).toHaveTextContent(`${nf.format(r.values.share_pct)}%`)
+    expect(within(blk).getByLabelText('Source: table T17')).toBeInTheDocument()
+  })
+
+  it('Conditions: movement, weather, surface and lighting, folded by default', async () => {
+    mockApi(sroutes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const det = screen.getByText('Conditions').closest('details')
+    expect(det.open).toBe(false)
+    for (const [id, name] of [['T16', 'Movement before the collision (party at fault)'], ['T7', 'Weather'],
+      ['T8', 'Road surface'], ['T6', 'Lighting']]) {
+      expect(within(det).getByRole('heading', { name })).toBeInTheDocument()
+      expect(within(det).getAllByLabelText(`Source: table ${id}`).length).toBeGreaterThan(0)
+      for (const r of t(id).rows) expect(within(det).getAllByText(r.label.trim()).length).toBeGreaterThan(0)
+    }
+  })
+
+  it('empty tables hide their block', async () => {
+    const zero = (x) => ({ ...x, rows: x.rows.map((r) => ({ ...r, values: { ...r.values, crashes: 0 } })) })
+    const ep = { ...sp, tables: sp.tables.filter((x) => x.id !== 'T18').map((x) => (x.id === 'T14' || x.id === 'T17' ? zero(x) : x)) }
+    mockApi({ ...sroutes, 'GET /studies/:id/profile': ep })
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    expect(screen.queryByLabelText('Why did they crash?')).toBeNull()
+    expect(screen.queryByLabelText('Hit and run, DUI and speed')).toBeNull()
+    expect(screen.queryByLabelText('Broadside: left turn vs right angle')).toBeNull()
+  })
+
+  it('a table missing a year carries its red note on the new blocks too (#188)', async () => {
+    const note = 'No CCRS party details for 2025 in this pull.'
+    const np = { ...sp, tables: sp.tables.map((x) => (x.id === 'T16' ? { ...x, note } : x)) }
+    mockApi({ ...sroutes, 'GET /studies/:id/profile': np })
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const det = screen.getByText('Conditions').closest('details')
+    const src = within(det).getAllByLabelText(/Source: table T16/)[0]
+    expect(src.className).toContain('src-note')
+  })
+
+  it('the location drill-in shows its PCF categories and hit and run / DUI / speed', async () => {
+    mockApi(sroutes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const first = table(profile, 'T2').rows[0]
+    fireEvent.click(within(screen.getByLabelText('Location ranking')).getAllByRole('button', { name: first.label })[0])
+    await screen.findByText('← All locations')
+    const pcf = table(sloc, `T18@${first.key}`)
+    const sec = screen.getByLabelText('Why did they crash? (this location)')
+    expect(within(sec).getAllByTestId('pcf-bar')).toHaveLength(pcf.rows.length)
+    expect(screen.getByLabelText('Hit and run, DUI and speed (this location)')).toBeInTheDocument()
+  })
+})
