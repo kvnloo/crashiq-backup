@@ -44,7 +44,7 @@ ALIASES = {"ROUTE": "RTE", "ROUTE_SFX": "RTE_SFX", "COUNTY": "CNTY", "LOCATION D
 
 
 def http_get(url: str) -> bytes:
-    req = urllib.request.Request(url, headers={"User-Agent": "Mozilla/5.0 CrashIQ/0.1 (+crash safety analysis)"})
+    req = urllib.request.Request(url, headers={"User-Agent": "CrashIQ/0.1 (+crash safety analysis)"})
     with urllib.request.urlopen(req, timeout=180) as r:
         return r.read()
 

@@ -5,11 +5,14 @@
   the AADT, peak-hour volume and peak-month ADT just behind the point (BACK) and just ahead of it (AHEAD). A count
   year runs October 1 to September 30. Most points are counted by portable counters in a rotating sample and
   adjusted to an annual estimate; many points repeat the previous year's value when they weren't recounted. Rows
-  described "BREAK IN RTE" or "ROUTE BREAK AHEAD" mark gaps in a route, with no AADT across them.
+  described "BREAK IN RTE" or "ROUTE BREAK AHEAD" mark gaps in a route, with no AADT across them. Caltrans explains
+  the back and ahead legs in its diagram "Back and Ahead Leg Traffic Count" (PDF, on the census page):
+  https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/back-and-ahead-leg-traffic-count-diagram-a11y.pdf
 - **Truck AADT:** a separate annual workbook, a row per leg (B behind, A ahead) at fewer points, with total vehicle
   AADT, truck AADT and the 2-, 3-, 4- and 5+-axle counts and shares.
 - **Ramps:** per-district ramp ADT workbooks (2016 to 2024) on the same page. Not loaded yet (#287 follow-up).
-- **Where:** https://dot.ca.gov/programs/traffic-operations/census (public; Caltrans). The files by year are listed in
+- **Where:** https://dot.ca.gov/programs/traffic-operations/census (public; Caltrans), fetched with the honest
+  `CrashIQ/0.1` user agent (dot.ca.gov serves it, checked 2026-10-26). The files by year are listed in
   `backend/crashiq/config/aadt.json`. The ArcGIS layers `CHhighway/Traffic_AADT` and `CHhighway/Truck_Volumes_AADT`
   hold one year's points with coordinates but no year field, so CrashIQ uses the annual workbooks.
 - **Formats:** the column names change between years (`ROUTE`/`RTE`, `COUNTY`/`CNTY`, `LOCATION DESCRIPTION`/
