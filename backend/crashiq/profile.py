@@ -316,6 +316,16 @@ def intersection_rate(crashes: int, years: float, major_aadt: float | None, mino
     return crashes * 1e6 / (365 * years * tev)
 
 
+def unplaced_text(n: int, share_pct, ksi: int, limitation: bool) -> str:
+    """The unplaced-crashes caveat, singular or plural by count (#266)."""
+    one = n == 1
+    text = (f"{n} crash{'' if one else 'es'} on this corridor ({share_pct}%) "
+            f"{'has' if one else 'have'} no coordinates and {'is' if one else 'are'}n't placed yet")
+    if ksi:
+        text += f", including {ksi} fatal or serious-injury crash{'' if ksi == 1 else 'es'} not in the KSI count"
+    return text + (". This is a data limitation for this study." if limitation else ".")
+
+
 def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str] | None = None) -> dict:
     exclude = exclude or set()
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
@@ -515,12 +525,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         caveats.append({"key": "unplaced", "count": len(unmatched), "share_pct": pct(len(unmatched), total_known),
                         "limitation": share > UNPLACED_LIMIT,
                         "ksi": sum(c["severity"] in ("K", "A") for c in unmatched),
-                        "text": (f"{len(unmatched)} crash{'es' if len(unmatched) != 1 else ''} on this corridor "
-                                 f"({pct(len(unmatched), total_known)}%) have no coordinates and aren't placed yet"
-                                 + (f", including {sum(c['severity'] in ('K', 'A') for c in unmatched)} fatal or "
-                                    "serious-injury crash(es) not in the KSI count"
-                                    if any(c["severity"] in ("K", "A") for c in unmatched) else "")
-                                 + (". This is a data limitation for this study." if share > UNPLACED_LIMIT else "."))})
+                        "text": unplaced_text(len(unmatched), pct(len(unmatched), total_known),
+                                              sum(c["severity"] in ("K", "A") for c in unmatched), share > UNPLACED_LIMIT)})
     approx = sum(1 for c in placed if c.get("location_provenance") == "approximate")
     if approx:                             # #255: say what the precise-point analyses leave out
         caveats.append({"key": "approximate_freeway", "count": approx,

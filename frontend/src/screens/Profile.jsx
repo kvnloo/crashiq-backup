@@ -41,7 +41,7 @@ function Kpis({ p }) {
       {items.map(([label, value, sub]) => (
         <div className="sf-kpi" key={label}>
           <div className="sf-kpi__label">{label} <Src tid="T1" n={n} p={p} /></div>
-          <div className="sf-kpi__value">{fmt(value)}{sub ? <small>{sub}</small> : null}</div>
+          <div className="sf-kpi__value">{fmt(value)}{sub ? <> <small>{sub}</small></> : null}</div>
         </div>
       ))}
     </div>
@@ -345,7 +345,12 @@ function Grid({ p, onOpen }) {
   useEffect(() => {
     const el = wrap.current
     if (!el) return undefined
-    const check = () => setMore(el.scrollWidth - el.clientWidth - el.scrollLeft > 2)
+    // a column whose right edge is past the grid's visible edge (#266: scrollWidth also counts overflow that isn't a
+    // column, and said so on Crenshaw with all 8 columns visible)
+    const check = () => {
+      const last = el.querySelector('thead th:last-child')
+      setMore(Boolean(last) && last.getBoundingClientRect().right - el.getBoundingClientRect().right > 2)
+    }
     check()
     el.addEventListener('scroll', check)
     window.addEventListener('resize', check)

@@ -234,3 +234,21 @@ def test_t9_has_a_day_not_stated_row_only_when_needed():
     t9 = next(t for t in p["tables"] if t["id"] == "T9")
     total = sum(v for r in t9["rows"] for k, v in r["values"].items())
     assert total == v_(p, "T1/crashes/value")
+
+
+def test_count_caveats_agree_in_number():
+    # #266: "1 crash on this corridor (0.5%) have no coordinates and aren't placed yet"
+    from crashiq.profile import unplaced_text
+    assert unplaced_text(1, 0.5, 0, False) == "1 crash on this corridor (0.5%) has no coordinates and isn't placed yet."
+    assert unplaced_text(3, 1.6, 0, False) == "3 crashes on this corridor (1.6%) have no coordinates and aren't placed yet."
+    assert unplaced_text(1, 0.5, 1, False) == ("1 crash on this corridor (0.5%) has no coordinates and isn't placed yet, "
+                                               "including 1 fatal or serious-injury crash not in the KSI count.")
+    assert unplaced_text(4, 12.0, 2, True).endswith("including 2 fatal or serious-injury crashes not in the KSI count. "
+                                                    "This is a data limitation for this study.")
+
+
+def test_the_stale_findings_note_agrees_in_number():
+    from crashiq.export import stale_text
+    assert stale_text(1) == ("1 accepted finding no longer matches the data after a study change and is left out "
+                             "until reviewed again.")
+    assert stale_text(2).startswith("2 accepted findings no longer match the data") and "and are left out" in stale_text(2)

@@ -87,4 +87,13 @@ describe('Findings screen', () => {
     expect(screen.getByRole('alert')).toHaveTextContent('no longer matches the data')
     expect(screen.getByRole('button', { name: '✓ Accept' })).toBeDisabled()
   })
+
+  it('never says "all numbers traced" on a stale finding (#266)', async () => {
+    const stale = { ...F1, stale: true, stale_reasons: ['declared 12 does not match T12/osm-1029~dark/target_crashes = 9'] }
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [stale], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    expect(await screen.findByText('Stale')).toBeInTheDocument()
+    expect(screen.queryByText(/all numbers traced/)).toBeNull()
+    expect(screen.getByText('validator: out of date')).toBeInTheDocument()
+  })
 })

@@ -412,3 +412,44 @@ describe('Crash profile screen', () => {
     if (vru.length) expect(within(strip).getByText('Ring: pedestrian, bicyclist, e-bike or e-scooter involved')).toBeTruthy()
   })
 })
+
+describe('Profile display fixes (#266)', () => {
+  it('keeps the KPI value and its "5 yr" sub-label apart (not "1055 yr")', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    const kpis = await screen.findByLabelText('Key numbers')
+    const sub = within(kpis).getByText(/^\d+ yr$/)
+    const value = sub.closest('.sf-kpi__value')
+    expect(value.textContent).toBe(`${nf.format(cell(profile, profile.kpis.crashes))} ${sub.textContent}`)
+  })
+
+  function grid(lastRight) {
+    // jsdom has no layout: the grid is 800 px wide; its last column ends at lastRight; scrollWidth says 900 either way
+    const spy = vi.spyOn(Element.prototype, 'getBoundingClientRect').mockImplementation(function rect() {
+      const right = this.classList?.contains('gridwrap') ? 800 : this.tagName === 'TH' ? lastRight : 0
+      return { left: 0, right, top: 0, bottom: 0, width: right, height: 0, x: 0, y: 0 }
+    })
+    const sw = vi.spyOn(Element.prototype, 'scrollWidth', 'get').mockReturnValue(900)
+    const cw = vi.spyOn(Element.prototype, 'clientWidth', 'get').mockReturnValue(800)
+    return () => { spy.mockRestore(); sw.mockRestore(); cw.mockRestore() }
+  }
+
+  it('says "More columns" only when a column is past the right edge', async () => {
+    const restore = grid(800)                                 // every column visible
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Collision type by location')
+    await new Promise((r) => setTimeout(r, 50))              // let the overflow check run
+    expect(screen.queryByText(/More columns/)).toBeNull()
+    restore()
+  })
+
+  it('says "More columns" when one is hidden', async () => {
+    const restore = grid(950)                                 // the last column ends 150 px past the edge
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Collision type by location')
+    expect(await screen.findByText(/More columns/)).toBeInTheDocument()
+    restore()
+  })
+})

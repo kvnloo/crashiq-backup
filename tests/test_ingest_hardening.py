@@ -195,7 +195,7 @@ def test_accepted_findings_that_no_longer_match_are_flagged_and_left_out_of_the_
     assert f["stale"] is True and f["stale_reasons"]
     assert client.patch(f"/api/studies/{sid}/findings/{top['id']}?status=accepted").status_code == 409
     text = " ".join(p.extract_text() for p in PdfReader(io.BytesIO(client.get(f"/api/studies/{sid}/export.pdf").content)).pages)
-    assert top["title"] not in text and "no longer match the data" in text
+    assert top["title"] not in text and "no longer match" in text
 
 
 def test_pdf_states_the_method_and_what_it_does_not_do(client):

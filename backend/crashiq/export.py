@@ -32,6 +32,12 @@ CREDITS = ("Crash data: CCRS, California Highway Patrol (data.ca.gov, public dom
 NO_AI = ("This report has no AI narrative. Findings are written by code from the over-representation screen (table T12, HSM excess-proportion test) and appear only after you accept them.")
 
 
+def stale_text(n: int) -> str:
+    """Singular or plural by count (#266)."""
+    return (f"{n} accepted finding{'' if n == 1 else 's'} no longer match{'es' if n == 1 else ''} the data after a "
+            f"study change and {'is' if n == 1 else 'are'} left out until reviewed again.")
+
+
 def _postmiles(pull: dict, a: dict, pm) -> list[dict]:
     """Counted crashes on a state route with their derived Caltrans postmile (#248)."""
     if pm is None:
@@ -476,8 +482,7 @@ def to_pdf(d: dict) -> bytes:
         story.append(Paragraph(f"The screen ran {p['screen_tests']} location × crash-type tests at P ≥ 0.80, so a few patterns "
                                "can pass by chance. Treat findings as leads to verify in the field.", small))
     if d.get("stale_findings"):
-        story.append(Paragraph(f"{d['stale_findings']} accepted finding(s) no longer match the data after a study "
-                               "change and are left out until reviewed again.", small))
+        story.append(Paragraph(stale_text(d["stale_findings"]), small))
     story += [Paragraph(NO_AI, small), Spacer(1, 14), Paragraph(CREDITS, small)]
     from .references import cited_sources
     story += [Paragraph("References", h2),
