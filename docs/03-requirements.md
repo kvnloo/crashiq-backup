@@ -518,11 +518,13 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   engineer enters, or the engineer can attach a file. If that is a file, you can read it." For each state-highway
   segment, intersection and ramp, the rate group comes from the engineer in one of two ways:
   (1) **entered** in the app from Caltrans' published list ("Basic Average Crash Rate Table", *2024 Crash Data on
-  California State Highways*, pp. 83–90, stored in `data/reference/` with the citation);
+  California State Highways*: highways H01–H67 pp. 83–85, intersections I01–I31 pp. 86–87, ramps R01–R80 pp. 88–90;
+  rates "loaded into TSN on April 22, 2022"; the ADT factor is "/" (divided by ADT in thousands) or "*" (times ADT in
+  thousands), per row; stored in `data/reference/` with the citation);
   (2) **read from the Caltrans TASAS output the engineer attaches** (the PDF a district returns for a crash-data
   request, e.g. Table B with rate groups and average rates).
   The file is read by **code** (a deterministic parser), never by AI: every number shown is traceable to the file or to
   the published table. Whatever can't be parsed is shown for the engineer to enter. CrashIQ then computes the expected
-  rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. A
-  suggestion from map data (#294 option B) can come later, labelled. Comparisons use Caltrans' on-highway counting rule
+  rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. This **replaces** the user's earlier answer "B" (2026-10-26, Engineering chat, on #294, never recorded in docs/03).
+  A map-data suggestion may still pre-fill the field, but only as a labelled suggestion the engineer confirms. Comparisons use Caltrans' on-highway counting rule
   or are labelled approximate.
