@@ -403,6 +403,41 @@ def get_records(sid: str, fid: str, request: Request) -> dict:
     return {"records": [{k: c.get(k) for k in keys} for c in select_records(placed, f.evidence_refs.records)]}
 
 
+@router.get("/studies/{sid}/findings/{fid}/diagram")
+def get_diagram(sid: str, fid: str, request: Request) -> dict:
+    """#268: the N10 collision diagram of a finding's own records at a study intersection, numbered and keyed to a
+    T21 list; for a segment finding, where the segment lies along the corridor. Approximate freeway placements are
+    never at an intersection, so they never reach a diagram."""
+    db = request.app.state.db
+    r = db.one("SELECT body FROM finding WHERE study_id = ? AND id = ?", (sid, fid))
+    if not r:
+        raise HTTPException(404, "Finding not found.")
+    f = Finding(**json.loads(r["body"]))
+    study, net, pull, a = assign_mod.for_study(db, sid)
+    by_id = {c["crash_id"]: c for c in pull["crashes"]}
+    placed = [{**by_id[x["crash_id"]], "location_id": x["location_id"], "location_provenance": x["location_provenance"],
+               "station_ft": x.get("station_ft")} for x in a["assignments"] if x["kind"] in ("intersection", "segment")]
+    recs = select_records(placed, f.evidence_refs.records)
+    it = next((i for i in net["intersections"] if i["id"] == f.location_id and i.get("is_study")), None)
+    if it is not None:
+        from . import diagram as diagram_mod
+        d = diagram_mod.build(net, it, recs)
+        return {"kind": "intersection", "records": len(recs), "diagram": d,
+                "table": profile_mod.diagram_table(fid, d, recs)}
+    seg = next((g for g in net.get("segments", []) if g["id"] == f.location_id), None)
+    length = max([g["to_station_ft"] for g in net.get("segments", [])] + [net.get("length_ft") or 0])
+    keys = ("crash_id", "date", "hour", "severity", "collision_type", "location_id", "station_ft", "ped", "bike",
+            "ebike", "escooter")
+    return {"kind": "segment", "records": len(recs), "diagram": None,
+            "strip": {"location_id": f.location_id, "name": seg["name"] if seg else None,
+                      "from_ft": seg["from_station_ft"] if seg else None,
+                      "to_ft": seg["to_station_ft"] if seg else None, "length_ft": length,
+                      # the strip's labels (PM review of #293): the corridor's study intersections, by name
+                      "intersections": [{"id": i["id"], "name": i["name"], "station_ft": i["station_ft"]}
+                                        for i in net["intersections"] if i.get("is_study")],
+                      "crashes": [{k: c.get(k) for k in keys} for c in recs]}}
+
+
 @router.get("/patterns")
 def get_patterns() -> dict:
     return patterns()

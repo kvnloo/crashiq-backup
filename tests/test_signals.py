@@ -200,3 +200,49 @@ def test_a_location_with_a_fatal_crash_leads_even_when_the_finding_s_own_records
         mp.undo()
     assert again[0]["location_id"] == last["location_id"] and again[0]["rank"]["location_fatal_crashes"] == 1
     assert again[0]["rank"]["fatal_crashes"] == 0                                    # no "Fatal crash" chip for it
+
+
+def test_a_finding_s_collision_diagram_draws_only_its_records(client):
+    # #268: the N10 diagram of the finding's crashes (not the whole intersection's); numbers and "not drawn" by code
+    import re
+    sid = _study(client)
+    client.post(f"/api/studies/{sid}/findings/screen")
+    fs = client.get(f"/api/studies/{sid}/findings").json()["findings"]
+    seen = set()
+    for f in fs:
+        recs = client.get(f"/api/studies/{sid}/findings/{f['id']}/records").json()["records"]
+        d = client.get(f"/api/studies/{sid}/findings/{f['id']}/diagram").json()
+        seen.add(d["kind"])
+        assert d["kind"] == f["meta"]["kind"] and d["records"] == len(recs)
+        if d["kind"] != "intersection":
+            assert d["diagram"] is None and d["strip"]["location_id"] == f["location_id"]
+            assert 0 <= d["strip"]["from_ft"] < d["strip"]["to_ft"] <= d["strip"]["length_ft"]
+            assert d["strip"]["name"] and d["strip"]["intersections"] and len(d["strip"]["crashes"]) == len(recs)
+            continue
+        dg = d["diagram"]
+        assert sorted(c["crash_id"] for c in dg["crashes"]) == sorted(r["crash_id"] for r in recs)
+        numbers = [int(x) for s in dg["steps"] if s["op"] == "text" and re.fullmatch(r"[\d, ]+", s["t"])
+                   for x in s["t"].split(",")]
+        assert len(numbers) == len(recs) - sum(dg["not_drawn"].values())
+        assert d["table"]["id"] == f"T21@{f['id']}" and len(d["table"]["rows"]) == len(recs)
+    assert "intersection" in seen
+
+
+def test_a_segment_finding_s_strip_names_the_segment_and_its_cross_streets(client):
+    # PM review of #293: the strip is labelled (segment name, the corridor's study intersections) and shows its crashes
+    sid = _study(client)
+    net = client.get(f"/api/studies/{sid}/network").json()
+    asg = client.get(f"/api/studies/{sid}/assignment").json()["assignments"]
+    seg = next(s for s in net["segments"] if any(a["location_id"] == s["id"] for a in asg))
+    body = findings.Finding(id="c7-seg", location_id=seg["id"], text="Segment claim.",
+                            evidence_refs={"tables": ["T12"], "records": {"location_id": seg["id"]}},
+                            meta={"kind": "segment"}).model_dump_json()
+    client.app.state.db.execute("INSERT INTO finding (study_id, id, body, status) VALUES (?, 'c7-seg', ?, 'proposed')",
+                                (sid, body))
+    d = client.get(f"/api/studies/{sid}/findings/c7-seg/diagram").json()
+    st = d["strip"]
+    assert d["kind"] == "segment" and st["name"] == seg["name"]
+    assert (st["from_ft"], st["to_ft"]) == (seg["from_station_ft"], seg["to_station_ft"])
+    assert {i["name"] for i in st["intersections"]} >= {i["name"] for i in net["intersections"] if i.get("is_study")}
+    n = sum(a["location_id"] == seg["id"] for a in asg)
+    assert len(st["crashes"]) == n == d["records"] and all(c["station_ft"] is not None for c in st["crashes"])

@@ -1,6 +1,7 @@
 import { Fragment, useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import CollisionDiagram from '../components/CollisionDiagram'
+import N10Diagram from '../components/N10Diagram'
+import StripDiagram from '../components/StripDiagram'
 import Replay from '../components/Replay'
 import { api, errorText } from '../lib/api'
 import { fmtNum } from '../lib/tables'
@@ -47,8 +48,24 @@ function Status({ s }) {
   return <span className="st">Needs review</span>
 }
 
-function Detail({ f, i, lib, records, corridor, study, onDecide }) {
+// #268: where a segment finding lies along the corridor, on the corridor strip (#102) with the segment marked and its
+// end cross-streets labelled (PM review of #293); stations and names from the server
+function StripPos({ s }) {
+  return (
+    <section aria-label="Where on the corridor">
+      <div className="sect-h"><h3 className="h3">Where on the corridor</h3></div>
+      <div data-testid="finding-strip">
+        <StripDiagram crashes={s.crashes || []} intersections={s.intersections || []} lengthFt={s.length_ft}
+          highlight={{ from_ft: s.from_ft, to_ft: s.to_ft, label: s.name || 'This segment' }} />
+      </div>
+      <p className="muted small-note">A segment has no intersection diagram; its crashes are the dots, and listed below.</p>
+    </section>
+  )
+}
+
+function Detail({ f, i, lib, records, diagram, study, onDecide }) {
   const [tab, setTab] = useState('records')
+  const [play, setPlay] = useState(false)
   const entry = libEntry(lib, f)
   const segment = f.meta?.kind === 'segment'
   const m = f.meta || {}
@@ -56,7 +73,15 @@ function Detail({ f, i, lib, records, corridor, study, onDecide }) {
   return (
     <div className="fdetail">
       <div className="sf-eyebrow">F{i + 1} · {locName(f)}</div>
-      <Replay anim={entry?.anim || 'generic'} segment={segment} records={records || []} />
+      {diagram?.kind === 'intersection' && diagram.diagram ? (
+        <N10Diagram d={diagram.diagram} t={diagram.table} label={locName(f)}
+          src={<span className="src" role="note" title={`The ${fmtNum(diagram.records)} crashes of this finding (records filter), table ${diagram.table.id}`}
+            aria-label={`Source: this finding's ${diagram.records} crashes`}>ⓘ</span>} />
+      ) : null}
+      {diagram?.kind === 'segment' && diagram.strip?.from_ft != null ? <StripPos s={diagram.strip} /> : null}
+      <button type="button" className="linkbtn" aria-expanded={play} onClick={() => setPlay(!play)}>
+        {play ? 'Hide the pattern' : 'Play the pattern'}</button>
+      {play ? <Replay anim={entry?.anim || 'generic'} segment={segment} records={records || []} /> : null}
       <Claim f={f} />
       <div className="why">
         <div>
@@ -74,7 +99,7 @@ function Detail({ f, i, lib, records, corridor, study, onDecide }) {
       </div>
       <div>
         <div className="tabs" role="tablist">
-          {[['records', `Records (${records ? records.length : '…'})`], ['diagram', 'Collision diagram'], ['audit', 'Audit']].map(([k, label]) => (
+          {[['records', `Records (${records ? records.length : '…'})`], ['audit', 'Audit']].map(([k, label]) => (
             <button key={k} type="button" role="tab" aria-selected={tab === k} className={tab === k ? 'on' : ''} onClick={() => setTab(k)}>{label}</button>
           ))}
         </div>
@@ -96,11 +121,6 @@ function Detail({ f, i, lib, records, corridor, study, onDecide }) {
                   ))}
                 </tbody>
               </table>
-            </div>
-          )}
-          {tab === 'diagram' && (
-            <div className="card-pad">
-              <CollisionDiagram records={records || []} corridor={corridor} cross={locName(f)} segment={segment} />
             </div>
           )}
           {tab === 'audit' && (
@@ -138,13 +158,13 @@ export default function Findings() {
   const [state, setState] = useState({ loading: true })
   const [sel, setSel] = useState(0)
   const [records, setRecords] = useState({})
+  const [diagrams, setDiagrams] = useState({})
 
   useEffect(() => {
     let alive = true
     api(`/studies/${studyId}/findings/screen`, { method: 'POST' })
-      .then(() => Promise.all([api(`/studies/${studyId}/findings`), api('/patterns'),
-        api(`/studies/${studyId}/network`).catch(() => null)]))
-      .then(([f, lib, net]) => alive && setState({ findings: f.findings, lib, corridor: net?.corridor_name || 'Corridor' }))
+      .then(() => Promise.all([api(`/studies/${studyId}/findings`), api('/patterns')]))
+      .then(([f, lib]) => alive && setState({ findings: f.findings, lib }))
       .catch((e) => alive && setState({ error: errorText(e) }))
     return () => { alive = false }
   }, [studyId])
@@ -161,6 +181,15 @@ export default function Findings() {
       .catch(() => alive && setRecords((s) => ({ ...s, [curId]: [] })))
     return () => { alive = false }
   }, [curId, studyId, records])
+
+  useEffect(() => {
+    if (!curId || diagrams[curId]) return undefined
+    let alive = true
+    api(`/studies/${studyId}/findings/${encodeURIComponent(curId)}/diagram`)
+      .then((d) => alive && setDiagrams((s) => ({ ...s, [curId]: d })))
+      .catch(() => alive && setDiagrams((s) => ({ ...s, [curId]: { kind: 'none' } })))
+    return () => { alive = false }
+  }, [curId, studyId, diagrams])
 
   async function decide(id, status) {
     const f = await api(`/studies/${studyId}/findings/${encodeURIComponent(id)}?status=${status}`, { method: 'PATCH' })
@@ -207,8 +236,7 @@ export default function Findings() {
         <p className="muted small">Findings are suggestions. Only accepted findings go in the report.</p>
         <button type="button" className={`sf-btn${nAcc ? ' sf-btn--go' : ''}`} onClick={() => navigate(`/s/${studyId}/export`)}>Go to export →</button>
       </aside>
-      {cur && <Detail key={cur.id} f={cur} i={findings.indexOf(cur)} lib={state.lib} records={records[cur.id]}
-        corridor={state.corridor} study={study} onDecide={decide} />}
+      {cur && <Detail key={cur.id} f={cur} i={findings.indexOf(cur)} lib={state.lib} records={records[cur.id]} diagram={diagrams[cur.id]} study={study} onDecide={decide} />}
     </section>
   )
 }

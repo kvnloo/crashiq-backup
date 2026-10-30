@@ -48,13 +48,12 @@ describe('Findings screen', () => {
     expect(await screen.findByRole('tab', { name: 'Records (12)' })).toBeInTheDocument()
   })
 
-  it('shows records, a collision diagram with one glyph per record, and the audit', async () => {
+  it('shows records and the audit (the collision diagram is at the top now, #268)', async () => {
     mockApi(routes())
     renderAt('/s/s1/findings')
     await screen.findByRole('tab', { name: 'Records (12)' })
     expect(document.querySelectorAll('.tabbody tbody tr')).toHaveLength(12)
-    fireEvent.click(screen.getByRole('tab', { name: 'Collision diagram' }))
-    expect(screen.getByRole('img', { name: 'Collision diagram, 12 records, schematic' })).toBeInTheDocument()
+    expect(screen.queryByRole('tab', { name: 'Collision diagram' })).toBeNull()
     fireEvent.click(screen.getByRole('tab', { name: 'Audit' }))
     expect(screen.getByText(/P\(true share > reference share\) = 0.97/)).toBeInTheDocument()
     expect(screen.getByText('Code, from table T12 (no AI)')).toBeInTheDocument()
@@ -69,6 +68,7 @@ describe('Findings screen', () => {
     const list = screen.getByRole('complementary', { name: 'Findings list' })
     fireEvent.click(within(list).getByText(/Broadside crashes over-represented/))
     expect(await screen.findByText('F2 · Marine Avenue – West 147th Street')).toBeInTheDocument()
+    fireEvent.click(screen.getByRole('button', { name: 'Play the pattern' }))             // never autoplays (#268)
     expect(screen.getByRole('img', { name: /Right-angle conflict/ })).toBeInTheDocument()
   })
 
@@ -152,5 +152,55 @@ describe('Findings list (#267)', () => {
     const list = await screen.findByRole('complementary', { name: 'Findings list' })
     const tt = within(list).getAllByTestId('fcard').map((c) => c.querySelector('.tt').textContent)
     expect(tt).toEqual(['Crashes with poor delineation at night over-represented', 'Hit object crashes from poor delineation at night.'])
+  })
+})
+
+// #268: the N10 collision diagram of the finding's own crashes at the top; the replay only on request
+import FD from '../__fixtures__/finding_diagram.json'
+
+describe('Finding collision diagram (#268)', () => {
+  const fdRoutes = (extra = {}) => routes({ 'GET /studies/:id/findings': { findings: [FD.finding], rejected_count: 0 },
+    'GET /studies/:id/findings/:fid/records': { records: FD.records },
+    'GET /studies/:id/findings/:fid/diagram': FD.diagram, ...extra })
+
+  it('an intersection finding opens on its N10 diagram: its records only, drawn minus not-drawn, keyed to a list', async () => {
+    mockApi(fdRoutes())
+    renderAt('/s/s1/findings')
+    const svg = await screen.findByTestId('collision-diagram')
+    const d = FD.diagram.diagram
+    expect(svg).toHaveAttribute('aria-label', expect.stringContaining(`${FD.records.length} crashes`))
+    const nums = [...svg.querySelectorAll('text')].map((t) => t.textContent).filter((t) => /^[\d, ]+$/.test(t))
+      .flatMap((t) => t.split(','))
+    expect(nums).toHaveLength(FD.records.length - Object.values(d.not_drawn).reduce((a, b) => a + b, 0))
+    const list = screen.getByText('Crash list (numbers on the diagram)').closest('details')
+    expect(within(list).getAllByRole('row').slice(1)).toHaveLength(FD.records.length)
+  })
+
+  it('the replay never autoplays: it is behind "Play the pattern", with no Pause or Replay buttons', async () => {
+    mockApi(fdRoutes())
+    renderAt('/s/s1/findings')
+    await screen.findByTestId('collision-diagram')
+    expect(screen.queryByRole('img', { name: /Pattern replay/ })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'Play the pattern' }))
+    expect(screen.getByRole('img', { name: /Pattern replay/ })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /Pause|Replay/ })).toBeNull()
+  })
+
+  it('a segment finding shows where the segment lies on the corridor and its records, no intersection diagram', async () => {
+    const seg = { ...FD.finding, id: 'seg', location_id: 'seg-1', meta: { ...FD.finding.meta, kind: 'segment' } }
+    mockApi(fdRoutes({ 'GET /studies/:id/findings': { findings: [seg], rejected_count: 0 },
+      'GET /studies/:id/findings/:fid/diagram': { kind: 'segment', records: FD.records.length, diagram: null,
+        strip: { location_id: 'seg-1', name: 'Marine Avenue – West 147th Street', from_ft: 1000, to_ft: 3000, length_ft: 10000,
+          intersections: [{ id: 'i1', name: 'Marine Avenue', station_ft: 1000 }, { id: 'i2', name: 'West 147th Street', station_ft: 3000 }],
+          crashes: FD.records.map((r, i) => ({ ...r, station_ft: 1200 + 100 * i, location_id: 'seg-1' })) } } }))
+    renderAt('/s/s1/findings')
+    const strip = await screen.findByTestId('finding-strip')
+    // PM review of #293: labelled with the segment's name and its end cross-streets; the finding's crashes as dots
+    expect(within(strip).getByTestId('strip-highlight')).toHaveTextContent('Marine Avenue – West 147th Street')
+    expect(within(strip).getByLabelText('Marine Avenue on the strip')).toBeInTheDocument()
+    expect(within(strip).getByLabelText('West 147th Street on the strip')).toBeInTheDocument()
+    expect(within(strip).getAllByTestId('strip-dot')).toHaveLength(FD.records.length)
+    expect(screen.queryByTestId('collision-diagram')).toBeNull()
+    expect(document.querySelectorAll('.tabbody tbody tr')).toHaveLength(FD.records.length)
   })
 })
