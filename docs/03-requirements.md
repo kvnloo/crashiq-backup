@@ -528,3 +528,12 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. This **replaces** the user's earlier answer "B" (2026-10-26, Engineering chat, on #294, never recorded in docs/03).
   A map-data suggestion may still pre-fill the field, but only as a labelled suggestion the engineer confirms. Comparisons use Caltrans' on-highway counting rule
   or are labelled approximate.
+- **Ramp identification and ramp rates DECIDED (user, 2026-10-30, Engineering session; #300):** option **B**, "A +
+  engineer picks". A crash's ramp is identified when its report names a ramp (ON/OFF RAMP, ONR/OFR), its direction of
+  travel and its cross street, and **exactly one** Caltrans ramp row (district ramp ADT file) within 0.3 mi on the same
+  route and county matches all three (direction, on/off, cross street in the description). When 2 or more rows fit,
+  the review list offers them and the engineer picks one (approved once, like an alias). Otherwise the crash gets no
+  ramp rate, with a note. Ramp ADT is the latest count at or before the crash year, labelled with its year, never a
+  later one; District 7's placeholder values (1001, 999) count as missing. Shown as a **"Ramps" table on tab 3** for
+  state-highway studies: one row per identified ramp with crashes, ramp ADT and crashes per million vehicles; the
+  small-number rule applies.
