@@ -45,7 +45,8 @@ def test_a_state_highway_segment_gets_each_calendar_year_s_aadt(cache):
     assert v["by_year"][2024] == a24                                            # 2025's count year is past 2024: latest
     assert v["by_year"][2021] == pytest.approx(0.75 * a21 + 0.25 * cache.segment("405", "LA", 13.5, 2022)["aadt"])
     assert v["coverage"] == 1.0 and v["latest_used"] and v["routes"] == ["405"]
-    assert v["source"] == "Caltrans Traffic Census Program, count years 2021–2024"
+    assert v["source"] == "Caltrans Traffic Census Program" and v["count_years"] == "2021–2024; later count years use 2024"
+    assert v["pm_coverage"] == 1.0
 
 
 def test_a_segment_running_past_the_counted_route_gets_no_exposure_for_it(cache):
@@ -63,7 +64,7 @@ def test_crash_rates_per_million_vehicle_miles_with_the_corridor_average_and_by_
     study, n, pull, asg = golden()
     n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": True,
                                "count_years": "2021–2024 (2025 uses 2024)", "routes": ["1"],
-                               "source": "Caltrans Traffic Census Program, count years 2021–2024"}}
+                               "source": "Caltrans Traffic Census Program"}}
     p = profile.build(study, n, pull, asg)
     t = {x["id"]: x for x in p["tables"]}
     r = {x["key"]: x["values"] for x in t["T22"]["rows"]}["S1"]
@@ -98,3 +99,46 @@ def test_off_the_state_highway_system_no_rates_says_local_counts_are_needed():
     n["corridor_names"] = ["I 405"]                                                          # a state route, no AADT yet
     cav = {c["key"]: c["text"] for c in profile.build(study, n, pull, asg)["caveats"]}
     assert "local traffic counts" not in cav["rates_not_computed"]
+
+
+def rated(crashes_on_s1, years=range(2021, 2026)):
+    """The golden profile with Caltrans volumes on S1 and that segment's crashes cut to the first N."""
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in years}, "coverage": 1.0, "latest_used": False,
+                               "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program"}}
+    on_s1 = [a["crash_id"] for a in asg["assignments"] if a["location_id"] == "S1"]
+    drop = set(on_s1[crashes_on_s1:])
+    asg = {**asg, "assignments": [a for a in asg["assignments"] if a["crash_id"] not in drop]}
+    pull = {**pull, "crashes": [c for c in pull["crashes"] if c["crash_id"] not in drop]}
+    return {x["id"]: x for x in profile.build(study, n, pull, asg)["tables"]}
+
+
+def test_a_rate_on_fewer_than_10_crashes_is_kept_and_marked_too_few():
+    t = rated(4)
+    r = t["T22"]["rows"][0]["values"]
+    assert r["crashes"] == 4 and r["rate_all"] is not None                 # kept for the export, marked
+    assert r["small_base"] == "n < 10: segment, corridor average"
+    assert t["T22"]["scope"]["small"] is True
+    assert all(y["values"].get("small_base") == "n < 10" for y in t["T23"]["rows"])   # 4 crashes over 5 years
+    full = rated(20)
+    assert "small_base" not in full["T22"]["rows"][0]["values"] and full["T22"]["scope"]["small"] is False
+
+
+def test_the_rates_say_how_many_corridor_crashes_are_at_intersections_and_left_out():
+    sc = rated(20)["T22"]["scope"]
+    assert sc["rated_crashes"] == 20 and sc["intersection_crashes"] == sc["corridor_crashes"] - 20
+    assert sc["text"] == (f"Segment crashes only: {sc['intersection_crashes']} of {sc['corridor_crashes']} crashes on "
+                          "this corridor are at intersections and aren't in these rates.")
+
+
+def test_a_state_route_with_no_caltrans_postmiles_says_local_counts_are_needed():
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    n["segments"] = [{**s, "aadt": None} for s in n["segments"]]
+    n["intersections"] = [{**i, "major_aadt": None, "minor_aadt": None} for i in n["intersections"]]
+    n["corridor_names"] = ["Lakewood Boulevard", "CA 19"]                    # relinquished: no route 19 postmiles here
+    n["shs_volumes"] = {s["id"]: {"by_year": {2024: None}, "coverage": 0.0, "pm_coverage": 0.0} for s in n["segments"]}
+    cav = {c["key"]: c["text"] for c in profile.build(study, n, pull, asg)["caveats"]}
+    assert "Route 19 isn't in Caltrans' state-highway postmiles here" in cav["rates_not_computed"]
+    assert "local traffic counts are needed" in cav["rates_not_computed"]

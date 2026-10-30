@@ -325,7 +325,11 @@ function Ranking({ p, onOpen }) {
 // C. How bad, not just how many? (#103) K/A/B/C/(U)/O bars from T3, direct-labelled; KSI called out from T1.
 // State-highway crash rates (#287, user decision 2026-10-26): Caltrans Traffic Census AADT on each study segment of a
 // state-route corridor (T22) and the corridor's rate year by year (T23). Every number is a cell; a row above the
-// corridor average is marked. Caltrans' statewide averages wait for #294 (rate groups, engineer-confirmed).
+// corridor average is marked. A rate on fewer than 10 crashes shows its count only (docs/03 small numbers, #296).
+// Segment crashes only until #297 (user); Caltrans' statewide averages wait for #294.
+const SHS_DETAIL = [['crashes', 'Crashes'], ['fi_crashes', 'Fatal + injury'], ['fatal_crashes', 'Fatal'], ['length_mi', 'Length (mi)'],
+  ['aadt', 'AADT'], ['mvm', 'MVM'], ['rate_all', 'All / MVM'], ['rate_fi', 'Fatal + injury / MVM'], ['rate_fatal', 'Fatal / MVM'],
+  ['corridor_rate_all', 'Corridor average'], ['ratio_to_corridor', '÷ average']]
 function ShsRates({ p }) {
   const t = p.tables.find((x) => x.id === 'T22')
   const by = p.tables.find((x) => x.id === 'T23')
@@ -333,33 +337,49 @@ function ShsRates({ p }) {
   const n = t.rows.reduce((a, r) => a + r.values.crashes, 0)
   const sources = [...new Set(t.rows.map((r) => r.values.source))]
   const years = [...new Set(t.rows.map((r) => r.values.count_years))]
+  const sc = t.scope || {}
+  const rate = (r, k) => (r.values.small_base ? '–' : fmt(r.values[k]))
   return (
     <section aria-label="State-highway crash rates">
       <div className="sect-h"><h2 className="h3">State-highway crash rates</h2><Src tid="T22" n={n} p={p} /></div>
-      <p className="muted small-note">Crashes per million vehicle-miles (MVM). AADT: {sources.join('; ')} (count years {years.join('; ')}).
-        Compared with this corridor&apos;s own average; Caltrans&apos; statewide averages are not shown yet.</p>
-      <div className="sf-table-wrap"><table className="sf-table" data-testid="shs-rates">
-        <thead><tr><th>Segment</th><th className="sf-num">Crashes</th><th className="sf-num">MVM</th><th className="sf-num">All / MVM</th>
-          <th className="sf-num">Fatal + injury / MVM</th><th className="sf-num">Fatal / MVM</th><th className="sf-num">Corridor average</th>
-          <th className="sf-num">÷ average</th></tr></thead>
+      <p className="muted small-note">Crashes per million vehicle-miles (MVM). AADT: {sources.join('; ')}, count years {years.join('; ')}.{' '}
+        {sc.small ? `Corridor average: too few crashes to compare (${fmt(sc.rated_crashes)}).`
+          : `Corridor average ${fmt(sc.corridor_rate_all ?? t.rows[0].values.corridor_rate_all)} crashes per MVM.`}{' '}
+        Caltrans&apos; statewide averages are not shown yet.</p>
+      {sc.text ? <p className="muted small-note" data-testid="shs-scope">{sc.text}</p> : null}
+      <div className="sf-table-wrap"><table className="sf-table shs" data-testid="shs-rates">
+        <thead><tr><th>Segment</th><th className="sf-num">Crashes</th><th className="sf-num">AADT</th><th className="sf-num">Length (mi)</th>
+          <th className="sf-num">All / MVM</th><th className="sf-num">Fatal + injury / MVM</th><th className="sf-num">÷ average</th></tr></thead>
         <tbody>{t.rows.map((r) => {
           const v = r.values
           return (
-            <tr key={r.key} className={v.ratio_to_corridor > 1 ? 'over' : ''} title={`AADT ${fmt(v.aadt)} (window average) · count years ${v.count_years} · ${v.source}`}>
-              <th scope="row">{r.label}</th>
-              {['crashes', 'mvm', 'rate_all', 'rate_fi', 'rate_fatal', 'corridor_rate_all', 'ratio_to_corridor'].map((k) => (
-                <td key={k} className="sf-num mono">{fmt(v[k])}</td>))}
+            <tr key={r.key} className={!v.small_base && v.ratio_to_corridor > 1 ? 'over' : ''}
+              title={`AADT ${fmt(v.aadt)} (window average) · ${fmt(v.mvm)} MVM · count years ${v.count_years} · ${v.source}`}>
+              <th scope="row">{titleCase(r.label)}</th>
+              {['crashes', 'aadt', 'length_mi'].map((k) => <td key={k} className="sf-num mono">{fmt(v[k])}</td>)}
+              <td className="sf-num mono">{rate(r, 'rate_all')}</td><td className="sf-num mono">{rate(r, 'rate_fi')}</td>
+              {v.small_base ? <td className="sf-num muted small">too few to compare</td>
+                : <td className="sf-num mono">{fmt(v.ratio_to_corridor)}</td>}
             </tr>
           )
         })}</tbody>
       </table></div>
+      <details className="showtable"><summary>Show table</summary>
+        <div className="sf-table-wrap"><table className="sf-table" data-testid="shs-detail">
+          <thead><tr><th>Segment</th>{SHS_DETAIL.map(([k, l]) => <th key={k} className="sf-num">{l}</th>)}<MarkTh t={t} /></tr></thead>
+          <tbody>{t.rows.map((r) => <tr key={r.key}><th scope="row">{titleCase(r.label)}</th>
+            {SHS_DETAIL.map(([k]) => <td key={k} className="sf-num mono">{fmt(r.values[k])}</td>)}<MarkTd t={t} r={r} /></tr>)}</tbody>
+        </table></div>
+      </details>
       {by?.rows?.length ? (
         <details className="showtable"><summary>By year</summary>
           <div className="sf-table-wrap"><table className="sf-table" data-testid="shs-by-year">
             <thead><tr><th>Year</th><th className="sf-num">Crashes</th><th className="sf-num">MVM</th><th className="sf-num">All / MVM</th><th className="sf-num">Fatal + injury / MVM</th></tr></thead>
             <tbody>{by.rows.map((r) => <tr key={r.key}><td className="mono">{r.label}</td>
-              {['crashes', 'mvm', 'rate_all', 'rate_fi'].map((k) => <td key={k} className="sf-num mono">{fmt(r.values[k])}</td>)}</tr>)}</tbody>
+              {['crashes', 'mvm'].map((k) => <td key={k} className="sf-num mono">{fmt(r.values[k])}</td>)}
+              {['rate_all', 'rate_fi'].map((k) => <td key={k} className="sf-num mono">{rate(r, k)}</td>)}</tr>)}</tbody>
           </table></div>
+          {by.rows.some((r) => r.values.small_base) ? <p className="muted small-note">– a year with fewer than {minN(p)} crashes: too few to compare.</p> : null}
           <Src tid="T23" n={n} p={p} />
         </details>
       ) : null}

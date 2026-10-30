@@ -648,31 +648,61 @@ describe('Small numbers on tab 3 (#271)', () => {
 describe('State-highway crash rates (#287)', () => {
   const T22 = { id: 'T22', title: 'State-highway crash rates (Caltrans AADT; crashes per million vehicle-miles)', columns: [],
     provenance: {}, rows: [
-      { key: 'seg-a', label: 'A – B', values: { crashes: 30, fi_crashes: 12, fatal_crashes: 1, length_mi: 0.6, aadt: 120000, mvm: 131.4,
+      { key: 'seg-a', label: 'EL CAMINO REAL – SANCHEZ AVENUE', values: { crashes: 30, fi_crashes: 12, fatal_crashes: 1, length_mi: 0.6, aadt: 120000, mvm: 131.4,
         rate_all: 0.23, rate_fi: 0.09, rate_fatal: 0.01, corridor_rate_all: 0.2, ratio_to_corridor: 1.15,
-        count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program, count years 2021–2024' } },
+        count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program' } },
       { key: 'seg-b', label: 'B – C', values: { crashes: 10, fi_crashes: 3, fatal_crashes: 0, length_mi: 0.4, aadt: 110000, mvm: 80.3,
         rate_all: 0.12, rate_fi: 0.04, rate_fatal: 0, corridor_rate_all: 0.2, ratio_to_corridor: 0.6,
-        count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program, count years 2021–2024' } }] }
+        count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program' } },
+      { key: 'seg-c', label: 'C – D', values: { crashes: 2, fi_crashes: 1, fatal_crashes: 0, length_mi: 0.1, aadt: 100000, mvm: 18.3,
+        rate_all: 0.11, rate_fi: 0.05, rate_fatal: 0, corridor_rate_all: 0.2, ratio_to_corridor: 1.5, small_base: 'n < 10: segment',
+        count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program' } }],
+    scope: { rated_crashes: 42, corridor_crashes: 99, intersection_crashes: 57, corridor_rate_all: 0.2, small: false,
+      text: 'Segment crashes only: 57 of 99 crashes on this corridor are at intersections and aren\'t in these rates.' } }
   const T23 = { id: 'T23', title: 'State-highway crash rate by year', columns: [], provenance: {}, rows: [
     { key: '2021', label: '2021', values: { crashes: 9, fi_crashes: 3, mvm: 42.1, rate_all: 0.21, rate_fi: 0.07 } },
-    { key: '2022', label: '2022', values: { crashes: 8, fi_crashes: 2, mvm: 42.3, rate_all: 0.19, rate_fi: 0.05 } }] }
+    { key: '2022', label: '2022', values: { crashes: 12, fi_crashes: 2, mvm: 42.3, rate_all: 0.28, rate_fi: 0.05 } }] }
+  T23.rows[0].values.small_base = 'n < 10'
 
   it('shows each segment\'s rates from T22 against the corridor average, with the AADT years and source', async () => {
     mockApi({ ...routes, 'GET /studies/:id/profile': { ...profile, tables: [...profile.tables, T22, T23] } })
     renderAt('/s/s1/profile')
     const sec = await screen.findByLabelText('State-highway crash rates')
     const rows = within(sec.querySelector('[data-testid="shs-rates"]')).getAllByRole('row').slice(1)
-    expect(rows).toHaveLength(2)
-    expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent))
-      .toEqual(['30', '131.4', '0.23', '0.09', '0.01', '0.2', '1.15'])
+    expect(rows).toHaveLength(3)
+    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('El Camino Real – Sanchez Avenue')
+    // the inputs an engineer checks first are columns; MVM, fatal and the corridor average are in the detail table
+    expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['30', '120,000', '0.6', '0.23', '0.09', '1.15'])
     expect(rows[0]).toHaveClass('over')                                           // above the corridor average
     expect(rows[1]).not.toHaveClass('over')
-    expect(sec).toHaveTextContent('Caltrans Traffic Census Program, count years 2021–2024')
-    expect(sec).toHaveTextContent('2021–2024; later count years use 2024')
+    expect(sec).toHaveTextContent('AADT: Caltrans Traffic Census Program, count years 2021–2024; later count years use 2024.')
+    expect(sec.textContent.match(/count years/g)).toHaveLength(2)                // once in the header, once for "later"
+    expect(sec).toHaveTextContent('Corridor average 0.2 crashes per MVM')
+    expect(sec).toHaveTextContent('Segment crashes only: 57 of 99 crashes on this corridor are at intersections')
     expect(within(sec).getAllByLabelText('Source: table T22').length).toBeGreaterThan(0)
     const by = within(sec.querySelector('[data-testid="shs-by-year"]')).getAllByRole('row').slice(1)
     expect(by.map((r) => r.firstChild.textContent)).toEqual(['2021', '2022'])
+    expect(within(by[0]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['2021', '9', '42.1', '–', '–'])
+    const full = within(sec.querySelector('[data-testid="shs-detail"]')).getAllByRole('row')
+    expect(within(full[0]).getAllByRole('columnheader').map((c) => c.textContent)).toContain('MVM')
+    expect(within(full[3]).getAllByRole('cell').map((c) => c.textContent)).toContain('n < 10: segment')
+  })
+
+  it('a segment with fewer than 10 crashes shows its count only: no rate, ratio or above-average mark', async () => {
+    mockApi({ ...routes, 'GET /studies/:id/profile': { ...profile, tables: [...profile.tables, T22, T23] } })
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('State-highway crash rates')
+    const row = within(sec.querySelector('[data-testid="shs-rates"]')).getAllByRole('row')[3]
+    expect(within(row).getAllByRole('cell').map((c) => c.textContent)).toEqual(['2', '100,000', '0.1', '–', '–', 'too few to compare'])
+    expect(row).not.toHaveClass('over')                                           // ratio 1.5, but on 2 crashes
+  })
+
+  it('a corridor average on fewer than 10 crashes is too few to compare', async () => {
+    const small = { ...T22, scope: { ...T22.scope, small: true, rated_crashes: 2 }, rows: [T22.rows[2]] }
+    mockApi({ ...routes, 'GET /studies/:id/profile': { ...profile, tables: [...profile.tables, small, T23] } })
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('State-highway crash rates')
+    expect(sec).toHaveTextContent('Corridor average: too few crashes to compare (2)')
   })
 
   it('a corridor without T22 shows no state-highway rates', async () => {

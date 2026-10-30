@@ -278,3 +278,8 @@ details.conditions .showtable summary::after { content: none; }
 
 /* #287 state-highway rates: a segment above the corridor average */
 [data-testid="shs-rates"] tr.over th, [data-testid="shs-rates"] tr.over td:nth-last-child(1) { color: var(--stop); font-weight: 700; }
+/* #296: the rates table fits the tab 3 column; names and headers wrap, details sit under "Show table" */
+.sf-table.shs { font-size: 12px; }
+.sf-table.shs th { white-space: normal; }
+.profile .datacol .sf-table.shs th, .profile .datacol .sf-table.shs td { padding: 6px 6px; }
+.sf-table.shs th[scope="row"] { font-weight: 500; }

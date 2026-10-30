@@ -396,6 +396,11 @@ def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict
     avg = r2(tot_c / tot_m) if tot_m else None
     for r in rows:
         r["values"].update(corridor_rate_all=avg, ratio_to_corridor=r2(r["values"]["rate_all"] / avg) if avg else None)
+        # small numbers (docs/03, #271): a rate on fewer than MIN_SHARE_N crashes is kept and marked; the screen shows
+        # the count only, "too few to compare"; so is a ratio to an average built on too few
+        small = [x for x, n in (("segment", r["values"]["crashes"]), ("corridor average", tot_c)) if n < MIN_SHARE_N]
+        if small:
+            r["values"]["small_base"] = f"{SMALL_MARK}: {', '.join(small)}"
     on = [c for sid in (r["key"] for r in rows) for c in groups.get(sid, [])]
     cols = [("crashes", "Crashes"), ("fi_crashes", "Fatal + injury crashes"), ("fatal_crashes", "Fatal crashes"),
             ("length_mi", "Length (mi)"), ("aadt", "AADT (window average)"), ("mvm", "Million vehicle-miles"),
@@ -403,9 +408,16 @@ def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict
             ("corridor_rate_all", "Corridor average per MVM"), ("ratio_to_corridor", "Rate ÷ corridor average"),
             ("count_years", "AADT count years"), ("source", "AADT source")]
     t22 = _table("T22", "State-highway crash rates (Caltrans AADT; crashes per million vehicle-miles)", cols, rows, on)
+    # segment crashes only for now; which crashes a state-highway rate counts is decision #297 (user)
+    at_x = sum(c["kind"] == "intersection" for c in placed)
+    t22["scope"] = {"rated_crashes": tot_c, "corridor_crashes": len(placed), "intersection_crashes": at_x,
+                    "corridor_rate_all": avg, "small": tot_c < MIN_SHARE_N,
+                    "text": f"Segment crashes only: {at_x} of {len(placed)} crashes on this corridor are at "
+                            "intersections and aren't in these rates."}
     yrows = [_row(y, str(y), crashes=crashes_y[y], fi_crashes=fi_y[y], mvm=round(mvm_y[y], 2),
                   rate_all=r2(crashes_y[y] / mvm_y[y]) if mvm_y[y] else None,
-                  rate_fi=r2(fi_y[y] / mvm_y[y]) if mvm_y[y] else None) for y in years]
+                  rate_fi=r2(fi_y[y] / mvm_y[y]) if mvm_y[y] else None,
+                  **({"small_base": SMALL_MARK} if crashes_y[y] < MIN_SHARE_N else {})) for y in years]
     t23 = _table("T23", "State-highway crash rate by year (the segments in T22)",
                  [("crashes", "Crashes"), ("fi_crashes", "Fatal + injury crashes"), ("mvm", "Million vehicle-miles"),
                   ("rate_all", "Crashes per MVM"), ("rate_fi", "Fatal + injury per MVM")], yrows, on)
@@ -638,9 +650,13 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                         "corridor, not by Caltrans' on-highway rule, so they are not comparable with Caltrans' "
                         "published averages."})
     if not rates_any and not shs_tables:
-        caveats.append({"key": "rates_not_computed", "text": "Crash rates were not computed (no AADT entered)."
-                        + ("" if corridor_routes(net) else " This corridor isn't a state highway, so local traffic "
-                           "counts are needed.")})
+        routes = sorted(corridor_routes(net))
+        vols = net.get("shs_volumes") or {}
+        off_pm = bool(vols) and all(v.get("pm_coverage", 1.0) == 0 for v in vols.values())
+        why = (" This corridor isn't a state highway, so local traffic counts are needed." if not routes else
+               f" Route {', '.join(routes)} isn't in Caltrans' state-highway postmiles here (for example a relinquished "
+               "stretch), so Caltrans traffic counts don't apply and local traffic counts are needed." if off_pm else "")
+        caveats.append({"key": "rates_not_computed", "text": "Crash rates were not computed (no AADT entered)." + why})
     elif peak:
         caveats.append({"key": "aadt_from_peak_hour", "k_factor": kf,
                         "text": f"AADT was estimated from peak-hour counts (AADT = peak-hour volume / K, K = {kf:.0%})."})

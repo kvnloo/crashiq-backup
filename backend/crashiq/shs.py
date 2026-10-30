@@ -28,7 +28,7 @@ def corridor_routes(net: dict) -> set[str]:
 
 def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict | None:
     """{segment id: {"by_year": {year: AADT or None}, "coverage", "latest_used", "count_years", "routes", "source",
-    "end_tolerance"}} for a state-highway corridor; None when it isn't one or a source is missing."""
+    "end_tolerance", "pm_coverage" (share of samples with a postmile)}} for a state-highway corridor; None when it isn't one or a source is missing."""
     routes = corridor_routes(net)
     if not routes or postmiles is None or aadt_cache is None or not net.get("line") or aadt_cache.db() is None:
         return None
@@ -39,6 +39,7 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
         a, b = s["from_station_ft"], s["to_station_ft"]
         n = max(1, math.ceil((b - a) / (SAMPLE_MI * FT_PER_MI)))
         pms = [postmiles.lookup(*line.point_at(a + (i + 0.5) * (b - a) / n), routes) for i in range(n)]
+        pm_cov = sum(pm is not None for pm in pms) / n
         by_year, covered, latest, end = {}, [], False, False
         for y in years:
             vals = []
@@ -56,9 +57,10 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
             covered.append(len(ok) / n)
             by_year[y] = round(sum(ok) / n, 1) if len(ok) == n else None
         out[s["id"]] = {"by_year": by_year, "coverage": round(min(covered), 3) if covered else 0.0,
+                        "pm_coverage": round(pm_cov, 3),
                         "latest_used": latest, "end_tolerance": end, "routes": sorted(routes),
                         "count_years": _years_label(have, years, latest),
-                        "source": f"Caltrans Traffic Census Program, count years {have[0]}–{have[-1]}" if have else ""}
+                        "source": "Caltrans Traffic Census Program" if have else ""}
     return out
 
 
