@@ -9,6 +9,8 @@ on each study segment of a corridor that carries a state route.
   AADT(year) = 0.75 x AADT(count year) + 0.25 x AADT(count year + 1). A count year after the newest file uses the
   newest, and the row says so.
 - A segment-year has an AADT only when every sample has one (coverage 1.0); otherwise none, never a partial guess.
+- Trucks: the 3+ axle truck AADT (aadt.truck_segment, the truck point behind) by the same sampling, blend and coverage
+  rules, for truck-involved crash rates.
 """
 
 from __future__ import annotations
@@ -28,20 +30,27 @@ def corridor_routes(net: dict) -> set[str]:
 
 def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict | None:
     """{segment id: {"by_year": {year: AADT or None}, "coverage", "latest_used", "count_years", "routes", "source",
-    "end_tolerance", "pm_coverage" (share of samples with a postmile)}} for a state-highway corridor; None when it isn't one or a source is missing."""
+    "end_tolerance", "pm_coverage" (share of samples with a postmile), "trucks_by_year" (3+ axle truck AADT,
+    same rules), "truck_count_years"}} for a state-highway corridor; None when it isn't one or a source is missing."""
     routes = corridor_routes(net)
     if not routes or postmiles is None or aadt_cache is None or not net.get("line") or aadt_cache.db() is None:
         return None
     line = Polyline([tuple(p) for p in net["line"]])
     have = [y for (y,) in aadt_cache.db().execute("SELECT DISTINCT year FROM point ORDER BY year")]
+    have_t = [y for (y,) in aadt_cache.db().execute("SELECT DISTINCT year FROM truck ORDER BY year")]
     out = {}
     for s in net.get("segments", []):
         a, b = s["from_station_ft"], s["to_station_ft"]
         n = max(1, math.ceil((b - a) / (SAMPLE_MI * FT_PER_MI)))
         pms = [postmiles.lookup(*line.point_at(a + (i + 0.5) * (b - a) / n), routes) for i in range(n)]
         pm_cov = sum(pm is not None for pm in pms) / n
-        by_year, covered, latest, end = {}, [], False, False
+        by_year, covered, latest, end, trucks = {}, [], False, False, {}
         for y in years:
+            tv = [[aadt_cache.truck_segment(pm["route"], pm["county"], pm["pm"], cy, pm.get("route_suffix") or "",
+                                            pm.get("suffix") or "") if pm else None for cy in (y, y + 1)] for pm in pms]
+            ok_t = [0.75 * a["trucks_3plus"] + 0.25 * b["trucks_3plus"] for a, b in tv
+                    if a and b and a["trucks_3plus"] is not None and b["trucks_3plus"] is not None]
+            trucks[y] = round(sum(ok_t) / n, 1) if len(ok_t) == n else None
             vals = []
             for pm in pms:
                 legs = [aadt_cache.segment(pm["route"], pm["county"], pm["pm"], cy, pm.get("route_suffix") or "",
@@ -60,6 +69,7 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
                         "pm_coverage": round(pm_cov, 3),
                         "latest_used": latest, "end_tolerance": end, "routes": sorted(routes),
                         "count_years": _years_label(have, years, latest),
+                        "trucks_by_year": trucks, "truck_count_years": _years_label(have_t, years, False),
                         "source": "Caltrans Traffic Census Program" if have else ""}
     return out
 

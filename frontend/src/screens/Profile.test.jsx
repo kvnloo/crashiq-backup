@@ -705,6 +705,25 @@ describe('State-highway crash rates (#287)', () => {
     expect(sec).toHaveTextContent('Corridor average: too few crashes to compare (2)')
   })
 
+  it('shows truck-involved rates per million 3+ axle truck-miles from T24, small segments as counts only', async () => {
+    const T24 = { id: 'T24', title: 'State-highway truck-involved crash rates', columns: [], provenance: {},
+      scope: { rated_crashes: 14, corridor_rate_truck: 1.1, small: false }, rows: [
+        { key: 'seg-a', label: 'A – B', values: { truck_crashes: 12, length_mi: 0.6, trucks_3plus: 5185, truck_mvm: 5.68,
+          rate_truck: 2.11, corridor_rate_truck: 1.1, ratio_to_corridor: 1.92, count_years: '2021–2024', source: 'Caltrans Traffic Census Program' } },
+        { key: 'seg-b', label: 'B – C', values: { truck_crashes: 2, length_mi: 0.4, trucks_3plus: 4800, truck_mvm: 3.5,
+          rate_truck: 0.57, corridor_rate_truck: 1.1, ratio_to_corridor: 0.52, small_base: 'n < 10: segment',
+          count_years: '2021–2024', source: 'Caltrans Traffic Census Program' } }] }
+    mockApi({ ...routes, 'GET /studies/:id/profile': { ...profile, tables: [...profile.tables, T22, T23, T24] } })
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('State-highway crash rates')
+    const rows = within(sec.querySelector('[data-testid="shs-trucks"]')).getAllByRole('row').slice(1)
+    expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['12', '5,185', '2.11', '1.92'])
+    expect(rows[0]).toHaveClass('over')
+    expect(within(rows[1]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['2', '4,800', '–', 'too few to compare'])
+    expect(sec).toHaveTextContent('Corridor truck average 1.1 per million truck-miles')
+    expect(within(sec).getAllByLabelText('Source: table T24').length).toBeGreaterThan(0)
+  })
+
   it('a corridor without T22 shows no state-highway rates', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')
