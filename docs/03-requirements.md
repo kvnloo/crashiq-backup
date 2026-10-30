@@ -514,3 +514,15 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   The AADT year and source are cited on every row, and findings cite the rate table. Any comparison with Caltrans
   averages uses Caltrans' on-highway counting rule or is labelled approximate. This settles the "rate exposure" part of
   #34 for state highways. Local streets still need local counts.
+- **Caltrans rate groups for statewide-average comparison DECIDED (user, 2026-10-29, PM session; #294):** "either the
+  engineer enters, or the engineer can attach a file. If that is a file, you can read it." For each state-highway
+  segment, intersection and ramp, the rate group comes from the engineer in one of two ways:
+  (1) **entered** in the app from Caltrans' published list ("Basic Average Crash Rate Table", *2024 Crash Data on
+  California State Highways*, pp. 83–90, stored in `data/reference/` with the citation);
+  (2) **read from the Caltrans TASAS output the engineer attaches** (the PDF a district returns for a crash-data
+  request, e.g. Table B with rate groups and average rates).
+  The file is read by **code** (a deterministic parser), never by AI: every number shown is traceable to the file or to
+  the published table. Whatever can't be parsed is shown for the engineer to enter. CrashIQ then computes the expected
+  rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. A
+  suggestion from map data (#294 option B) can come later, labelled. Comparisons use Caltrans' on-highway counting rule
+  or are labelled approximate.
