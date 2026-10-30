@@ -16,8 +16,8 @@ from conftest import FIXTURES
 ROWS = json.loads((FIXTURES / "aadt_la405_ora1.json").read_text())
 
 
-def xlsx(name: str) -> bytes:
-    f = ROWS[name]
+def xlsx(name: str, rows: dict | None = None) -> bytes:
+    f = (rows or ROWS)[name]
     wb = Workbook()
     wb.active.title = "Preface"
     wb.active.append(["Caltrans Traffic Census Program"])

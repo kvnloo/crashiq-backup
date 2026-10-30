@@ -15,8 +15,13 @@ https://dot.ca.gov/programs/traffic-operations/census (config/aadt.json lists th
   `latest_used`; a year before the first loaded file gets nothing.
 - Trucks: the truck workbook has a row per leg (B behind, A ahead) at fewer points; trucks with 3 or more axles are
   TRK_3 + TRK_4 + TRK_5 (docs/03 truck definition).
+- Ramps: the district ramp ADT workbooks, one row per ramp (route, county, postmile, description) with ten years of
+  counts (YR_<year>); Caltrans counts ramps on rotation. Every listed edition is loaded and, where editions overlap,
+  the newest edition's value wins. 1001 and 999 are codes, not counts (runs of 1001 ending in 999 on closed ramps, a
+  lone 999 between real counts, in every district), so they count as missing (#287 point 3). A ramp's ADT for a year
+  is the latest count at or before it, labelled with its year, never a later one (#287 point 2).
 - Cache: data/cache/aadt/caltrans_aadt_<download date>.sqlite (never committed), downloaded in the background the
-  first time it's needed, refreshed after REFRESH_DAYS.
+  first time it's needed, refreshed after REFRESH_DAYS, or at once when it predates SCHEMA (a copy without ramps).
 """
 
 from __future__ import annotations
@@ -38,6 +43,8 @@ END_TOLERANCE_MI = 0.05     # PM decision on #289 (a): at a line's first and las
 REFRESH_DAYS = 365
 RETRY_MINUTES = 60
 SOURCE = "Caltrans Traffic Census Program"
+SCHEMA = 2                  # 2: ramp table (#287 ramps)
+RAMP_PLACEHOLDERS = (999, 1001)
 
 # the workbooks name the same column differently from year to year
 ALIASES = {"ROUTE": "RTE", "ROUTE_SFX": "RTE_SFX", "COUNTY": "CNTY", "LOCATION DESCRIPTION": "DESCRIPTION",
@@ -112,10 +119,18 @@ class AadtCache:
 
     def ready(self) -> Path | None:
         p = self.newest()
-        if p is None or (self.now() - p.stat().st_mtime) / 86400 >= REFRESH_DAYS:
+        if p is None or (self.now() - p.stat().st_mtime) / 86400 >= REFRESH_DAYS or self._schema(p) < SCHEMA:
             self._start()
             p = self.newest()
         return p
+
+    def _schema(self, p: Path) -> int:
+        """The copy's schema; an older copy keeps serving until the new one is in."""
+        if getattr(self, "_schema_of", (None,))[0] != p:
+            with sqlite3.connect(f"file:{p}?mode=ro", uri=True) as con:
+                row = con.execute("SELECT value FROM meta WHERE key = 'schema'").fetchone()
+            self._schema_of = (p, int(row[0]) if row else 1)
+        return self._schema_of[1]
 
     def error(self) -> str | None:
         return self._failed[1] if self._failed else None
@@ -154,10 +169,17 @@ class AadtCache:
         con.execute("CREATE TABLE truck (year INTEGER, route TEXT, route_suffix TEXT, county TEXT, prefix TEXT, pm REAL, "
                     "suffix TEXT, leg TEXT, description TEXT, vehicle_aadt INTEGER, truck_aadt INTEGER, "
                     "trk_2 INTEGER, trk_3 INTEGER, trk_4 INTEGER, trk_5 INTEGER)")
-        sources = []
+        con.execute("CREATE TABLE ramp (route TEXT, route_suffix TEXT, county TEXT, prefix TEXT, pm REAL, suffix TEXT, "
+                    "description TEXT, district TEXT, year INTEGER, adt INTEGER, edition INTEGER)")
+        sources, ramps, placeholders = [], {}, 0
         try:
             for year, files in sorted(self.years.items()):
                 for kind, url in files.items():
+                    if kind == "ramps":
+                        for u in url:
+                            sources.append((year, kind, u))
+                            placeholders += _ramp_rows(self.get(u), year, ramps)
+                        continue
                     data = self.get(url)
                     sources.append((year, kind, url))
                     for r in _rows(data):
@@ -176,10 +198,15 @@ class AadtCache:
                                          *(_int(r.get(f"TRK_{n}_AXLE")) for n in (2, 3, 4, 5))))
             if not con.execute("SELECT COUNT(*) FROM point").fetchone()[0]:
                 raise RuntimeError("the traffic-volume files had no count points")
+            con.executemany("INSERT INTO ramp VALUES (?,?,?,?,?,?,?,?,?,?,?)",
+                            [(*k, dist, y, adt, ed) for (k, y), (adt, ed, dist) in ramps.items()])
             con.execute("CREATE INDEX point_line ON point (route, county, year)")
             con.execute("CREATE INDEX truck_line ON truck (route, county, year)")
+            con.execute("CREATE INDEX ramp_line ON ramp (route, county, pm)")
             con.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
-            con.executemany("INSERT INTO meta VALUES (?, ?)", [("downloaded", day), ("sources", json.dumps(sources))])
+            con.executemany("INSERT INTO meta VALUES (?, ?)", [("downloaded", day), ("sources", json.dumps(sources)),
+                                                               ("schema", str(SCHEMA)),
+                                                               ("ramp_placeholders", str(placeholders))])
             con.commit()
         finally:
             con.close()
@@ -262,6 +289,29 @@ class AadtCache:
         return {"year": y[0], "wanted_year": year, "latest_used": y[1], "truck_aadt": a[4], "trucks_3plus": three,
                 "length_mi": round(nxt[0] - a[0], 3), "from": {"pm": a[0], "description": a[2]}, "to": {"pm": nxt[0]}}
 
+    def ramps_near(self, route: str, county: str, pm: float, mi: float, route_suffix: str = "") -> list[dict]:
+        """The Caltrans ramps within `mi` of a postmile on one route and county, with their counts by year."""
+        con = self.db()
+        if con is None or pm is None:
+            return []
+        out = {}
+        q = ("SELECT route, route_suffix, county, prefix, pm, suffix, description, district, year, adt FROM ramp "
+             "WHERE route = ? AND route_suffix = ? AND county = ? AND pm BETWEEN ? AND ? ORDER BY pm")
+        for *k, dist, y, adt in con.execute(q, (str(route).lstrip("0"), route_suffix or "", county, pm - mi - 1e-9,
+                                                pm + mi + 1e-9)):
+            r = out.setdefault(tuple(k), {"id": "|".join(map(str, k)), "route": k[0], "route_suffix": k[1],
+                                          "county": k[2], "prefix": k[3], "pm": k[4], "suffix": k[5],
+                                          "description": k[6], "district": dist, "by_year": {}})
+            if adt is not None:
+                r["by_year"][y] = adt
+        return list(out.values())
+
+    @staticmethod
+    def ramp_adt(ramp: dict, year: int) -> dict | None:
+        """The latest count at or before the year, with its year; never a later one (#287 point 2)."""
+        ys = [y for y in ramp["by_year"] if y <= year]
+        return {"adt": ramp["by_year"][max(ys)], "count_year": max(ys)} if ys else None
+
     def _line(self, con, table, year, route, route_suffix, county, suffix, cols):
         q = (f"SELECT {cols} FROM {table} WHERE year = ? AND route = ? AND county = ? AND route_suffix = ? "
              "AND suffix = ? ORDER BY pm")
@@ -283,6 +333,30 @@ class AadtCache:
             return None
         label = f"{SOURCE}, {s['year']} AADT" + (" (latest available)" if s["latest_used"] else "")
         return {**s, "source": label}
+
+
+def _ramp_rows(data: bytes, edition: int, out: dict) -> int:
+    """A district ramp workbook into out[(ramp key, year)] = (ADT, edition, district), the newest edition winning;
+    returns how many placeholder values (1001, 999) were left out."""
+    skipped = 0
+    for r in _rows(data):
+        k = _key(r)
+        if not k[0] or k[4] is None:
+            continue
+        key = (*k, " ".join(_txt(r.get("LOCATION_DESC")).upper().split()))
+        for col, v in r.items():
+            if not col.startswith("YR_") or not col[3:].isdigit():
+                continue
+            n = _int(v)
+            if n in RAMP_PLACEHOLDERS:
+                skipped += 1
+                continue
+            if n is None:
+                continue
+            was = out.get((key, int(col[3:])))
+            if was is None or was[1] <= edition:
+                out[(key, int(col[3:]))] = (n, edition, _txt(r.get("DISTRICT")))
+    return skipped
 
 
 def _seg(a, b, aadt, piece: dict, end: bool = False) -> dict:

@@ -81,7 +81,7 @@ def test_crash_rates_per_million_vehicle_miles_with_the_corridor_average_and_by_
 
 
 def test_with_shs_adds_exposure_on_a_state_highway_and_nothing_elsewhere(cache):
-    pull = {"years": [2024], "cleaning": {"years_missing": []}}
+    pull = {"years": [2024], "cleaning": {"years_missing": []}, "crashes": []}
     on = profile.with_shs(net(13.3, 13.8), pull, FakePM(), cache)
     assert on["shs_volumes"]["s1"]["by_year"][2024] == ahead(2024, 13.28)
     off = net(13.3, 13.8, names=("Crenshaw Boulevard",))
@@ -200,3 +200,20 @@ def test_no_truck_counts_for_a_window_year_means_no_truck_rate():
                                "trucks_by_year": {**{y: 1000 for y in range(2021, 2025)}, 2025: None}}}
     ids = {x["id"] for x in profile.build(study, n, pull, asg)["tables"]}
     assert "T22" in ids and "T24" not in ids
+
+
+def test_with_shs_identifies_the_ramp_crashes_on_a_state_highway(tmp_path):
+    from test_ramps import RAMP_FILES, RAMP_YEARS
+    rc = aadt.AadtCache(tmp_path / "r", years=RAMP_YEARS, get=Get(RAMP_FILES), background=False, now=lambda: 1_793_000_000)
+
+    class PM(FakePM):
+        def for_crash(self, c):
+            return self.lookup(c["lat"], c["lon"], {"405"})
+    at = lambda pm: LAT0 + (pm - PM0) * MI_LAT                                      # noqa: E731
+    crashes = [{"crash_id": "r1", "primary_road": "NORMANDIE AV", "secondary_road": "I-405 NB OFF RAMP",
+                "reported_at": "2024-03-02T08:00:00", "lat": at(13.8), "lon": -118.3},
+               {"crash_id": "m1", "primary_road": "I-405", "secondary_road": "VERMONT AVE",
+                "reported_at": "2024-03-02T08:00:00", "lat": at(13.5), "lon": -118.3}]
+    pull = {"years": [2024], "cleaning": {"years_missing": []}, "crashes": crashes}
+    on = profile.with_shs(net(13.3, 13.8), pull, PM(), rc)
+    assert list(on["shs_ramps"]) == ["r1"] and on["shs_ramps"]["r1"]["ramp"]["description"] == "NB OFF TO NORMANDIE AVE"

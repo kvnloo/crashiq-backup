@@ -80,3 +80,19 @@ def _years_label(have: list[int], years: list[int], latest: bool) -> str:
         return ""
     label = f"{have[0]}–{have[-1]}" if len(have) > 1 else str(have[0])
     return label + (f"; later count years use {have[-1]}" if latest else "")
+
+
+def ramp_crashes(crashes: list[dict], postmiles, aadt_cache, picks: dict | None = None) -> dict:
+    """{crash id: ramps.identify result} for the ramp crashes with a derived postmile (#287 ramps, #300)."""
+    from . import ramps
+    if postmiles is None or aadt_cache is None or aadt_cache.db() is None:
+        return {}
+    out = {}
+    for c in crashes:
+        if ramps.report(c) is None:
+            continue
+        p = postmiles.for_crash(c)
+        r = ramps.identify({**c, "postmile": p}, aadt_cache, picks) if p else None
+        if r:
+            out[c["crash_id"]] = r
+    return out
