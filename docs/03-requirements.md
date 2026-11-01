@@ -543,7 +543,9 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   approximate tiers).
   - **In the segment (mainline) rate:** every crash on the highway's own roadway. On a conventional (at-grade) state
     highway this **includes crashes at its intersections** (answer 2a), including reports that name the cross street
-    as the primary road and the highway second, when the crash is at the intersection (distance 0; answer 3).
+    as the primary road and the highway second, when the crash is at the intersection (answer 3). **"At the
+    intersection" = within the 250 ft intersection influence area**, the same HSM rule the app uses for intersection
+    crashes everywhere (§3 above; user 2026-11-02, "2A"). Beyond 250 ft on the cross street, it's out.
     Intersection rates (Caltrans groups I01–I31, #294) may be shown as a separate view of those intersections; they
     are never added to the segment rate.
   - **Out of the mainline rate, into the ramp rates (#300):**
@@ -555,7 +557,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   - **Stays mainline:** "<route> TO <route>" with a **local** cross street (2026-10-25: the local street passes under
     or over the freeway).
   - **Out of the rate entirely:**
-    - crashes on a cross street or frontage road away from the highway (distance > 0 on a conventional highway), even
+    - crashes on a cross street or frontage road away from the highway (beyond the 250 ft influence area on a
+      conventional highway), even
       when their GPS sits on or next to the highway line;
     - on a freeway (access-controlled), any crash whose primary road is a cross street;
     - roads over or under a freeway (N7, #67).
@@ -567,6 +570,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     the row gets **no rate** (all or nothing per row) and gives the reason "count too old for <years> (newest <year>)";
     its crash counts are still shown. How many identified ramp crashes this affects is to be measured on #302's merged
     code (Engineering's first estimate also counted 5-year-old counts, which are used).
-  - **Direction:** compass and route directions are translated, not matched strictly. A CHP "S/B" on a route Caltrans
-    signs EB/WB matches the route direction it's closest to. The method is in its own issue (#308) and waits for the
-    user's confirmation before it's built.
+  - **Direction: matched strictly, no translation (user, 2026-11-02, PM session: "do not do it. It will bite us in
+    the butt").** This **replaces** the 2026-11-01 answer to translate compass and route directions (a CHP "S/B" on a
+    route Caltrans signs EB/WB). A ramp crash whose reported direction doesn't match the ramp row's direction as
+    written gets no ramp rate, with the reason. #308 is closed unbuilt.
