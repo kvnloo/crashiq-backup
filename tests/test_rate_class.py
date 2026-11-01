@@ -33,6 +33,8 @@ def c(p, s, ft=None):
     # #314 review: the route by number though the field adds the freeway's name; another route's main lanes are out
     (FWY, c("NORTHBOUND I-405 SAN DIEGO FREEWAY", "HAWTHORNE BLVD"), ("mainline", "on the highway")),
     (FWY, c("I-110 S/B TO I-405 N/B", "190TH ST"), ("cross_street", "on another route's main lanes (I-110)")),
+    (FWY, c("405 SB", "ARTESIA BLVD"), ("mainline", "on the highway")),                       # #334
+    (FWY, c("110 SB", "ARTESIA BLVD"), ("cross_street", "cross street on a freeway")),
     # freeway: any cross-street primary is out, whatever the distance
     (FWY, c("VERMONT AVE", "I-405", 0), ("cross_street", "cross street on a freeway")),
 ])
