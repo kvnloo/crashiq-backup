@@ -255,3 +255,11 @@ details.conditions .showtable summary::after { content: none; }
 .dg.few .v { grid-column: 2 / 4; text-align: left; }
 .counts { list-style: none; margin: 0; padding: 0; display: grid; gap: 4px; font-size: 13px; }
 .counts li { display: flex; justify-content: space-between; gap: 12px; border-bottom: 1px solid var(--line); padding-bottom: 4px; }
+
+/* #287 state-highway rates: a segment above the corridor average */
+[data-testid="shs-rates"] tr.over th, [data-testid="shs-rates"] tr.over td:nth-last-child(1) { color: var(--stop); font-weight: 700; }
+/* #296: the rates table fits the tab 3 column; names and headers wrap, details sit under "Show table" */
+.sf-table.shs { font-size: 12px; }
+.sf-table.shs th { white-space: normal; }
+.profile .datacol .sf-table.shs th, .profile .datacol .sf-table.shs td { padding: 6px 6px; }
+.sf-table.shs th[scope="row"] { font-weight: 500; }

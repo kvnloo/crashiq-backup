@@ -129,3 +129,25 @@ def test_the_download_waits_after_a_failure(tmp_path):
     assert c.ready() is None and "down" in c.error()
     c.ready()
     assert len(c.get.urls) == 1                                                   # no retry within the hour
+
+
+def test_up_to_0_05_mi_past_a_line_s_last_or_first_count_point_uses_that_point_labelled(cache):
+    # PM decision on #289 (a): a 0.05 mi end tolerance at a line's first and last count points only, labelled
+    last = cache.segment("405", "LA", 14.398 + 0.04, year=2024)          # Western Ave is the fixture's last LA-405 point
+    assert last["aadt"] == 241000 and last["aadt_end_tolerance"] and last["from"]["pm"] == 14.398
+    first = cache.segment("405", "LA", 11.224 - 0.05, year=2024)          # Avalon Blvd, the first: its BACK leg
+    assert first["aadt"] == 232000 and first["aadt_end_tolerance"]
+    assert cache.segment("405", "LA", 14.398 + 0.06, year=2024) is None
+    assert not cache.segment("405", "LA", 13.5, year=2024)["aadt_end_tolerance"]
+    assert cache.segment("1", "ORA", 1.077 + 0.01, year=2024) is None      # a route break is not a line end (b: no bridging)
+
+
+def test_a_segment_whose_ends_have_different_prefixes_takes_the_leg_of_the_crash_s_prefix(cache):
+    # #287 point 1: never measure across a prefix change; ORA-1 R1.077 (break) .. 8.43 is a break anyway, so this
+    # builds one: R0.78 (AHEAD 38,900) then 8.43 (no prefix, BACK 37,900)
+    con = cache.db()
+    s = cache._pick(aadt._around([(0.78, "R", "a", 38900, 38900), (8.43, "", "b", 37900, 37900)], 5.0), 5.0, "")
+    assert s["aadt"] == 37900 and s["prefix_change"] and s["piece"]["length_mi"] is None
+    s = cache._pick(aadt._around([(0.78, "R", "a", 38900, 38900), (8.43, "", "b", 37900, 37900)], 5.0), 5.0, "R")
+    assert s["aadt"] == 38900
+    assert con is not None

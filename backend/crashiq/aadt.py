@@ -34,6 +34,7 @@ from typing import Callable
 
 CONFIG = json.loads((Path(__file__).parent / "config" / "aadt.json").read_text())
 YEARS = {int(y): v for y, v in CONFIG["years"].items()}
+END_TOLERANCE_MI = 0.05     # PM decision on #289 (a): at a line's first and last count points only
 REFRESH_DAYS = 365
 RETRY_MINUTES = 60
 SOURCE = "Caltrans Traffic Census Program"
@@ -202,7 +203,7 @@ class AadtCache:
         return (max(have), True) if year > max(have) else (max(y for y in have if y < year), True)
 
     def segment(self, route: str, county: str, pm: float, year: int, route_suffix: str = "",
-                suffix: str = "") -> dict | None:
+                suffix: str = "", prefix: str = "") -> dict | None:
         """The count segment a postmile lies on, with its AADT for that count year; None where there is none."""
         con = self.db()
         if con is None or pm is None:
@@ -212,20 +213,33 @@ class AadtCache:
             return None
         rows = self._line(con, "point", y[0], route, route_suffix, county, suffix,
                           "pm, prefix, description, back_aadt, ahead_aadt")
-        a, b = _around(rows, pm)
+        out = self._pick(_around(rows, pm), pm, prefix)
+        return {"year": y[0], "wanted_year": year, "latest_used": y[1], **out} if out else None
+
+    @staticmethod
+    def _pick(ab: tuple, pm: float, prefix: str = "") -> dict | None:
+        """The leg that applies at a postmile between count points a and b (rows: pm, prefix, description, back, ahead).
+        - Between two points: the nearer point's leg facing the crash, split at the midpoint.
+        - Ends differ in postmile prefix (#287 point 1): never measured across; the crash takes the leg of the end
+          whose prefix it shares (else the point ahead's BACK), and the piece has no length.
+        - Up to END_TOLERANCE_MI before a line's first point or past its last (PM, #289 a): that point's facing leg,
+          labelled `aadt_end_tolerance`. A blank AHEAD is a route break and is never bridged (#289 b)."""
+        a, b = ab
+        if a is None and b is not None and b[0] - pm <= END_TOLERANCE_MI + 1e-9 and b[3] is not None:
+            return _seg(b, b, b[3], {"from_pm": pm, "to_pm": b[0], "leg": f"back of {b[2]}"}, end=True)
+        if b is None and a is not None and pm - a[0] <= END_TOLERANCE_MI + 1e-9 and a[4] is not None:
+            return _seg(a, a, a[4], {"from_pm": a[0], "to_pm": pm, "leg": f"ahead of {a[2]}"}, end=True)
         if a is None or b is None or a[4] is None:
             return None
+        if a[1] != b[1]:
+            use_b = prefix != a[1] and b[3] is not None
+            leg = {"from_pm": None, "to_pm": None, "leg": f"back of {b[2]}" if use_b else f"ahead of {a[2]}"}
+            return _seg(a, b, b[3] if use_b else a[4], leg)
         mid = round((a[0] + b[0]) / 2, 3)
         second = pm >= mid and b[3] is not None           # the second half takes the next point's BACK leg
-        aadt = b[3] if second else a[4]
         piece = {"from_pm": mid if second else a[0], "to_pm": b[0] if second else mid,
                  "leg": f"back of {b[2]}" if second else f"ahead of {a[2]}"}
-        piece["length_mi"] = round(piece["to_pm"] - piece["from_pm"], 3)
-        return {"year": y[0], "wanted_year": year, "latest_used": y[1], "aadt": aadt, "piece": piece,
-                "length_mi": round(b[0] - a[0], 3),
-                "from": {"pm": a[0], "prefix": a[1], "description": a[2], "ahead_aadt": a[4]},
-                "to": {"pm": b[0], "prefix": b[1], "description": b[2], "back_aadt": b[3]},
-                "prefix_change": a[1] != b[1]}
+        return _seg(a, b, b[3] if second else a[4], piece)
 
     def truck_segment(self, route: str, county: str, pm: float, year: int, route_suffix: str = "",
                       suffix: str = "") -> dict | None:
@@ -263,11 +277,21 @@ class AadtCache:
         y = count_year(c.get("reported_at") or c.get("date"))
         if not p or y is None:
             return None
-        s = self.segment(p["route"], p["county"], p["pm"], y, p.get("route_suffix") or "", p.get("suffix") or "")
+        s = self.segment(p["route"], p["county"], p["pm"], y, p.get("route_suffix") or "", p.get("suffix") or "",
+                         p.get("prefix") or "")
         if s is None:
             return None
         label = f"{SOURCE}, {s['year']} AADT" + (" (latest available)" if s["latest_used"] else "")
         return {**s, "source": label}
+
+
+def _seg(a, b, aadt, piece: dict, end: bool = False) -> dict:
+    lengths = None not in (piece["from_pm"], piece["to_pm"])
+    return {"aadt": aadt, "piece": {**piece, "length_mi": round(piece["to_pm"] - piece["from_pm"], 3) if lengths else None},
+            "length_mi": round(b[0] - a[0], 3),
+            "from": {"pm": a[0], "prefix": a[1], "description": a[2], "ahead_aadt": a[4]},
+            "to": {"pm": b[0], "prefix": b[1], "description": b[2], "back_aadt": b[3]},
+            "prefix_change": a[1] != b[1], "aadt_end_tolerance": end}
 
 
 def _around(rows: list, pm: float):
