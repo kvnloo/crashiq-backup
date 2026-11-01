@@ -523,8 +523,10 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Crash cost ranking prices (#273) DECIDED (user, 2026-11-01, Engineering session):** locations are ranked by crash
   cost using Caltrans' **Local Roadway Safety Manual v1.8 (May 2026), Appendix D, p. 100, 2026 dollars**: fatal +
   serious (KA) priced by location type (signalized intersection $2,379,000; non-signalized intersection $3,784,000;
-  roadway $3,276,000), then B $213,000, C $121,000, O $20,000. As the LRSM states it: each K or A crash at the KA price
-  for its location type; segment crashes at the roadway price; a signal = signalized, a stop = non-signalized. Two
+  roadway $3,276,000), then B $213,000, C $121,000, O $20,000. As the app applies it: each K or A crash at the KA price
+  for its location type (as in the LRSM's worked examples); segment crashes at the roadway price; an intersection
+  with a signal = signalized; any other known control (stop, yield, roundabout) = non-signalized, which is what
+  "non-signalized" means. Two
   gaps the LRSM leaves, decided by the user:
   - **U (injury, level not stated)** is priced as C ($121,000), and the U count is shown beside the cost;
   - a KA crash at an intersection whose **control isn't known** (no OSM signal or stop tag) gets the signalized price
