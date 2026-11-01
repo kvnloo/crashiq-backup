@@ -321,6 +321,24 @@ describe('Crash profile screen', () => {
     expect(full).toHaveLength(table(profile, 'T2').rows.length)
   })
 
+  it('ranks by Caltrans crash cost from T2: order, the cost and its U count (#273)', async () => {
+    const costs = { 0: 5233000, 1: 7027000, 2: 475000 }
+    const p2 = { ...profile, tables: profile.tables.map((t) => (t.id !== 'T2' ? t : { ...t, rows: t.rows.map((r, i) => (
+      { ...r, values: { ...r.values, crash_cost: costs[i] ?? 20000, sev_u: i === 1 ? 2 : 0, cost_control_unknown: i === 0 } })) })) }
+    mockApi({ ...routes, 'GET /studies/:id/profile': p2 })
+    renderAt('/s/s1/profile')
+    const rank = await screen.findByLabelText('Location ranking')
+    expect(within(rank).queryByTestId('rank-cost')).toBeNull()                    // the count ranking stays the default
+    fireEvent.click(within(rank).getByRole('radio', { name: 'Crash cost' }))
+    const t2 = table(p2, 'T2').rows.filter((r) => r.values.crashes > 0)
+    const byCost = [...t2].sort((a, b) => b.values.crash_cost - a.values.crash_cost || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+    const items = within(rank).getAllByRole('listitem')
+    items.forEach((li, i) => expect(li.querySelector('.rowlink').textContent).toBe(byCost[i].label))
+    const first = within(items[0]).getByTestId('rank-cost')
+    expect(first).toHaveTextContent('$7.0M · 2 U')
+    expect(first.getAttribute('title')).toContain('$7,027,000')
+  })
+
   it('severity bars equal T3 and KSI equals T1 (#103)', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')

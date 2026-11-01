@@ -1,0 +1,9 @@
+# Caltrans Local Roadway Safety Manual (LRSM) Version 1.8, May 2026; Appendix D (BCR calculations), crash-cost table under step 2 (unnumbered), page 100 (PDF page 106)
+# https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/lrsm2026final.pdf (downloaded 2026-11-01); 2026 dollars; state-pack data (#19); see crash_costs_ca.md
+severity,location_type,cost_usd
+KA,signalized_intersection,2379000
+KA,non_signalized_intersection,3784000
+KA,roadway,3276000
+B,any,213000
+C,any,121000
+O,any,20000

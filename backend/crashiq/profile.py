@@ -19,6 +19,7 @@ from fastapi import APIRouter, Request
 
 from . import pcf, assign as assign_mod
 from . import study as study_mod
+from . import crash_cost
 from .geo import Polyline
 
 SEVERITY_LABELS = {"K": "Fatal (K)", "A": "Suspected serious injury (A)", "B": "Suspected minor injury (B)",
@@ -705,6 +706,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             seg_aadt = daily(s.get("aadt"))
             rate = segment_rate(k["crashes"], years, seg_aadt, s["length_mi"])
             expo[lid] = (kind, k["crashes"], exposure(kind, years, seg_aadt, s["length_mi"]), rate)
+            vals.update(**crash_cost.location_cost(cs, "segment", None))         # LRSM crash cost (#273)
             vals.update(length_mi=round(s["length_mi"], 3),
                         crashes_per_mi_yr=r2(k["crashes"] / s["length_mi"] / years) if years and s["length_mi"] else None,
                         aadt=round(seg_aadt) if seg_aadt is not None else None, rate=r2(rate),
@@ -716,6 +718,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             rate = intersection_rate(k["crashes"], years, maj, mnr, it.get("legs"))
             tev = entering_volume(maj, mnr, it.get("legs"))
             expo[lid] = (kind, k["crashes"], exposure(kind, years, tev), rate)
+            vals.update(**crash_cost.location_cost(cs, "intersection", it["control"]))
             vals.update(length_mi=None, crashes_per_mi_yr=None, control=it["control"], rate=r2(rate),
                         rate_unit="per MEV" if rate is not None else None)
             label = it["name"]
@@ -746,7 +749,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         ("reference_rate", "Average rate, similar sites"), ("critical_rate", "Critical rate (95%)"),
         ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),
         ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"), ("sev_c", "Possible (C)"),
-        ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")], loc_rows, placed))
+        ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)"),
+        ("crash_cost", "Crash cost ($, Caltrans LRSM 2026)"), ("cost_control_unknown", "Cost: intersection control unknown")],
+        loc_rows, placed))
+    tables[-1]["source_note"] = crash_cost.SOURCE                     # the crash-cost basis (#273)
     shs_tables = shs_rate_tables(net, [y for y in pull["years"] if y not in years_missing], placed,
                                  study.get("radius_ft") or 250, ramp_out)
     shs_tables += ramp_rate_tables(net, placed + ramp_out, [y for y in pull["years"] if y not in years_missing])
