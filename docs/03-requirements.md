@@ -546,6 +546,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     as the primary road and the highway second, when the crash is at the intersection (answer 3). **"At the
     intersection" = within the 250 ft intersection influence area**, the same HSM rule the app uses for intersection
     crashes everywhere (§3 above; user 2026-11-01, "2A"). Beyond 250 ft on the cross street, it's out.
+    A **blank distance counts as 0** (user 2026-11-01, Engineering session). So a cross-street-primary crash is at
+    the intersection when its distance is blank or no more than the study's influence radius (default 250 ft).
+    **Which segment gets an intersection's crashes** (user 2026-11-01, Engineering session): an intersection sits
+    where two segments meet. Its crash goes to the segment on the side its GPS is on. A crash with no GPS, placed at
+    the intersection itself, goes to the segment after it in station order.
     Intersection rates (Caltrans groups I01–I31, #294) may be shown as a separate view of those intersections; they
     are never added to the segment rate.
   - **Out of the mainline rate, into the ramp rates (#300):**
