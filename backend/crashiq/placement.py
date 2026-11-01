@@ -134,10 +134,48 @@ def place_mile_markers(net: dict, result: dict, gate: locate.Gate, postmiles) ->
     return counts
 
 
+CROSSING_ON_PATH = json.loads((Path(__file__).parent / "config" / "placement.json").read_text()).get("crossing_on_path", False)
+
+
+def place_crossings(db: Database | None, net: dict, result: dict, gate: locate.Gate, overpass=None) -> dict:
+    """#318 (user 2026-11-01): crashes at the corridor's crossing with a railway or a named trail or path. Placed as
+    `crossing_rail` / `crossing_path` when that tier is on, else the spot is the review list's suggestion; two or more
+    crossings, or none, leave the crash on the review list with the reason. A crash on a separate bike-only path
+    (the path is its primary road) stays a suggestion until the user confirms (`crossing_on_path`)."""
+    from . import crossings
+    todo = [c for c in result["crashes"] if c.get("review_reason") == "crossing" and not c.get("exclude_rule")]
+    counts = {"tried": len(todo), "placed": 0, "suggested": 0, "no_spot": {}}
+    if not todo or db is None or not net.get("line"):
+        return counts
+    try:
+        osm_x = network_mod.fetch_overpass(db, network_mod.crossing_query([tuple(p) for p in net["line"]]),
+                                           transport=overpass, allow_empty=True)
+    except network_mod.NetworkError as e:
+        counts["error"] = str(e)
+        return counts
+    for c in todo:
+        r = crossings.place(c, net, osm_x)
+        if "why" in r:
+            c["crossing"] = {**(c.get("crossing") or {}), "why": r["why"]}
+            counts["no_spot"][r["why"]] = counts["no_spot"].get(r["why"], 0) + 1
+            continue
+        tier = f"crossing_{r['kind']}"
+        if tier in gate.auto_tiers and (CROSSING_ON_PATH or not r["on_path"]):
+            c.update(lat=r["lat"], lon=r["lon"], location_source=tier, review_reason=None,
+                     crossing={**(c.get("crossing") or {}), "placed_at": r["note"]})
+            counts["placed"] += 1
+        else:
+            c["suggestion"] = {"tier": tier, "lat": r["lat"], "lon": r["lon"], "note": r["note"],
+                               **({"on_path": True} if r["on_path"] else {})}
+            counts["suggested"] += 1
+    return counts
+
+
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
                     raw: dict | None = None, tiger=None, postmiles=None) -> dict:
     gate = gate or locate.Gate()
     result["cleaning"]["mile_markers"] = place_mile_markers(net, result, gate, postmiles)
+    result["cleaning"]["crossings"] = place_crossings(db, net, result, gate, overpass)
     # no cross street (#94): nothing for the locator to work with; the engineer places it from the review list
     todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")
             and not c.get("review_reason")]

@@ -287,6 +287,9 @@ RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_lim
              "not_on_corridor_street": "on another street (the report names neither the corridor nor the cross street)",
              "no_cross_street": "no cross street in the report (not stated), so its place on the corridor is unknown",
              "private_property": "on private property",
+             "crossing": "at a railway or a trail or path, not one of the corridor's intersections (on the review list with "
+                         "the crossing as the suggestion, until that placement is approved, or with why there's no one "
+                         "crossing)",
              "mile_marker": "a mile marker instead of a cross street (on the review list with its Caltrans postmile point "
                             "as the suggestion, until that placement is approved)",
              "user_excluded": "excluded by the engineer on the review list (reason in the Review decisions sheet)"}
@@ -335,6 +338,9 @@ def methodology(d: dict) -> str:
             + ("A report that gives a mile marker on the state route instead of a cross street is placed at that "
                "Caltrans postmile (SHN Postmiles Tenth layer), plus any stated distance along the route. "
                if "postmile" in locate.configured_tiers() else "")
+            + ("A report naming the corridor and a railway, trail or path is placed where the corridor crosses it, "
+               "plus any stated distance along the path; two or more possible crossings go to the review list. "
+               if {"crossing_rail", "crossing_path"} & locate.configured_tiers() else "")
             + f"Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed" + (f" ({ncs} of them name the corridor but give no cross street, so where on the corridor "

@@ -52,6 +52,16 @@ class NetworkError(RuntimeError):
 
 
 # -- Overpass ----------------------------------------------------------------------------------------
+def crossing_query(line: list[tuple[float, float]]) -> str:
+    """Railways and named paths across the corridor (#318): crossing features, never streets. Whole ways come back
+    (all their nodes), so a distance along a path can be walked past the query radius."""
+    coords = ",".join(f"{lat:.6f},{lon:.6f}" for lat, lon in line)
+    return (f'[out:json][timeout:90];('
+            f'way(around:{QUERY_RADIUS_M},{coords})["railway"~"^(rail|light_rail|tram|subway)$"];'
+            f'way(around:{QUERY_RADIUS_M},{coords})["highway"~"^(cycleway|path|footway)$"]["name"];'
+            f');out body;>;out body qt;')
+
+
 def overpass_query(line: list[tuple[float, float]]) -> str:
     coords = ",".join(f"{lat:.6f},{lon:.6f}" for lat, lon in line)
     return (f'[out:json][timeout:90];'
@@ -143,13 +153,13 @@ OSM_TTL_DAYS = 180     # streets change slowly; a cached Overpass answer is refr
 
 
 def fetch_overpass(db: Database, query: str, transport: Transport | None = None, retries: int = 3,
-                   backoff_s: float = 2.0, sleep: Callable[[float], None] = time.sleep) -> dict:
+                   backoff_s: float = 2.0, sleep: Callable[[float], None] = time.sleep, allow_empty: bool = False) -> dict:
     """Overpass JSON for `query`, from the SQLite cache when present. Raises NetworkError on failure."""
     key = "overpass:" + hashlib.sha1(query.encode()).hexdigest()
     hit = db.one("SELECT body, (julianday('now') - julianday(created_at)) AS age_days FROM http_cache WHERE key = ?",
                  (key,))
     old = json.loads(hit["body"]) if hit else None
-    if old is not None and not old.get("elements"):
+    if old is not None and not old.get("elements") and not allow_empty:
         old = None                           # an empty answer cached before #84 is a miss, never a map
     if old is not None and (hit["age_days"] or 0) < OSM_TTL_DAYS:
         return old
@@ -162,7 +172,7 @@ def fetch_overpass(db: Database, query: str, transport: Transport | None = None,
             data = json.loads(transport(OVERPASS_URL, payload, 120))
             if not isinstance(data.get("elements"), list):
                 raise ValueError("response has no elements")
-            if not data["elements"]:
+            if not data["elements"] and not allow_empty:
                 # A drawn corridor always has streets around it; overpass-api.de sometimes answers 0 elements with no
                 # remark under load (7 of 14 calls in the statewide run, #84). Retry, and never cache it.
                 raise ValueError("Overpass returned no streets (empty answer)")
