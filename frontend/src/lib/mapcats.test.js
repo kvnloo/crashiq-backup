@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import crashes from '../__fixtures__/crashes.json'
 import network from '../__fixtures__/network.json'
 import { SEVERITY } from './severity'
-import { SLOTS, OTHER, catOf, categories, columns, corridorAzimuth, locationPoints, topLocations, visible } from './mapcats'
+import { KSI_MIN, SLOTS, OTHER, catOf, categories, columns, corridorAzimuth, locationPoints, topLocations, visible } from './mapcats'
 
 const C = crashes.crashes.filter((c) => c.lat != null)
 
@@ -76,6 +76,24 @@ describe('3D columns', () => {
     ids.slice(0, 3).forEach((id, i) => expect(byLoc[at.get(id).name]).toBeCloseTo((200 * counts[i]) / tallest, 6))
   })
 
+  it('stacks Fatal and Serious at the base, then B, C, U, PDO (#272)', () => {
+    const loc = [{ id: 'x', name: 'X', lon: -118.3, lat: 33.9, kind: 'intersection' }]
+    const sev = ['O', 'O', 'O', 'C', 'B', 'A', 'K', 'U'].map((s, i) => ({ crash_id: String(i), severity: s, location_id: 'x' }))
+    const fc = columns(loc, sev, 'severity', categories('severity', sev), 200)
+    const order = [...fc.features].sort((a, b) => a.properties.base - b.properties.base).map((f) => f.properties.key)
+    expect(order).toEqual(['K', 'A', 'B', 'C', 'U', 'O'])
+  })
+
+  it('a KSI slab stays visible under a tall property-damage stack, and the column height still equals its crashes', () => {
+    const loc = [{ id: 'x', name: 'X', lon: -118.3, lat: 33.9, kind: 'intersection' }]
+    const sev = [{ severity: 'K' }, ...Array.from({ length: 199 }, () => ({ severity: 'O' }))]
+      .map((c, i) => ({ ...c, crash_id: String(i), location_id: 'x' }))
+    const fc = columns(loc, sev, 'severity', categories('severity', sev), 200)
+    const k = fc.features.find((f) => f.properties.key === 'K').properties
+    expect(k.top - k.base).toBeCloseTo(200 * KSI_MIN, 6)                 // 1 of 200 would be 1 m: shown at 8 m
+    expect(Math.max(...fc.features.map((f) => f.properties.top))).toBeCloseTo(200, 6)
+  })
+
   it('lays a north–south corridor across the screen', () => {
     expect(corridorAzimuth([[33.89, -118.3], [33.91, -118.3]])).toBeCloseTo(0, 6)
     expect(corridorAzimuth([[33.9, -118.31], [33.9, -118.29]])).toBeCloseTo(90, 6)
@@ -85,8 +103,9 @@ describe('3D columns', () => {
 describe('topLocations (#100)', () => {
   const locs = [{ id: 'a', name: 'A St' }, { id: 'b', name: 'B St' }, { id: 'c', name: 'C St' }, { id: 'd', name: 'D St' }, { id: 'e', name: 'E St' }]
   const cr = (id, n) => Array.from({ length: n }, () => ({ location_id: id }))
-  it('keeps the three with the most crashes, ties by name, none without crashes', () => {
-    expect(topLocations(locs, [...cr('c', 5), ...cr('a', 2), ...cr('b', 2), ...cr('d', 1)])).toEqual(['c', 'a', 'b'])
+  it('keeps the five with the most crashes, ties by name, none without crashes (#272)', () => {
+    expect(topLocations(locs, [...cr('c', 5), ...cr('a', 2), ...cr('b', 2), ...cr('d', 1)])).toEqual(['c', 'a', 'b', 'd'])
+    expect(topLocations(locs, [...cr('c', 5), ...cr('a', 2), ...cr('b', 2), ...cr('d', 1)], 3)).toEqual(['c', 'a', 'b'])
     expect(topLocations(locs, cr('e', 1))).toEqual(['e'])
     expect(topLocations(locs, [])).toEqual([])
   })

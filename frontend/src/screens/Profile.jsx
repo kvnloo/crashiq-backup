@@ -319,14 +319,18 @@ function SevBar({ v, max }) {
   )
 }
 
-function Ranking({ p, onOpen }) {
+// T2 rows in the ranking's order for one sort (the list here and the map's labels, #272)
+function ranked(t, sort) {
+  const key = SORTS.find(([k]) => k === sort)[2]
+  return [...t.rows].filter((r) => r.values.crashes > 0)
+    .sort((a, b) => key(b.values) - key(a.values) || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+}
+
+function Ranking({ p, onOpen, sort, setSort }) {
   const t = table(p, 'T2')
   const hasCrit = t.rows.some((r) => r.values.rate_to_critical != null)
-  const [sort, setSort] = useState('crashes')
   const [all, setAll] = useState(false)
-  const key = SORTS.find(([k]) => k === sort)[2]
-  const rows = [...t.rows].filter((r) => r.values.crashes > 0)
-    .sort((a, b) => key(b.values) - key(a.values) || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+  const rows = ranked(t, sort)
   const shown = all ? rows : rows.slice(0, 5)
   const max = Math.max(1, ...t.rows.map((r) => r.values.crashes))
   const maxBy = {}
@@ -890,6 +894,7 @@ export default function Profile() {
   const [review, setReview] = useState(null)      // review list data while it's open (#97)
   const [picking, setPicking] = useState(null)    // { ids, done } while a map point is being picked
   const [mapMode, setMapMode] = useState(null)    // 'ped' | 'bike' | 'motorcycle': only those crashes on the map (#105)
+  const [rankSort, setRankSort] = useState('crashes')   // the ranking's sort; the map labels its top 5 (#272)
 
   useEffect(() => {
     let alive = true
@@ -948,11 +953,12 @@ export default function Profile() {
   const locs = useMemo(() => locationPoints(state.net), [state.net])
   const highlight = useMemo(() => (drill?.data ? new Set(drill.data.crashes.map((c) => c.crash_id)) : null), [drill])
   const p = state.profile
+  const top = useMemo(() => (p ? ranked(table(p, 'T2'), rankSort).slice(0, 5).map((r) => r.key) : undefined), [p, rankSort])
 
   return (
     <section className="profile" aria-label="Crash profile">
       <div className="mapcol">
-        <ProfileMap line={state.line} crashes={mapMode ? (state.crashes || []).filter((c) => c[mapMode]) : state.crashes || []} locations={locs} highlight={highlight} selected={drill?.row.key}
+        <ProfileMap line={state.line} crashes={mapMode ? (state.crashes || []).filter((c) => c[mapMode]) : state.crashes || []} locations={locs} highlight={highlight} selected={drill?.row.key} top={top}
           onPick={picking ? (pt) => picking.done(pt) : undefined} />
       </div>
       <div className="datacol">
@@ -978,7 +984,7 @@ export default function Profile() {
             {/* #269: the first screen answers where, how bad and can I trust it; the rest follows in this order */}
             <Kpis p={p} />
             <Quality p={p} excluded={state.excludedByRule || {}} onReview={openReview} />
-            <Ranking p={p} onOpen={openLocation} />
+            <Ranking p={p} onOpen={openLocation} sort={rankSort} setSort={setRankSort} />
             <Vru p={p} onMap={setMapMode} mapMode={mapMode} />
             <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
             <ShsRates p={p} />

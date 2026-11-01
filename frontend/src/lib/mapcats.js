@@ -81,8 +81,12 @@ export function ring(lon, lat, r = 11, n = 20) {
   return [[...pts, pts[0]]]
 }
 
-// Stacked columns: one stack per location, one slab per category, heights in metres.
-// locations: [{id, name, lon, lat, kind}]; crashes carry location_id.
+// Stacked columns: one stack per location, one slab per category, heights in metres, in category order from the
+// ground up (severity: Fatal, Serious, then B, C, U, PDO). locations: [{id, name, lon, lat, kind}]; crashes carry
+// location_id. A Fatal or Serious slab is never thinner than KSI_MIN of the tallest column (#272: 4 KSI crashes
+// under 190 property-damage ones were invisible); the extra comes off the column's largest other slab, so a column's
+// height still equals its crashes.
+export const KSI_MIN = 0.04
 export function columns(locations, crashes, dim, cats, maxHeight = 220, radius = 14) {
   const per = new Map(locations.map((l) => [l.id, []]))
   for (const c of crashes) per.get(c.location_id)?.push(c)
@@ -92,24 +96,32 @@ export function columns(locations, crashes, dim, cats, maxHeight = 220, radius =
   const features = []
   for (const l of locations) {
     const list = per.get(l.id) || []
+    const slabs = cats.map((cat) => ({ cat, k: list.filter((c) => catOf(dim, c) === cat.key).length }))
+      .filter((x) => x.k).map((x) => ({ ...x, h: x.k * unit }))
+    if (dim === 'severity') {
+      const floor = KSI_MIN * maxHeight
+      for (const x of slabs.filter((y) => (y.cat.key === 'K' || y.cat.key === 'A') && y.h < floor)) {
+        const donor = slabs.filter((y) => y.cat.key !== 'K' && y.cat.key !== 'A').sort((a, b) => b.h - a.h)[0]
+        const add = Math.min(floor - x.h, donor ? donor.h - floor : 0)
+        if (add > 0) { x.h += add; donor.h -= add }
+      }
+    }
     let base = 0
-    for (const cat of cats) {
-      const k = list.filter((c) => catOf(dim, c) === cat.key).length
-      if (!k) continue
+    for (const { cat, k, h } of slabs) {
       features.push({
         type: 'Feature',
         geometry: { type: 'Polygon', coordinates: ring(l.lon, l.lat, l.kind === 'segment' ? radius * 0.7 : radius) },
-        properties: { location: l.name, kind: l.kind, cat: cat.label, color: cat.color, count: k, total: list.length,
-          base: base + (base ? gap : 0), top: base + k * unit },
+        properties: { location: l.name, kind: l.kind, cat: cat.label, key: cat.key, color: cat.color, count: k,
+          total: list.length, base: base + (base ? gap : 0), top: base + h },
       })
-      base += k * unit
+      base += h
     }
   }
   return { type: 'FeatureCollection', features }
 }
 
-// The n locations with the most crashes (ties by name): the only ones labelled all the time (#100, label clutter).
-export function topLocations(locations, crashes, n = 3) {
+// The n locations with the most crashes (ties by name): labelled when the page gives no ranking (#100, #272).
+export function topLocations(locations, crashes, n = 5) {
   const count = new Map()
   for (const c of crashes) if (c.location_id) count.set(c.location_id, (count.get(c.location_id) || 0) + 1)
   return locations.filter((l) => count.get(l.id))

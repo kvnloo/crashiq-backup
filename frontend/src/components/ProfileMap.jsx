@@ -8,6 +8,7 @@ import { TILE_MAX_NATIVE_ZOOM, TILE_URL } from '../lib/tiles'
 
 const TILE_ATTR_HTML = 'Tiles © Esri — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 const PITCH_3D = 55
+const FIT_3D_BACKOFF = 0.15     // zoom levels: the tilted near end still fits
 const VRU_RING = '#E6EAEE'     // --fg on the (always dark) map: no hue, so the severity ramp and its CVD check stand
 const EMPTY = { type: 'FeatureCollection', features: [] }
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`)
@@ -55,7 +56,7 @@ function style() {
 
 // Crash map for step 3. 3D view: one stacked column per location (height = crashes, slabs = the "color by"
 // categories); 2D view: dots only. Rotate/tilt with the buttons, right-drag, or two fingers.
-export default function ProfileMap({ line, crashes = [], locations = [], highlight, onPick, selected }) {
+export default function ProfileMap({ line, crashes = [], locations = [], highlight, onPick, selected, top }) {
   const box = useRef(null)
   const mapRef = useRef(null)
   const pickRef = useRef(onPick)
@@ -64,6 +65,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
   const [hidden, setHidden] = useState({})
   const [is3d, setIs3d] = useState(true)
   const [bearing, setBearing] = useState(0)
+  const [view, setView] = useState(0)          // bumped when the camera stops: labels re-pick their side (#272)
 
   const cats = useMemo(() => categories(dim, crashes), [dim, crashes])
   const colorOf = useMemo(() => new Map(cats.map((c) => [c.key, c.color])), [cats])
@@ -103,6 +105,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
     map.on('idle', onStyle)
     map.on('error', () => {})              // a missing basemap tile must not spam the console or block the layers
     map.on('rotate', () => setBearing(map.getBearing()))
+    map.on('moveend', () => setView((v) => v + 1))
     const popup = new maplibregl.Popup({ closeButton: false, closeOnClick: false, className: 'ciq-pop' })
     map.on('mousemove', 'crashes', (e) => {
       const p = e.features?.[0]?.properties
@@ -157,10 +160,10 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
     map.getSource('columns').setData(is3d ? columns(locations, shown, dim, cats, scale.h, scale.r) : EMPTY)
   }, [ready, shown, dim, cats, colorOf, locations, is3d, highlight, scale])
 
-  // Names as HTML markers (no glyph server needed), but only for the 3 locations with the most crashes and the one
-  // opened in the drill-down; every other name and every count is on hover (#100: the user found it cluttered).
-  const labelled = useMemo(() => new Set([...topLocations(locations, shown), ...(selected ? [selected] : [])]),
-    [locations, shown, selected])
+  // Names as HTML markers (no glyph server needed), only for the top 5 of the page's current ranking (`top`; else by
+  // crashes) and the one opened in the drill-down; every other name and every count is on hover (#100, #272)
+  const labelled = useMemo(() => new Set([...(top ? top.slice(0, 5) : topLocations(locations, shown)),
+    ...(selected ? [selected] : [])]), [locations, shown, selected, top])
   useEffect(() => {
     const map = mapRef.current
     if (!ready || !map) return
@@ -178,20 +181,25 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
       const el = document.createElement('div')
       el.className = 'ciq-label'
       el.textContent = l.name
-      return new maplibregl.Marker({ element: el, anchor: 'top', offset: [0, 10] }).setLngLat([l.lon, l.lat]).addTo(map)
+      // beside the column, never over it (principle 4, #272): to its right, or to its left in the map's right third
+      const right = (map.project?.([l.lon, l.lat])?.x ?? 0) > (box.current?.clientWidth || 0) * 0.66
+      return new maplibregl.Marker({ element: el, anchor: right ? 'right' : 'left', offset: [right ? -16 : 16, 0] })
+        .setLngLat([l.lon, l.lat]).addTo(map)
     })
     return () => ms.forEach((m) => m.remove())
-  }, [ready, locations, labelled])
+  }, [ready, locations, labelled, view])
 
   function fit(animate) {
     const map = mapRef.current
     if (!map || !line?.length) return
     const lons = line.map((p) => p[1]), lats = line.map((p) => p[0])
+    // the corridor fills the map width with about 10% padding each side (#272); the legend sits below it
+    const w = box.current?.clientWidth || 800
     const cam = map.cameraForBounds([[Math.min(...lons), Math.min(...lats)], [Math.max(...lons), Math.max(...lats)]],
-      { padding: { top: 70, bottom: 170, left: 50, right: 50 }, bearing: align })
+      { padding: { top: 60, bottom: 150, left: Math.round(w * 0.1), right: Math.round(w * 0.1) }, bearing: align })
     if (!cam) return
     // tilting pushes the near end of the corridor toward the edge; back off a little in 3D
-    const v = { ...cam, zoom: cam.zoom - (is3d ? 0.4 : 0), bearing: align, pitch: is3d ? PITCH_3D : 0 }
+    const v = { ...cam, zoom: cam.zoom - (is3d ? FIT_3D_BACKOFF : 0), bearing: align, pitch: is3d ? PITCH_3D : 0 }
     if (animate) map.easeTo({ ...v, duration: 700 }); else map.jumpTo(v)
   }
 
