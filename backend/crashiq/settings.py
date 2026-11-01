@@ -35,6 +35,11 @@ class Settings:
                                                                         ROOT / "data" / "cache" / "ccrs_files")))
     # Census TIGER/Line roads per county (#229): a few MB each (Los Angeles ~60 MB), never committed
     tiger_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_TIGER_DIR", ROOT / "data" / "cache" / "tiger")))
+    # USDOT NAD California rows (#283; user-approved download 2026-10-25): nad_ca_r24.csv + its SQLite index, never committed
+    nad_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_NAD_DIR", ROOT / "data" / "cache" / "nad")))
+    # Census TIGER/Line ADDRFEAT address ranges per county (#283): the D5 review suggestion, never committed
+    addrfeat_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_ADDRFEAT_DIR",
+                                                                        ROOT / "data" / "cache" / "tiger_addrfeat")))
     # Caltrans SHN Postmiles Tenth (#248): ~30 MB, never committed
     postmile_dir: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_POSTMILE_DIR",
                                                                         ROOT / "data" / "cache" / "postmiles")))

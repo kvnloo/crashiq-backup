@@ -90,8 +90,9 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
         x, y = line.proj.to_xy(c["lat"], c["lon"])
         cands = [(math.hypot(x - px, y - py), it) for it in studies for px, py in [pts[it["id"]]]
                  if math.hypot(x - px, y - py) <= radius_ft]
-        if base["location_provenance"] == "approximate":
-            cands = []           # +-0.5 mi (#255): never an intersection crash; on a segment, or out by the usual rules
+        if base["location_provenance"] in ("approximate", "address_nad"):
+            cands = []           # an estimate (#255 +-0.5 mi, #283 NAD ~400 ft): never an intersection crash; on a
+            #                      segment, or out by the usual rules
         gps = base["location_provenance"] in crashes_mod.GPS_SOURCES     # converted (#143) or offset (#218): still GPS
         if gps:
             # #53: GPS far from the intersection the report itself names -> flagged and counted (not moved)
@@ -146,6 +147,8 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
             "unmatched_by_rule": dict(Counter(a["rule"] for a in out if a["kind"] == "unmatched")),
             "gps_far_from_stated": sum(1 for a in out if a.get("gps_check") and a["kind"] in ("intersection", "segment")),
             "approximate": sum(1 for a in out if a["location_provenance"] == "approximate"
+                               and a["kind"] in ("intersection", "segment")),
+            "address_nad": sum(1 for a in out if a["location_provenance"] == "address_nad"
                                and a["kind"] in ("intersection", "segment")),
             "radius_ft": radius_ft, "buffer_ft": buffer_ft, "assignments": out}
 

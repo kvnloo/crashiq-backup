@@ -72,6 +72,10 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   stated direction. Two or more crossings, or none, go to review with the reason, never the nearest guess. A bike
   lane on the road is the road ("BIKE LANE" is dropped from the name). A crash on a separate bike-only path stays a
   suggestion until the user confirms (`crossing_on_path`).
+    In CrashIQ (`backend/crashiq/nad.py`, `addrfeat.py`): a corridor field with a house number, the other field blank,
+    a placeholder or the same street (never a route, a numbered street or a distance) is D5. The NAD points with that
+    number on that street in the crash's city (its county when unincorporated) must be one place (within 1,000 ft);
+    the spot is their mean. The app's matching reproduces #264: 623 of 12,568 D5 placed, 86.2% within 400 ft.
 - **Fatal crashes:** FARS coordinates as a fallback, only when the FARS point fits both named roads. FARS beats an
   approximate placement (#280/#281).
 - **Freeway crashes:** `methods/freeway-crashes.md`. In short:

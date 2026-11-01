@@ -46,6 +46,30 @@ def _gps_usable(c: dict, net: dict) -> bool:
     return x.get("rule") != "not_on_corridor_street" and not x.get("gps_check")
 
 
+# Placements that are estimates, not points (docs/03): freeway reports (#255) and NAD address points (#283). They count
+# on segments, never at an intersection, and a FARS point that fits the named roads replaces them (#280).
+APPROX_SOURCES = ("approximate", "address_nad")
+
+
+def place_address(c: dict, addresses) -> bool:
+    """D5 (#283; user decision 2026-10-25): a house-address crash at its NAD address point, approximate ("usually
+    within 400 ft"). Where NAD has none, it stays on the review list with the TIGER address-range point as the
+    suggestion. True when placed."""
+    from . import nad
+    from .names import street_key
+    ha, k = c["house_address"], street_key(c["house_address"]["street"])
+    p = addresses.nad.lookup(c.get("county_code"), c.get("city"), ha["number"], k) if addresses.nad else None
+    if p:
+        c.update(lat=p["lat"], lon=p["lon"], location_source="address_nad", review_reason=None,
+                 approximate={"method": "address_nad", "plus_minus_ft": nad.PLUS_MINUS_FT, "points": p["points"],
+                              "source": nad.SOURCE})
+        return True
+    t = addresses.addrfeat.lookup(c.get("county_code"), ha["number"], k) if addresses.addrfeat else None
+    if t:
+        c["suggestion"] = {"tier": "address_tiger", "lat": t["lat"], "lon": t["lon"]}
+    return False
+
+
 def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass=None, tiger=None) -> dict:
     """Fatal crashes first (#174, user decision 2026-10-21): a fatal crash with no usable location (no GPS and no
     placement by the street-name locator, or GPS the assignment rejects or flags) takes its linked FARS point like GPS
@@ -70,11 +94,11 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
         if (c.get("killed") or 0) <= 0 or c.get("exclude_rule"):
             continue
         src = c.get("location_source")
-        if src not in ("unmatched", "approximate", "gps", "gps_dms_corrected", "gps_sign_corrected",
+        if src not in ("unmatched", *APPROX_SOURCES, "gps", "gps_dms_corrected", "gps_sign_corrected",
                        "gps_offset_applied"):
             continue                       # placed by the locator (exact) or by hand: a usable location (#191)
         # an approximate freeway spot is an estimate: a FARS point that fits the named roads replaces it (#280)
-        if src not in ("unmatched", "approximate") and (c.get("lat") is None or _gps_usable(c, net)):
+        if src not in ("unmatched", *APPROX_SOURCES) and (c.get("lat") is None or _gps_usable(c, net)):
             continue                                       # its own GPS checks out
         counts["tried"] += 1
         status, row = fars.link(db, c)
@@ -97,8 +121,8 @@ def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass
             continue
         c.update(lat=p[0], lon=p[1], location_source="fars", fars_case=fars.case_key(row["year"], row["st_case"]),
                  review_reason=None, suggestion=None,
-                 gps_replaced=[c["lat"], c["lon"]] if src not in ("unmatched", "approximate") else None)
-        if src == "approximate":
+                 gps_replaced=[c["lat"], c["lon"]] if src not in ("unmatched", *APPROX_SOURCES) else None)
+        if src in APPROX_SOURCES:
             c["approximate_replaced"] = {**c.pop("approximate"), "lat_lon": [trial_from[0], trial_from[1]]}
         counts["placed"] += 1
     return counts
@@ -172,14 +196,21 @@ def place_crossings(db: Database | None, net: dict, result: dict, gate: locate.G
 
 
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
-                    raw: dict | None = None, tiger=None, postmiles=None) -> dict:
+                    raw: dict | None = None, tiger=None, postmiles=None, addresses=None) -> dict:
     gate = gate or locate.Gate()
     result["cleaning"]["mile_markers"] = place_mile_markers(net, result, gate, postmiles)
     result["cleaning"]["crossings"] = place_crossings(db, net, result, gate, overpass)
+    # house addresses (D5, #283): NAD address point, else review with the TIGER suggestion; never the street locator
+    house = [c for c in result["crashes"] if c.get("review_reason") == "house_address" and not c.get("exclude_rule")]
+    by_nad = sum(place_address(c, addresses) for c in house) if addresses is not None else 0
     # no cross street (#94): nothing for the locator to work with; the engineer places it from the review list
     todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")
             and not c.get("review_reason")]
     counts = {"tried": len(todo), "placed": {}, "suggested": 0, "still_unplaced": 0}
+    if house:
+        counts["house_address"] = {"tried": len(house), "placed_nad": by_nad,
+                                   "suggested_tiger": sum(1 for c in house if (c.get("suggestion") or {}).get("tier")
+                                                          == "address_tiger")}
     # GPS snapped to the named intersection while the report states an offset (#218): the offset wins
     offset_cands = [c for c in result["crashes"] if c.get("location_source") in ("gps", "gps_dms_corrected", "gps_sign_corrected")
                     and (c.get("offset_ft") or 0) > gps_rules.CONFIG["offset_min_ft"] and c.get("offset_dir")]
@@ -221,9 +252,13 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
             counts["still_unplaced"] += 1
     # FARS only after the locator: a fatal crash it placed exactly has a usable location (#191)
     result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass, tiger)
-    replaced = sum(1 for c in result["crashes"] if c.get("approximate_replaced"))
-    if replaced:                          # approximate freeway spots FARS replaced (#280) are counted as FARS
-        counts["placed"]["freeway_offset"] -= replaced
-        counts["approximate_replaced_by_fars"] = replaced
+    replaced = [c["approximate_replaced"]["method"] for c in result["crashes"] if c.get("approximate_replaced")]
+    if replaced:                          # approximate spots FARS replaced (#280) are counted as FARS
+        for m in replaced:
+            if m == "address_nad":
+                counts["house_address"]["placed_nad"] -= 1
+            else:
+                counts["placed"]["freeway_offset"] -= 1
+        counts["approximate_replaced_by_fars"] = len(replaced)
     result["cleaning"]["placement"] = counts
     return counts

@@ -39,7 +39,7 @@ function style() {
         'circle-opacity': ['case', ['get', 'hollow'], 0, ['get', 'dim'], 0.15, 0.9],
         'circle-stroke-color': ['case', ['get', 'hollow'], ['get', 'color'], '#0D1013'],
         'circle-stroke-width': 1.5, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.2, 1], 'circle-pitch-alignment': 'map' } },
-      // placed approximately from a freeway report (#255, +-0.5 mi): a wide faint ring says "about here", not "here"
+      // placed approximately (#255 freeway report, +-0.5 mi; #283 NAD address point): a wide faint ring says "about here"
       { id: 'approx', type: 'circle', source: 'crashes', filter: ['==', ['get', 'approx'], true], paint: {
         'circle-radius': 13, 'circle-opacity': 0.06, 'circle-color': '#C9D1D9', 'circle-stroke-color': '#C9D1D9',
         'circle-stroke-width': 1, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.15, 0.55], 'circle-pitch-alignment': 'map' } },
@@ -155,7 +155,7 @@ export default function ProfileMap({ line, crashes = [], locations = [], highlig
       properties: { color: colorOf.get(catOf(dim, c)) || '#6B7682', dim: Boolean(highlight && !highlight.has(c.crash_id)),
         hollow: dim === 'severity' && HOLLOW.has(catOf(dim, c)), vru: isVru(c), road: vruWho(c), big: c.severity === 'K' || c.severity === 'A', type: (c.collision_type || 'Crash').toLowerCase(), date: c.date || '',
         hour: c.hour != null ? `${String(c.hour).padStart(2, '0')}:00` : '', sev: c.severity,
-        approx: c.location_source === 'approximate' },
+        approx: c.location_source === 'approximate' || c.location_source === 'address_nad' },
     })) })
     map.getSource('columns').setData(is3d ? columns(locations, shown, dim, cats, scale.h, scale.r) : EMPTY)
   }, [ready, shown, dim, cats, colorOf, locations, is3d, highlight, scale])

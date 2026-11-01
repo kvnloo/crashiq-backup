@@ -30,7 +30,7 @@ from . import network as network_mod
 from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection, Polyline
-from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
+from .names import ROUTE_SPELLINGS, SUFFIX as SUFFIX_WORDS, drop_directional, route_number, route_numbers, same_core, street_key
 from . import aliases as aliases_mod
 from . import gps_rules
 from . import union as union_mod
@@ -67,7 +67,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 30    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319; 30: #318)
+PULL_FORMAT = 31    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319; 30: #318; 31: #283)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -592,6 +592,32 @@ def _mile_marker_on(roads: list, on_idx: list[int]) -> tuple[str | None, float] 
         mk = marker(rd)
         if mk and any(j != i for j in on_idx):
             return mk
+
+
+_HOUSE = re.compile(r"^\s*(\d{1,5})\s+(.+)$|^(.+?)\s+(\d{1,5})\s*$")
+_NOT_A_NUMBER = re.compile(r"^\s*\d+\s*(?:FT|FEET|'|MI|MILES?|YDS?|YARDS?)\b")
+
+
+def house_address(roads: list, on_idx: list[int], corridor_keys) -> dict | None:
+    """D5 (#283): a road field naming the corridor with a house number ("8451 S CRENSHAW BLVD", "GENEVA AV 1677"),
+    the other field blank, a placeholder, 1-2 letters, or the same street. {"number", "street"} or None. Never a
+    route ("RT 101"), a numbered street ("AVENUE 200"), or a distance ("100 FT N OF ..."); private property stays
+    excluded under its own rule (#94)."""
+    if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd):
+        return None
+    for i in on_idx:
+        raw = re.sub(r"\(.*?\)", " ", str(roads[i] or "")).strip()
+        m = _HOUSE.match(raw)
+        if not m or _NOT_A_NUMBER.match(raw):
+            continue
+        num, street = (m.group(1), m.group(2)) if m.group(1) else (m.group(4), m.group(3))
+        k = street_key(street)
+        if k is None or route_number(k) is not None or k.core in SUFFIX_WORDS or re.fullmatch(r"[A-Z]", k.core) \
+                or not _names_street(street, corridor_keys):
+            continue
+        others = [roads[j] for j in range(len(roads)) if j != i]
+        if all(_squeeze(rd) in NO_CROSS or len(_squeeze(rd)) <= 2 or _names_street(rd, corridor_keys) for rd in others):
+            return {"number": int(num), "street": street.strip()}
     return None
 
 
@@ -663,6 +689,12 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
             # On a road passing over or under the corridor: never meets it (N7, #67). Kept and listed.
             log["no_coords_grade_separated"] += 1
             c["exclude_rule"] = "grade_separated_crossing"
+            recs.append((c, "unmatched"))
+        elif (ha := house_address(roads, on_idx, corridor_keys)):
+            # A house address on the corridor instead of a cross street (D5, #283): placed at its NAD address point
+            # when there is one (placement.py), else on the review list with the TIGER address-range suggestion
+            log["no_coords_house_address"] = log.get("no_coords_house_address", 0) + 1
+            c["review_reason"], c["house_address"] = "house_address", ha
             recs.append((c, "unmatched"))
         elif (mm := _mile_marker_on(roads, on_idx)) is not None:
             # A mile marker on the corridor's state route instead of a cross street (#319): placed at that Caltrans
@@ -1068,7 +1100,8 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
             from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
             place_unmatched(db, net, result, overpass=overpass, raw=raw,
                             tiger=getattr(ckan, "tiger", None) if union_mod.enabled() else None,
-                            postmiles=getattr(ckan, "postmiles", None))
+                            postmiles=getattr(ckan, "postmiles", None),
+                            addresses=getattr(ckan, "addresses", None))
             now = study_mod.require(db, sid)
             now_net = network_mod.network(db, sid)
             if (cache_key(now, now_net) if now_net.get("line") else None) == key:
@@ -1083,10 +1116,25 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
 def ckan_for(request: Request) -> Ckan:
     st = request.app.state
     return Ckan(getattr(st, "ckan", None), retries=getattr(st, "ckan_retries", 3), files=files_for(st),
-                tiger=tiger_for(st), postmiles=postmile_for(st))
+                tiger=tiger_for(st), postmiles=postmile_for(st),
+                addresses=addresses_for(st))
 
 
 _TIGER_CACHES: dict[str, object] = {}
+_ADDRESSES: dict[str, object] = {}
+
+
+def addresses_for(st):
+    """NAD + TIGER ADDRFEAT for house-address crashes (#283): local files only (downloaded once, user-approved
+    2026-10-25). A test or harness sets `app.state.addresses`; with a fake or recorded CKAN and none set, none."""
+    from .nad import addresses
+    if getattr(st, "addresses", None) is not None:
+        return st.addresses
+    if getattr(st, "ckan", None) is not None:
+        return None
+    key = f"{st.settings.nad_dir}|{st.settings.addrfeat_dir}"
+    with _LOCKS_GUARD:
+        return _ADDRESSES.setdefault(key, addresses(st.settings.nad_dir, st.settings.addrfeat_dir))
 
 
 def tiger_for(st):
