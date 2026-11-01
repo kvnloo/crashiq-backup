@@ -5,7 +5,8 @@ Pipeline (all deterministic code):
 2. Corridor ways: ways that run *along* the line (nodes within 80 ft and direction within 25°).
 3. Candidate nodes: nodes shared by a corridor way and any other road way, inside the study limits.
 4. Cluster candidates along the line (a divided road gives two nodes per cross street) → one intersection each.
-5. Control from OSM tags near the intersection: traffic_signals → signal, stop → stop, else unknown. Never guessed.
+5. Control from OSM tags near the intersection: traffic_signals → signal; a junction=roundabout/circular way or a
+   mini_roundabout node → roundabout; stop → stop; give_way → yield (#337); else unknown. Never guessed.
 6. Segments: between adjacent *study* intersections (and the study limits A/B), lengths in feet along the line.
 
 Data © OpenStreetMap contributors (ODbL).
@@ -42,6 +43,8 @@ CLUSTER_FT = 150          # nodes this close along the line can belong to one in
 END_TOL_FT = 60           # an intersection this far past A or B still counts as the terminus
 STUB_FT = 50              # no segment between a terminus and an intersection closer than this
 CONTROL_FT = 120          # signal/stop tags this close to the intersection set its control
+RING_FT = 60              # a roundabout ring or mini-roundabout this close to the intersection is its control (#337)
+YIELD_FT = 100            # a give_way sign this close (about 30 m) to the intersection sets yield control (#337)
 
 DEFAULT_RADIUS_FT = 250.0   # HSM / Caltrans intersection influence area (R2.4)
 DEFAULT_BUFFER_FT = 100.0   # corridor buffer each side of the line; provisional default, see PR for #7
@@ -336,6 +339,11 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
     tagged = [(n, n.get("tags", {}).get("highway")) for n in nodes.values()]
     signals = [n for n, h in tagged if h == "traffic_signals"]
     stops = [n for n, h in tagged if h == "stop"]
+    # roundabouts: the nodes of junction=roundabout/circular ways, and mini-roundabout nodes; yield: give_way signs (#337)
+    ring_ids = {nid for w in ways if w.get("tags", {}).get("junction") in ("roundabout", "circular")
+                for nid in w.get("nodes", [])}
+    rings = [n for n, h in tagged if h == "mini_roundabout"] + [nodes[i] for i in ring_ids if i in nodes]
+    yields = [n for n, h in tagged if h == "give_way"]
     out = []
     for c in clusters:
         # Position from the nodes where a *named* cross street meets the corridor; unnamed slip lanes and
@@ -354,7 +362,9 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
         sides = set().union(*(cross_sides[n] for n in c))
         legs = 2 + len(sides) if sides else None     # 3 = T (cross street on one side), 4 = through cross street
         control = ("signal" if _any_within(line, signals, cx, cy, CONTROL_FT)
-                   else "stop" if _any_within(line, stops, cx, cy, CONTROL_FT) else "unknown")
+                   else "roundabout" if set(c) & ring_ids or _any_within(line, rings, cx, cy, RING_FT)
+                   else "stop" if _any_within(line, stops, cx, cy, CONTROL_FT)
+                   else "yield" if _any_within(line, yields, cx, cy, YIELD_FT) else "unknown")
         out.append({
             "id": f"osm-{min(c)}", "name": name, "station_ft": round(max(0.0, min(line.length_ft, st)), 1),
             "lat": round(lat, 7), "lon": round(lon, 7), "osm_node_ids": sorted(c), "control": control,
