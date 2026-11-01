@@ -154,3 +154,63 @@ def test_route_number_in_a_cited_location_name_is_not_a_figure_but_other_numbers
     assert bad == ["number 41 in the text is not backed by a cited table cell"]
     bad = findings.validate(f(ok + " 12 were at night."), tables, crashes_, (2021, 2025))
     assert bad == ["number 12 in the text is not backed by a cited table cell"]
+
+
+# #274: every fatal crash is its own finding; the validator checks its date against the record
+def _fatal_setup():
+    placed = [dict(c) for c in PLACED]
+    k = next(c for c in placed if c["location_id"] == "I1")
+    k.update(severity="K", date="2023-04-05", collision_type="BROADSIDE", pcf="22350", ped=True)
+    pull = {**PULL, "crashes": [{**BY[c["crash_id"]], **({"severity": "K", "date": "2023-04-05",
+                                                           "collision_type": "BROADSIDE", "pcf": "22350", "ped": True}
+                                                          if c["crash_id"] == k["crash_id"] else {})}
+                                for c in PULL["crashes"]]}
+    prof = profile.build(STUDY, NET, pull, A)
+    return prof, prof["tables"], placed, k
+
+
+def test_a_fatal_crash_is_its_own_finding_and_passes_the_validator():
+    prof, tables, placed, k = _fatal_setup()
+    fs = F.fatal_findings(prof, tables, placed)
+    assert [f.id for f in fs] == [f"fatal-{k['crash_id']}"]
+    f = fs[0]
+    label = next(r["label"] for r in next(t for t in tables if t["id"] == "T2")["rows"] if r["key"] == "I1")
+    assert f.text == (f'Fatal crash at {label} on 2023-04-05: broadside, primary collision factor "22350", '
+                      "involving a pedestrian.")
+    assert f.source == "screen" and f.meta["kind_of_finding"] == "fatal" and f.evidence_refs.tables == ["T2"]
+    assert F.validate(f, tables, placed, WINDOW) == []
+    assert [c["crash_id"] for c in F.select_records(placed, f.evidence_refs.records)] == [k["crash_id"]]
+
+
+def test_a_fatal_finding_with_a_wrong_date_is_rejected():
+    prof, tables, placed, _ = _fatal_setup()
+    f = F.fatal_findings(prof, tables, placed)[0]
+    f.text = f.text.replace("2023-04-05", "2023-04-06")
+    assert "date 2023-04-06 in the text is not the date of a cited crash record" in F.validate(f, tables, placed, WINDOW)
+
+
+def test_an_approximate_fatal_crash_says_so():
+    prof, tables, placed, k = _fatal_setup()
+    k["location_source"] = "approximate"
+    f = F.fatal_findings(prof, tables, placed)[0]
+    assert f.text.endswith("Approximate location: no usable GPS, placed from the report.") and f.meta["approximate"]
+
+
+def test_fatal_findings_sort_first():
+    fatal = {"meta": {"kind_of_finding": "fatal"}, "rank": {"location_fatal_crashes": 1, "ksi_crashes": 1}}
+    strong = {"meta": {"probability": 0.99}, "rank": {"location_fatal_crashes": 1, "ksi_crashes": 5, "crashes": 9}}
+    stale = {**fatal, "stale": True}
+    assert sorted([strong, stale, fatal], key=F._order) == [fatal, strong, stale]
+
+
+def test_a_location_with_4_of_8_ksi_crashes_gets_a_ksi_finding():
+    from crashiq import signals
+    def crashes(lid, n, ksi):
+        return [{"crash_id": f"{lid}-{i}", "location_id": lid, "severity": "A" if i < ksi else "O",
+                 "collision_type": "REAR END"} for i in range(n)]
+    placed = crashes("osm-1", 8, 4) + crashes("osm-2", 12, 0) + crashes("osm-3", 12, 1) + crashes("osm-4", 10, 0)
+    out = signals.screen(placed, [("osm-1", "A St"), ("osm-2", "B St"), ("osm-3", "C St"), ("osm-4", "D St")])
+    ksi = [s for s in out["signals"] if s["target"] == "ksi"]
+    assert [s["location_id"] for s in ksi] == ["osm-1"]
+    row = next(r for r in out["table"]["rows"] if r["key"] == "osm-1~ksi")["values"]
+    assert (row["target_crashes"], row["location_crashes"]) == (4, 8)

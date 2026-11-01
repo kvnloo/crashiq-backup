@@ -278,3 +278,25 @@ describe('Corridor summary (#270)', () => {
     expect(within(sum).getByTestId('fsum-counts')).toHaveTextContent('2 findings: 0 accepted, 2 need review')
   })
 })
+
+
+describe('Fatal-crash findings (#274)', () => {
+  const FK = { id: 'fatal-9001', location_id: 'osm-1029', source: 'screen', status: 'proposed',
+    title: 'Fatal crash at West 135th Street',
+    text: 'Fatal crash at West 135th Street on 2023-04-05: broadside, primary collision factor "22350", involving a pedestrian.',
+    numbers: [{ value: 1, table_id: 'T2', cell: 'osm-1029/fatal_crashes' }],
+    evidence_refs: { tables: ['T2'], records: { crash_id: '9001', location_id: 'osm-1029' } },
+    meta: { kind_of_finding: 'fatal', pattern: 'fatal', location: 'West 135th Street', kind: 'intersection' },
+    rank: { fatal_crashes: 1, ksi_crashes: 1, crashes: 1, location_fatal_crashes: 1 } }
+
+  it('says no test was run, and the audit says it was written from the record', async () => {
+    mockApi(routes({ 'GET /studies/:id/findings': { findings: [FK, F1], rejected_count: 0 } }))
+    renderAt('/s/s1/findings')
+    await openFirst()
+    expect(await screen.findByTestId('fatal-note')).toHaveTextContent('no test is run')
+    expect(screen.getAllByText('Fatal crash').length).toBeGreaterThan(0)
+    fireEvent.click(screen.getByRole('tab', { name: 'Audit' }))
+    expect(screen.getByText(/None: every fatal crash is listed/)).toBeInTheDocument()
+    expect(screen.getByText(/from the crash record and table T2/)).toBeInTheDocument()
+  })
+})

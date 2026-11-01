@@ -43,6 +43,7 @@ _NUM = re.compile(r"(?<![\w.$-])(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(?:\s*(%|percent
 _ORDINAL = re.compile(r"(?<![\w.])\d+(?:st|nd|rd|th)\b", re.I)
 _SPELLED = re.compile(r"\b(" + "|".join(SPELLED) + r")\b", re.I)
 _QUOTED = re.compile(r"[\"“]([^\"”]{1,120})[\"”]")
+_DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 
 
 class Number(BaseModel):
@@ -52,6 +53,7 @@ class Number(BaseModel):
 
 
 class RecordFilter(BaseModel):
+    crash_id: str | None = None          # one crash record by its Collision Id (a fatal-crash finding, #274)
     location_id: str | None = None
     severity: list[str] | None = None
     collision_type: list[str] | None = None
@@ -119,6 +121,8 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
 def select_records(crashes: list[dict], f: RecordFilter) -> list[dict]:
     out = []
     for c in crashes:
+        if f.crash_id is not None and str(c.get("crash_id")) != f.crash_id:
+            continue
         if f.location_id is not None and c.get("location_id") != f.location_id:
             continue
         if f.severity and c.get("severity") not in f.severity:
@@ -177,6 +181,11 @@ def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: 
     if not evidence:
         reasons.append("evidence filter selects zero crash records")
     quoted_ok = {str(c.get(k)).strip().lower() for c in evidence for k in _TEXT_FIELDS if c.get(k)}
+    # a date written in the text must be the date of a cited crash record (#274: a fatal crash on its date)
+    dates = {str(c.get("date") or "")[:10] for c in evidence}
+    for d in _DATE.findall(finding.text):
+        if d not in dates:
+            reasons.append(f"date {d} in the text is not the date of a cited crash record")
     lo, hi = window
     for w in extract_numbers(finding.text, quoted_ok, _location_names(finding, tables)):
         plain = w.replace(",", "")
@@ -294,13 +303,48 @@ def screen_findings(prof: dict, tables: list[dict]) -> list[Finding]:
     return out
 
 
+ROAD_USERS = (("ped", "a pedestrian"), ("bike", "a bicyclist"), ("ebike", "an e-bike rider"),
+              ("escooter", "an e-scooter rider"), ("motorcycle", "a motorcyclist"))
+APPROX = ("approximate", "address_nad")
+
+
+def fatal_findings(prof: dict, tables: list[dict], placed: list[dict]) -> list[Finding]:
+    """#274 (user decision 2026-10-25, docs/03): every fatal crash placed at a study location is its own finding,
+    written by code from the crash record, with no statistical test. It cites the record (Collision Id) and the
+    location's T2 row; an approximate placement says so (and never reaches a collision diagram, #255)."""
+    t2 = {r["key"]: r for t in tables if t["id"] == "T2" for r in t["rows"]}
+    out = []
+    for c in sorted((c for c in placed if c.get("severity") == "K" and c.get("location_id") in t2),
+                    key=lambda c: (str(c.get("date") or ""), str(c["crash_id"]))):
+        row = t2[c["location_id"]]
+        what = [(c.get("collision_type") or "collision type not stated").lower()]
+        if c.get("pcf"):
+            what.append(f'primary collision factor "{c["pcf"]}"' + (f" ({c['pcf_category']})" if c.get("pcf_category")
+                                                                     and not any(ch.isdigit() for ch in str(c["pcf_category"])) else ""))
+        users = [w for k, w in ROAD_USERS if c.get(k)]
+        what.append("involving " + " and ".join(users) if users else "vehicles only")
+        approx = c.get("location_source") in APPROX
+        text = (f"Fatal crash at {row['label']} on {str(c.get('date'))[:10]}: {', '.join(what)}."
+                + (" Approximate location: no usable GPS, placed from the report." if approx else ""))
+        out.append(Finding(
+            id=f"fatal-{c['crash_id']}", location_id=c["location_id"], text=text,
+            title=f"Fatal crash at {row['label']}",
+            numbers=[Number(value=row["values"]["fatal_crashes"], table_id="T2", cell=f"{c['location_id']}/fatal_crashes")],
+            evidence_refs=Evidence(tables=["T2"], records=RecordFilter(crash_id=str(c["crash_id"]),
+                                                                          location_id=c["location_id"])),
+            source="screen",
+            meta={"kind_of_finding": "fatal", "pattern": "fatal", "location": row["label"], "crash_id": str(c["crash_id"]),
+                  "kind": row["values"].get("kind"), "approximate": approx, "corridor_crashes": prof_total(prof)}))
+    return out
+
+
 def run_screen(db, sid: str) -> dict:
     """(Re)write the code findings for a study. A finding keeps its accept/reject status while its text is unchanged;
     findings the data no longer supports are removed."""
-    prof, tables, _ = context(db, sid)
-    fresh = screen_findings(prof, tables)
+    prof, tables, placed = context(db, sid)
+    fresh = screen_findings(prof, tables) + fatal_findings(prof, tables, placed)
     old = {r["id"]: json.loads(r["body"]) for r in db.query(
-        "SELECT id, body FROM finding WHERE study_id = ? AND id LIKE 'c7-%'", (sid,))}
+        "SELECT id, body FROM finding WHERE study_id = ? AND (id LIKE 'c7-%' OR id LIKE 'fatal-%')", (sid,))}
     for f in fresh:
         if f.id in old and old[f.id]["text"] == f.text:
             f.status = old[f.id]["status"]
@@ -308,7 +352,8 @@ def run_screen(db, sid: str) -> dict:
     for fid in old:
         if fid not in keep:
             db.execute("DELETE FROM finding WHERE study_id = ? AND id = ?", (sid, fid))
-    db.execute("DELETE FROM finding_rejected WHERE study_id = ? AND finding_id LIKE 'c7-%'", (sid,))
+    db.execute("DELETE FROM finding_rejected WHERE study_id = ? AND (finding_id LIKE 'c7-%' OR finding_id LIKE 'fatal-%')",
+               (sid,))
     return submit(db, sid, fresh)
 
 
@@ -371,10 +416,12 @@ def _named(label) -> str | None:
 
 
 def _order(f: dict):
-    """#267: findings at locations with a fatal crash (T2) first, then by KSI crashes in the finding's records, then by
-    test strength (probability), then by crash count; stale findings last. Ties keep the screen's order."""
+    """#267: the fatal-crash findings (#274), then findings at locations with a fatal crash (T2), then by KSI crashes in
+    the finding's records, then by test strength (probability), then by crash count; stale findings last. Ties keep the
+    screen's order."""
     rk = f.get("rank") or {}
-    return (bool(f.get("stale")), -(rk.get("location_fatal_crashes", 0) > 0), -rk.get("ksi_crashes", 0),
+    fatal = (f.get("meta") or {}).get("kind_of_finding") == "fatal"                      # every fatal crash first (#274)
+    return (bool(f.get("stale")), -fatal, -(rk.get("location_fatal_crashes", 0) > 0), -rk.get("ksi_crashes", 0),
             -float((f.get("meta") or {}).get("probability") or 0), -rk.get("crashes", 0))
 
 
