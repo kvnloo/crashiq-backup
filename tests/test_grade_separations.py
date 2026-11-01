@@ -176,3 +176,27 @@ def test_grade_separations_are_stored_and_backfilled_from_the_cache(client, db):
     again = client.get(f"/api/studies/{sid}/network").json()
     assert [g["name"] for g in again["grade_separations"]] == ["Nimitz Freeway / I 880"]
     assert again["corridor_highway"] == "primary"
+
+
+def test_a_frontage_street_beside_a_freeway_is_never_a_corridor_name():
+    # #325 (Tester, live I-405): Freeman Ave, a frontage street beside the freeway, became a corridor name, and its
+    # T-junctions with 164th and 165th St became study intersections with a 0.07 mi segment between them
+    o = OSM()
+    o.corridor("San Diego Freeway", "motorway", ref="I 405")
+    fx = LON + 0.0002                                                # ~60 ft east of the freeway
+    o.way([(la, fx) for la in (37.598, 37.601, 37.603, 37.605, 37.607, 37.609, 37.612)],
+          name="Freeman Avenue", highway="residential")
+    for la, nm in ((37.6045, "West 164th Street"), (37.6055, "West 165th Street")):
+        o.way([(la, fx), (la, fx + 0.002)], name=nm, highway="residential")         # T-junctions on the frontage
+    got = network.detect(o.osm(), LINE)
+    assert got["corridor_highway"] == "motorway"
+    assert "Freeman Avenue" not in got["corridor_names"] and got["corridor_name"] == "San Diego Freeway"
+    assert got["intersections"] == []
+
+
+def test_an_arterial_keeps_every_parallel_piece_of_its_own_name():
+    o = OSM()
+    o.corridor("Main Street")
+    o.way([(37.600, LON + 0.0001), (37.606, LON + 0.0001)], name="Main Street", highway="primary")   # a divided half
+    got = network.detect(o.osm(), LINE)
+    assert got["corridor_names"] == ["Main Street"]

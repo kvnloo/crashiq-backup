@@ -228,6 +228,7 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
 
     # 2. corridor ways: enough of the way runs along the line
     corridor_ids: set[int] = set()
+    along: list[tuple[dict, float]] = []
     along_len: Counter = Counter()
     hw_len: Counter = Counter()
     for w in ways:
@@ -248,8 +249,15 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
         if run_len >= 50 and run_len >= 0.5 * near_len:
             corridor_ids.add(w["id"])
             hw_len[w.get("tags", {}).get("highway", "")] += run_len
-            for n in _names(w.get("tags", {})):
-                along_len[n] += run_len
+            along.append((w, run_len))
+    # a freeway corridor is its motorway ways only: a frontage or parallel surface street beside it (Freeman Ave on
+    # I-405, #325) never names the corridor or makes intersections with its own side streets
+    if hw_len and hw_len.most_common(1)[0][0] == "motorway":
+        along = [(w, n) for w, n in along if w.get("tags", {}).get("highway") == "motorway"]
+        corridor_ids = {w["id"] for w, _ in along}
+    for w, run in along:
+        for n in _names(w.get("tags", {})):
+            along_len[n] += run
     corridor_name = along_len.most_common(1)[0][0] if along_len else None
     corridor_cores = {c for c in (_core(n) for n in along_len) if c}
     corridor_highway = hw_len.most_common(1)[0][0] if hw_len else None
