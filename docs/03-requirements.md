@@ -561,3 +561,12 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     - roads over or under a freeway (N7, #67).
   - **Why:** this follows Caltrans' TASAS mainline/ramp split, so mainline rates are comparable with Caltrans' highway
     base rates (#294). It replaces the interim "segment crashes only" label on #296.
+- **Ramp count age and direction DECIDED (user, 2026-11-01, Engineering session; #302):**
+  - **Count age:** a ramp count more than **5 years older** than the year it stands for isn't used (a 5-year-old count
+    is). The ramp's row is checked for every study-window year: if any window year has only a count that's too old,
+    the row gets **no rate** (all or nothing per row) and gives the reason "count too old for <years> (newest <year>)";
+    its crash counts are still shown. How many identified ramp crashes this affects is to be measured on #302's merged
+    code (Engineering's first estimate also counted 5-year-old counts, which are used).
+  - **Direction:** compass and route directions are translated, not matched strictly. A CHP "S/B" on a route Caltrans
+    signs EB/WB matches the route direction it's closest to. The method is in its own issue (#308) and waits for the
+    user's confirmation before it's built.
