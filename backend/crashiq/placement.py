@@ -141,7 +141,7 @@ def place_crossings(db: Database | None, net: dict, result: dict, gate: locate.G
     """#318 (user 2026-11-01): crashes at the corridor's crossing with a railway or a named trail or path. Placed as
     `crossing_rail` / `crossing_path` when that tier is on, else the spot is the review list's suggestion; two or more
     crossings, or none, leave the crash on the review list with the reason. A crash on a separate bike-only path
-    (the path is its primary road) stays a suggestion until the user confirms (`crossing_on_path`)."""
+    (the path is its primary road) is placed on the path (`crossing_on_path`, user 2026-11-01)."""
     from . import crossings
     todo = [c for c in result["crashes"] if c.get("review_reason") == "crossing" and not c.get("exclude_rule")]
     counts = {"tried": len(todo), "placed": 0, "suggested": 0, "no_spot": {}}

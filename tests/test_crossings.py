@@ -111,7 +111,7 @@ def test_while_the_tiers_are_off_the_crossing_is_the_suggestion():
     assert counts["placed"] == 0 and counts["suggested"] == 1
 
 
-def test_with_a_tier_on_it_places_but_a_crash_on_a_bike_only_path_stays_a_suggestion():
+def test_with_a_tier_on_it_places_and_a_crash_on_a_bike_only_path_is_placed_on_the_path():
     from crashiq import locate, placement
     r = {"crashes": [xc("a", "MAIN ST", "PACIFIC ELECTRIC TRL"), xc("b", "PACIFIC ELECTRIC TRL", "MAIN ST", 817, "W")],
          "cleaning": {}}
@@ -119,9 +119,11 @@ def test_with_a_tier_on_it_places_but_a_crash_on_a_bike_only_path_stays_a_sugges
                               transport(osm(TRAIL)))
     a, b = r["crashes"]
     assert a["location_source"] == "crossing_path" and a["review_reason"] is None
-    assert b["location_source"] == "unmatched" and b["suggestion"]["on_path"] is True       # pending the user
+    assert b["location_source"] == "crossing_path" and b["review_reason"] is None             # user 2a, 2026-11-01
+    assert b["lon"] < -118.300                                                                # 817 ft W along the trail
 
 
-def test_the_crossing_tiers_are_off_by_default():
+def test_the_crossing_tiers_are_off_and_bike_only_path_crashes_go_on_the_path():
     from crashiq import locate, placement
-    assert not {"crossing_rail", "crossing_path"} & locate.configured_tiers() and placement.CROSSING_ON_PATH is False
+    assert not {"crossing_rail", "crossing_path"} & locate.configured_tiers()
+    assert placement.CROSSING_ON_PATH is True                         # the user's 2a (2026-11-01, #331): on the path
