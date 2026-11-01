@@ -451,3 +451,17 @@ def test_ebike_and_escooter_are_their_own_road_users():
     assert m["bike"] and not m["ebike"]
     assert f(("Driver", "MiniVan"), iw="BICYCLE")["bike"]                   # no party coded: CHP's involved-with
     assert not f(("Driver", "MotorizedBicycle"))["ebike"]                     # still open in N9: unchanged
+
+
+def test_a_freeway_with_no_intersections_excludes_cross_streets_that_are_not_its_crossings(fake):
+    # #328 (Tester, live I-405): with no at-grade intersections (#327) nothing was ever excluded as off the stretch.
+    # On a freeway the known crossings are its grade separations: any other cross street is off the stretch
+    net = {**NET, "intersections": [], "is_freeway": True,
+           "grade_separations": [{"name": "Rosecrans Avenue"}, {"name": "West 144th Street"}]}
+    out = crashes.pull(STUDY, net, Ckan(fake))                       # a freeway study has GPS crashes in its box
+    cs = {c["crash_id"]: c for c in out["crashes"]}
+    assert not cs["9200001"].get("exclude_rule")                                     # by the 144th crossing
+    assert cs["9200003"]["exclude_rule"] == "cross_street_not_on_corridor"            # Marine: not a crossing
+    assert cs["9200002"]["exclude_rule"] == "grade_separated_crossing"                # on Rosecrans itself
+    no_cross = [c for c in out["crashes"] if c.get("review_reason") == "no_cross_street"]
+    assert all(not c.get("exclude_rule") for c in no_cross)                           # unchanged
