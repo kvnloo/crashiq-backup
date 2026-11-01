@@ -531,8 +531,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Which crashes count in a state-highway mainline crash rate DECIDED (user, 2026-10-31, PM session; #297):**
   "only mainline taken as mainline". The segment (mainline) rate counts every crash on the highway's own mainline
   roadway, including crashes in at-grade intersections on the highway itself. It does **not** count:
-  - **ramp and connector crashes**, including police wording such as "<route> E/B TO <street>" or
-    "<route> W/B TO <route> W/B" with no "ramp" in it (the #278 reading). These go to the ramp rates (#300);
+  - **ramp and connector crashes**: reports that name a ramp; police wording "<route> <dir> TO <local street>" as the
+    road itself, with no "ramp" in it (an off-ramp to that street; the reading the PM proposed with this decision);
+    and true connectors "<route> TO <route>" whose cross street is one of the two routes (2026-10-25). These go to
+    the ramp rates (#300). A "<route> TO <route>" report with a **local** cross street stays mainline, as decided
+    2026-10-25 (the local street passes under or over the freeway);
   - **crashes on a cross street or frontage road** (the primary road isn't the highway) away from the highway's own
     roadway, even when their GPS sits on or next to the highway line;
   - roads over or under a freeway (already excluded, N7, #67).
