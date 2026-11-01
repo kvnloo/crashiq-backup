@@ -538,9 +538,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   state-highway studies: one row per identified ramp with crashes, ramp ADT and crashes per million vehicles; the
   small-number rule applies.
 - **Ramp count age and direction DECIDED (user, 2026-11-01, Engineering session; #302):**
-  - **Count age:** a ramp gets no rate when the newest Caltrans ramp count at or before the crash year is **more than 5
-    years older** than that year. Its row gives the reason: "count too old". On today's data that's about 1 in 4
-    identified ramp crashes (546 with a count 5–9 years old, 121 with one 10–14 years old).
+  - **Count age:** a ramp count more than **5 years older** than the year it stands for isn't used (a 5-year-old count
+    is). The ramp's row is checked for every study-window year: if any window year has only a count that's too old,
+    the row gets **no rate** (all or nothing per row) and gives the reason "count too old for <years> (newest <year>)";
+    its crash counts are still shown. How many identified ramp crashes this affects is to be measured on #302's merged
+    code (Engineering's first estimate also counted 5-year-old counts, which are used).
   - **Direction:** compass and route directions are translated, not matched strictly. A CHP "S/B" on a route Caltrans
     signs EB/WB matches the route direction it's closest to. The method is in its own issue (#308) and waits for the
     user's confirmation before it's built.
