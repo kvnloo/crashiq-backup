@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import threading
 from pathlib import Path
 
 
@@ -19,6 +20,7 @@ class FakeCkan:
         self.package = data["package"]
         self.tables = data["tables"]
         self.db = sqlite3.connect(":memory:", check_same_thread=False)
+        self._lock = threading.Lock()
         self.db.row_factory = sqlite3.Row
         self.sql_log: list[str] = []
         self.rows_max = rows_max                  # emulates data.ca.gov's per-query row cap
@@ -44,7 +46,8 @@ class FakeCkan:
             return {"fields": [{"id": "_id", "type": "int"}] + t["fields"], "records": []}
         if action == "datastore_search_sql":
             self.sql_log.append(params["sql"])
-            rows = [dict(r) for r in self.db.execute(params["sql"]).fetchall()]
+            with self._lock:                    # one in-memory connection, many server threads (#323)
+                rows = [dict(r) for r in self.db.execute(params["sql"]).fetchall()]
             if self.rows_max is not None and len(rows) > self.rows_max:
                 return {"records": rows[:self.rows_max], "records_truncated": True}
             return {"records": rows}

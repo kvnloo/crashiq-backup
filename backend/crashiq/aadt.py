@@ -111,7 +111,7 @@ class AadtCache:
         self._lock = threading.Lock()
         self._running = False
         self._failed: tuple[float, str] | None = None
-        self._con: tuple[Path, sqlite3.Connection] | None = None
+        self._local = threading.local()          # per-thread read-only connections (#323)
 
     # -- the copy ------------------------------------------------------------------------------------------------
     def newest(self) -> Path | None:
@@ -214,12 +214,15 @@ class AadtCache:
         os.replace(tmp, out)
 
     def db(self) -> sqlite3.Connection | None:
+        """A read-only connection to the newest copy, one per thread: the server answers requests on several threads
+        at once, and a connection shared between them gives errors and wrong rows (#323)."""
         p = self.ready()
         if p is None:
             return None
-        if self._con is None or self._con[0] != p:
-            self._con = (p, sqlite3.connect(f"file:{p}?mode=ro", uri=True, check_same_thread=False))
-        return self._con[1]
+        con = getattr(self._local, "con", None)
+        if con is None or con[0] != p:
+            con = self._local.con = (p, sqlite3.connect(f"file:{p}?mode=ro", uri=True))
+        return con[1]
 
     # -- the join ------------------------------------------------------------------------------------------------
     def _year(self, con: sqlite3.Connection, table: str, year: int) -> tuple[int, bool] | None:
