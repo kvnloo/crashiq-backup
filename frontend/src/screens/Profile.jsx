@@ -415,6 +415,42 @@ function ShsRates({ p }) {
   )
 }
 
+// Ramps (#287; user decision 2026-10-30, docs/03, #300): crashes per million vehicles on each Caltrans ramp a crash
+// is identified on (T25), with the latest count at or before each year; the scope line counts every ramp crash.
+const rampName = (s) => titleCase(s).replace(/\b([NSEW])b\b/g, '$1B').replace(/\b(On|Off|To|From|Fr)\b/g, (m) => m.toLowerCase())
+function ShsRamps({ p }) {
+  const t = p.tables.find((x) => x.id === 'T25')
+  if (!t) return null
+  const n = t.rows.reduce((a, r) => a + r.values.crashes, 0)
+  const rate = (r) => (r.values.small_base ? '–' : fmt(r.values.rate_all))
+  return (
+    <section aria-label="Ramp crash rates">
+      <div className="sect-h"><h2 className="h3">Ramp crash rates</h2><Src tid="T25" n={n} p={p} /></div>
+      <p className="muted small-note">Crashes per million vehicles (MV) on each Caltrans ramp, from the district ramp ADT: the
+        latest count at or before each year. {t.scope?.text}</p>
+      {t.rows.length ? (
+        <>
+          <div className="sf-table-wrap"><table className="sf-table shs" data-testid="shs-ramps">
+            <thead><tr><th>Ramp</th><th className="sf-num">Crashes</th><th className="sf-num">Ramp ADT</th>
+              <th className="sf-num">Per MV</th><th>Count years</th></tr></thead>
+            <tbody>{t.rows.map((r) => {
+              const v = r.values
+              return (
+                <tr key={r.key} title={`${fmt(v.mv)} MV · ${v.source}${v.picked ? ` · ${fmt(v.picked)} picked by the engineer` : ''}`}>
+                  <th scope="row">{rampName(r.label)}<br /><span className="muted small mono">{v.postmile}</span></th>
+                  <td className="sf-num mono">{fmt(v.crashes)}</td><td className="sf-num mono">{fmt(v.adt)}</td>
+                  <td className="sf-num mono">{rate(r)}</td><td className="muted small">{v.count_years}</td>
+                </tr>
+              )
+            })}</tbody>
+          </table></div>
+          {t.rows.some((r) => r.values.small_base) ? <p className="muted small-note">– a ramp with fewer than {minN(p)} crashes: too few to compare.</p> : null}
+        </>
+      ) : null}
+    </section>
+  )
+}
+
 function Severity({ p }) {
   const t = table(p, 'T3')
   const rows = t.rows.filter((r) => r.key !== 'U' || r.values.crashes)
@@ -889,6 +925,7 @@ export default function Profile() {
             <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
             <Ranking p={p} onOpen={openLocation} />
             <ShsRates p={p} />
+            <ShsRamps p={p} />
             <Severity p={p} />
             <Trend p={p} />
             <Grid p={p} onOpen={openLocation} />
