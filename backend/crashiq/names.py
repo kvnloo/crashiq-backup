@@ -82,6 +82,23 @@ ROUTE_SPELLINGS = {"SR": ("SR", "RT", "RTE", "HWY", "HIGHWAY", "ROUTE", "STATERO
                    "I": ("I", "INTERSTATE"), "US": ("US", "HWY", "HIGHWAY")}
 
 
+# A route written bare in a freeway report (#334): "405 SB", "405 SOUTHBOUND", "99 HWY", "101 FWY", and "1-15 S/B"
+# (a "1-" typed for "I-" before an interstate number). Callers read it only for the corridor's own route or a report
+# CHP marks as freeway; never a house number ("405 MAIN ST"), a numbered street ("405TH ST") or a number alone.
+_BARE = re.compile(r"^\s*(1\s*-\s*)?(\d{1,3})\s+(?:[NSEW]\s*/?\s*B|NORTHBOUND|SOUTHBOUND|EASTBOUND|WESTBOUND|HWY|HIGHWAY|"
+                   r"FWY|FREEWAY|FRWY)\b")
+INTERSTATES = {"5", "8", "10", "15", "40", "80", "105", "110", "205", "210", "215", "238", "280", "380", "405", "505",
+               "580", "605", "680", "710", "780", "805", "880", "980"}
+
+
+def bare_route(raw: str | None) -> str | None:
+    m = _BARE.match(str(raw or "").upper())
+    if not m:
+        return None
+    n = str(int(m.group(2)))
+    return None if m.group(1) and n not in INTERSTATES else n
+
+
 def route_number(k: StreetKey | None) -> str | None:
     """'1' for the key of SR 1 / CA 1 / RT 1; None for a named street."""
     m = _ROUTE_KEY.match(k.core) if k else None

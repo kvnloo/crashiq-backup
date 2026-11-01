@@ -18,7 +18,7 @@ from __future__ import annotations
 import re
 
 from . import grade, ramps
-from .names import route_numbers, street_key
+from .names import bare_route, route_numbers, street_key
 from .shs import corridor_routes
 
 MAINLINE, RAMP, CROSS = "mainline", "ramp", "cross_street"
@@ -44,7 +44,8 @@ def classify(c: dict, net: dict, radius_ft: float) -> tuple[str, str]:
     other = _other_route(c.get("primary_road"), net)
     if other:
         return CROSS, f"on another route's main lanes ({other})"
-    if grade.names(c.get("primary_road"), keys) or route_numbers(c.get("primary_road")) & corridor_routes(net):
+    if grade.names(c.get("primary_road"), keys) or \
+            (route_numbers(c.get("primary_road")) | {bare_route(c.get("primary_road"))}) & corridor_routes(net):
         return MAINLINE, "on the highway"                    # by name, or by route number ("NORTHBOUND I-405 ...")
     if net.get("is_freeway"):
         return CROSS, "cross street on a freeway"

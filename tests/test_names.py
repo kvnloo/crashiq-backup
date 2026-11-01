@@ -107,3 +107,24 @@ def test_the_general_rules_dont_touch_what_they_shouldnt():
     assert street_key("ST JOHNS AVE").core == "SAINT JOHNS"            # #212 unchanged
     assert route_numbers("PACIFIC COAST HWY - SR1") == {"1"}            # the route still matches by number
     assert street_key("JR HIGH SCHOOL DR").core == "JUNIOR HIGH SCHOOL"
+
+
+# #334: bare route spellings in freeway reports, read only for the corridor's own route or an IsFreeway report
+def test_a_bare_route_number_with_a_direction_or_highway_word_reads_as_the_route():
+    from crashiq.names import bare_route
+    for raw, want in (("405 SB", "405"), ("405 S/B", "405"), ("405 SOUTHBOUND", "405"), ("99 HWY", "99"),
+                      ("101 FWY", "101"), ("1-15 S/B", "15"), ("1-405 NB", "405"), ("5 NORTHBOUND", "5")):
+        assert bare_route(raw) == want, raw
+
+
+def test_never_a_house_number_a_numbered_street_or_a_bare_number():
+    from crashiq.names import bare_route
+    for raw in ("405 MAIN ST", "5TH ST", "405TH ST", "405", "1-23 S/B", "1234 SB", "405 SBD AVE"):
+        assert bare_route(raw) is None, raw                     # "1-" only before an interstate number
+
+
+def test_the_corridor_street_check_reads_its_own_bare_route():
+    from crashiq import crashes
+    keys = [street_key("San Diego Freeway"), street_key("I 405")]
+    assert crashes._names_street("405 SB", keys)
+    assert not crashes._names_street("110 SB", keys)            # another route's number: not this corridor

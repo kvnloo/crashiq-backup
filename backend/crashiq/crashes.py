@@ -30,7 +30,7 @@ from . import network as network_mod
 from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection, Polyline
-from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
+from .names import ROUTE_SPELLINGS, bare_route, drop_directional, route_number, route_numbers, same_core, street_key
 from . import aliases as aliases_mod
 from . import gps_rules
 from . import union as union_mod
@@ -349,7 +349,7 @@ def _names_street(raw: str | None, keys) -> bool:
     if k and any(same_core(k, x) for x in keys):
         return True
     routes = {route_number(x) for x in keys} - {None}
-    if routes & route_numbers(raw):        # SR-1, RT 1, HWY 1, "PCH - SR1" for a corridor tagged CA 1 (#83)
+    if routes & (route_numbers(raw) | ({bare_route(raw)} - {None})):      # "405 SB" on an I-405 corridor (#334)        # SR-1, RT 1, HWY 1, "PCH - SR1" for a corridor tagged CA 1 (#83)
         return True
     sq, sp = _squeeze(raw), _spaced(raw)
     return any(route_number(x) is None and len(_squeeze(x.core)) >= 4

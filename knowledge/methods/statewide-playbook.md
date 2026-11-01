@@ -49,6 +49,8 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   - apply the cleaner rules of #242 (PKY/PW, EXPWY, HW, TRL, RT as a trailing word, JR, CYN, MTN, HTS);
   - route suffixes such as "PACIFIC COAST HWY - SR1" and "BEACH BL - SR39 BLVD";
   - more wording forms in #305 ("STATE HIGHWAY 96", "W CURB LINE OF …", two streets in one field).
+  - a bare route in a freeway report ("405 SB", "99 HWY", "1-15 S/B" for I-15) is that route, read only for the
+    corridor's own route (#334); never a house number, a numbered street or a number alone.
 - Tiers that auto-place: **exact** and **unique_pair** (the two streets, allowing only what the report leaves out, meet
   once). unique_pair added +108,547 crashes at accuracy equal to or better than exact.
 - **Alias table** of local spellings, city-scoped, every entry approved by the user (912 in CA,
