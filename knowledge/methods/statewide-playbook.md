@@ -65,6 +65,13 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   is the review list's suggestion. First look (Engineering, 2026-11-01, 226 CCRS crashes with police GPS and a route
   number): median 375 ft from the GPS, 53.5% within 0.1 mi, 87.6% within 1 mi, so CHP's markers are often not
   Caltrans postmiles (signed miles, or rounded). Tester measures before any switch-on.
+- **Railway and trail crossings (D3, user 2026-11-01, #318; off until measured):** "FRANCIS ST & RAIL ROAD", "MANGO
+  AVE & PACIFIC ELECTRIC TRL": where the corridor crosses that railway (any railway when the report just says
+  railroad) or that named trail or path (`crossings.py`), from OSM railway=rail/light_rail/tram/subway and named
+  highway=cycleway/path/footway, kept apart from the street graph. A stated distance is walked along the path in the
+  stated direction. Two or more crossings, or none, go to review with the reason, never the nearest guess. A bike
+  lane on the road is the road ("BIKE LANE" is dropped from the name). A crash on a separate bike-only path stays a
+  suggestion until the user confirms (`crossing_on_path`).
 - **Fatal crashes:** FARS coordinates as a fallback, only when the FARS point fits both named roads. FARS beats an
   approximate placement (#280/#281).
 - **Freeway crashes:** `methods/freeway-crashes.md`. In short:

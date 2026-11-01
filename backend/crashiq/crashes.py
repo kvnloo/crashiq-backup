@@ -24,6 +24,7 @@ from pathlib import Path
 
 from fastapi import APIRouter, HTTPException, Request, Response
 
+from . import crossings as crossings_mod
 from . import grade
 from . import network as network_mod
 from . import study as study_mod
@@ -66,7 +67,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 29    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319)
+PULL_FORMAT = 30    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319; 30: #318)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -682,7 +683,14 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
             recs.append((c, "unmatched"))
         else:
             at_crossing = any(grade.same_road(k, x) for k in other for x in gs_keys)   # corridor, by an overpass
-            if cross_keys and not at_crossing and not any(same_core(k, x) for k in other for x in cross_keys):
+            feature = next((f for f in (crossings_mod.read(roads[i]) for i in range(len(roads)) if i not in on_idx) if f),
+                           None)
+            if feature and not any(same_core(k, x) for k in other for x in cross_keys):
+                # The corridor and a railway or a trail or path, not one of its intersections (#318): placed where the
+                # corridor crosses it when that tier is on (placement.py), else on the review list with the spot
+                log["no_coords_crossing"] = log.get("no_coords_crossing", 0) + 1
+                c["review_reason"], c["crossing"] = "crossing", feature
+            elif cross_keys and not at_crossing and not any(same_core(k, x) for k in other for x in cross_keys):
                 # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
                 # listed under its rule (#39, docs/03).
                 log["no_coords_off_study_stretch"] += 1

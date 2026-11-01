@@ -8,6 +8,7 @@ import { fmt } from '../lib/tables'
 const REASON = {
   no_cross_street: 'No cross street in the report',
   mile_marker: 'Mile marker on the state route (suggestion: its Caltrans postmile)',
+  crossing: 'At a railway, trail or path (suggestion: where the corridor crosses it)',
   no_coordinates: 'No GPS, and no exact street match',
   report_changed: 'CHP revised the report: check again',
 }
