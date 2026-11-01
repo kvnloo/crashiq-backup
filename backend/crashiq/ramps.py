@@ -97,15 +97,19 @@ def _to_wording(road: str, other: str) -> dict | None:
 
 def _from_wording(road: str) -> dict | None:
     """"<route> <dir> FROM <local street>" or "<dir> FROM <local street>" ("I-405 S/B FROM ARTESIA", "N/B FROM
-    HAWTHORNE"): the <dir> on-ramp from that street (user 2026-11-01, #341). A direction is required, and the street
-    mustn't be a route."""
+    HAWTHORNE"): the <dir> on-ramp from that street (user 2026-11-01, #341). A direction is required. From a route
+    ("I-405 S/B FROM I-110") it's a freeway connector, never the mainline."""
     m = re.match(r"^(.*?)\s*\bFROM\s+(.+)$", road)
     if not m:
         return None
     a, b = m.groups()
     d = _dir(a)
     only_dir = bool(re.fullmatch(r"\s*(?:[NSEW]\s*/?\s*B|NORTHBOUND|SOUTHBOUND|EASTBOUND|WESTBOUND)\s*", a))
-    if not d or not (_is_route(a) or only_dir) or _is_route(b) or not _words(b):
+    if not d or not (_is_route(a) or only_dir):
+        return None
+    if _is_route(b):                       # "I-405 S/B FROM I-110": from another freeway, a connector (no ramp rate)
+        return {"dir": d, "on_off": None, "cross": [], "connector": True}
+    if not _words(b):
         return None
     return {"dir": d, "on_off": "ON", "cross": _words(b), "from_street": True, "from_word": True}
 
