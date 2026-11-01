@@ -504,17 +504,23 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   D3 no-GPS walkthrough (20 crashes, 10 fatal).
   - **Railways and trails:** a report naming a street and a railway ("FRANCIS ST & RAIL ROAD") or a trail or bike path
     ("MANGO AVE & PACIFIC ELECTRIC TRL") is placed **where the street crosses the railway or trail**. A stated distance
-    ("817 ft W of CITRUS AV" on "ESCONDIDO CREEK BIKE PATH") is measured from that crossing **along the path**. The
+    ("817 ft W of CITRUS AV" on "ESCONDIDO CREEK BIKE PATH") is measured from that crossing **along the path, in the
+    stated direction**. Two or more possible crossings in the agency's area → review list, never the nearest guess. The
     user: the crash happens at the crossing whatever the vehicle, and which lane (bike lane, shared lane) doesn't
-    matter. Where the "path" is a bike lane on the road itself, the road is used. A separate bike-only path is placed
-    on the path itself (the user: "that's different"; the PM reads it as placed on the path, not on a road). Railway
+    matter. Where the "path" is a bike lane on the road itself, the road is used. **Pending the user's confirmation:** a separate bike-only path is placed on the path itself (the user said "that's
+    different"; the PM reads it as placed on the path, not on a road). Until confirmed, those crashes go to review with
+    the path spot as the suggestion. Railway
     and path lines come from the same OSM extract (railway=rail/light_rail, highway=cycleway/path/footway with a
     name), with TIGER rail features where OSM lacks them.
   - **Mile markers:** "ANGELES CREST HWY & MILE MARKER 28.86" is placed at that **Caltrans postmile** on the named
-    state route (the postmile layer, #248), plus any stated offset. The user: "we have got [an] extra clue".
+    state route (the postmile layer, #248), plus any stated offset. A named state highway is mapped to its route
+    (Angeles Crest Hwy = SR-2) through the postmile layer or the OSM ref; the county comes from the crash's county code,
+    not the reporting city; CHP writes the number without Caltrans' R/M prefix, so a postmile that exists under two
+    prefixes is two places → review. The user: "we have got [an] extra clue".
   - Both are built behind a switch, measured by Tester on hidden police GPS (crashes that have both), and switched on
     with the user's OK, like every new tier. If they reach the 98% bar they auto-place as precise; otherwise the user
-    decides whether they're labelled approximate.
+    decides whether they're labelled approximate. With zero misses, a Wilson 95% low of 98% needs at least 189 truth
+    crashes; with fewer, Tester reports the numbers and the user decides.
 - **State-highway crash rates from Caltrans AADT DECIDED (user, 2026-10-26, PM session, "BUILD IT"):** exposure for
   crash rates on the State Highway System comes from the **Caltrans Traffic Census Program**: AADT by route, county and
   postmile (back/ahead legs), plus truck AADT by axle class and ramp volumes by district. Annual .xlsx files, and the
