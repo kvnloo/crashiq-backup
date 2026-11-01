@@ -706,8 +706,8 @@ describe('State-highway crash rates (#287)', () => {
       { key: 'seg-c', label: 'C – D', values: { crashes: 2, fi_crashes: 1, fatal_crashes: 0, length_mi: 0.1, aadt: 100000, mvm: 18.3,
         rate_all: 0.11, rate_fi: 0.05, rate_fatal: 0, corridor_rate_all: 0.2, ratio_to_corridor: 1.5, small_base: 'n < 10: segment',
         count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program' } }],
-    scope: { rated_crashes: 42, corridor_crashes: 99, intersection_crashes: 57, corridor_rate_all: 0.2, small: false,
-      text: 'Segment crashes only: 57 of 99 crashes on this corridor are at intersections and aren\'t in these rates.' } }
+    scope: { rated_crashes: 42, ramp_crashes: 7, cross_street_crashes: 12, corridor_rate_all: 0.2, small: false,
+      text: 'Mainline crashes: 42. Not in this rate: 7 ramp crashes (see Ramps), 12 cross-street crashes.' } }
   const T23 = { id: 'T23', title: 'State-highway crash rate by year', columns: [], provenance: {}, rows: [
     { key: '2021', label: '2021', values: { crashes: 9, fi_crashes: 3, mvm: 42.1, rate_all: 0.21, rate_fi: 0.07 } },
     { key: '2022', label: '2022', values: { crashes: 12, fi_crashes: 2, mvm: 42.3, rate_all: 0.28, rate_fi: 0.05 } }] }
@@ -727,7 +727,7 @@ describe('State-highway crash rates (#287)', () => {
     expect(sec).toHaveTextContent('AADT: Caltrans Traffic Census Program, count years 2021–2024; later count years use 2024.')
     expect(sec.textContent.match(/count years/g)).toHaveLength(2)                // once in the header, once for "later"
     expect(sec).toHaveTextContent('Corridor average 0.2 crashes per MVM')
-    expect(sec).toHaveTextContent('Segment crashes only: 57 of 99 crashes on this corridor are at intersections')
+    expect(sec).toHaveTextContent('Mainline crashes: 42. Not in this rate: 7 ramp crashes (see Ramps), 12 cross-street crashes.')
     expect(within(sec).getAllByLabelText('Source: table T22').length).toBeGreaterThan(0)
     const by = within(sec.querySelector('[data-testid="shs-by-year"]')).getAllByRole('row').slice(1)
     expect(by.map((r) => r.firstChild.textContent)).toEqual(['2021', '2022'])

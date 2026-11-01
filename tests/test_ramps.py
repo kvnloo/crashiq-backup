@@ -82,6 +82,31 @@ def test_a_report_without_a_ramp_word_is_not_a_ramp_crash():
     assert ramps.report({"primary_road": "I-405", "secondary_road": "VERMONT AVE"}) is None
 
 
+# "<route> <dir> TO <local street>" = the <dir> off-ramp to that street (user 1a, 2026-11-01, docs/03 #297)
+@pytest.mark.parametrize("primary, secondary, want", [
+    ("I-405 S/B TO VERMONT AVE", "VERMONT AVE", ("S", "OFF", ["VERMONT"])),
+    ("RT 99 NB TO AVENUE 200", "AVENUE 200", ("N", "OFF", ["200"])),
+    ("VERMONT AVE", "I-405 SB TO VERMONT AVE", ("S", "OFF", ["VERMONT"])),
+])
+def test_route_dir_to_a_local_street_names_the_off_ramp(primary, secondary, want):
+    r = ramps.report({"primary_road": primary, "secondary_road": secondary})
+    assert (r["dir"], r["on_off"], r["cross"]) == want and not r.get("connector")
+
+
+def test_route_to_route_is_a_connector_only_when_the_cross_street_is_one_of_the_routes():
+    r = ramps.report({"primary_road": "I-405 NB TO I-110", "secondary_road": "I-110"})
+    assert r["connector"] is True
+    # a local cross street: the local street passes under or over the freeway; stays mainline (2026-10-25)
+    assert ramps.report({"primary_road": "I-405 NB TO I-110", "secondary_road": "VERMONT AVE"}) is None
+    assert ramps.report({"primary_road": "I-405 TO VERMONT AVE", "secondary_road": "VERMONT AVE"}) is None   # no dir
+
+
+def test_a_connector_crash_gets_no_ramp_rate_with_the_reason(cache):
+    c = crash("I-405 NB TO I-110", "I-110", 13.49)
+    r = ramps.identify(c, cache)
+    assert r["status"] == "none" and r["why"] == "freeway connector"
+
+
 @pytest.mark.parametrize("desc, want", [
     ("SB OFF TO VERMONT AVE", ("S", "OFF")), ("NB ON FROM NB RTE 110", ("N", "ON")),
     ("099/NB ON FR BELLEVUE RD", ("N", "ON")), ("NBOFF TRAVER/MERRITT DR", ("N", "OFF")),
@@ -197,3 +222,21 @@ def test_no_ramp_crashes_no_ramp_table():
     from crashiq import profile
     from test_profile import golden
     assert "T25" not in {x["id"] for x in profile.build(*golden())["tables"]}
+
+
+def test_named_ramp_crashes_the_freeway_rules_exclude_still_count_in_t25():
+    # #314 review (Tester): "I-405 N/B ARTESIA BLVD OFR" is excluded at assignment (rule ramp) on a freeway study, but
+    # it is a ramp crash: it counts on its identified ramp in T25 and in T22's "not in this rate" ramp count
+    from crashiq import profile
+    from test_shs import shs_golden
+    study, n, pull, asg = shs_golden()
+    s1 = sorted(a["crash_id"] for a in asg["assignments"] if a["location_id"] == "S1")
+    out = s1[:3]
+    asg = {**asg, "assignments": [{**a, "kind": "excluded", "location_id": None, "rule": "ramp"} if a["crash_id"] in out
+                                  else a for a in asg["assignments"]]}
+    n["shs_ramps"] = {cid: {"crash_id": cid, "status": "identified", "ramp": VERMONT, "picked": False} for cid in out}
+    n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": False,
+                               "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program"}}
+    t = {x["id"]: x for x in profile.build(study, n, pull, asg)["tables"]}
+    assert t["T25"]["rows"][0]["values"]["crashes"] == 3 and t["T25"]["scope"]["ramp_crashes"] == 3
+    assert t["T22"]["scope"]["ramp_crashes"] == 3 and t["T22"]["rows"][0]["values"]["crashes"] == 17

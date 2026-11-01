@@ -19,6 +19,7 @@ from fastapi import APIRouter, Request
 
 from . import pcf, assign as assign_mod
 from . import study as study_mod
+from .geo import Polyline
 
 SEVERITY_LABELS = {"K": "Fatal (K)", "A": "Suspected serious injury (A)", "B": "Suspected minor injury (B)",
                    "C": "Possible injury (C)", "U": "Injury, level not reported", "O": "Property damage only (O)"}
@@ -370,14 +371,38 @@ def gps_far_text(n: int, check_ft: float) -> str:
             f"{'it' if one else 'them'}; check {'it' if one else 'them'} on the map.")
 
 
-def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict]) -> list[dict]:
+def mainline_groups(net: dict, placed: list[dict], radius_ft: float) -> tuple[dict, dict]:
+    """({segment id: its mainline crashes}, {crash id: (rate class, reason)}) on a state-highway corridor (#304,
+    rate_class.py). A mainline crash at a study intersection counts in the segment on its GPS side (answer 2a)."""
+    from . import rate_class
+    cls = {c["crash_id"]: rate_class.classify(c, net, radius_ft) for c in placed}
+    its = {i["id"]: i for i in net.get("intersections", [])}
+    line = Polyline([tuple(p) for p in net["line"]]) if net.get("line") else None
+    out: dict[str, list] = {}
+    for c in placed:
+        if cls[c["crash_id"]][0] != rate_class.MAINLINE:
+            continue
+        sid = c["location_id"]
+        if c["kind"] == "intersection" and sid in its:
+            st = line.project(c["lat"], c["lon"]).station_ft \
+                if line is not None and c.get("lat") is not None and c.get("lon") is not None else None
+            sid = rate_class.segment_for(its[sid], net.get("segments", []), st)
+        out.setdefault(sid, []).append(c)
+    return out, cls
+
+
+def shs_rate_tables(net: dict, years: list[int], placed: list[dict], radius_ft: float,
+                    ramp_out: list[dict] = ()) -> list[dict]:
     """T22 / T23: crash rates on a state-highway corridor from Caltrans AADT (#287; user decision 2026-10-26).
     Crashes per million vehicle-miles: all, fatal + injury (K, A, B, C and injury level not stated) and fatal, per
     study segment with Caltrans exposure for every window year; each against the corridor's own average (crashes over
     vehicle-miles of the segments that have rates), and the corridor's rate year by year. Every row carries the count
-    years and source. The entered AADT (T2) is untouched."""
+    years and source. The entered AADT (T2) is untouched. Mainline crashes only (#304, user decision #297)."""
     vols = net.get("shs_volumes") or {}
+    if not vols:
+        return []
     segs = {s["id"]: s for s in net.get("segments", [])}
+    groups, cls = mainline_groups(net, placed, radius_ft)
     fi = lambda cs: sum(c["severity"] in "KABCU" for c in cs)                       # noqa: E731
     rows, mvm_y, crashes_y, fi_y, mvm_of = [], Counter(), Counter(), Counter(), {}
     for sid, v in vols.items():
@@ -416,12 +441,19 @@ def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict
             ("corridor_rate_all", "Corridor average per MVM"), ("ratio_to_corridor", "Rate ÷ corridor average"),
             ("count_years", "AADT count years"), ("source", "AADT source")]
     t22 = _table("T22", "State-highway crash rates (Caltrans AADT; crashes per million vehicle-miles)", cols, rows, on)
-    # segment crashes only for now; which crashes a state-highway rate counts is decision #297 (user)
-    at_x = sum(c["kind"] == "intersection" for c in placed)
-    t22["scope"] = {"rated_crashes": tot_c, "corridor_crashes": len(placed), "intersection_crashes": at_x,
+    # which crashes count (#304, user decision #297): mainline only; ramps are rated in T25, cross streets in none
+    n_cls = Counter(k for k, _ in cls.values())
+    n_ramp, n_cross = n_cls["ramp"] + len(ramp_out), n_cls["cross_street"]
+    unrated = n_cls["mainline"] - tot_c                       # mainline crashes on segments without Caltrans counts
+    t22["scope"] = {"rated_crashes": tot_c, "unrated_mainline_crashes": unrated, "ramp_crashes": n_ramp,
+                    "cross_street_crashes": n_cross,
                     "corridor_rate_all": avg, "small": tot_c < MIN_SHARE_N,
-                    "text": f"Segment crashes only: {at_x} of {len(placed)} crashes on this corridor are at "
-                            "intersections and aren't in these rates."}
+                    "classes": {cid: list(v) for cid, v in cls.items()},
+                    "text": f"Mainline crashes: {tot_c}"
+                            + (f" ({unrated} more on segments without Caltrans counts)" if unrated else "")
+                            + f". Not in this rate: {n_ramp} ramp crash"
+                            f"{'es' if n_ramp != 1 else ''} (see Ramps), {n_cross} cross-street crash"
+                            f"{'es' if n_cross != 1 else ''}."}
     t24 = _truck_rates(vols, segs, groups, years)
     yrows = [_row(y, str(y), crashes=crashes_y[y], fi_crashes=fi_y[y], mvm=round(mvm_y[y], 2),
                   rate_all=r2(crashes_y[y] / mvm_y[y]) if mvm_y[y] else None,
@@ -549,6 +581,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     exclude = exclude or set()
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
     placed, unmatched, excluded_n, excluded_prov, gps_far = [], [], 0, 0, 0
+    ramp_out = []         # named-ramp crashes the freeway rules exclude (rule "ramp"): still rated in T25 (#314)
     for a in assignment["assignments"]:
         c = {**by_id[a["crash_id"]], **{k: a[k] for k in ("kind", "location_id", "location_provenance")}}
         prov = c["location_provenance"] or ""
@@ -563,6 +596,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             unmatched.append(c)
         else:
             excluded_n += 1
+            if a.get("rule") == "ramp":
+                ramp_out.append(c)
     years_missing = pull["cleaning"].get("years_missing", [])
     years = len(pull["years"]) - len(years_missing)
     length_mi = net["length_mi"]
@@ -712,8 +747,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),
         ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"), ("sev_c", "Possible (C)"),
         ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")], loc_rows, placed))
-    shs_tables = shs_rate_tables(net, groups, [y for y in pull["years"] if y not in years_missing], placed)
-    shs_tables += ramp_rate_tables(net, placed, [y for y in pull["years"] if y not in years_missing])
+    shs_tables = shs_rate_tables(net, [y for y in pull["years"] if y not in years_missing], placed,
+                                 study.get("radius_ft") or 250, ramp_out)
+    shs_tables += ramp_rate_tables(net, placed + ramp_out, [y for y in pull["years"] if y not in years_missing])
     tables += shs_tables
     # T13: collision type x location (#105 grid): one row per T2 location, one column per collision type with crashes
     tcount = Counter((c.get("collision_type") or "") for c in placed)

@@ -59,9 +59,23 @@ def test_a_corridor_that_is_not_a_state_highway_gets_none(cache):
     assert shs.segment_volumes(net(13.3, 13.8), None, cache, [2024]) is None
 
 
-def test_crash_rates_per_million_vehicle_miles_with_the_corridor_average_and_by_year():
+def shs_golden(at_x=("MAIN ST", "SR-1", 400.0)):
+    """The golden study on a state route (CA 1): S1's crashes on the highway itself; I1's on the cross street with the
+    highway second, at_x = (primary, secondary, distance): by default beyond 250 ft, so out of the mainline rate."""
     from test_profile import golden
     study, n, pull, asg = golden()
+    n["corridor_names"] = ["CA 1"]
+    where = {a["crash_id"]: a["location_id"] for a in asg["assignments"]}
+    roads = {"S1": ("SR-1", "MAIN ST", None), "I1": at_x}
+    pull = {**pull, "crashes": [{**c, **dict(zip(("primary_road", "secondary_road", "offset_ft"),
+                                                  roads.get(where.get(c["crash_id"]), (None, None, None))))}
+                                for c in pull["crashes"]]}
+    return study, n, pull, asg
+
+
+def test_crash_rates_per_million_vehicle_miles_with_the_corridor_average_and_by_year():
+    from test_profile import golden
+    study, n, pull, asg = shs_golden()
     n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": True,
                                "count_years": "2021–2024 (2025 uses 2024)", "routes": ["1"],
                                "source": "Caltrans Traffic Census Program"}}
@@ -101,10 +115,9 @@ def test_off_the_state_highway_system_no_rates_says_local_counts_are_needed():
     assert "local traffic counts" not in cav["rates_not_computed"]
 
 
-def rated(crashes_on_s1, years=range(2021, 2026)):
+def rated(crashes_on_s1, years=range(2021, 2026), at_x=("MAIN ST", "SR-1", 400.0)):
     """The golden profile with Caltrans volumes on S1 and that segment's crashes cut to the first N."""
-    from test_profile import golden
-    study, n, pull, asg = golden()
+    study, n, pull, asg = shs_golden(at_x)
     n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in years}, "coverage": 1.0, "latest_used": False,
                                "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program"}}
     on_s1 = [a["crash_id"] for a in asg["assignments"] if a["location_id"] == "S1"]
@@ -125,11 +138,46 @@ def test_a_rate_on_fewer_than_10_crashes_is_kept_and_marked_too_few():
     assert "small_base" not in full["T22"]["rows"][0]["values"] and full["T22"]["scope"]["small"] is False
 
 
-def test_the_rates_say_how_many_corridor_crashes_are_at_intersections_and_left_out():
+def test_the_scope_line_counts_mainline_ramp_and_cross_street_crashes():
     sc = rated(20)["T22"]["scope"]
-    assert sc["rated_crashes"] == 20 and sc["intersection_crashes"] == sc["corridor_crashes"] - 20
-    assert sc["text"] == (f"Segment crashes only: {sc['intersection_crashes']} of {sc['corridor_crashes']} crashes on "
-                          "this corridor are at intersections and aren't in these rates.")
+    assert sc["rated_crashes"] == 20 and sc["ramp_crashes"] == 0 and sc["cross_street_crashes"] == 30
+    assert sc["text"] == "Mainline crashes: 20. Not in this rate: 0 ramp crashes (see Ramps), 30 cross-street crashes."
+    assert sc["unrated_mainline_crashes"] == 0
+    assert set(map(tuple, sc["classes"].values())) == {("mainline", "on the highway"),
+                                                       ("cross_street", "cross street, beyond 250 ft")}
+
+
+def test_the_scope_line_counts_mainline_crashes_on_segments_without_caltrans_counts():
+    study, n, pull, asg = shs_golden(at_x=("MAIN ST", "SR-1", None))
+    n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": False,
+                               "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program"}}
+    n["segments"] = n["segments"] + [{**n["segments"][0], "id": "S2", "from_station_ft": 4168, "to_station_ft": 5000}]
+    asg = {**asg, "assignments": [{**a, "location_id": "S2"} if a["location_id"] == "S1" and i % 2 else a
+                                  for i, a in enumerate(asg["assignments"])]}
+    sc = {x["id"]: x for x in profile.build(study, n, pull, asg)["tables"]}["T22"]["scope"]
+    assert sc["unrated_mainline_crashes"] == 50 - sc["rated_crashes"] > 0
+    assert sc["text"].startswith(f"Mainline crashes: {sc['rated_crashes']} ({50 - sc['rated_crashes']} more on "
+                                 "segments without Caltrans counts). Not in this rate:")
+
+
+def test_intersection_crashes_at_the_highway_count_in_the_segment_rate():
+    # 2a + answer 3: cross street first, highway second, within the influence radius -> mainline, into S1 (the
+    # segment after I1; GPS on either side, there's none before it)
+    t = rated(20, at_x=("MAIN ST", "SR-1", None))
+    assert t["T22"]["rows"][0]["values"]["crashes"] == 50 and t["T22"]["scope"]["cross_street_crashes"] == 0
+    assert sum(r["values"]["crashes"] for r in t["T23"]["rows"]) == 50
+
+
+def test_a_ramp_crash_with_gps_on_the_mainline_counts_as_ramp_not_mainline():
+    t = rated(20, at_x=("SR-1 NB TO MAIN ST", "MAIN ST", None))
+    assert t["T22"]["rows"][0]["values"]["crashes"] == 20
+    assert t["T22"]["scope"]["ramp_crashes"] == 30
+
+
+def test_placement_is_unchanged_by_the_rate_class():
+    from test_profile import golden
+    plain = {x["id"]: x for x in profile.build(*golden())["tables"]}["T2"]
+    assert {x["id"]: x for x in profile.build(*shs_golden())["tables"]}["T2"]["rows"] == plain["rows"]
 
 
 def test_a_state_route_with_no_caltrans_postmiles_says_local_counts_are_needed():
@@ -153,8 +201,7 @@ def test_a_segment_gets_its_3_plus_axle_truck_aadt_from_the_truck_point_behind(c
 
 
 def trucked(n_truck, aadt3=1000, years=range(2021, 2026), whole=False):
-    from test_profile import golden
-    study, n, pull, asg = golden()
+    study, n, pull, asg = shs_golden()
     on_s1 = {a["crash_id"] for a in asg["assignments"] if a["location_id"] == "S1"}
     hit = sorted(on_s1)[:n_truck]
     pull = {**pull, "crashes": [{**c, "heavy_truck": c["crash_id"] in hit} for c in pull["crashes"]]}
@@ -193,8 +240,7 @@ def test_zero_truck_aadt_gives_no_rate_and_no_ratio():
 
 def test_no_truck_counts_for_a_window_year_means_no_truck_rate():
     assert "T24" in trucked(12)
-    from test_profile import golden
-    study, n, pull, asg = golden()
+    study, n, pull, asg = shs_golden()
     n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": False,
                                "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program",
                                "trucks_by_year": {**{y: 1000 for y in range(2021, 2025)}, 2025: None}}}

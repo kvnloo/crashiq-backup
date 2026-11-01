@@ -1,6 +1,8 @@
 """Which Caltrans ramp a ramp crash is on (#287 ramps; user decision 2026-10-30, docs/03, #300: option B).
 
-A crash is a ramp crash when its report names a ramp. Its ramp is **identified** when the report gives its direction
+A crash is a ramp crash when its report names a ramp, or reads "<route> <dir> TO <local street>" (the <dir> off-ramp
+to that street, user 2026-11-01, #304), or is a connector "<route> TO <route>" whose cross street is one of the two
+routes (no ramp rate: Caltrans' ramp files don't count connectors). Its ramp is **identified** when the report gives its direction
 of travel, on or off, and its cross street, and exactly one Caltrans ramp (district ramp ADT files, aadt.py) within
 RAMP_MI of the crash's derived postmile (#248) on the same route and county fits all three. When 2 or more fit, the
 engineer picks one (approved once); otherwise the crash gets no ramp rate, and the reason says why. Code only: no
@@ -66,6 +68,29 @@ def _words(text: str) -> list[str]:
     return out
 
 
+def _is_route(text: str) -> bool:
+    return bool(ROUTE_REF.search(text) or (DIR.search(text) and re.search(r"\d", text)))
+
+
+def _numbers(text: str) -> set[str]:
+    return {str(int(n)) for n in re.findall(r"(?<!\d)(\d{1,3})(?!\d)", text)}
+
+
+def _to_wording(road: str, other: str) -> dict | None:
+    """"<route> <dir> TO <local street>": the <dir> off-ramp to that street (user 1a, 2026-11-01, docs/03 #297); it
+    names the ramp for the strict match. "<route> TO <route>": a freeway connector when the cross street is one of the
+    two routes; with a local cross street it is the mainline (2026-10-25), so None."""
+    m = re.match(r"^(.+?)\s+TO\s+(.+)$", road)
+    if not m or not _is_route(m.group(1)):
+        return None
+    a, b = m.groups()
+    if _is_route(b):
+        return {"dir": _dir(a), "on_off": None, "cross": [], "connector": True} \
+            if _numbers(other) & (_numbers(a) | _numbers(b)) and _is_route(other) else None
+    d = _dir(a)
+    return {"dir": d, "on_off": "OFF", "cross": _words(b), "to_street": True} if d else None
+
+
 def report(c: dict) -> dict | None:
     """What a crash report says about its ramp; None when it doesn't name one."""
     p, s = str(c.get("primary_road") or "").upper(), str(c.get("secondary_road") or "").upper()
@@ -74,7 +99,7 @@ def report(c: dict) -> dict | None:
     elif RAMP.search(s):
         ramp, other = s, p
     else:
-        return None
+        return _to_wording(p, s) or _to_wording(s, p)
     d = _dir(ramp) or (_dir(other) if ROUTE_REF.search(other) else None)
     cross = _words(ramp) or (_words(other) if _words(other) else [])
     return {"dir": d, "on_off": _on_off(ramp), "cross": cross}
@@ -125,6 +150,8 @@ def identify(c: dict, cache, picks: dict | None = None) -> dict | None:
         return None
     year = count_year(c.get("reported_at") or c.get("date"))
     base = {"crash_id": c.get("crash_id"), "year": year, "report": r, "picked": False}
+    if r.get("connector"):
+        return {**base, "status": "none", "why": "freeway connector"}
     missing = [w for w, ok in (("direction", r["dir"]), ("on or off", r["on_off"]), ("cross street", r["cross"]))
                if not ok]
     if missing:
