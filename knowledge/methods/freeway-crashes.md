@@ -1,6 +1,6 @@
 # Placing freeway crashes (bucket D1)
 
-Status 2026-10-23: method agreed with the user; build = #246 (report placement), #247 (GPS repair), #248 (postmile
+Status 2026-10-23, updated 2026-10-25 (#278; see "How the app finds the spot" below for the current rules): method agreed with the user; build = #246 (report placement), #247 (GPS repair), #248 (postmile
 output). Measurements: Tester, run 9A basis (CCRS mirror 2026-10-19, OSM 2026-10-18).
 
 ## How CHP describes a freeway crash
@@ -23,7 +23,7 @@ intersection matcher finds nothing. That's why 24,076 crashes (2021–25) sat in
 | Ramp (2,528) | `NB I5 OFF RAMP` / `FLORA ST` / N 10 F | Where the ramp meets the cross street (the ramp terminal), plus the offset; a few feet = at the terminal |
 | Freeway-to-freeway (1,683) | `I-680 S/B TO SR-4` / `SR-4` / N 1320 F | **On the connector ramp**, the stated distance from the second freeway along the connector |
 
-**Report beats GPS** (same as the city-street rule in docs/03): when the officer's GPS and the report disagree, place
+**Report beats GPS** (2026-10-23; **replaced 2026-10-25**: officer GPS that fits is kept, see below): when the officer's GPS and the report disagree, place
 by the report and keep the GPS as provenance. The officer's GPS is a weak answer key on freeways.
 
 Worked examples (unit-test truth for #246):

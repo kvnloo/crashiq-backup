@@ -1,5 +1,25 @@
 # Lessons (newest first)
 
+- 2026-10-31 · A bucket named "street missing from the map" (D3, 26,631) was mostly crashes with **no GPS** (78%). Of the
+  3,156 with GPS in the right city, the GPS was usually fine and failed only because the report's names didn't read:
+  spelling ~700 (CHESEBRA = Chesebro, TEHON = Tejon), wording ~700 ("BEACH BL - SR39 BLVD", "STATE HIGHWAY 96", "W CURB
+  LINE OF …"). Split every bucket by GPS before designing a rule (Tester; #305, #306).
+- 2026-10-31 · GPS on a freeway line doesn't make a crash a mainline crash. CHP writes off-ramp crashes as "I-10 E/B TO
+  <street>" with no "ramp", and cross-street crashes at interchanges carry GPS beside the line. For rates, classify by
+  the report's road wording (user decision #297, #304).
+- 2026-10-31 · "X TO Y" means different things: "<route> TO <local street>" as the road = an off-ramp; "<route> TO
+  <route>" with a local cross street = the first route's main lanes (2026-10-25); with a route as the cross street = a
+  true connector (review). Check earlier decisions before writing a new reading (#303 had to be corrected).
+- 2026-10-29 · Caltrans district crash-data memos (TASAS Table B) give rate groups and average rates per segment and
+  ramp. Read them with a deterministic parser, never AI (#298).
+- 2026-10-26 · Caltrans count years run October–September: a calendar year = 0.75 × count year + 0.25 × next. The 2023
+  AADT workbook repeats 2022 values on some segments; the table says which year was used (#289).
+- 2026-10-26 · Caltrans AADT: never bridge a blank AHEAD leg (route break) or measure across a postmile prefix change
+  (R, M …); 0.05 mi tolerance at line ends (#289).
+- 2026-10-25 · NAD address points place house-address crashes within 400 ft of police GPS 86.1% of the time, but NAD covers
+  only 10 CA contributors (647 of 12,568 D5 crashes). Elsewhere: review with the Census/TIGER suggestion (#277, #283).
+- 2026-10-25 · On freeways, keep officer GPS that fits. The CHP postmile tie-breaker sided with GPS and with the report
+  about equally (568 vs 514), and the user's three hand reviews all favoured the GPS (#262).
 - 2026-10-25 · CHP's manual (HPM 110.5 ch. 3, Apr 2021) makes GPS the main crash location and the postmile a fallback
   "if GPS coordinates cannot be collected"; not required on ramps or connectors. An empty `Milepost*` is expected, not a
   quality signal. Source: `sources/ca-police-gps-capture.md`.
