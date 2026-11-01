@@ -29,6 +29,9 @@ def c(p, s, ft=None):
     (CONV, c("MAIN ST", "PACIFIC COAST HWY", 250), ("mainline", "at an intersection")),
     (CONV, c("MAIN ST", "PACIFIC COAST HWY", 251), ("cross_street", "cross street, beyond 250 ft")),
     (CONV, c("PCH FRONTAGE RD", "MAIN ST", 100), ("cross_street", "cross street or frontage road")),
+    # #314 review: the route by number though the field adds the freeway's name; another route's main lanes are out
+    (FWY, c("NORTHBOUND I-405 SAN DIEGO FREEWAY", "HAWTHORNE BLVD"), ("mainline", "on the highway")),
+    (FWY, c("I-110 S/B TO I-405 N/B", "190TH ST"), ("cross_street", "on another route's main lanes (I-110)")),
     # freeway: any cross-street primary is out, whatever the distance
     (FWY, c("VERMONT AVE", "I-405", 0), ("cross_street", "cross street on a freeway")),
 ])

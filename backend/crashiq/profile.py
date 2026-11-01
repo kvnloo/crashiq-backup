@@ -391,7 +391,8 @@ def mainline_groups(net: dict, placed: list[dict], radius_ft: float) -> tuple[di
     return out, cls
 
 
-def shs_rate_tables(net: dict, years: list[int], placed: list[dict], radius_ft: float) -> list[dict]:
+def shs_rate_tables(net: dict, years: list[int], placed: list[dict], radius_ft: float,
+                    ramp_out: list[dict] = ()) -> list[dict]:
     """T22 / T23: crash rates on a state-highway corridor from Caltrans AADT (#287; user decision 2026-10-26).
     Crashes per million vehicle-miles: all, fatal + injury (K, A, B, C and injury level not stated) and fatal, per
     study segment with Caltrans exposure for every window year; each against the corridor's own average (crashes over
@@ -442,7 +443,7 @@ def shs_rate_tables(net: dict, years: list[int], placed: list[dict], radius_ft: 
     t22 = _table("T22", "State-highway crash rates (Caltrans AADT; crashes per million vehicle-miles)", cols, rows, on)
     # which crashes count (#304, user decision #297): mainline only; ramps are rated in T25, cross streets in none
     n_cls = Counter(k for k, _ in cls.values())
-    n_ramp, n_cross = n_cls["ramp"], n_cls["cross_street"]
+    n_ramp, n_cross = n_cls["ramp"] + len(ramp_out), n_cls["cross_street"]
     unrated = n_cls["mainline"] - tot_c                       # mainline crashes on segments without Caltrans counts
     t22["scope"] = {"rated_crashes": tot_c, "unrated_mainline_crashes": unrated, "ramp_crashes": n_ramp,
                     "cross_street_crashes": n_cross,
@@ -580,6 +581,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     exclude = exclude or set()
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
     placed, unmatched, excluded_n, excluded_prov, gps_far = [], [], 0, 0, 0
+    ramp_out = []         # named-ramp crashes the freeway rules exclude (rule "ramp"): still rated in T25 (#314)
     for a in assignment["assignments"]:
         c = {**by_id[a["crash_id"]], **{k: a[k] for k in ("kind", "location_id", "location_provenance")}}
         prov = c["location_provenance"] or ""
@@ -594,6 +596,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             unmatched.append(c)
         else:
             excluded_n += 1
+            if a.get("rule") == "ramp":
+                ramp_out.append(c)
     years_missing = pull["cleaning"].get("years_missing", [])
     years = len(pull["years"]) - len(years_missing)
     length_mi = net["length_mi"]
@@ -744,8 +748,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"), ("sev_c", "Possible (C)"),
         ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")], loc_rows, placed))
     shs_tables = shs_rate_tables(net, [y for y in pull["years"] if y not in years_missing], placed,
-                                 study.get("radius_ft") or 250)
-    shs_tables += ramp_rate_tables(net, placed, [y for y in pull["years"] if y not in years_missing])
+                                 study.get("radius_ft") or 250, ramp_out)
+    shs_tables += ramp_rate_tables(net, placed + ramp_out, [y for y in pull["years"] if y not in years_missing])
     tables += shs_tables
     # T13: collision type x location (#105 grid): one row per T2 location, one column per collision type with crashes
     tcount = Counter((c.get("collision_type") or "") for c in placed)

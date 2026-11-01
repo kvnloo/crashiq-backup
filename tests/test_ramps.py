@@ -222,3 +222,21 @@ def test_no_ramp_crashes_no_ramp_table():
     from crashiq import profile
     from test_profile import golden
     assert "T25" not in {x["id"] for x in profile.build(*golden())["tables"]}
+
+
+def test_named_ramp_crashes_the_freeway_rules_exclude_still_count_in_t25():
+    # #314 review (Tester): "I-405 N/B ARTESIA BLVD OFR" is excluded at assignment (rule ramp) on a freeway study, but
+    # it is a ramp crash: it counts on its identified ramp in T25 and in T22's "not in this rate" ramp count
+    from crashiq import profile
+    from test_shs import shs_golden
+    study, n, pull, asg = shs_golden()
+    s1 = sorted(a["crash_id"] for a in asg["assignments"] if a["location_id"] == "S1")
+    out = s1[:3]
+    asg = {**asg, "assignments": [{**a, "kind": "excluded", "location_id": None, "rule": "ramp"} if a["crash_id"] in out
+                                  else a for a in asg["assignments"]]}
+    n["shs_ramps"] = {cid: {"crash_id": cid, "status": "identified", "ramp": VERMONT, "picked": False} for cid in out}
+    n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": False,
+                               "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program"}}
+    t = {x["id"]: x for x in profile.build(study, n, pull, asg)["tables"]}
+    assert t["T25"]["rows"][0]["values"]["crashes"] == 3 and t["T25"]["scope"]["ramp_crashes"] == 3
+    assert t["T22"]["scope"]["ramp_crashes"] == 3 and t["T22"]["rows"][0]["values"]["crashes"] == 17
