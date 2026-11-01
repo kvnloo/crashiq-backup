@@ -528,17 +528,36 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. This **replaces** the user's earlier answer "B" (2026-10-26, Engineering chat, on #294, never recorded in docs/03).
   A map-data suggestion may still pre-fill the field, but only as a labelled suggestion the engineer confirms. Comparisons use Caltrans' on-highway counting rule
   or are labelled approximate.
-- **Which crashes count in a state-highway mainline crash rate DECIDED (user, 2026-10-31, PM session; #297):**
-  "only mainline taken as mainline". The segment (mainline) rate counts every crash on the highway's own mainline
-  roadway, including crashes in at-grade intersections on the highway itself. It does **not** count:
-  - **ramp and connector crashes**: reports that name a ramp; police wording "<route> <dir> TO <local street>" as the
-    road itself, with no "ramp" in it (an off-ramp to that street; the reading the PM proposed with this decision);
-    and true connectors "<route> TO <route>" whose cross street is one of the two routes (2026-10-25). These go to
-    the ramp rates (#300). A "<route> TO <route>" report with a **local** cross street stays mainline, as decided
-    2026-10-25 (the local street passes under or over the freeway);
-  - **crashes on a cross street or frontage road** (the primary road isn't the highway) away from the highway's own
-    roadway, even when their GPS sits on or next to the highway line;
-  - roads over or under a freeway (already excluded, N7, #67).
-  This is Caltrans' TASAS mainline/ramp split, so mainline rates are comparable with Caltrans' highway base rates
-  (#294). Intersection crashes are still shown in their own tables. Replaces the interim "segment crashes only" label
-  on #296.
+- **Ramp identification and ramp rates DECIDED (user, 2026-10-30, Engineering session; #300):** option **B**, "A +
+  engineer picks". A crash's ramp is identified when its report names a ramp (ON/OFF RAMP, ONR/OFR), its direction of
+  travel and its cross street, and **exactly one** Caltrans ramp row (district ramp ADT file) within 0.3 mi on the same
+  route and county matches all three (direction, on/off, cross street in the description). When 2 or more rows fit,
+  the review list offers them and the engineer picks one (approved once, like an alias). Otherwise the crash gets no
+  ramp rate, with a note. Ramp ADT is the latest count at or before the crash year, labelled with its year, never a
+  later one; District 7's placeholder values (1001, 999) count as missing. Shown as a **"Ramps" table on tab 3** for
+  state-highway studies: one row per identified ramp with crashes, ramp ADT and crashes per million vehicles; the
+  small-number rule applies.
+- **Which crashes count in a state-highway mainline crash rate DECIDED (user, 2026-10-31 and 2026-11-01, PM session;
+  #297):** "only mainline taken as mainline", then "1a, 2a, 3 ok" to the three follow-up questions. This is about
+  **counting for rates only**: where a crash is placed on the map doesn't change (freeway rules 2026-10-23/25,
+  approximate tiers).
+  - **In the segment (mainline) rate:** every crash on the highway's own roadway. On a conventional (at-grade) state
+    highway this **includes crashes at its intersections** (answer 2a), including reports that name the cross street
+    as the primary road and the highway second, when the crash is at the intersection (distance 0; answer 3).
+    Intersection rates (Caltrans groups I01–I31, #294) may be shown as a separate view of those intersections; they
+    are never added to the segment rate.
+  - **Out of the mainline rate, into the ramp rates (#300):**
+    - reports that name a ramp (ON/OFF RAMP, ONR/OFR);
+    - police wording "<route> <dir> TO <local street>" as the road, with no ramp word: the **<dir> off-ramp to that
+      street** (answer 1a). For #300's strict match it counts as naming the ramp: direction <dir>, off, cross street =
+      that street;
+    - true connectors "<route> TO <route>" whose cross street is one of the two routes (2026-10-25).
+  - **Stays mainline:** "<route> TO <route>" with a **local** cross street (2026-10-25: the local street passes under
+    or over the freeway).
+  - **Out of the rate entirely:**
+    - crashes on a cross street or frontage road away from the highway (distance > 0 on a conventional highway), even
+      when their GPS sits on or next to the highway line;
+    - on a freeway (access-controlled), any crash whose primary road is a cross street;
+    - roads over or under a freeway (N7, #67).
+  - **Why:** this follows Caltrans' TASAS mainline/ramp split, so mainline rates are comparable with Caltrans' highway
+    base rates (#294). It replaces the interim "segment crashes only" label on #296.

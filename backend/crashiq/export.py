@@ -56,8 +56,9 @@ def _postmiles(pull: dict, a: dict, pm) -> list[dict]:
     return out
 
 
-def gather(db, sid: str, postmiles=None) -> dict:
+def gather(db, sid: str, postmiles=None, aadt_cache=None) -> dict:
     study, net, pull, a = for_study(db, sid)
+    net = profile_mod.with_shs(net, pull, postmiles, aadt_cache)        # state-highway rates (#287)
     from .findings import check_stored        # local import: findings imports profile, which export also uses
     accepted = [f for f in check_stored(db, sid) if f["status"] == "accepted"]
     return {"study": study, "network": net, "profile": profile_mod.build(study, net, pull, a),
@@ -508,15 +509,16 @@ router = APIRouter()
 
 @router.get("/studies/{sid}/export.xlsx")
 def export_xlsx(sid: str, request: Request):
-    from .crashes import postmile_for
-    d = gather(request.app.state.db, sid, postmile_for(request.app.state))
+    from .crashes import aadt_for, postmile_for
+    d = gather(request.app.state.db, sid, postmile_for(request.app.state), aadt_for(request.app.state))
     return Response(to_xlsx(d), media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
                     headers={"Content-Disposition": f'attachment; filename="{_fname(d["study"], "xlsx")}"'})
 
 
 @router.get("/studies/{sid}/export.pdf")
 def export_pdf(sid: str, request: Request):
-    d = gather(request.app.state.db, sid)
+    from .crashes import aadt_for, postmile_for
+    d = gather(request.app.state.db, sid, postmile_for(request.app.state), aadt_for(request.app.state))
     return Response(to_pdf(d), media_type="application/pdf",
                     headers={"Content-Disposition": f'attachment; filename="{_fname(d["study"], "pdf")}"'})
 
