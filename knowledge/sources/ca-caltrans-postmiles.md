@@ -13,3 +13,8 @@
   between the two 0.1-mile points that bracket where CrashIQ placed it (within 100 m of the route; the side of the
   stated travel direction first). Marked derived: CHP's CCRS tables carry no postmile CrashIQ uses, and the postmile
   never changes placement. It lets Caltrans users match crashes against TASAS (`ca-caltrans-tasas.md`).
+- **Mile markers to a point (#319, user decision 2026-11-01; behind a switch):** the reverse lookup. A postmile on a
+  route in a county is interpolated between the tenth points of every line (alignment, prefix, suffix) that spans it;
+  lines within 0.1 mi are one place (the two sides of a divided road), farther apart are two (a realignment, R vs no
+  prefix) and the crash goes to review. Counties: the layer's 58 Caltrans abbreviations, matched to CCRS county codes
+  1-58 (`postmile.COUNTY`). First look on 226 CCRS crashes with police GPS: median 375 ft, 53.5% within 0.1 mi.

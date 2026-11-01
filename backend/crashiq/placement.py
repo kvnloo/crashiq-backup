@@ -109,9 +109,35 @@ APPROX_MI = json.loads((Path(__file__).parent / "config" / "placement.json").rea
 # X or Y) are held for review; an "X TO Y" naming a local street is placed on X's lanes like mainline
 FWY_AUTO_KINDS = frozenset(json.loads((Path(__file__).parent / "config" / "placement.json").read_text())
                            .get("freeway_auto_kinds", ["mainline", "ramp", "connector_local"]))
+def place_mile_markers(net: dict, result: dict, gate: locate.Gate, postmiles) -> dict:
+    """#319 (user 2026-11-01): mile-marker crashes at their Caltrans postmile. Placed as `postmile` when that tier is
+    on, else the point is the review list's suggestion; no point leaves the crash on the review list with the reason."""
+    from . import mile_marker
+    from .shs import corridor_routes
+    todo = [c for c in result["crashes"] if c.get("review_reason") == "mile_marker" and not c.get("exclude_rule")]
+    counts = {"tried": len(todo), "placed": 0, "suggested": 0, "no_point": {}}
+    if not todo or postmiles is None:
+        return counts
+    rts = corridor_routes(net)
+    for c in todo:
+        r = mile_marker.place(c, postmiles, rts)
+        if "why" in r:
+            c["mile_marker"] = {**(c.get("mile_marker") or {}), "why": r["why"]}
+            counts["no_point"][r["why"]] = counts["no_point"].get(r["why"], 0) + 1
+        elif "postmile" in gate.auto_tiers:
+            c.update(lat=r["lat"], lon=r["lon"], location_source="postmile", review_reason=None,
+                     mile_marker={**(c.get("mile_marker") or {}), "placed_at": r["note"]})
+            counts["placed"] += 1
+        else:
+            c["suggestion"] = {"tier": "postmile", "lat": r["lat"], "lon": r["lon"], "note": r["note"]}
+            counts["suggested"] += 1
+    return counts
+
+
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
-                    raw: dict | None = None, tiger=None) -> dict:
+                    raw: dict | None = None, tiger=None, postmiles=None) -> dict:
     gate = gate or locate.Gate()
+    result["cleaning"]["mile_markers"] = place_mile_markers(net, result, gate, postmiles)
     # no cross street (#94): nothing for the locator to work with; the engineer places it from the review list
     todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")
             and not c.get("review_reason")]

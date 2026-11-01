@@ -58,6 +58,13 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   - freeway, from the report: "usually within 0.5 mi" (`methods/freeway-crashes.md`);
   - house-address crashes (D5) at USDOT NAD address points: "usually within 400 ft" (86.1% on police GPS). Where NAD
     doesn't cover, the crash goes to review with the Census/TIGER address-range point as a suggestion (#264, #283).
+- **Mile markers (D3, user 2026-11-01, #319; off until measured):** "ANGELES CREST HWY & MILE MARKER 28.86" at that
+  Caltrans postmile on the route the other field names (else the corridor's route), in the crash's county,
+  interpolated between tenth points, plus a stated distance along the route (`mile_marker.py`). Two places for one
+  postmile (a realignment prefix the report leaves out), or none, go to review with the reason. While off, the point
+  is the review list's suggestion. First look (Engineering, 2026-11-01, 226 CCRS crashes with police GPS and a route
+  number): median 375 ft from the GPS, 53.5% within 0.1 mi, 87.6% within 1 mi, so CHP's markers are often not
+  Caltrans postmiles (signed miles, or rounded). Tester measures before any switch-on.
 - **Fatal crashes:** FARS coordinates as a fallback, only when the FARS point fits both named roads. FARS beats an
   approximate placement (#280/#281).
 - **Freeway crashes:** `methods/freeway-crashes.md`. In short:
