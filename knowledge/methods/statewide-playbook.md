@@ -89,7 +89,14 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
 - Accuracy per tier with a Wilson 95% lower bound; 98% bar for a tier to auto-place unless the user decides otherwise.
   Below the bar, a tier can still be approximate if the user approves the label (freeway 0.5 mi, NAD 400 ft).
 - Every repair gets a chance control (shift the point randomly, count how often the "repair" still fits).
+- No-change proofs run every corridor in tests/statewide/corridors_frozen.json; report every crash whose placement or
+  assignment changes.
 - Claims that reach the website go in `knowledge/claims.md` with their run and basis.
+
+- **Freeway corridors (#328, #329):** a freeway corridor is its motorway ways only (#325). Its buffer is measured
+  from every motorway way of its route within 150 m, both carriageways, not only the drawn line; the study limits
+  still come from the drawn line. With no at-grade intersections, its known crossings are its grade separations: a
+  no-GPS report naming another cross street is off the stretch.
 
 ## 5. Sort what's left into named buckets, largest first
 CA after run 10 (#295; 134,249 difficult crashes):

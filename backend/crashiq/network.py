@@ -62,6 +62,28 @@ def crossing_query(line: list[tuple[float, float]]) -> str:
             f');out body;>;out body qt;')
 
 
+CARRIAGEWAY_M = 150      # a freeway's other carriageway lies this close to a line drawn along one of them (#329)
+
+
+def carriageway_query(line: list[tuple[float, float]]) -> str:
+    coords = ",".join(f"{lat:.6f},{lon:.6f}" for lat, lon in line)
+    return f'[out:json][timeout:90];way(around:{CARRIAGEWAY_M},{coords})["highway"="motorway"];out body;>;out body qt;'
+
+
+def carriageways(osm: dict, routes: set[str]) -> list[list[list[float]]]:
+    """The motorway ways of the corridor's route(s), both directions, as lines of [lat, lon] (#329): a freeway
+    corridor's buffer is measured from these, not only from the line the engineer drew along one carriageway."""
+    from .names import route_numbers
+    nodes = {e["id"]: (e["lat"], e["lon"]) for e in osm.get("elements", []) if e.get("type") == "node"}
+    out = []
+    for w in (e for e in osm.get("elements", []) if e.get("type") == "way"):
+        if route_numbers(str(w.get("tags", {}).get("ref") or "")) & routes:
+            pts = [list(nodes[n]) for n in w.get("nodes", []) if n in nodes]
+            if len(pts) >= 2:
+                out.append(pts)
+    return out
+
+
 def overpass_query(line: list[tuple[float, float]]) -> str:
     coords = ",".join(f"{lat:.6f},{lon:.6f}" for lat, lon in line)
     return (f'[out:json][timeout:90];'

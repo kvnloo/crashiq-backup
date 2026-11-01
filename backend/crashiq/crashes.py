@@ -67,7 +67,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 30    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319; 30: #318)
+PULL_FORMAT = 31    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319; 30: #318; 31: #329)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -690,7 +690,9 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                 # corridor crosses it when that tier is on (placement.py), else on the review list with the spot
                 log["no_coords_crossing"] = log.get("no_coords_crossing", 0) + 1
                 c["review_reason"], c["crossing"] = "crossing", feature
-            elif cross_keys and not at_crossing and not any(same_core(k, x) for k in other for x in cross_keys):
+            elif (cross_keys or (net.get("is_freeway") and gs_keys)) and not at_crossing \
+                    and not any(same_core(k, x) for k in other for x in cross_keys):
+                # (on a freeway with no at-grade intersections its known crossings are its grade separations, #328)
                 # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
                 # listed under its rule (#39, docs/03).
                 log["no_coords_off_study_stretch"] += 1
@@ -1065,6 +1067,15 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
                 result["cleaning"]["network"] = ninfo
                 result["cleaning"].setdefault("files_pending", {}).update(ninfo["tiger_pending"])
                 result["network_alt"] = alt
+            if net.get("is_freeway") and net.get("line"):
+                # both carriageways of the corridor's route: the buffer is measured from them too (#329)
+                from .shs import corridor_routes
+                try:
+                    cw = network_mod.fetch_overpass(db, network_mod.carriageway_query([tuple(p) for p in net["line"]]),
+                                                    transport=overpass, allow_empty=True)
+                    result["carriageways"] = network_mod.carriageways(cw, corridor_routes(net))
+                except network_mod.NetworkError as e:
+                    result["cleaning"]["carriageways_error"] = str(e)
             from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
             place_unmatched(db, net, result, overpass=overpass, raw=raw,
                             tiger=getattr(ckan, "tiger", None) if union_mod.enabled() else None,

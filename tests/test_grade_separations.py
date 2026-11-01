@@ -200,3 +200,28 @@ def test_an_arterial_keeps_every_parallel_piece_of_its_own_name():
     o.way([(37.600, LON + 0.0001), (37.606, LON + 0.0001)], name="Main Street", highway="primary")   # a divided half
     got = network.detect(o.osm(), LINE)
     assert got["corridor_names"] == ["Main Street"]
+
+
+def test_a_freeway_buffer_is_measured_from_both_carriageways():
+    # #329 (Tester, live I-405): 174 mainline crashes on the far carriageway were outside the 100 ft buffer of the line
+    # drawn along the near one. Two I 405 motorway ways about 160 ft apart; the corridor is drawn on the first
+    o = OSM()
+    o.corridor("San Diego Freeway", "motorway", ref="I 405")
+    far = LON + 0.000555                                              # ~160 ft east
+    o.way([(la, far) for la in (37.598, 37.603, 37.607, 37.612)], name="San Diego Freeway", highway="motorway",
+          ref="I 405")
+    o.way([(37.598, LON - 0.003), (37.612, LON - 0.003)], name="Other Freeway", highway="motorway", ref="I 110")
+    osm = o.osm()
+    net = _net(network.detect(osm, LINE), is_freeway=True)
+    lanes = network.carriageways(osm, {"405"})
+    assert len(lanes) == 2                                            # both I 405 ways, not I 110
+    crashes = [_crash("far", 37.6040, "I-405", "MAIN ST", is_freeway=True),
+               _crash("out", 37.6040, "I-405", "MAIN ST", is_freeway=True)]
+    crashes[0]["lon"] = LON + 0.00052                                 # 150 ft from the drawn line, ~10 ft from the far way
+    crashes[1]["lon"] = LON - 0.00052                                 # 150 ft west: far from both
+    a = assign.assign(crashes, net, 250.0, 100.0, carriageways=lanes)
+    got = {x["crash_id"]: (x["kind"], x["rule"], x["distance_ft"]) for x in a["assignments"]}
+    assert got["far"][:2] == ("segment", "corridor_buffer") and got["far"][2] < 20
+    assert got["out"][:2] == ("excluded", "outside_buffer")
+    before = assign.assign(crashes, net, 250.0, 100.0)                # without the carriageways: as it was
+    assert {x["crash_id"]: x["rule"] for x in before["assignments"]}["far"] == "outside_buffer"
