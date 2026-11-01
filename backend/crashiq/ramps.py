@@ -95,6 +95,21 @@ def _to_wording(road: str, other: str) -> dict | None:
     return {"dir": d, "on_off": "OFF", "cross": _words(b), "to_street": True} if d else None
 
 
+def _from_wording(road: str) -> dict | None:
+    """"<route> <dir> FROM <local street>" or "<dir> FROM <local street>" ("I-405 S/B FROM ARTESIA", "N/B FROM
+    HAWTHORNE"): the <dir> on-ramp from that street (user 2026-11-01, #341). A direction is required, and the street
+    mustn't be a route."""
+    m = re.match(r"^(.*?)\s*\bFROM\s+(.+)$", road)
+    if not m:
+        return None
+    a, b = m.groups()
+    d = _dir(a)
+    only_dir = bool(re.fullmatch(r"\s*(?:[NSEW]\s*/?\s*B|NORTHBOUND|SOUTHBOUND|EASTBOUND|WESTBOUND)\s*", a))
+    if not d or not (_is_route(a) or only_dir) or _is_route(b) or not _words(b):
+        return None
+    return {"dir": d, "on_off": "ON", "cross": _words(b), "from_street": True, "from_word": True}
+
+
 def report(c: dict) -> dict | None:
     """What a crash report says about its ramp; None when it doesn't name one."""
     p, s = str(c.get("primary_road") or "").upper(), str(c.get("secondary_road") or "").upper()
@@ -103,7 +118,7 @@ def report(c: dict) -> dict | None:
     elif RAMP.search(s):
         ramp, other = s, p
     else:
-        return _to_wording(p, s) or _to_wording(s, p)
+        return _to_wording(p, s) or _to_wording(s, p) or _from_wording(p) or _from_wording(s)
     d = _dir(ramp) or (_dir(other) if ROUTE_REF.search(other) else None)
     cross = _words(ramp) or (_words(other) if _words(other) else [])
     return {"dir": d, "on_off": _on_off(ramp), "cross": cross}
