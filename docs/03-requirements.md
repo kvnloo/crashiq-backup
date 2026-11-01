@@ -520,6 +520,16 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     with the user's OK, like every new tier. If they reach the 98% bar they auto-place as precise; otherwise the user
     decides whether they're labelled approximate. With zero misses, a Wilson 95% low of 98% needs at least 189 truth
     crashes; with fewer, Tester reports the numbers and the user decides.
+- **Crash cost ranking prices (#273) DECIDED (user, 2026-11-01, Engineering session):** locations are ranked by crash
+  cost using Caltrans' **Local Roadway Safety Manual v1.8 (May 2026), Appendix D, p. 100, 2026 dollars**: fatal +
+  serious (KA) priced by location type (signalized intersection $2,379,000; non-signalized intersection $3,784,000;
+  roadway $3,276,000), then B $213,000, C $121,000, O $20,000. As the LRSM states it: each K or A crash at the KA price
+  for its location type; segment crashes at the roadway price; a signal = signalized, a stop = non-signalized. Two
+  gaps the LRSM leaves, decided by the user:
+  - **U (injury, level not stated)** is priced as C ($121,000), and the U count is shown beside the cost;
+  - a KA crash at an intersection whose **control isn't known** (no OSM signal or stop tag) gets the signalized price
+    ($2,379,000, the lower one), and the row is marked "control unknown".
+  The prices sit in a cited reference table; every cost shown is computed by code from it.
 - **State-highway crash rates from Caltrans AADT DECIDED (user, 2026-10-26, PM session, "BUILD IT"):** exposure for
   crash rates on the State Highway System comes from the **Caltrans Traffic Census Program**: AADT by route, county and
   postmile (back/ahead legs), plus truck AADT by axle class and ramp volumes by district. Annual .xlsx files, and the
