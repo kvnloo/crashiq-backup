@@ -48,20 +48,28 @@ def ft(a: tuple[float, float], b: tuple[float, float]) -> float:
 class NadIndex:
     def __init__(self, db_path: Path, csv_path: Path):
         self.db_path, self.csv_path = Path(db_path), Path(csv_path)
-        self._con: sqlite3.Connection | None = None
-        self._lock = threading.Lock()
+        self._ready = False
+        self._lock = threading.Lock()            # one build at a time
+        self._local = threading.local()          # per-thread read-only connections (#323)
 
     def ready(self) -> bool:
         """The index exists, or is built now from the CSV. False when there is no CSV (D5 then goes to review)."""
         with self._lock:
-            if self._con is not None:
+            if self._ready:
                 return True
             if not self._built():
                 if not self.csv_path.exists():
                     return False
                 self._build()
-            self._con = sqlite3.connect(f"file:{self.db_path}?mode=ro", uri=True, check_same_thread=False)
+            self._ready = True
             return True
+
+    def _conn(self) -> sqlite3.Connection:
+        """A read-only connection for this thread: one shared between server threads gives errors and wrong rows."""
+        con = getattr(self._local, "con", None)
+        if con is None:
+            con = self._local.con = sqlite3.connect(f"file:{self.db_path}?mode=ro", uri=True)
+        return con
 
     def _built(self) -> bool:
         if not self.db_path.exists():
@@ -114,7 +122,7 @@ class NadIndex:
             return None
         from .crashes import city_key
         ck = city_key(city)
-        rows = {r for key in _keys(k) for r in self._con.execute(
+        rows = {r for key in _keys(k) for r in self._conn().execute(
             "SELECT name, inc, post, lat, lon FROM point WHERE county = ? AND number = ? AND key = ?",
             (int(county), int(number), key))}
         pts = []

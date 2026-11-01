@@ -171,3 +171,29 @@ def test_the_profile_counts_and_explains_nad_placements():
     cav = {c["key"]: c for c in p["caveats"]}["address_nad"]
     assert cav["count"] == 3 and cav["text"].startswith("3 crash reports give a house address instead of a cross street")
     assert "never at an intersection" in cav["text"]
+
+
+def test_lookups_from_many_threads_at_once_match_one_thread(index):
+    # #323: the server answers requests on several threads; a shared SQLite connection gave errors and wrong rows
+    import threading
+    asks = [(48, "FAIRFIELD", 5101, "BUSINESS CENTER DR"), (48, "VACAVILLE", 200, "MAIN ST"), (48, "FAIRFIELD", 300, "OAK AVE"),
+            (24, "UNINCORPORATED", 42, "PINE RD")]
+    want = [index.lookup(c, city, n, street_key(s)) for c, city, n, s in asks]
+    errors, wrong, go = [], [], threading.Barrier(12)
+
+    def work():
+        go.wait()
+        for _ in range(50):
+            for (c, city, n, s), w in zip(asks, want):
+                try:
+                    if index.lookup(c, city, n, street_key(s)) != w:
+                        wrong.append(s)
+                except Exception as e:      # noqa: BLE001
+                    errors.append(repr(e))
+
+    ts = [threading.Thread(target=work) for _ in range(12)]
+    for t in ts:
+        t.start()
+    for t in ts:
+        t.join()
+    assert not errors and not wrong, f"{len(errors)} errors, {len(wrong)} wrong; first: {errors[:2]}"
