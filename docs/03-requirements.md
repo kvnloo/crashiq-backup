@@ -507,9 +507,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     ("817 ft W of CITRUS AV" on "ESCONDIDO CREEK BIKE PATH") is measured from that crossing **along the path, in the
     stated direction**. Two or more possible crossings in the agency's area → review list, never the nearest guess. The
     user: the crash happens at the crossing whatever the vehicle, and which lane (bike lane, shared lane) doesn't
-    matter. Where the "path" is a bike lane on the road itself, the road is used. **Pending the user's confirmation:** a separate bike-only path is placed on the path itself (the user said "that's
-    different"; the PM reads it as placed on the path, not on a road). Until confirmed, those crashes go to review with
-    the path spot as the suggestion. Railway
+    matter. Where the "path" is a bike lane on the road itself, the road is used. A separate bike-only path is placed **on the path itself** (confirmed by
+    the user, 2026-11-01: "2a"). Railway
     and path lines come from the same OSM extract (railway=rail/light_rail, highway=cycleway/path/footway with a
     name), with TIGER rail features where OSM lacks them.
   - **Mile markers:** "ANGELES CREST HWY & MILE MARKER 28.86" is placed at that **Caltrans postmile** on the named
@@ -582,6 +581,9 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     - police wording "<route> <dir> TO <local street>" as the road, with no ramp word: the **<dir> off-ramp to that
       street** (answer 1a). For #300's strict match it counts as naming the ramp: direction <dir>, off, cross street =
       that street;
+    - the mirror wording "<local street> TO <route> <dir>" ("REDONDO BEACH BLVD. TO I-405 NB"): the **<dir> on-ramp
+      from that street** (user 2026-11-01, "1a"). For #300's strict match: direction <dir>, on, cross street = that
+      street;
     - true connectors "<route> TO <route>" whose cross street is one of the two routes (2026-10-25).
   - **Stays mainline:** "<route> TO <route>" with a **local** cross street (2026-10-25: the local street passes under
     or over the freeway).
