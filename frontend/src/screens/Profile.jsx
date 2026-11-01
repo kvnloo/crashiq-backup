@@ -30,14 +30,16 @@ function Src({ tid, n, p }) {
 
 function Kpis({ p }) {
   const n = cell(p, 'T1/crashes/value')
+  // #269: Crashes, KSI, Fatal as its own number when there is one, per mile·year
+  const fatal = cell(p, 'T1/fatal_crashes/value')
   const items = [
     ['Crashes', cell(p, p.kpis.crashes), `${cell(p, 'T1/years/value')} yr`],
     ['KSI', cell(p, p.kpis.ksi_crashes), 'fatal + serious'],
-    ['Injury crashes', cell(p, p.kpis.injury_crashes), null],
+    ...(fatal ? [['Fatal', fatal, null]] : []),
     ['Per mile · year', cell(p, p.kpis.crashes_per_mi_yr), null],
   ]
   return (
-    <div className="sf-kpis" aria-label="Key numbers">
+    <div className={`sf-kpis n${items.length}`} aria-label="Key numbers">
       {items.map(([label, value, sub]) => (
         <div className="sf-kpi" key={label}>
           <div className="sf-kpi__label">{label} <Src tid="T1" n={n} p={p} /></div>
@@ -207,6 +209,43 @@ function Heat({ t }) {
   )
 }
 
+// When crashes happen (#269): hour of day (24 bars, T26) and day of week (7 bars, T27), severity-stacked; every bar
+// is a table cell. The 7 x 24 grid (T9) is folded behind "Show hour × day grid".
+function ColBars({ t, label, short }) {
+  const max = Math.max(1, ...t.rows.map((r) => r.values.crashes))
+  return (
+    <div className="colbars" role="group" aria-label={label}>
+      {t.rows.map((r) => (
+        <div className="cb" key={r.key} data-testid="colbar" title={`${r.label}: ${fmt(r.values.crashes)}`}
+          aria-label={`${r.label}, ${r.values.crashes}`}>
+          <span className="tr" aria-hidden="true">
+            {SEV_PARTS.map(([k]) => (r.values[`sev_${k}`] ? <i key={k} className={`sev-${k}`} style={{ height: `${(100 * r.values[`sev_${k}`]) / max}%` }} /> : null))}
+          </span>
+          <span className="lab">{short(r)}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function When({ p }) {
+  const n = cell(p, 'T1/crashes/value')
+  const hours = table(p, 'T26')
+  const days = table(p, 'T27')
+  return (
+    <section aria-label="When crashes happen">
+      <div className="sect-h"><h2 className="h3">When crashes happen</h2><Src tid="T26" n={n} p={p} /></div>
+      {hours?.rows?.length ? <ColBars t={hours} label="Crashes by hour of day"
+        short={(r) => (r.key === 'not_stated' ? 'n/s' : Number(r.key) % 6 === 0 ? r.label : '')} /> : null}
+      {days?.rows?.length ? <><div className="sect-h"><h3 className="h3">Day of week</h3><Src tid="T27" n={n} p={p} /></div>
+        <ColBars t={days} label="Crashes by day of week" short={(r) => (r.key === 'not_stated' ? 'n/s' : r.label.slice(0, 3))} /></> : null}
+      {hours?.rows?.length ? sevLegend(hours) : null}
+      <details className="showtable"><summary>Show hour × day grid</summary>
+        <div className="sect-h"><span /><Src tid="T9" n={n} p={p} /></div><Heat t={table(p, 'T9')} /></details>
+    </section>
+  )
+}
+
 // Rate against its critical rate: bar = rate, tick = critical rate, red when over. Scaled per kind (units differ).
 function RateBar({ v, max }) {
   const crit = v.critical_rate
@@ -280,14 +319,18 @@ function SevBar({ v, max }) {
   )
 }
 
-function Ranking({ p, onOpen }) {
+// T2 rows in the ranking's order for one sort (the list here and the map's labels, #272)
+function ranked(t, sort) {
+  const key = SORTS.find(([k]) => k === sort)[2]
+  return [...t.rows].filter((r) => r.values.crashes > 0)
+    .sort((a, b) => key(b.values) - key(a.values) || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+}
+
+function Ranking({ p, onOpen, sort, setSort }) {
   const t = table(p, 'T2')
   const hasCrit = t.rows.some((r) => r.values.rate_to_critical != null)
-  const [sort, setSort] = useState('crashes')
   const [all, setAll] = useState(false)
-  const key = SORTS.find(([k]) => k === sort)[2]
-  const rows = [...t.rows].filter((r) => r.values.crashes > 0)
-    .sort((a, b) => key(b.values) - key(a.values) || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+  const rows = ranked(t, sort)
   const shown = all ? rows : rows.slice(0, 5)
   const max = Math.max(1, ...t.rows.map((r) => r.values.crashes))
   const maxBy = {}
@@ -498,6 +541,7 @@ const QUALITY = [['located_gps', 'GPS', 'q-gps', "Located by the officer's GPS"]
 
 function Quality({ p, excluded, onReview }) {
   const v = (k) => cell(p, `T1/${k}/value`) || 0
+  const warn = p.caveats.filter((c) => c.limitation)          // #269: data limitations sit in the trust line
   const [open, setOpen] = useState(false)
   const width = QUALITY.reduce((t, [k]) => t + v(k), 0) || 1   // drawing scale only: the bar spans every crash read
   return (
@@ -514,6 +558,11 @@ function Quality({ p, excluded, onReview }) {
             <i className={c} />{fmt(v(k))} {label}{dms ? <small className="muted"> ({fmt(dms)} converted)</small> : null}</span>
         })}
       </p>
+      {warn.length ? (
+        <ul className="caveats" aria-label="Data limitations">
+          {warn.map((c) => <li key={c.key} className="warn">{c.text}</li>)}
+        </ul>
+      ) : null}
       {v('fatal_unplaced') ? <p className="qline"><button type="button" className="linkbtn q-fatal" onClick={onReview} data-testid="q-fatal">
         ⚑ {fmt(v('fatal_unplaced'))} fatal crash{v('fatal_unplaced') === 1 ? '' : 'es'} without a location</button></p> : null}
       {open ? (
@@ -615,6 +664,8 @@ function Grid({ p, onOpen }) {
   const cols = t.columns.filter((c) => c.key !== 'total' && t.rows.some((r) => r.values[c.key]))
   const rows = t.rows.filter((r) => r.values.total)
   const max = Math.max(1, ...rows.flatMap((r) => cols.map((c) => r.values[c.key] || 0)))
+  const t4 = table(p, 'T4')                         // the corridor's collision-type totals (#269: no separate bars)
+  const total = (k) => t4.rows.find((r) => r.key === k)?.values.crashes
   return (
     <section aria-label="Collision type by location">
       <div className="sect-h"><h2 className="h3">Is there a pattern?</h2><Src tid="T13" n={cell(p, 'T1/crashes/value')} p={p} /></div>
@@ -633,10 +684,13 @@ function Grid({ p, onOpen }) {
               </tr>
             ))}
           </tbody>
+          <tfoot><tr data-testid="grid-total"><th scope="row">All crashes <Src tid="T4" n={cell(p, 'T1/crashes/value')} p={p} /></th>
+            {cols.map((c) => <td key={c.key} className="sf-num mono" title={c.label}>{fmt(total(c.key))}</td>)}</tr></tfoot>
         </table>
       </div>
       {more ? <p className="gridmore" role="note">More columns → scroll the grid</p> : null}
       <p className="muted small-note">Darker = more crashes of that type at that location. Findings tests which of these stand out.</p>
+      <Broadside p={p} n={cell(p, 'T1/crashes/value')} />
     </section>
   )
 }
@@ -724,11 +778,17 @@ function Vru({ p, onMap, mapMode }) {
 
 function DataSources({ p, pull, onRefresh, busy }) {
   const prov = Object.entries(p.location_provenance || {}).filter(([, v]) => v)
+  const notes = p.caveats.filter((c) => !c.limitation)        // #269: every other caveat, here, never dropped
   const cl = pull?.cleaning || {}
   return (
     <details className="adv sources">
       <summary>Where these crashes come from</summary>
       <div className="srcbody">
+        {notes.length ? (
+          <ul className="caveats" aria-label="Caveats">
+            {notes.map((c) => <li key={c.key}>{c.text}</li>)}
+          </ul>
+        ) : null}
         <p className="muted">{p.source}. Pulled {pull?.pulled_at?.slice(0, 10)}.</p>
         <div className="lbl">Crash locations</div>
         <ul>{prov.map(([k, v]) => <li key={k}><span>{provLabel(k)}</span><span className="mono">{fmt(v)}</span></li>)}</ul>
@@ -834,6 +894,7 @@ export default function Profile() {
   const [review, setReview] = useState(null)      // review list data while it's open (#97)
   const [picking, setPicking] = useState(null)    // { ids, done } while a map point is being picked
   const [mapMode, setMapMode] = useState(null)    // 'ped' | 'bike' | 'motorcycle': only those crashes on the map (#105)
+  const [rankSort, setRankSort] = useState('crashes')   // the ranking's sort; the map labels its top 5 (#272)
 
   useEffect(() => {
     let alive = true
@@ -892,11 +953,12 @@ export default function Profile() {
   const locs = useMemo(() => locationPoints(state.net), [state.net])
   const highlight = useMemo(() => (drill?.data ? new Set(drill.data.crashes.map((c) => c.crash_id)) : null), [drill])
   const p = state.profile
+  const top = useMemo(() => (p ? ranked(table(p, 'T2'), rankSort).slice(0, 5).map((r) => r.key) : undefined), [p, rankSort])
 
   return (
     <section className="profile" aria-label="Crash profile">
       <div className="mapcol">
-        <ProfileMap line={state.line} crashes={mapMode ? (state.crashes || []).filter((c) => c[mapMode]) : state.crashes || []} locations={locs} highlight={highlight} selected={drill?.row.key}
+        <ProfileMap line={state.line} crashes={mapMode ? (state.crashes || []).filter((c) => c[mapMode]) : state.crashes || []} locations={locs} highlight={highlight} selected={drill?.row.key} top={top}
           onPick={picking ? (pt) => picking.done(pt) : undefined} />
       </div>
       <div className="datacol">
@@ -919,32 +981,19 @@ export default function Profile() {
           <Drill row={drill.row} data={drill.data} onClose={() => setDrill(null)} />
         ) : (
           <>
+            {/* #269: the first screen answers where, how bad and can I trust it; the rest follows in this order */}
             <Kpis p={p} />
             <Quality p={p} excluded={state.excludedByRule || {}} onReview={openReview} />
+            <Ranking p={p} onOpen={openLocation} sort={rankSort} setSort={setRankSort} />
             <Vru p={p} onMap={setMapMode} mapMode={mapMode} />
             <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
-            <Ranking p={p} onOpen={openLocation} />
             <ShsRates p={p} />
             <ShsRamps p={p} />
-            <Severity p={p} />
-            <Trend p={p} />
             <Grid p={p} onOpen={openLocation} />
-            {p.caveats.length > 0 && (
-              <ul className="caveats" aria-label="Caveats">
-                {p.caveats.map((c) => <li key={c.key} className={c.limitation ? 'warn' : ''}>{c.text}</li>)}
-              </ul>
-            )}
-            <section>
-              <div className="sect-h"><h2 className="h3">Collision type</h2><Src tid="T4" n={cell(p, 'T1/crashes/value')} /></div>
-              <Bars t={table(p, 'T4')} />
-              <div className="legend small">{SEV_PARTS.filter(([k]) => table(p, 'T4').rows.some((r) => r.values[`sev_${k}`])).map(([k, l]) => <span key={k}><i className={`sev-${k}`} />{l}</span>)}</div>
-              <Broadside p={p} n={cell(p, 'T1/crashes/value')} />
-            </section>
+            <Severity p={p} />
             <Why p={p} n={cell(p, 'T1/crashes/value')} />
-            <section>
-              <div className="sect-h"><h2 className="h3">When crashes happen</h2><Src tid="T9" n={cell(p, 'T1/crashes/value')} /></div>
-              <Heat t={table(p, 'T9')} />
-            </section>
+            <Trend p={p} />
+            <When p={p} />
             <Conditions p={p} n={cell(p, 'T1/crashes/value')} />
             <DataSources p={p} pull={state.pull} onRefresh={refresh} busy={refreshing} />
             {state.refreshError ? <div className="err" role="alert">{state.refreshError}</div> : null}

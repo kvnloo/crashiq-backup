@@ -34,10 +34,16 @@ function routes(extra = {}) {
     'GET /studies/:id/findings/:fid/records': { records: RECS }, ...extra }
 }
 
+// the corridor summary opens first (#270); these tests read a finding, so open the first card
+async function openFirst() {
+  fireEvent.click((await screen.findAllByTestId('fcard'))[0])
+}
+
 describe('Findings screen', () => {
   it('runs the screen, lists findings and traces every number in the claim to its T12 cell', async () => {
     const calls = mockApi(routes())
     renderAt('/s/s1/findings')
+    await openFirst()
     expect(await screen.findByText('2 findings · 0 accepted')).toBeInTheDocument()
     expect(calls.some((c) => c.method === 'POST' && c.path.endsWith('/findings/screen'))).toBe(true)
     const nums = [...document.querySelectorAll('.claim .num')]
@@ -51,6 +57,7 @@ describe('Findings screen', () => {
   it('shows records and the audit (the collision diagram is at the top now, #268)', async () => {
     mockApi(routes())
     renderAt('/s/s1/findings')
+    await openFirst()
     await screen.findByRole('tab', { name: 'Records (12)' })
     expect(document.querySelectorAll('.tabbody tbody tr')).toHaveLength(12)
     expect(screen.queryByRole('tab', { name: 'Collision diagram' })).toBeNull()
@@ -62,6 +69,7 @@ describe('Findings screen', () => {
   it('accepts a finding and switches between findings', async () => {
     const calls = mockApi(routes({ 'PATCH /studies/:id/findings/:fid': { ...F1, status: 'accepted' } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     fireEvent.click(await screen.findByRole('button', { name: '✓ Accept' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'PATCH')).toBe(true))
     expect(await screen.findByText('2 findings · 1 accepted')).toBeInTheDocument()
@@ -83,6 +91,7 @@ describe('Findings screen', () => {
     const stale = { ...F1, stale: true, stale_reasons: ['declared 12 does not match T12/osm-1029~dark/target_crashes = 9'] }
     mockApi(routes({ 'GET /studies/:id/findings': { findings: [stale, F2], rejected_count: 0 } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     expect(await screen.findByText('Stale')).toBeInTheDocument()
     expect(screen.getByRole('alert')).toHaveTextContent('no longer matches the data')
     expect(screen.getByRole('button', { name: '✓ Accept' })).toBeDisabled()
@@ -92,6 +101,7 @@ describe('Findings screen', () => {
     const stale = { ...F1, stale: true, stale_reasons: ['declared 12 does not match T12/osm-1029~dark/target_crashes = 9'] }
     mockApi(routes({ 'GET /studies/:id/findings': { findings: [stale], rejected_count: 0 } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     expect(await screen.findByText('Stale')).toBeInTheDocument()
     expect(screen.queryByText(/all numbers traced/)).toBeNull()
     expect(screen.getByText('validator: out of date')).toBeInTheDocument()
@@ -108,6 +118,7 @@ describe('Findings list (#267)', () => {
   it('keeps the order the server ranks (fatal, KSI, strength, crashes), stale ones under "Out of date"', async () => {
     mockApi(routes({ 'GET /studies/:id/findings': { findings: [K, M, S], rejected_count: 0 } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     const list = await screen.findByRole('complementary', { name: 'Findings list' })
     const cards = within(list).getAllByTestId('fcard')
     expect(cards.map((c) => c.querySelector('.loc-l').textContent)).toEqual(['West 135th Street', 'Marine Avenue – West 147th Street', 'West 132nd Street'])
@@ -121,6 +132,7 @@ describe('Findings list (#267)', () => {
   it('cards are one line: location, title without the repeated location, chips; never the paragraph or an id', async () => {
     mockApi(routes({ 'GET /studies/:id/findings': { findings: [K, M], rejected_count: 0 } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     const list = await screen.findByRole('complementary', { name: 'Findings list' })
     const card = within(list).getAllByTestId('fcard')[0]
     expect(card.querySelector('.tt').textContent).toBe('Crashes after dark over-represented')
@@ -133,6 +145,7 @@ describe('Findings list (#267)', () => {
     const X = { ...K, pattern_ref: null, meta: { ...K.meta, pattern: 'ksi', factors: ['Excessive speed', 'Left-turn conflicts'] } }
     mockApi(routes({ 'GET /studies/:id/findings': { findings: [X], rejected_count: 0 } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     expect(await screen.findByText('Excessive speed · Left-turn conflicts')).toBeInTheDocument()
     expect(screen.queryByText(/No library entry/)).toBeNull()
   })
@@ -141,6 +154,7 @@ describe('Findings list (#267)', () => {
     const X = { ...K, meta: { ...K.meta, pattern: undefined } }
     mockApi(routes({ 'GET /studies/:id/findings': { findings: [X], rejected_count: 0 } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     expect(await screen.findByText('Poor visibility or lighting')).toBeInTheDocument()
   })
 
@@ -149,6 +163,7 @@ describe('Findings list (#267)', () => {
     const U = { ...S, id: 'u', title: null, text: 'Hit object crashes from poor delineation at night.' }
     mockApi(routes({ 'GET /studies/:id/findings': { findings: [T, U], rejected_count: 0 } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     const list = await screen.findByRole('complementary', { name: 'Findings list' })
     const tt = within(list).getAllByTestId('fcard').map((c) => c.querySelector('.tt').textContent)
     expect(tt).toEqual(['Crashes with poor delineation at night over-represented', 'Hit object crashes from poor delineation at night.'])
@@ -166,6 +181,7 @@ describe('Finding collision diagram (#268)', () => {
   it('an intersection finding opens on its N10 diagram: its records only, drawn minus not-drawn, keyed to a list', async () => {
     mockApi(fdRoutes())
     renderAt('/s/s1/findings')
+    await openFirst()
     const svg = await screen.findByTestId('collision-diagram')
     const d = FD.diagram.diagram
     expect(svg).toHaveAttribute('aria-label', expect.stringContaining(`${FD.records.length} crashes`))
@@ -179,6 +195,7 @@ describe('Finding collision diagram (#268)', () => {
   it('the replay never autoplays: it is behind "Play the pattern", with no Pause or Replay buttons', async () => {
     mockApi(fdRoutes())
     renderAt('/s/s1/findings')
+    await openFirst()
     await screen.findByTestId('collision-diagram')
     expect(screen.queryByRole('img', { name: /Pattern replay/ })).toBeNull()
     fireEvent.click(screen.getByRole('button', { name: 'Play the pattern' }))
@@ -194,6 +211,7 @@ describe('Finding collision diagram (#268)', () => {
           intersections: [{ id: 'i1', name: 'Marine Avenue', station_ft: 1000 }, { id: 'i2', name: 'West 147th Street', station_ft: 3000 }],
           crashes: FD.records.map((r, i) => ({ ...r, station_ft: 1200 + 100 * i, location_id: 'seg-1' })) } } }))
     renderAt('/s/s1/findings')
+    await openFirst()
     const strip = await screen.findByTestId('finding-strip')
     // PM review of #293: labelled with the segment's name and its end cross-streets; the finding's crashes as dots
     expect(within(strip).getByTestId('strip-highlight')).toHaveTextContent('Marine Avenue – West 147th Street')
@@ -202,5 +220,61 @@ describe('Finding collision diagram (#268)', () => {
     expect(within(strip).getAllByTestId('strip-dot')).toHaveLength(FD.records.length)
     expect(screen.queryByTestId('collision-diagram')).toBeNull()
     expect(document.querySelectorAll('.tabbody tbody tr')).toHaveLength(FD.records.length)
+  })
+})
+
+describe('Corridor summary (#270)', () => {
+  const T2 = { id: 'T2', title: 'Locations', columns: [], provenance: {}, rows: [
+    { key: 'osm-1', label: 'Marine Avenue', values: { crashes: 30, ksi_crashes: 2, vru_crashes: 1 } },
+    { key: 'osm-1029', label: 'West 135th Street', values: { crashes: 20, ksi_crashes: 1, vru_crashes: 4 } },
+    { key: 'seg-x', label: 'Marine Avenue – West 147th Street', values: { crashes: 9, ksi_crashes: 0, vru_crashes: 0 } },
+    { key: 'osm-2', label: 'West 144th Street', values: { crashes: 12, ksi_crashes: 0, vru_crashes: 2 } },
+    { key: 'osm-3', label: 'West 132nd Street', values: { crashes: 11, ksi_crashes: 1, vru_crashes: 0 } },
+    { key: 'osm-4', label: 'West 139th Street', values: { crashes: 10, ksi_crashes: 0, vru_crashes: 0 } },
+    { key: 'osm-5', label: 'Empty', values: { crashes: 0, ksi_crashes: 0, vru_crashes: 0 } }] }
+  const NET = { corridor_name: 'Crenshaw Boulevard', length_ft: 6000,
+    intersections: [{ id: 'osm-1029', station_ft: 2000 }], segments: [{ id: 'seg-x', from_station_ft: 4000, to_station_ft: 5000 }] }
+  const F2s = { ...F2, location_id: 'seg-x', status: 'accepted' }
+  const sroutes = () => routes({ 'GET /studies/:id/profile': { tables: [T2] }, 'GET /studies/:id/network': NET,
+    'GET /studies/:id/findings': { findings: [F1, F2s], rejected_count: 0 } })
+
+  it('opens first: the top locations in ranking order, each number a T2 cell, plus every location with a finding', async () => {
+    mockApi(sroutes())
+    renderAt('/s/s1/findings')
+    const sum = await screen.findByLabelText('Corridor summary')
+    expect(screen.getByTestId('fsummary')).toHaveAttribute('aria-pressed', 'true')
+    const rows = within(sum).getAllByTestId('fsum-row')
+    // top 5 by crashes (30, 20, 12, 11, 10), then the segment with a finding though it ranks 6th; never a 0-crash row
+    expect(rows.map((r) => r.firstChild.firstChild.textContent)).toEqual(['Marine Avenue', 'West 135th Street', 'West 144th Street',
+      'West 132nd Street', 'West 139th Street', 'Marine Avenue – West 147th Street'])
+    ;[...T2.rows].filter((r) => r.values.crashes).sort((a, b) => b.values.crashes - a.values.crashes).slice(0, 5).forEach((r, i) => {
+      expect(within(rows[i]).getByTestId('fsum-crashes')).toHaveTextContent(`${r.values.crashes} crashes`)
+      expect(rows[i]).toHaveTextContent(`${r.values.ksi_crashes} KSI`)
+      expect(rows[i]).toHaveTextContent(`${r.values.vru_crashes} ped/bike`)
+    })
+    expect(within(rows[1]).getAllByLabelText(/Source: table T2/).length).toBe(3)
+    expect(rows[1]).toHaveTextContent('F1 Crashes after dark over-represented')
+    expect(within(sum).getByTestId('fsum-counts')).toHaveTextContent('2 findings: 1 accepted, 1 needs review, 0 rejected.')
+  })
+
+  it('marks the finding locations F1…Fn on the strip; a marker or a location opens its first finding', async () => {
+    mockApi(sroutes())
+    renderAt('/s/s1/findings')
+    const sum = await screen.findByLabelText('Corridor summary')
+    const marks = within(sum).getAllByTestId('fmark')
+    expect(marks.map((m) => m.getAttribute('aria-label'))).toEqual(['F1: West 135th Street', 'F2: Marine Avenue – West 147th Street'])
+    fireEvent.click(marks[1])
+    expect(await screen.findByText(/^F2 · /)).toBeInTheDocument()
+    fireEvent.click(screen.getByTestId('fsummary'))
+    fireEvent.click(await screen.findByRole('button', { name: 'West 135th Street' }))
+    expect(await screen.findByText(/^F1 · /)).toBeInTheDocument()
+  })
+
+  it('without T2 it says so, and still counts the findings', async () => {
+    mockApi(routes())
+    renderAt('/s/s1/findings')
+    const sum = await screen.findByLabelText('Corridor summary')
+    expect(sum).toHaveTextContent("The location table (T2) isn't available.")
+    expect(within(sum).getByTestId('fsum-counts')).toHaveTextContent('2 findings: 0 accepted, 2 need review')
   })
 })

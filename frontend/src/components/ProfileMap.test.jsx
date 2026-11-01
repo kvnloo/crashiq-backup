@@ -18,7 +18,7 @@ vi.mock('maplibre-gl', () => {
     remove() {}
   }
   class Popup { setLngLat() { return this } setHTML() { return this } addTo() { return this } remove() {} }
-  class Marker { constructor() { calls.push(['marker']) } setLngLat() { return this } addTo() { return this } remove() {} }
+  class Marker { constructor(o) { calls.push(['marker', o]) } setLngLat() { return this } addTo() { return this } remove() {} }
   return { default: { Map, Popup, Marker } }
 })
 vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
@@ -37,6 +37,15 @@ describe('ProfileMap', () => {
     expect(last('jump')[1].pitch).toBe(55)
     expect(last('jump')[1].bearing).toBe(-45)                       // north–south corridor → shown on the diagonal
     expect(last('data', 'columns')[2].features.length).toBeGreaterThan(0)
+  })
+
+  it('labels at most the top 5 of the ranking plus the selected location, beside the column (#272)', async () => {
+    const locs = locationPoints(network)
+    render(<ProfileMap line={network.line} crashes={C} locations={locs} top={locs.map((l) => l.id)} selected={locs.at(-1).id} />)
+    await screen.findByText(/Showing/)
+    await waitFor(() => expect(calls.filter((c) => c[0] === 'marker').length).toBeGreaterThan(0))
+    expect(calls.filter((c) => c[0] === 'marker' && ['left', 'right'].includes(c[1]?.anchor)).length).toBe(Math.min(6, locs.length))
+    expect(calls.filter((c) => c[0] === 'marker').length).toBeLessThanOrEqual(6)
   })
 
   it('rotates, resets north, fits and switches to 2D', async () => {

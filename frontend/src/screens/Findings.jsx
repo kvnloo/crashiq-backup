@@ -150,27 +150,116 @@ function Detail({ f, i, lib, records, diagram, study, onDecide }) {
   )
 }
 
+// #270: the corridor-level answer first. The top locations from T2 in tab 3's ranking order (crashes, then KSI...),
+// each with its numbers (T2 cells, cited) and the titles of its findings; a strip with the finding locations numbered
+// F1...Fn; the findings counted by status. Built by code from these cells and templates, no AI.
+const TOP = 5
+function stationOf(net, lid) {
+  const i = (net?.intersections || []).find((x) => x.id === lid)
+  if (i?.station_ft != null) return i.station_ft
+  const sg = (net?.segments || []).find((x) => x.id === lid)
+  return sg ? (sg.from_station_ft + sg.to_station_ft) / 2 : null
+}
+
+function SummaryStrip({ net, marks, onOpen }) {
+  const len = net?.length_ft || Math.max(1, ...marks.map((m) => m.at))
+  const W = 560, PAD = 18, base = 34
+  const x = (st) => PAD + (Math.max(0, Math.min(len, st)) / (len || 1)) * (W - 2 * PAD)
+  return (
+    <svg className="fsum-strip" viewBox={`0 0 ${W} 58`} role="img" aria-label="Finding locations along the corridor from A to B">
+      <line x1={PAD} x2={W - PAD} y1={base} y2={base} className="strip-line" />
+      <text x={PAD - 4} y={base + 4} textAnchor="end" className="strip-end">A</text>
+      <text x={W - PAD + 4} y={base + 4} className="strip-end">B</text>
+      {marks.map((m, k) => (
+        <g key={m.lid} className="fmark" role="button" tabIndex={0} aria-label={`${m.labels.join(', ')}: ${m.name}`} data-testid="fmark"
+          onClick={() => onOpen(m.first)} onKeyDown={(e) => { if (e.key === 'Enter') onOpen(m.first) }}>
+          <title>{`${m.labels.join(', ')} · ${m.name}`}</title>
+          <circle cx={x(m.at)} cy={base} r={9} />
+          <text x={x(m.at)} y={base + 3.5} textAnchor="middle">{m.labels[0].slice(1)}</text>
+          {k % 2 === 0 ? <text x={x(m.at)} y={12} textAnchor="middle" className="fmark-l">{m.labels.join(' ')}</text> : null}
+        </g>
+      ))}
+    </svg>
+  )
+}
+
+function Summary({ findings, profile, net, onOpen }) {
+  const t2 = profile?.tables?.find((t) => t.id === 'T2')
+  const live = findings.filter((f) => !f.stale)
+  const n = {
+    accepted: live.filter((f) => f.status === 'accepted').length,
+    review: live.filter((f) => f.status !== 'accepted' && f.status !== 'rejected').length,
+    rejected: live.filter((f) => f.status === 'rejected').length,
+    stale: findings.length - live.length,
+  }
+  const byLoc = new Map()
+  findings.forEach((f, i) => { if (!byLoc.has(f.location_id)) byLoc.set(f.location_id, []); byLoc.get(f.location_id).push(i) })
+  // tab 3's default ranking (most crashes first, ties by name): the top TOP, plus every location with a finding
+  const rows = t2 ? [...t2.rows].filter((r) => r.values.crashes > 0)
+    .sort((a, b) => b.values.crashes - a.values.crashes || a.label.localeCompare(b.label)) : []
+  const shown = rows.filter((r, k) => k < TOP || byLoc.has(r.key))
+  const marks = [...byLoc.entries()].map(([lid, idx]) => ({ lid, first: idx[0], labels: idx.map((i) => `F${i + 1}`),
+    name: locName(findings[idx[0]]), at: stationOf(net, lid) })).filter((m) => m.at != null)
+  const src = (r, k) => <span className="src" role="note" tabIndex={0} aria-label={`Source: table T2, ${r.key} ${k}`}
+    title={`Table T2 · ${r.label} · ${k}`}>ⓘ</span>
+  return (
+    <div className="fdetail fsummary" aria-label="Corridor summary">
+      <div className="sf-eyebrow">Summary · {net?.corridor_name || 'the corridor'}</div>
+      <h1 className="h2">Where to act first</h1>
+      <p className="fsum-counts" data-testid="fsum-counts">
+        {findings.length} finding{findings.length === 1 ? '' : 's'}: {n.accepted} accepted, {n.review} need{n.review === 1 ? 's' : ''} review, {n.rejected} rejected
+        {n.stale ? `, ${n.stale} out of date` : ''}.</p>
+      {marks.length ? <SummaryStrip net={net} marks={marks} onOpen={onOpen} /> : null}
+      {shown.length ? (
+        <ol className="fsum-list" aria-label="Top locations">
+          {shown.map((r) => {
+            const idx = byLoc.get(r.key) || []
+            return (
+              <li key={r.key} data-testid="fsum-row">
+                <div className="fsum-head">
+                  {idx.length ? <button type="button" className="rowlink" onClick={() => onOpen(idx[0])}>{r.label}</button> : <span>{r.label}</span>}
+                  <span className="mono n" data-testid="fsum-crashes">{fmtNum(r.values.crashes)} crashes {src(r, 'crashes')}</span>
+                  <span className="mono n">{fmtNum(r.values.ksi_crashes)} KSI {src(r, 'ksi_crashes')}</span>
+                  <span className="mono n">{fmtNum(r.values.vru_crashes ?? 0)} ped/bike {src(r, 'vru_crashes')}</span>
+                </div>
+                {idx.length ? (
+                  <ul className="fsum-f">{idx.map((i) => (
+                    <li key={findings[i].id}><button type="button" className="linkbtn" onClick={() => onOpen(i)}>
+                      <b className="mono">F{i + 1}</b> {shortTitle(findings[i])}</button> <Status s={findings[i].status} /></li>
+                  ))}</ul>
+                ) : <p className="muted small">No finding here: no crash type stands out.</p>}
+              </li>
+            )
+          })}
+        </ol>
+      ) : <p className="muted">The location table (T2) isn&apos;t available.</p>}
+      <p className="muted small">Order as on the crash profile: most crashes first. Findings are suggestions; only accepted ones go in the report.</p>
+    </div>
+  )
+}
+
 // Step 4. Findings from the over-representation screen (code, table T12). The AI analyst adds narrative later.
 export default function Findings() {
   const { studyId } = useParams()
   const navigate = useNavigate()
   const { study } = useStudy()
   const [state, setState] = useState({ loading: true })
-  const [sel, setSel] = useState(0)
+  const [sel, setSel] = useState(-1)              // -1: the corridor summary (#270), selected by default
   const [records, setRecords] = useState({})
   const [diagrams, setDiagrams] = useState({})
 
   useEffect(() => {
     let alive = true
     api(`/studies/${studyId}/findings/screen`, { method: 'POST' })
-      .then(() => Promise.all([api(`/studies/${studyId}/findings`), api('/patterns')]))
-      .then(([f, lib]) => alive && setState({ findings: f.findings, lib }))
+      .then(() => Promise.all([api(`/studies/${studyId}/findings`), api('/patterns'),
+        api(`/studies/${studyId}/profile`).catch(() => null), api(`/studies/${studyId}/network`).catch(() => null)]))
+      .then(([f, lib, profile, net]) => alive && setState({ findings: f.findings, lib, profile, net }))
       .catch((e) => alive && setState({ error: errorText(e) }))
     return () => { alive = false }
   }, [studyId])
 
   const findings = useMemo(() => state.findings || [], [state.findings])
-  const cur = findings[Math.min(sel, Math.max(0, findings.length - 1))]
+  const cur = sel < 0 ? null : findings[Math.min(sel, Math.max(0, findings.length - 1))]
   const curId = cur?.id
 
   useEffect(() => {
@@ -219,6 +308,10 @@ export default function Findings() {
     <section className="findings-screen" aria-label="Findings">
       <aside className="flist" aria-label="Findings list">
         <div className="sf-eyebrow">{findings.length} findings · {nAcc} accepted</div>
+        <button type="button" data-testid="fsummary" className={`fcard fcard-sum${sel < 0 ? ' sel' : ''}`} onClick={() => setSel(-1)}
+          aria-pressed={sel < 0}>
+          <span className="loc-l">Corridor</span><span className="tt">Summary: where to act first</span>
+        </button>
         {/* the server's order (#267): fatal, KSI, strength, crashes; stale ones last, under a divider */}
         {findings.map((f, i) => (
           <Fragment key={f.id}>
@@ -236,6 +329,7 @@ export default function Findings() {
         <p className="muted small">Findings are suggestions. Only accepted findings go in the report.</p>
         <button type="button" className={`sf-btn${nAcc ? ' sf-btn--go' : ''}`} onClick={() => navigate(`/s/${studyId}/export`)}>Go to export →</button>
       </aside>
+      {sel < 0 ? <Summary findings={findings} profile={state.profile} net={state.net} onOpen={setSel} /> : null}
       {cur && <Detail key={cur.id} f={cur} i={findings.indexOf(cur)} lib={state.lib} records={records[cur.id]} diagram={diagrams[cur.id]} study={study} onDecide={decide} />}
     </section>
   )
