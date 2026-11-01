@@ -373,7 +373,7 @@ function Ranking({ p, onOpen, sort, setSort }) {
 // state-route corridor (T22) and the corridor's rate year by year (T23). Every number is a cell; a row above the
 // corridor average is marked. A rate on fewer than 10 crashes shows its count only (docs/03 small numbers, #296).
 // Trucks (T24): heavy-truck-involved crashes per million 3+ axle truck-miles, folded under "Trucks".
-// Segment crashes only until #297 (user); Caltrans' statewide averages wait for #294.
+// Mainline crashes only (#304, user decision #297); Caltrans' statewide averages wait for #294.
 const SHS_DETAIL = [['crashes', 'Crashes'], ['fi_crashes', 'Fatal + injury'], ['fatal_crashes', 'Fatal'], ['length_mi', 'Length (mi)'],
   ['aadt', 'AADT'], ['mvm', 'MVM'], ['rate_all', 'All / MVM'], ['rate_fi', 'Fatal + injury / MVM'], ['rate_fatal', 'Fatal / MVM'],
   ['corridor_rate_all', 'Corridor average'], ['ratio_to_corridor', '÷ average']]

@@ -132,10 +132,17 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
 - **Coverage:** a segment-year gets a rate only when every 0.05 mi sample has a count; never a partial guess.
 - **Which crashes count** (user 2026-10-31, #297): a mainline rate counts the highway's own mainline crashes only.
   - **GPS on the freeway line is not proof of mainline.** Ramp and cross-street crashes at interchanges often carry
-    GPS on or beside the line. Classify by the report's road wording:
-    - a ramp named → ramp; how "<route> <dir> TO <local street>" (no ramp word) is identified is pending the
-      user (#303 review);
-    - a cross street as the primary road → not in the mainline rate.
+    GPS on or beside the line. Classify by the report's road wording (`backend/crashiq/rate_class.py`, #304):
+    - a ramp named, or "<route> <dir> TO <local street>" (= the <dir> off-ramp to that street), or a connector
+      "<route> TO <route>" whose cross street is one of the routes → ramp (rated in the ramp table; a connector
+      gets no ramp rate);
+    - "<route> TO <route>" with a local cross street → mainline;
+    - the highway as the primary road → mainline. On a conventional highway, the highway as the secondary road
+      with the distance blank or within the study's influence radius (250 ft) → mainline too (an intersection
+      crash, user 2026-11-01);
+    - any other primary road (a cross street, a frontage road) → in no rate; on a freeway, always.
+  - An intersection's mainline crashes count in the segment on their GPS side; with no GPS, or GPS within 25 ft of
+    the intersection, the segment after it; the last intersection, the segment before (user 2026-11-01).
   - Ramps are rated separately, by a strict match to one ramp row, else the engineer picks (#300). A year's ramp
     count is the latest at or before it; one more than 5 years older than the year gives no rate (user 2026-11-01).
 - **Small numbers:** under 10 crashes, show counts and mark the rate "too few to compare" (#271).
