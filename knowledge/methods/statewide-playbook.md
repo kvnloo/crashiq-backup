@@ -70,8 +70,8 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   railroad) or that named trail or path (`crossings.py`), from OSM railway=rail/light_rail/tram/subway and named
   highway=cycleway/path/footway, kept apart from the street graph. A stated distance is walked along the path in the
   stated direction. Two or more crossings, or none, go to review with the reason, never the nearest guess. A bike
-  lane on the road is the road ("BIKE LANE" is dropped from the name). A crash on a separate bike-only path stays a
-  suggestion until the user confirms (`crossing_on_path`).
+  lane on the road is the road ("BIKE LANE" is dropped from the name). A crash on a separate bike-only path is placed
+  on the path itself (user 2026-11-01, #331; `crossing_on_path`).
 - **Fatal crashes:** FARS coordinates as a fallback, only when the FARS point fits both named roads. FARS beats an
   approximate placement (#280/#281).
 - **Freeway crashes:** `methods/freeway-crashes.md`. In short:
@@ -140,7 +140,8 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
 - **Which crashes count** (user 2026-10-31, #297): a mainline rate counts the highway's own mainline crashes only.
   - **GPS on the freeway line is not proof of mainline.** Ramp and cross-street crashes at interchanges often carry
     GPS on or beside the line. Classify by the report's road wording (`backend/crashiq/rate_class.py`, #304):
-    - a ramp named, or "<route> <dir> TO <local street>" (= the <dir> off-ramp to that street), or a connector
+    - a ramp named, or "<route> <dir> TO <local street>" (= the <dir> off-ramp to that street), or "<local street>
+      TO <route> <dir>" (= the <dir> on-ramp from that street, user 2026-11-01, #331), or a connector
       "<route> TO <route>" whose cross street is one of the routes → ramp (rated in the ramp table; a connector
       gets no ramp rate);
     - "<route> TO <route>" with a local cross street → mainline;

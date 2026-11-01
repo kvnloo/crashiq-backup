@@ -10,8 +10,8 @@ possible crossings go to review with the reason, never the nearest guess; no cro
   corridor (network.crossing_query), kept apart from the street graph: they never become streets.
 - A railroad named generically (RAIL ROAD, RR TRACKS, UPRR...) matches any railway; a trail or path matches by name.
 - A bike lane on the road itself is the road (names.NOISE drops "BIKE LANE"); a crash on a separate bike-only path
-  (the path is the report's primary road) is pending the user's confirmation: its spot is only a suggestion
-  (config/placement.json `crossing_on_path`, false).
+  (the path is the report's primary road) is placed on the path (user 2a, 2026-11-01, #331; config/placement.json
+  `crossing_on_path`, true).
 - Behind tiers `crossing_rail` / `crossing_path`, off (not in auto_tiers): while off the spot is the review suggestion.
 """
 

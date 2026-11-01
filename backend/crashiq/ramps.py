@@ -77,13 +77,17 @@ def _numbers(text: str) -> set[str]:
 
 
 def _to_wording(road: str, other: str) -> dict | None:
-    """"<route> <dir> TO <local street>": the <dir> off-ramp to that street (user 1a, 2026-11-01, docs/03 #297); it
-    names the ramp for the strict match. "<route> TO <route>": a freeway connector when the cross street is one of the
+    """"<route> <dir> TO <local street>": the <dir> off-ramp to that street (user 1a, 2026-11-01, docs/03 #297), and
+    "<local street> TO <route> <dir>" the <dir> on-ramp from it (#331); each names the ramp for the strict match. "<route> TO <route>": a freeway connector when the cross street is one of the
     two routes; with a local cross street it is the mainline (2026-10-25), so None."""
     m = re.match(r"^(.+?)\s+TO\s+(.+)$", road)
-    if not m or not _is_route(m.group(1)):
+    if not m:
         return None
     a, b = m.groups()
+    if not _is_route(a):
+        # "<local street> TO <route> <dir>": the <dir> on-ramp from that street (user 1a, 2026-11-01, docs/03 #331)
+        d = _dir(b) if _is_route(b) else None
+        return {"dir": d, "on_off": "ON", "cross": _words(a), "from_street": True} if d and _words(a) else None
     if _is_route(b):
         return {"dir": _dir(a), "on_off": None, "cross": [], "connector": True} \
             if _numbers(other) & (_numbers(a) | _numbers(b)) and _is_route(other) else None

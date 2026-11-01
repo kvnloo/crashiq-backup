@@ -37,7 +37,8 @@ def classify(c: dict, net: dict, radius_ft: float) -> tuple[str, str]:
     r = ramps.report(c)
     if r is not None:
         why = "freeway connector" if r.get("connector") else \
-              "<route> <dir> TO <street>: the off-ramp" if r.get("to_street") else "names a ramp"
+              "<route> <dir> TO <street>: the off-ramp" if r.get("to_street") else \
+              "<street> TO <route> <dir>: the on-ramp" if r.get("from_street") else "names a ramp"
         return RAMP, why
     keys = grade.corridor_keys(net)
     other = _other_route(c.get("primary_road"), net)

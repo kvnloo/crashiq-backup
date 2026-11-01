@@ -93,6 +93,24 @@ def test_route_dir_to_a_local_street_names_the_off_ramp(primary, secondary, want
     assert (r["dir"], r["on_off"], r["cross"]) == want and not r.get("connector")
 
 
+# "<local street> TO <route> <dir>" = the <dir> on-ramp from that street (user 1a, 2026-11-01, #331)
+@pytest.mark.parametrize("primary, secondary, want", [
+    ("REDONDO BEACH BLVD. TO I-405 NB", "REDONDO BEACH BLVD.", ("N", "ON", ["REDONDO", "BEACH"])),
+    ("VERMONT AVE TO SB I-405", "VERMONT AVE", ("S", "ON", ["VERMONT"])),
+])
+def test_street_to_route_dir_names_the_on_ramp(primary, secondary, want):
+    r = ramps.report({"primary_road": primary, "secondary_road": secondary})
+    assert (r["dir"], r["on_off"], r["cross"]) == want and r["from_street"]
+
+
+def test_the_on_ramp_reading_leaves_the_other_to_forms_alone():
+    off = ramps.report({"primary_road": "I-405 S/B TO VERMONT AVE", "secondary_road": "VERMONT AVE"})
+    assert off["on_off"] == "OFF" and not off.get("from_street")
+    assert ramps.report({"primary_road": "I-405 NB TO I-110", "secondary_road": "VERMONT AVE"}) is None
+    assert ramps.report({"primary_road": "VERMONT AVE TO I-405", "secondary_road": "VERMONT AVE"}) is None    # no dir
+    assert ramps.report({"primary_road": "MAIN ST TO OAK AVE", "secondary_road": "OAK AVE"}) is None          # no route
+
+
 def test_route_to_route_is_a_connector_only_when_the_cross_street_is_one_of_the_routes():
     r = ramps.report({"primary_road": "I-405 NB TO I-110", "secondary_road": "I-110"})
     assert r["connector"] is True
