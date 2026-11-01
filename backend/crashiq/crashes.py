@@ -66,7 +66,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 28    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255)
+PULL_FORMAT = 29    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -584,6 +584,16 @@ def _drop_refiled(crashes: dict[str, dict], parties: dict[str, list], log: dict)
 NO_CROSS = {"", "NOTSTATED", "UNKNOWN", "UNK", "NA", "NONE", "NOSTREET", "PRIVATEPROPERTY"}
 
 
+def _mile_marker_on(roads: list, on_idx: list[int]) -> tuple[str | None, float] | None:
+    """(prefix, postmile) when a road field gives a mile marker and the other one names the corridor (#319)."""
+    from .mile_marker import marker
+    for i, rd in enumerate(roads):
+        mk = marker(rd)
+        if mk and any(j != i for j in on_idx):
+            return mk
+    return None
+
+
 def _no_cross_street(roads: list, on_idx: list[int]) -> bool:
     """The road fields other than the corridor give no cross street: blank, a placeholder, or 1-2 letters of junk."""
     others = [roads[i] for i in range(len(roads)) if i not in on_idx]
@@ -652,6 +662,12 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
             # On a road passing over or under the corridor: never meets it (N7, #67). Kept and listed.
             log["no_coords_grade_separated"] += 1
             c["exclude_rule"] = "grade_separated_crossing"
+            recs.append((c, "unmatched"))
+        elif (mm := _mile_marker_on(roads, on_idx)) is not None:
+            # A mile marker on the corridor's state route instead of a cross street (#319): placed at that Caltrans
+            # postmile when the tier is on (placement.py), else on the review list with the point as the suggestion
+            log["no_coords_mile_marker"] = log.get("no_coords_mile_marker", 0) + 1
+            c["review_reason"], c["mile_marker"] = "mile_marker", {"prefix": mm[0], "pm": mm[1]}
             recs.append((c, "unmatched"))
         elif _no_cross_street(roads, on_idx):
             # The report gives no usable cross street ('NOT STATED', blank, 'PRIVATE PROPERTY', junk): where on
@@ -1043,7 +1059,8 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
                 result["network_alt"] = alt
             from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
             place_unmatched(db, net, result, overpass=overpass, raw=raw,
-                            tiger=getattr(ckan, "tiger", None) if union_mod.enabled() else None)
+                            tiger=getattr(ckan, "tiger", None) if union_mod.enabled() else None,
+                            postmiles=getattr(ckan, "postmiles", None))
             now = study_mod.require(db, sid)
             now_net = network_mod.network(db, sid)
             if (cache_key(now, now_net) if now_net.get("line") else None) == key:
@@ -1058,7 +1075,7 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
 def ckan_for(request: Request) -> Ckan:
     st = request.app.state
     return Ckan(getattr(st, "ckan", None), retries=getattr(st, "ckan_retries", 3), files=files_for(st),
-                tiger=tiger_for(st))
+                tiger=tiger_for(st), postmiles=postmile_for(st))
 
 
 _TIGER_CACHES: dict[str, object] = {}

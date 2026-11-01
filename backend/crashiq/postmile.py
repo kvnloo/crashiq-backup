@@ -40,6 +40,11 @@ MAX_GAP_MI = 0.15
 REFRESH_DAYS = 365
 RETRY_MINUTES = 60
 TRAVEL = {"N": "NB", "S": "SB", "E": "EB", "W": "WB"}
+ONE_PLACE_FT = 528.0          # matches of one postmile within 0.1 mi (the two sides of a divided road) are one place
+# Caltrans county abbreviations by CCRS county code (alphabetical, 1-58); the layer's County values
+COUNTY = dict(enumerate("ALA ALP AMA BUT CAL COL CC DN ED FRE GLE HUM IMP INY KER KIN LAK LAS LA MAD MRN MPA MEN MER "
+                        "MOD MNO MON NAP NEV ORA PLA PLU RIV SAC SBT SBD SD SF SJ SLO SM SB SCL SCR SHA SIE SIS SOL "
+                        "SON STA SUT TEH TRI TUL TUO VEN YOL YUB".split(), start=1))
 
 
 def http_get(url: str) -> dict:
@@ -159,6 +164,20 @@ class PostmileCache:
             return None
         return nearest(con, lat, lon, routes, travel)
 
+    def places(self, route: str, county: str, pm: float, prefix: str | None = None) -> list[dict]:
+        """The distinct places of one postmile on a route in a county (#319): interpolated between the layer's tenth
+        points on every line (alignment, prefix, suffix) that spans it, the lines within ONE_PLACE_FT averaged. A
+        prefix (R, M...) the report gives keeps only those lines; without one, a realignment can make two places."""
+        con = self._db()
+        if con is None:
+            return []
+        return places(con, route, county, pm, prefix)
+
+    def at(self, route: str, county: str, pm: float, prefix: str | None = None) -> dict | None:
+        """{"lat", "lon"} of a postmile when it is exactly one place, else None."""
+        found = self.places(route, county, pm, prefix)
+        return found[0] if len(found) == 1 else None
+
     def for_crash(self, c: dict) -> dict | None:
         """The derived postmile of a placed crash on a state route, or None."""
         if c.get("lat") is None or c.get("lon") is None:
@@ -205,6 +224,35 @@ def nearest(con: sqlite3.Connection, lat: float, lon: float, routes: set[str], t
     _, dist_m, key, a, b, t = best
     return {"route": key[0], "route_suffix": key[1], "county": key[2], "prefix": key[3], "suffix": key[4],
             "align": key[5], "direction": a[8], "pm": round(a[4] + t * (b[4] - a[4]), 3), "distance_m": round(dist_m, 1)}
+
+
+def places(con: sqlite3.Connection, route: str, county: str, pm: float, prefix: str | None) -> list[dict]:
+    rows = con.execute("SELECT route_suffix, prefix, suffix, align, pm, lat, lon FROM pm WHERE route = ? AND county = ? "
+                       "AND pm BETWEEN ? AND ?", (str(route).lstrip("0"), county, pm - 0.2, pm + 0.2)).fetchall()
+    lines: dict[tuple, list] = {}
+    for r in rows:
+        if prefix is None or r[1] == prefix:
+            lines.setdefault(r[:4], []).append(r)
+    hits = []
+    for pts in lines.values():
+        pts.sort(key=lambda r: r[4])
+        for a, b in zip(pts, pts[1:]):
+            if a[4] - 1e-4 <= pm <= b[4] + 1e-4 and b[4] - a[4] <= MAX_GAP_MI:
+                t = 0.0 if b[4] == a[4] else min(1.0, max(0.0, (pm - a[4]) / (b[4] - a[4])))
+                hits.append((a[5] + t * (b[5] - a[5]), a[6] + t * (b[6] - a[6])))
+                break
+    out: list[list] = []
+    for h in hits:                                     # group the lines' points into places
+        grp = next((g for g in out if _ft(g[0], h) <= ONE_PLACE_FT), None)
+        if grp is None:
+            out.append([h])
+        else:
+            grp.append(h)
+    return [{"lat": sum(p[0] for p in g) / len(g), "lon": sum(p[1] for p in g) / len(g)} for g in out]
+
+
+def _ft(a, b) -> float:
+    return math.hypot((a[0] - b[0]) * 364000, (a[1] - b[1]) * 364000 * math.cos(math.radians(a[0])))
 
 
 def _seg(p, a, b) -> tuple[float, float]:

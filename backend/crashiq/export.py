@@ -21,6 +21,7 @@ import math
 from reportlab.graphics.shapes import Circle, Drawing, Group, PolyLine, Polygon, Rect, String
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
+from . import locate
 from . import union as union_mod
 from . import profile as profile_mod
 from .severity import COLORS as SEV_COLORS
@@ -286,6 +287,8 @@ RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_lim
              "not_on_corridor_street": "on another street (the report names neither the corridor nor the cross street)",
              "no_cross_street": "no cross street in the report (not stated), so its place on the corridor is unknown",
              "private_property": "on private property",
+             "mile_marker": "a mile marker instead of a cross street (on the review list with its Caltrans postmile point "
+                            "as the suggestion, until that placement is approved)",
              "user_excluded": "excluded by the engineer on the review list (reason in the Review decisions sheet)"}
 
 
@@ -329,8 +332,10 @@ def methodology(d: dict) -> str:
             "the reference street crosses the freeway, at the ramp terminal, or along the connector, plus the stated "
             "distance. Such crashes count on the corridor segments, never at an intersection, and intersection tables "
             "and collision diagrams leave them out. "
-            + 
-            f"Excluded: {excl}. "
+            + ("A report that gives a mile marker on the state route instead of a cross street is placed at that "
+               "Caltrans postmile (SHN Postmiles Tenth layer), plus any stated distance along the route. "
+               if "postmile" in locate.configured_tiers() else "")
+            + f"Excluded: {excl}. "
             f"{unplaced} crash{'es' if unplaced != 1 else ''} had no usable coordinates and {'are' if unplaced != 1 else 'is'} "
             "not placed" + (f" ({ncs} of them name the corridor but give no cross street, so where on the corridor "
                             "is unknown; they are on the review list for the engineer to place)" if ncs else "")

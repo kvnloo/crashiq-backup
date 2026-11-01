@@ -17,6 +17,7 @@ const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from th
   verified_typo: 'Matched after correcting a small typo (one possible street, confirmed by the cross street)',
   freeway_offset: 'Freeway crash placed by the report: from the reference street, ramp terminal or connector, plus the stated distance',
   approximate: 'Approximate (usually within 0.5 mi): a freeway crash with no usable GPS, placed by the report',
+  postmile: 'At the Caltrans postmile of the mile marker the report gives, on the state route',
   fars: 'FARS (NHTSA) point, checked against the report\'s streets', exact: 'Matched by street names', fuzzy: 'Fuzzy name match',
   user: 'Placed by you', unmatched: 'Not placed yet (no coordinates)' }
 const provLabel = (k) => PROV_LABEL[k] || (k.startsWith('jev') ? `Jev suggestion ${k.slice(3)}` : k)
