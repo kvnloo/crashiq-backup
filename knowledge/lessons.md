@@ -1,9 +1,10 @@
 # Lessons (newest first)
 
 - 2026-10-31 · A bucket named "street missing from the map" (D3, 26,631) was mostly crashes with **no GPS** (78%). Of the
-  3,156 with GPS in the right city, the GPS was usually fine and failed only because the report's names didn't read:
-  spelling ~700 (CHESEBRA = Chesebro, TEHON = Tejon), wording ~700 ("BEACH BL - SR39 BLVD", "STATE HIGHWAY 96", "W CURB
-  LINE OF …"). Split every bucket by GPS before designing a rule (Tester; #305, #306).
+  3,156 with GPS in the right city, up to ~700 failed on spelling (CHESEBRA = Chesebro, TEHON = Tejon) and up to ~700 on
+  wording ("BEACH BL - SR39 BLVD", "STATE HIGHWAY 96", "W CURB LINE OF …"); the groups overlap and are upper bounds. The
+  rest have GPS 400+ ft from the named street or neither name on the map. Split every bucket by GPS before designing a
+  rule (Tester; #305, #306).
 - 2026-10-31 · GPS on a freeway line doesn't make a crash a mainline crash. CHP writes off-ramp crashes as "I-10 E/B TO
   <street>" with no "ramp", and cross-street crashes at interchanges carry GPS beside the line. For rates, classify by
   the report's road wording (user decision #297, #304).

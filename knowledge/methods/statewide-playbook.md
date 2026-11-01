@@ -2,8 +2,10 @@
 
 Written 2026-10-23 from California, brought up to date 2026-11-01. CCRS 2021–25: 2,057,508 crashes. Coverage:
 - run 8: 92.6% on the map;
-- run 10 (#295): **93.48%** (fatal 97.76%, KSI 94.28%); 92.4% of placements agree with police GPS, and 98.7% agree
-  with San Francisco's own data.
+- run 10 (#295): **93.48%** (fatal 97.76%, KSI 94.28%);
+- CrashIQ's street-name placements (exact + unique_pair) are at the right intersection 92.4% of the time on hidden police
+  GPS (low 92.1%, C9);
+- the exact tier agreed with San Francisco's own crash data 98.7% of the time (#16, 2026-10-18 basis).
 
 This is the order that worked, so the next state doesn't repeat the learning. Each step links to its evidence.
 Decisions behind each rule are in docs/03; this file is the how.
@@ -85,7 +87,11 @@ CA after run 10 (#295; 134,249 difficult crashes):
 - D5 house number: 12,568;
 - D4 near-miss streets: 11,556;
 - D8 streets meet in more than one place: 7,841;
-- D9 no street map for the area: 2,086.
+- D9 no street map for the area: 2,086;
+- newly difficult: 3.
+
+Fatal / KSI per bucket: D3 155 / 1,424 · D1 60 / 605 · D5 44 / 487 · D9 36 / 330 · D6 36 / 754 · D2 33 / 400 ·
+D4 26 / 454 · D8 22 / 389 · D7 21 / 625. The user has prioritised by these.
 
 For each bucket: pull 5–20 real records, have the user place them by hand and explain the clues, turn that into a
 rule, build it behind a gate, measure, then the user approves.
@@ -93,8 +99,9 @@ rule, build it behind a gate, measure, then the user approves.
 **Before writing a rule, split the bucket by GPS** (Tester, D3, 2026-10-31). D3's 26,631:
 - 78% have no usable GPS at all;
 - 10% have GPS outside the reported city or county;
-- 12% (3,156) have GPS in the right place that failed the fit check only because the names didn't read: spelling
-  (~700), wording forms (~700), or the GPS is 400+ ft from the named street.
+- 12% (3,156) have GPS in the right city or county. Up to ~700 of them failed on spelling and up to ~700 on wording
+  (the two overlap and are upper bounds, to be confirmed by #305/#306). The rest have GPS 400+ ft from the named
+  street (1,285) or neither name on the map within about 1 mi (1,162).
 
 The first two groups need a non-GPS method; the third is fixed in the name cleaner and the alias table (#305, #306).
 
@@ -112,7 +119,8 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
 - **Which crashes count** (user 2026-10-31, #297): a mainline rate counts the highway's own mainline crashes only.
   - **GPS on the freeway line is not proof of mainline.** Ramp and cross-street crashes at interchanges often carry
     GPS on or beside the line. Classify by the report's road wording:
-    - a ramp named, or "<route> <dir> TO <local street>" → ramp;
+    - a ramp named → ramp; how "<route> <dir> TO <local street>" (no ramp word) is identified is pending the
+      user (#303 review);
     - a cross street as the primary road → not in the mainline rate.
   - Ramps are rated separately, by a strict match to one ramp row, else the engineer picks (#300).
 - **Small numbers:** under 10 crashes, show counts and mark the rate "too few to compare" (#271).
