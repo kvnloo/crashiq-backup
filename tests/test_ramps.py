@@ -40,6 +40,12 @@ def test_ramp_adt_is_the_latest_count_at_or_before_the_year_never_a_later_one(ca
     assert cache.ramp_adt(r, 2011) is None                                     # nothing at or before 2011
 
 
+def test_a_ramp_count_more_than_5_years_before_the_year_is_too_old(cache):
+    r = next(x for x in cache.ramps_near("405", "LA", 12.166, 0.01) if "TRUCK SCALES" in x["description"])
+    assert cache.ramp_adt(r, 2019) == {"adt": 144, "count_year": 2014}         # 5 years old: used
+    assert cache.ramp_adt(r, 2020) == {"adt": None, "count_year": 2014, "too_old": True}
+
+
 def test_the_newest_edition_wins_where_editions_overlap(cache):
     r = next(x for x in cache.ramps_near("405", "LA", 13.47, 0.01) if x["description"] == "NB ON FROM VERMONT AVE")
     assert r["by_year"][2012] == 5600                                          # only in the 2021 edition
@@ -52,7 +58,7 @@ def test_placeholder_values_1001_and_999_count_as_missing(cache):
     assert cache.ramp_adt(r, 2021) == {"adt": 9793, "count_year": 2020}
     closed = [x for x in cache.ramps_near("405", "LA", 12.166, 0.01) if "TRUCK SCALES" in x["description"]]
     assert closed and closed[0]["by_year"] == {2014: 144}                      # then 1001 (2015), 999 (2016): missing
-    assert cache.ramp_adt(closed[0], 2024) == {"adt": 144, "count_year": 2014}
+    assert cache.ramp_adt(closed[0], 2019) == {"adt": 144, "count_year": 2014}
     assert json.loads(dict(cache.db().execute("SELECT key, value FROM meta").fetchall())["ramp_placeholders"]) > 0
 
 
@@ -173,6 +179,18 @@ def test_a_year_with_no_ramp_count_at_or_before_it_means_no_rate():
     v = {x["id"]: x for x in profile.build(study, n, pull, asg)["tables"]}["T25"]["rows"][0]["values"]
     assert v["crashes"] == 20 and v["rate_all"] is None and v["mv"] is None
     assert v["count_years"] == "2023 (2024, 2025 use 2023); no count at or before 2021, 2022"
+
+
+def test_a_too_old_ramp_count_means_no_rate_and_says_so():
+    from crashiq import profile
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    old = {**VERMONT, "by_year": {2015: 4000, 2023: 5062}}                       # 2021, 2022 would use 2015
+    s1 = sorted(a["crash_id"] for a in asg["assignments"] if a["location_id"] == "S1")
+    n["shs_ramps"] = {cid: {"crash_id": cid, "status": "identified", "ramp": old, "picked": False} for cid in s1}
+    v = {x["id"]: x for x in profile.build(study, n, pull, asg)["tables"]}["T25"]["rows"][0]["values"]
+    assert v["rate_all"] is None and v["mv"] is None and v["adt"] is None
+    assert v["count_years"] == "2023 (2024, 2025 use 2023); count too old for 2021, 2022 (newest 2015)"
 
 
 def test_no_ramp_crashes_no_ramp_table():

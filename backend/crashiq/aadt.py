@@ -45,6 +45,7 @@ RETRY_MINUTES = 60
 SOURCE = "Caltrans Traffic Census Program"
 SCHEMA = 2                  # 2: ramp table (#287 ramps)
 RAMP_PLACEHOLDERS = (999, 1001)
+RAMP_MAX_AGE = 5                    # years; an older ramp count gives no rate (user decision 2026-11-01)
 
 # the workbooks name the same column differently from year to year
 ALIASES = {"ROUTE": "RTE", "ROUTE_SFX": "RTE_SFX", "COUNTY": "CNTY", "LOCATION DESCRIPTION": "DESCRIPTION",
@@ -308,9 +309,15 @@ class AadtCache:
 
     @staticmethod
     def ramp_adt(ramp: dict, year: int) -> dict | None:
-        """The latest count at or before the year, with its year; never a later one (#287 point 2)."""
+        """The latest count at or before the year, with its year; never a later one (#287 point 2). A count more than
+        RAMP_MAX_AGE years before the year is too old to use (user decision 2026-11-01): adt None, too_old True."""
         ys = [y for y in ramp["by_year"] if y <= year]
-        return {"adt": ramp["by_year"][max(ys)], "count_year": max(ys)} if ys else None
+        if not ys:
+            return None
+        cy = max(ys)
+        if year - cy > RAMP_MAX_AGE:
+            return {"adt": None, "count_year": cy, "too_old": True}
+        return {"adt": ramp["by_year"][cy], "count_year": cy}
 
     def _line(self, con, table, year, route, route_suffix, county, suffix, cols):
         q = (f"SELECT {cols} FROM {table} WHERE year = ? AND route = ? AND county = ? AND route_suffix = ? "

@@ -466,8 +466,9 @@ def _truck_rates(vols: dict, segs: dict, groups: dict, years: list[int]) -> dict
 
 def ramp_rate_tables(net: dict, placed: list[dict], years: list[int]) -> list[dict]:
     """T25: crashes per million vehicles on each identified Caltrans ramp (#287 ramps; user decision 2026-10-30,
-    docs/03, #300). A window year's ramp ADT is the latest count at or before it, never a later one; a ramp with no
-    count at or before some window year has counts only. The scope line counts every ramp crash's outcome."""
+    docs/03, #300). A window year's ramp ADT is the latest count at or before it, never a later one, and no more than
+    RAMP_MAX_AGE years old (user decision 2026-11-01); a ramp without one for some window year has counts only. The
+    scope line counts every ramp crash's outcome."""
     from .aadt import SOURCE, AadtCache
     found = net.get("shs_ramps") or {}
     mine = [c for c in placed if c["crash_id"] in found]
@@ -485,7 +486,8 @@ def ramp_rate_tables(net: dict, placed: list[dict], years: list[int]) -> list[di
     rows = []
     for rid, (ramp, cs) in sorted(by_ramp.items(), key=lambda kv: kv[1][0]["pm"]):
         used = {y: AadtCache.ramp_adt(ramp, y) for y in years}
-        mv = sum(u["adt"] * 365 for u in used.values()) / 1e6 if None not in used.values() else None
+        mv = sum(u["adt"] * 365 for u in used.values()) / 1e6 \
+            if all(u and u["adt"] is not None for u in used.values()) else None
         rows.append(_row(rid, ramp["description"], crashes=len(cs), fi_crashes=fi(cs),
                          picked=sum(found[c["crash_id"]].get("picked", False) for c in cs),
                          postmile=f"{ramp['county']}-{ramp['route']}{ramp.get('route_suffix') or ''} PM "
@@ -512,7 +514,7 @@ def ramp_rate_tables(net: dict, placed: list[dict], years: list[int]) -> list[di
 
 def _ramp_years(used: dict) -> str:
     """'2021–2023 (2024, 2025 use 2023)': the count years a ramp row uses, and any window year without one."""
-    have = {y: u["count_year"] for y, u in used.items() if u}
+    have = {y: u["count_year"] for y, u in used.items() if u and not u.get("too_old")}
     cys = sorted(set(have.values()))
     run = lambda xs: (f"{xs[0]}–{xs[-1]}" if len(xs) > 1 and xs == list(range(xs[0], xs[-1] + 1))  # noqa: E731
                       else ", ".join(map(str, xs)))
@@ -524,6 +526,12 @@ def _ramp_years(used: dict) -> str:
     if late:
         text += " (" + "; ".join(f"{', '.join(map(str, ys))} use{'s' if len(ys) == 1 else ''} {cy}"
                                  for cy, ys in late.items()) + ")"
+    old = {}
+    for y, u in sorted(used.items()):
+        if u and u.get("too_old"):
+            old.setdefault(u["count_year"], []).append(y)
+    if old:
+        text += "; count too old for " + "; ".join(f"{', '.join(map(str, ys))} (newest {cy})" for cy, ys in old.items())
     gone = [y for y, u in used.items() if not u]
     if gone:
         text += f"; no count at or before {', '.join(map(str, gone))}"

@@ -27,7 +27,9 @@
   5,650 placeholder values left out.
   - **Use in CrashIQ (#287 ramps, user decision 2026-10-30, #300):** a ramp crash's ramp is identified when exactly
     one ramp within 0.3 mi fits the report's direction, on/off and cross street (`backend/crashiq/ramps.py`); the
-    engineer picks when 2 or more fit. A year's ramp ADT is the latest count at or before it, never a later one.
+    engineer picks when 2 or more fit. A year's ramp ADT is the latest count at or before it, never a later one,
+    and a count more than 5 years before the year is too old to use (user decision 2026-11-01): no rate, and the row
+    says "count too old".
   - **Measured (Engineering, 2026-10-30)** on the Tester's 4,424 statewide ramp crashes with a derived postmile
     (#292, `aadt_match.csv`): identified 2,094 (47%); 2 or more fit 186; no ramp rate 2,144. The no-rate reasons:
     no ramp fits 1,137 (mostly CHP's compass direction against Caltrans' route direction, or a cross street missing
