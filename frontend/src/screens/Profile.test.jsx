@@ -705,6 +705,46 @@ describe('State-highway crash rates (#287)', () => {
     expect(sec).toHaveTextContent('Corridor average: too few crashes to compare (2)')
   })
 
+  it('shows truck-involved rates per million 3+ axle truck-miles from T24, small segments as counts only', async () => {
+    const T24 = { id: 'T24', title: 'State-highway truck-involved crash rates', columns: [], provenance: {},
+      scope: { rated_crashes: 14, corridor_rate_truck: 1.1, small: false, text: 'Crashes involving a heavy truck per truck-mile.' }, rows: [
+        { key: 'seg-a', label: 'A – B', values: { truck_crashes: 12, length_mi: 0.6, trucks_3plus: 5185, truck_mvm: 5.68,
+          rate_truck: 2.11, corridor_rate_truck: 1.1, ratio_to_corridor: 1.92, count_years: '2021–2024', source: 'Caltrans Traffic Census Program' } },
+        { key: 'seg-b', label: 'B – C', values: { truck_crashes: 2, length_mi: 0.4, trucks_3plus: 4800, truck_mvm: 3.5,
+          rate_truck: 0.57, corridor_rate_truck: 1.1, ratio_to_corridor: 0.52, small_base: 'n < 10: segment',
+          count_years: '2021–2024', source: 'Caltrans Traffic Census Program' } }] }
+    mockApi({ ...routes, 'GET /studies/:id/profile': { ...profile, tables: [...profile.tables, T22, T23, T24] } })
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('State-highway crash rates')
+    const rows = within(sec.querySelector('[data-testid="shs-trucks"]')).getAllByRole('row').slice(1)
+    expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['12', '5,185', '2.11', '1.92'])
+    expect(rows[0]).toHaveClass('over')
+    expect(within(rows[1]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['2', '4,800', '–', 'too few to compare'])
+    expect(sec).toHaveTextContent('Corridor truck average 1.1 per million truck-miles')
+    expect(within(sec).getByTestId('shs-trucks-scope')).toHaveTextContent('Crashes involving a heavy truck per truck-mile.')
+    expect(within(sec).getAllByLabelText('Source: table T24').length).toBeGreaterThan(0)
+  })
+
+  it('shows identified ramps from T25 per million vehicles, with every ramp crash outcome counted', async () => {
+    const T25 = { id: 'T25', title: 'Ramp crash rates', columns: [], provenance: {}, rows: [
+      { key: 'r1', label: 'SB OFF TO VERMONT AVE', values: { crashes: 12, fi_crashes: 4, postmile: 'LA-405 PM 13.492', adt: 4780, mv: 8.72,
+        rate_all: 1.38, rate_fi: 0.46, count_years: '2021–2023 (2024, 2025 use 2023)', picked: 0, source: 'Caltrans Traffic Census Program, District 7 ramp ADT' } },
+      { key: 'r2', label: 'NB OFF TO NORMANDIE AVE', values: { crashes: 3, fi_crashes: 1, postmile: 'LA-405 PM 13.707', adt: 8156, mv: 14.9,
+        rate_all: 0.2, rate_fi: 0.07, count_years: '2021–2024', picked: 1, small_base: 'n < 10', source: 'Caltrans Traffic Census Program, District 7 ramp ADT' } }],
+      scope: { ramp_crashes: 20, identified: 15, pick: 2, none: 3, none_why: { 'no cross street': 3 },
+        text: '20 ramp crashes: 15 on an identified Caltrans ramp; 2 with 2 or more possible ramps (the engineer picks); 3 with no ramp rate (no cross street: 3).' } }
+    mockApi({ ...routes, 'GET /studies/:id/profile': { ...profile, tables: [...profile.tables, T22, T23, T25] } })
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('Ramp crash rates')
+    const rows = within(sec.querySelector('[data-testid="shs-ramps"]')).getAllByRole('row').slice(1)
+    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('SB off to Vermont Ave')
+    expect(within(rows[0]).getByRole('rowheader')).toHaveTextContent('LA-405 PM 13.492')
+    expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['12', '4,780', '1.38', '2021–2023 (2024, 2025 use 2023)'])
+    expect(within(rows[1]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['3', '8,156', '–', '2021–2024'])
+    expect(sec).toHaveTextContent('20 ramp crashes: 15 on an identified Caltrans ramp; 2 with 2 or more possible ramps')
+    expect(within(sec).getAllByLabelText('Source: table T25').length).toBeGreaterThan(0)
+  })
+
   it('a corridor without T22 shows no state-highway rates', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')

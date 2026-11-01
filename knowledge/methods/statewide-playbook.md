@@ -122,7 +122,8 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
     - a ramp named → ramp; how "<route> <dir> TO <local street>" (no ramp word) is identified is pending the
       user (#303 review);
     - a cross street as the primary road → not in the mainline rate.
-  - Ramps are rated separately, by a strict match to one ramp row, else the engineer picks (#300).
+  - Ramps are rated separately, by a strict match to one ramp row, else the engineer picks (#300). A year's ramp
+    count is the latest at or before it; one more than 5 years older than the year gives no rate (user 2026-11-01).
 - **Small numbers:** under 10 crashes, show counts and mark the rate "too few to compare" (#271).
 - **Statewide comparison:** the rate group is entered by the engineer, or read by code from the DOT file they attach.
   Never guessed, and never read by AI (#294, #298).

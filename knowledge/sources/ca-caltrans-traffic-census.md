@@ -10,7 +10,32 @@
   https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/back-and-ahead-leg-traffic-count-diagram-a11y.pdf
 - **Truck AADT:** a separate annual workbook, a row per leg (B behind, A ahead) at fewer points, with total vehicle
   AADT, truck AADT and the 2-, 3-, 4- and 5+-axle counts and shares.
-- **Ramps:** per-district ramp ADT workbooks (2016 to 2024) on the same page. Not loaded yet (#287 follow-up).
+  Truck points are far apart, so one point's ahead leg can cover miles (2024: LA-405 12.97 to 17.589; SM-82 3.435
+  to 10.554), and some points carry only a back leg (LA-405 17.589). Truck-involved rates (T24, #287) use the 3+ axle
+  count (TRK_3 + TRK_4 + TRK_5) of the truck point behind. Hand check, Engineering, 2026-10-29: LA-405 PM 13.5
+  4,919 (2021) and 5,185 (2024) 3+ axle trucks of 270,000 / 285,000 AADT (1.8%); SM-82 PM 9.0 (El Camino Real) 200
+  to 232 of 29,500 to 34,000 (0.7%); LA-5 PM 20.0 about 10,100 of 206,000 (4.9%).
+- **Ramps:** per-district ramp ADT workbooks on the same page (2017–2024 as .xlsx, 2016 as PDF). Each edition holds
+  ten years of counts per ramp (YR_2015 … YR_2024 in the 2024 edition), one row per ramp: route, county, postmile,
+  and a free-text description ("SB OFF TO VERMONT AVE", "099/NB ON FR BELLEVUE RD", "NBOFF TRAVER/MERRITT DR",
+  "NORWOOD TO WB-80"). Ramps are counted on rotation, so most years are blank. Rows starting "SEG" are pieces of a
+  ramp; "CONN" rows are freeway connectors. The preface sheet is an image, and nothing on the page explains the
+  values 1001 and 999, which appear in every district: runs of 1001 ending in 999 on closed ramps (LA-405 "SB OFF
+  TRUCK SCALES (CLOSED)": 1001, 999) and a lone 999 between real counts (LA-405 "NB ON FROM WB RTE 105": 9,793 in
+  2020, 999 in 2021, 33,373 in 2022). CrashIQ treats both as missing (pain point 38). Engineering's copy, 2026-10-30:
+  48 files (2021–2024, 12 districts, 16.5 MB): 14,356 distinct ramp rows, 13,297 with at least one real count;
+  5,650 placeholder values left out.
+  - **Use in CrashIQ (#287 ramps, user decision 2026-10-30, #300):** a ramp crash's ramp is identified when exactly
+    one ramp within 0.3 mi fits the report's direction, on/off and cross street (`backend/crashiq/ramps.py`); the
+    engineer picks when 2 or more fit. A year's ramp ADT is the latest count at or before it, never a later one,
+    and a count more than 5 years before the year is too old to use (user decision 2026-11-01): no rate, and the row
+    says "count too old".
+  - **Measured (Engineering, 2026-10-30)** on the Tester's 4,424 statewide ramp crashes with a derived postmile
+    (#292, `aadt_match.csv`): identified 2,094 (47%); 2 or more fit 186; no ramp rate 2,144. The no-rate reasons:
+    no ramp fits 1,137 (mostly CHP's compass direction against Caltrans' route direction, or a cross street missing
+    from the description); no ramp within 0.3 mi 286; no direction in the report 240; no cross street 204; on or
+    off not stated 156; two or more of these missing 121. On the identified crashes the count used is 0 years old
+    for 382, 1–4 years for 947, 5–9 for 546, 10–14 for 121, and 98 have no count at or before the crash year.
 - **Where:** https://dot.ca.gov/programs/traffic-operations/census (public; Caltrans), fetched with the honest
   `CrashIQ/0.1` user agent (dot.ca.gov serves it, checked 2026-10-26). The files by year are listed in
   `backend/crashiq/config/aadt.json`. The ArcGIS layers `CHhighway/Traffic_AADT` and `CHhighway/Truck_Volumes_AADT`
