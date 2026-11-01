@@ -312,7 +312,10 @@ function Locations({ t, onOpen }) {
 const SEV_PARTS = [['k', 'Fatal'], ['a', 'Serious injury'], ['b', 'Minor injury'], ['c', 'Possible injury'],
   ['u', 'Injury, level not stated'], ['o', 'Property damage']]
 const SORTS = [['crashes', 'Crashes', (v) => v.crashes], ['ksi', 'KSI', (v) => v.ksi_crashes],
-  ['vru', 'Pedestrians + bicyclists', (v) => v.vru_crashes ?? 0], ['rate', 'Rate vs critical', (v) => v.rate_to_critical ?? -1]]
+  ['vru', 'Pedestrians + bicyclists', (v) => v.vru_crashes ?? 0], ['rate', 'Rate vs critical', (v) => v.rate_to_critical ?? -1],
+  ['cost', 'Crash cost', (v) => v.crash_cost ?? -1]]
+// #273: a T2 cell in dollars, short ("$5.2M"); the exact value is in the title and the table
+const money = (v) => (v == null ? '—' : v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : `$${Math.round(v / 1e3)}k`)
 
 function SevBar({ v, max }) {
   return (
@@ -332,6 +335,7 @@ function ranked(t, sort) {
 function Ranking({ p, onOpen, sort, setSort }) {
   const t = table(p, 'T2')
   const hasCrit = t.rows.some((r) => r.values.rate_to_critical != null)
+  const hasCost = t.rows.some((r) => r.values.crash_cost != null)
   const [all, setAll] = useState(false)
   const rows = ranked(t, sort)
   const shown = all ? rows : rows.slice(0, 5)
@@ -342,7 +346,7 @@ function Ranking({ p, onOpen, sort, setSort }) {
     <section aria-label="Location ranking">
       <div className="sect-h"><h2 className="h3">Which locations need attention first?</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       <div className="seg strip-dim" role="radiogroup" aria-label="Rank by">
-        {SORTS.filter(([k]) => k !== 'rate' || hasCrit).map(([k, label]) => (
+        {SORTS.filter(([k]) => (k !== 'rate' || hasCrit) && (k !== 'cost' || hasCost)).map(([k, label]) => (
           <button key={k} type="button" role="radio" aria-checked={sort === k} className={sort === k ? 'on' : ''} onClick={() => setSort(k)}>{label}</button>
         ))}
       </div>
@@ -354,6 +358,9 @@ function Ranking({ p, onOpen, sort, setSort }) {
             <span className="mono n ksi" title="KSI crashes (fatal + serious)">{fmt(r.values.ksi_crashes)} KSI</span>
             <span className={`mono vrun${r.values.vru_crashes ? '' : ' zero'}`} data-testid="rank-vru"
               title="Crashes with a pedestrian or bicyclist (KSI among them)">◯ {fmt(r.values.vru_crashes || 0)} ped/bike{r.values.vru_ksi_crashes ? ` · ${fmt(r.values.vru_ksi_crashes)} KSI` : ''}</span>
+            {sort === 'cost' ? <span className="mono n cost" data-testid="rank-cost"
+              title={`Crash cost $${fmt(r.values.crash_cost)} (Caltrans LRSM 2026)${r.values.sev_u ? `; ${r.values.sev_u} injury crash${r.values.sev_u === 1 ? '' : 'es'} with the level not stated, priced as possible injury` : ''}${r.values.cost_control_unknown ? '; intersection control unknown, signalized price' : ''}`}>
+              {money(r.values.crash_cost)}{r.values.sev_u ? <small> · {fmt(r.values.sev_u)} U</small> : null}{r.values.cost_control_unknown ? <small> · control ?</small> : null}</span> : null}
             <SevBar v={r.values} max={max} />
             {hasCrit && r.values.critical_rate != null ? <RateBar v={r.values} max={maxBy[r.values.kind] || 1} /> : null}
           </li>
