@@ -326,6 +326,7 @@ function Ranking({ p, onOpen }) {
 // State-highway crash rates (#287, user decision 2026-10-26): Caltrans Traffic Census AADT on each study segment of a
 // state-route corridor (T22) and the corridor's rate year by year (T23). Every number is a cell; a row above the
 // corridor average is marked. A rate on fewer than 10 crashes shows its count only (docs/03 small numbers, #296).
+// Trucks (T24): heavy-truck-involved crashes per million 3+ axle truck-miles, folded under "Trucks".
 // Segment crashes only until #297 (user); Caltrans' statewide averages wait for #294.
 const SHS_DETAIL = [['crashes', 'Crashes'], ['fi_crashes', 'Fatal + injury'], ['fatal_crashes', 'Fatal'], ['length_mi', 'Length (mi)'],
   ['aadt', 'AADT'], ['mvm', 'MVM'], ['rate_all', 'All / MVM'], ['rate_fi', 'Fatal + injury / MVM'], ['rate_fatal', 'Fatal / MVM'],
@@ -333,6 +334,7 @@ const SHS_DETAIL = [['crashes', 'Crashes'], ['fi_crashes', 'Fatal + injury'], ['
 function ShsRates({ p }) {
   const t = p.tables.find((x) => x.id === 'T22')
   const by = p.tables.find((x) => x.id === 'T23')
+  const tk = p.tables.find((x) => x.id === 'T24')
   if (!t?.rows?.length) return null
   const n = t.rows.reduce((a, r) => a + r.values.crashes, 0)
   const sources = [...new Set(t.rows.map((r) => r.values.source))]
@@ -371,6 +373,32 @@ function ShsRates({ p }) {
             {SHS_DETAIL.map(([k]) => <td key={k} className="sf-num mono">{fmt(r.values[k])}</td>)}<MarkTd t={t} r={r} /></tr>)}</tbody>
         </table></div>
       </details>
+      {tk?.rows?.length ? (
+        <details className="showtable"><summary>Trucks (3+ axles)</summary>
+          <p className="muted small-note" data-testid="shs-trucks-scope">{tk.scope?.text} Truck AADT count years{' '}
+            {[...new Set(tk.rows.map((r) => r.values.count_years))].join('; ')}.{' '}
+            {tk.scope?.small ? `Corridor truck average: too few crashes to compare (${fmt(tk.scope.rated_crashes)}).`
+              : `Corridor truck average ${fmt(tk.scope?.corridor_rate_truck)} per million truck-miles.`}</p>
+          <div className="sf-table-wrap"><table className="sf-table shs" data-testid="shs-trucks">
+            <thead><tr><th>Segment</th><th className="sf-num">Truck crashes</th><th className="sf-num">3+ axle AADT</th>
+              <th className="sf-num">Per million truck-miles</th><th className="sf-num">÷ average</th></tr></thead>
+            <tbody>{tk.rows.map((r) => {
+              const v = r.values
+              return (
+                <tr key={r.key} className={!v.small_base && v.ratio_to_corridor > 1 ? 'over' : ''}
+                  title={`${fmt(v.truck_mvm)} million truck-miles · ${fmt(v.length_mi)} mi · count years ${v.count_years} · ${v.source}`}>
+                  <th scope="row">{titleCase(r.label)}</th>
+                  <td className="sf-num mono">{fmt(v.truck_crashes)}</td><td className="sf-num mono">{fmt(v.trucks_3plus)}</td>
+                  <td className="sf-num mono">{rate(r, 'rate_truck')}</td>
+                  {v.small_base ? <td className="sf-num muted small">too few to compare</td>
+                    : <td className="sf-num mono">{fmt(v.ratio_to_corridor)}</td>}
+                </tr>
+              )
+            })}</tbody>
+          </table></div>
+          <Src tid="T24" n={tk.scope?.rated_crashes} p={p} />
+        </details>
+      ) : null}
       {by?.rows?.length ? (
         <details className="showtable"><summary>By year</summary>
           <div className="sf-table-wrap"><table className="sf-table" data-testid="shs-by-year">

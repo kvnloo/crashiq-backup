@@ -10,6 +10,11 @@
   https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/back-and-ahead-leg-traffic-count-diagram-a11y.pdf
 - **Truck AADT:** a separate annual workbook, a row per leg (B behind, A ahead) at fewer points, with total vehicle
   AADT, truck AADT and the 2-, 3-, 4- and 5+-axle counts and shares.
+  Truck points are far apart, so one point's ahead leg can cover miles (2024: LA-405 12.97 to 17.589; SM-82 3.435
+  to 10.554), and some points carry only a back leg (LA-405 17.589). Truck-involved rates (T24, #287) use the 3+ axle
+  count (TRK_3 + TRK_4 + TRK_5) of the truck point behind. Hand check, Engineering, 2026-10-29: LA-405 PM 13.5
+  4,919 (2021) and 5,185 (2024) 3+ axle trucks of 270,000 / 285,000 AADT (1.8%); SM-82 PM 9.0 (El Camino Real) 200
+  to 232 of 29,500 to 34,000 (0.7%); LA-5 PM 20.0 about 10,100 of 206,000 (4.9%).
 - **Ramps:** per-district ramp ADT workbooks (2016 to 2024) on the same page. Not loaded yet (#287 follow-up).
 - **Where:** https://dot.ca.gov/programs/traffic-operations/census (public; Caltrans), fetched with the honest
   `CrashIQ/0.1` user agent (dot.ca.gov serves it, checked 2026-10-26). The files by year are listed in

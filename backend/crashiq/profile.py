@@ -395,7 +395,8 @@ def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict
     tot_c, tot_m = sum(r["values"]["crashes"] for r in rows), sum(mvm_of[r["key"]] for r in rows)
     avg = r2(tot_c / tot_m) if tot_m else None
     for r in rows:
-        r["values"].update(corridor_rate_all=avg, ratio_to_corridor=r2(r["values"]["rate_all"] / avg) if avg else None)
+        r["values"].update(corridor_rate_all=avg, ratio_to_corridor=r2(r["values"]["rate_all"] / avg)
+                           if avg and r["values"]["rate_all"] is not None else None)
         # small numbers (docs/03, #271): a rate on fewer than MIN_SHARE_N crashes is kept and marked; the screen shows
         # the count only, "too few to compare"; so is a ratio to an average built on too few
         small = [x for x, n in (("segment", r["values"]["crashes"]), ("corridor average", tot_c)) if n < MIN_SHARE_N]
@@ -414,6 +415,7 @@ def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict
                     "corridor_rate_all": avg, "small": tot_c < MIN_SHARE_N,
                     "text": f"Segment crashes only: {at_x} of {len(placed)} crashes on this corridor are at "
                             "intersections and aren't in these rates."}
+    t24 = _truck_rates(vols, segs, groups, years)
     yrows = [_row(y, str(y), crashes=crashes_y[y], fi_crashes=fi_y[y], mvm=round(mvm_y[y], 2),
                   rate_all=r2(crashes_y[y] / mvm_y[y]) if mvm_y[y] else None,
                   rate_fi=r2(fi_y[y] / mvm_y[y]) if mvm_y[y] else None,
@@ -421,7 +423,45 @@ def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict
     t23 = _table("T23", "State-highway crash rate by year (the segments in T22)",
                  [("crashes", "Crashes"), ("fi_crashes", "Fatal + injury crashes"), ("mvm", "Million vehicle-miles"),
                   ("rate_all", "Crashes per MVM"), ("rate_fi", "Fatal + injury per MVM")], yrows, on)
-    return [t22, t23]
+    return [t22, t23, *([t24] if t24 else [])]
+
+
+def _truck_rates(vols: dict, segs: dict, groups: dict, years: list[int]) -> dict | None:
+    """T24: heavy-truck-involved crashes (docs/03 heavy truck) per million 3+ axle truck-miles, per segment with truck
+    AADT for every window year, against the corridor's own truck average; the small-number rule as T22."""
+    rows, mvm_of = [], {}
+    for sid, v in vols.items():
+        s, tb = segs.get(sid), v.get("trucks_by_year") or {}
+        if s is None or not years or any(tb.get(y) is None for y in years):
+            continue
+        cs = [c for c in groups.get(sid, []) if c.get("heavy_truck")]
+        mvm = mvm_of[sid] = sum(tb[y] * s["length_mi"] * 365 / 1e6 for y in years)
+        rows.append(_row(sid, s["name"], truck_crashes=len(cs), length_mi=round(s["length_mi"], 3),
+                         trucks_3plus=round(sum(tb[y] for y in years) / len(years)), truck_mvm=round(mvm, 2),
+                         rate_truck=r2(len(cs) / mvm) if mvm else None,
+                         count_years=v.get("truck_count_years", ""), source=v["source"]))
+    if not rows:
+        return None
+    tot_c, tot_m = sum(r["values"]["truck_crashes"] for r in rows), sum(mvm_of[r["key"]] for r in rows)
+    avg = r2(tot_c / tot_m) if tot_m else None
+    for r in rows:
+        v = r["values"]
+        v.update(corridor_rate_truck=avg, ratio_to_corridor=r2(v["rate_truck"] / avg)
+                 if avg and v["rate_truck"] is not None else None)
+        small = [x for x, n in (("segment", v["truck_crashes"]), ("corridor average", tot_c)) if n < MIN_SHARE_N]
+        if small:
+            v["small_base"] = f"{SMALL_MARK}: {', '.join(small)}"
+    on = [c for r in rows for c in groups.get(r["key"], []) if c.get("heavy_truck")]
+    t = _table("T24", "State-highway truck-involved crash rates (Caltrans 3+ axle truck AADT; per million truck-miles)",
+               [("truck_crashes", "Heavy-truck-involved crashes"), ("length_mi", "Length (mi)"),
+                ("trucks_3plus", "3+ axle truck AADT (window average)"), ("truck_mvm", "Million truck-miles"),
+                ("rate_truck", "Truck-involved crashes per million truck-miles"),
+                ("corridor_rate_truck", "Corridor average"), ("ratio_to_corridor", "Rate ÷ corridor average"),
+                ("count_years", "Truck AADT count years"), ("source", "AADT source")], rows, on)
+    t["scope"] = {"rated_crashes": tot_c, "corridor_rate_truck": avg, "small": tot_c < MIN_SHARE_N,
+                  "text": "Crashes involving a heavy truck (which can include trucks under 3 axles) per million miles "
+                          "driven by trucks with 3 or more axles."}
+    return t
 
 
 def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str] | None = None) -> dict:
@@ -645,8 +685,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                         "text": f"CCRS has no queryable data for {', '.join(map(str, years_missing))}; those years are not in the profile."})
     from .shs import corridor_routes
     if shs_tables:
-        caveats.append({"key": "shs_rates", "text": "State-highway crash rates (T22, T23) use Caltrans Traffic Census "
-                        "AADT; each row names its count years. They count crashes as CrashIQ places them on the "
+        tids = ", ".join(t["id"] for t in shs_tables)
+        trucks = " (T24: heavy-truck-involved crashes over 3+ axle truck AADT)" if "T24" in tids else ""
+        caveats.append({"key": "shs_rates", "text": f"State-highway crash rates ({tids}) use Caltrans Traffic Census "
+                        f"AADT{trucks}; each row names its count years. They count crashes as CrashIQ places them on the "
                         "corridor, not by Caltrans' on-highway rule, so they are not comparable with Caltrans' "
                         "published averages."})
     if not rates_any and not shs_tables:

@@ -142,3 +142,61 @@ def test_a_state_route_with_no_caltrans_postmiles_says_local_counts_are_needed()
     cav = {c["key"]: c["text"] for c in profile.build(study, n, pull, asg)["caveats"]}
     assert "Route 19 isn't in Caltrans' state-highway postmiles here" in cav["rates_not_computed"]
     assert "local traffic counts are needed" in cav["rates_not_computed"]
+
+
+# Trucks (docs/03 #287: truck-involved crash rates using 3+ axle truck AADT; heavy truck as docs/03 defines it)
+def test_a_segment_gets_its_3_plus_axle_truck_aadt_from_the_truck_point_behind(cache):
+    v = shs.segment_volumes(net(13.3, 13.8), FakePM(), cache, [2021, 2024])["s1"]
+    assert v["trucks_by_year"][2024] == 917 + 560 + 3708          # CARSON, JCT. RTE. 110 ahead leg: 3, 4, 5+ axles
+    assert v["trucks_by_year"][2021] is None                       # the fixture has no 2021 truck file
+    assert v["truck_count_years"] == "2024; later count years use 2024"   # 2024 blends in count year 2025 (#299 r1)
+
+
+def trucked(n_truck, aadt3=1000, years=range(2021, 2026), whole=False):
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    on_s1 = {a["crash_id"] for a in asg["assignments"] if a["location_id"] == "S1"}
+    hit = sorted(on_s1)[:n_truck]
+    pull = {**pull, "crashes": [{**c, "heavy_truck": c["crash_id"] in hit} for c in pull["crashes"]]}
+    n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in years}, "coverage": 1.0, "latest_used": False,
+                               "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program",
+                               "trucks_by_year": {y: aadt3 for y in years}, "truck_count_years": "2021–2024"}}
+    p = profile.build(study, n, pull, asg)
+    return p if whole else {x["id"]: x for x in p["tables"]}
+
+
+def test_the_rates_caveat_names_the_truck_table():
+    cav = {c["key"]: c["text"] for c in trucked(12, whole=True)["caveats"]}
+    assert cav["shs_rates"].startswith("State-highway crash rates (T22, T23, T24) use Caltrans Traffic Census AADT "
+                                       "(T24: heavy-truck-involved crashes over 3+ axle truck AADT);")
+
+
+def test_truck_involved_crash_rate_per_million_3_plus_axle_truck_miles():
+    t = trucked(12)
+    r = t["T24"]["rows"][0]["values"]
+    tmvm = 1000 * 0.6 * 365 * 5 / 1e6                              # 1.095 million truck-miles
+    assert r["truck_crashes"] == 12 and r["trucks_3plus"] == 1000 and r["truck_mvm"] == pytest.approx(round(tmvm, 2))
+    assert r["rate_truck"] == pytest.approx(round(12 / tmvm, 2)) and "small_base" not in r
+    assert r["count_years"] == "2021–2024" and r["source"] == "Caltrans Traffic Census Program"
+    assert trucked(3)["T24"]["rows"][0]["values"]["small_base"] == "n < 10: segment, corridor average"
+
+
+def test_the_truck_table_says_what_it_counts_over_what():
+    assert trucked(12)["T24"]["scope"]["text"] == ("Crashes involving a heavy truck (which can include trucks under 3 "
+                                                   "axles) per million miles driven by trucks with 3 or more axles.")
+
+
+def test_zero_truck_aadt_gives_no_rate_and_no_ratio():
+    r = trucked(12, aadt3=0)["T24"]["rows"][0]["values"]
+    assert r["truck_mvm"] == 0 and r["rate_truck"] is None and r["ratio_to_corridor"] is None
+
+
+def test_no_truck_counts_for_a_window_year_means_no_truck_rate():
+    assert "T24" in trucked(12)
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": False,
+                               "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program",
+                               "trucks_by_year": {**{y: 1000 for y in range(2021, 2025)}, 2025: None}}}
+    ids = {x["id"] for x in profile.build(study, n, pull, asg)["tables"]}
+    assert "T22" in ids and "T24" not in ids
