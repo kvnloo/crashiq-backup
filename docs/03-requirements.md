@@ -528,3 +528,14 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. This **replaces** the user's earlier answer "B" (2026-10-26, Engineering chat, on #294, never recorded in docs/03).
   A map-data suggestion may still pre-fill the field, but only as a labelled suggestion the engineer confirms. Comparisons use Caltrans' on-highway counting rule
   or are labelled approximate.
+- **Which crashes count in a state-highway mainline crash rate DECIDED (user, 2026-10-31, PM session; #297):**
+  "only mainline taken as mainline". The segment (mainline) rate counts every crash on the highway's own mainline
+  roadway, including crashes in at-grade intersections on the highway itself. It does **not** count:
+  - **ramp and connector crashes**, including police wording such as "I-10 E/B TO HIGHLAND SPRINGS AVE" or
+    "I-10 W/B TO SR-60 W/B" with no "ramp" in it (the #278 reading). These go to the ramp rates (#300);
+  - **crashes on a cross street or frontage road** (the primary road isn't the highway) away from the highway's own
+    roadway, even when their GPS sits on or next to the highway line;
+  - roads over or under a freeway (already excluded, N7, #67).
+  This is Caltrans' TASAS mainline/ramp split, so mainline rates are comparable with Caltrans' highway base rates
+  (#294). Intersection crashes are still shown in their own tables. Replaces the interim "segment crashes only" label
+  on #296.
