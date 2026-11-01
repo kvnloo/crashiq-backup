@@ -39,6 +39,10 @@ ROUTE_TAIL = re.compile(r"\s+-\s*(?:SR|SH|RT|RTE|HWY|US|I|CA)[\s-]*\d+(?:\s+(?:"
 # Where on the street, written before its name (#305): W CURB LINE OF LEMON ST, N SIDE OF, NORTH OF, 100 FT NORTH OF
 POSITION = re.compile(r"^(?:\d+\s*(?:FT|FEET|MI|MILES?)\s+)?(?:(?:N|S|E|W|NE|NW|SE|SW|NORTH|SOUTH|EAST|WEST)(?:LY)?\s+)?"
                       r"(?:(?:CURB\s*LINE|CURBLINE|CURB|SIDE|EDGE|SHOULDER)\s+)?OF\s+(?!THE\b)")    # OF THE ...: a landmark
+# Street types spelled out: a way may be named just that ("Plaza", "Circle"), so these alone still name a street
+TYPE_WORDS = {"STREET", "AVENUE", "BOULEVARD", "DRIVE", "ROAD", "PLACE", "COURT", "TERRACE", "WAY", "LANE", "ALLEY",
+              "HIGHWAY", "PARKWAY", "CIRCLE", "EXPRESSWAY", "FREEWAY", "PLAZA", "SQUARE", "WALK", "TUNNEL", "TRAIL",
+              "ROUTE"}
 # Text that is never a street (#305): a parking lot, a numbered utility pole (outside brackets)
 NOT_A_STREET = re.compile(r"\bPARKING (?:LOT|STRUCTURE|GARAGE)\b|\bPOLE\s*\d")
 # Two streets in one field (#305): SOUTH WESTBORO AVE AND NORWICH AVE, A & B
@@ -126,6 +130,9 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     s = re.sub(r"\(.*?\)", " ", raw.upper())   # "(3100 BLOCK)", "(N)", "(IN-N-OUT PARKING LOT)"
     if NOT_A_STREET.search(s):                  # outside brackets only: "8451 CRENSHAW BLVD (PARKING LOT)" names it
         return None
+    raw_toks = re.findall(r"[A-Z0-9]+", s)
+    if len(raw_toks) == 1 and raw_toks[0] in SUFFIX and raw_toks[0] not in TYPE_WORDS:
+        return None                             # "- ALY" as written: an abbreviated type alone names no street
     s = ROUTE_TAIL.sub("", s)
     s = POSITION.sub("", s.strip())
     s = re.sub(r"[.,#'\"]", " ", s).replace("&", " ")
@@ -139,6 +146,7 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
                 "US HIGHWAY": "US", "US ROUTE": "US"}.get(route.group(1), route.group(1))
         return StreetKey(f"{kind} {int(route.group(2))}", None)
     numbered = bool(re.match(r"^\d+\s+(?=[A-Z])", s))
+    as_written = s
     s = re.sub(r"^\d+\s+(?=[A-Z])", "", s)       # house number "3144 W 147TH ST"
     # "Avenue of Flags", "Avenue of the Stars": OF belongs to the name here. CHP writes AVE OF, AV OF, and adds or drops
     # THE (Buellton: AVENUE OF FLAGS and AVENUE OF THE FLAGS), so THE is left out of the key (#154)
@@ -146,7 +154,10 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     s = NOISE.sub(" ", s).replace("_", " ")
     s = s.replace("/", " ").replace("-", " ")    # Alvarado-Niles Road = ALVARADO NILES RD (#80); routes matched above
     toks = [t for t in s.split() if t]
-    if not toks or (len(toks) == 1 and toks[0] in SUFFIX):     # "- ALY": a street type alone names no street
+    if len(toks) == 1 and toks[0] in SUFFIX:     # stripping left a type word alone: ENTRANCE RD, 1 DR are names (#310)
+        toks = as_written.replace("/", " ").replace("-", " ").split()
+        numbered = False
+    if not toks:
         return None
     if len(toks) > 1 and toks[0] in DIRECTIONAL:  # keep it ("SOUTH VAN NESS" is its own street), spelled out
         toks[0] = {"N": "NORTH", "S": "SOUTH", "E": "EAST", "W": "WEST"}[DIRECTIONAL[toks[0]]]

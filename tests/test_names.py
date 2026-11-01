@@ -152,3 +152,7 @@ def test_non_street_text_is_never_a_street():
         assert street_key(raw) is None, raw
         assert street_keys(raw) == [], raw
     assert street_key("POLE LINE RD") == StreetKey("POLE LINE", "RD")                 # a real street (Davis)
+    # the lone-type check reads the field as written, so names the cleaner shortens still match (#310 review)
+    assert street_key("ENTRANCE RD") == street_key("Entrance Road") is not None
+    assert street_key("1 DR") == street_key("1 Dr") is not None
+    assert street_key("PLAZA") == street_key("Plaza") is not None
