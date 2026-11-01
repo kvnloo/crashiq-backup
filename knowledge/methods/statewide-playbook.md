@@ -48,7 +48,12 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   - expand leading abbreviations (AVE M = Avenue M, #212);
   - apply the cleaner rules of #242 (PKY/PW, EXPWY, HW, TRL, RT as a trailing word, JR, CYN, MTN, HTS);
   - route suffixes such as "PACIFIC COAST HWY - SR1" and "BEACH BL - SR39 BLVD";
-  - more wording forms in #305 ("STATE HIGHWAY 96", "W CURB LINE OF …", two streets in one field).
+  - the wording forms of #305, in the GPS fit check and in intersection matching alike: PK = Parkway; SH-60 and
+    STATE HIGHWAY 96 = the route; position words before the name ("W CURB LINE OF", "N SIDE OF", "100 FT NORTH OF";
+    "OF THE …" stays a landmark); two streets in one field ("A AND B", "A & B"), tried only when the field as
+    written doesn't place, and placed only when exactly one pair fits;
+  - never a street: a parking lot, a numbered pole, a street type alone ("- ALY"). Text in brackets doesn't count:
+    "8451 CRENSHAW BLVD (PARKING LOT)" still names Crenshaw.
 - Tiers that auto-place: **exact** and **unique_pair** (the two streets, allowing only what the report leaves out, meet
   once). unique_pair added +108,547 crashes at accuracy equal to or better than exact.
 - **Alias table** of local spellings, city-scoped, every entry approved by the user (912 in CA,

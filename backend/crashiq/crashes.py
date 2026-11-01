@@ -29,7 +29,7 @@ from . import network as network_mod
 from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection, Polyline
-from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
+from .names import NOT_A_STREET, ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key, street_keys
 from . import aliases as aliases_mod
 from . import gps_rules
 from . import union as union_mod
@@ -342,10 +342,9 @@ def _squeeze(t: str | None) -> str:
 def _names_street(raw: str | None, keys) -> bool:
     """Does a CCRS road field name this street? CHP sometimes writes a full address ("14605 CRENSHAW BLVD.-
     GARDENA- CA 90249"), so fall back to the squeezed core inside the text, as the SQL prefilter does."""
-    if _placeholder(raw):
-        return False                          # NOT STATED contains STATE (#121)
-    k = street_key(raw)
-    if k and any(same_core(k, x) for x in keys):
+    if _placeholder(raw) or NOT_A_STREET.search(re.sub(r"\(.*?\)", " ", str(raw).upper())):
+        return False                          # NOT STATED contains STATE (#121); a parking lot, a pole (#305)
+    if any(same_core(k, x) for k in street_keys(raw) for x in keys):       # each street of "A AND B" too (#305)
         return True
     routes = {route_number(x) for x in keys} - {None}
     if routes & route_numbers(raw):        # SR-1, RT 1, HWY 1, "PCH - SR1" for a corridor tagged CA 1 (#83)

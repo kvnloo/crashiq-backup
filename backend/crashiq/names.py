@@ -29,12 +29,20 @@ SUFFIX = {
     "TRAIL": "TRL", "TRL": "TRL", "TR": "TRL",
     # a trailing type word only (ARROW RT = Arrow Route); "RT 46" is a route number, read before this table
     "ROUTE": "RTE", "RTE": "RTE", "RT": "RTE",
+    "PK": "PKWY",                    # HARBOR BAY PK = Harbor Bay Parkway (approved alias rows, abbreviation kind; #305)
 }
 # Words CHP shortens anywhere in a name (alias batch A): MARTIN LUTHER KING JR WY = Martin Luther King Junior Way
 WORDS = {"JR": "JUNIOR", "CYN": "CANYON", "MTN": "MOUNTAIN", "HTS": "HEIGHTS"}
 # A route tag after the name ("PACIFIC COAST HWY - SR1", "BEACH BL - SR39"): the route is read from the raw text
 # (route_numbers), the name is what's left
-ROUTE_TAIL = re.compile(r"\s+-\s*(?:SR|RT|RTE|HWY|US|I|CA)[\s-]*\d+\s*$")
+ROUTE_TAIL = re.compile(r"\s+-\s*(?:SR|SH|RT|RTE|HWY|US|I|CA)[\s-]*\d+(?:\s+(?:" + "|".join(SUFFIX) + r"))?\s*$")
+# Where on the street, written before its name (#305): W CURB LINE OF LEMON ST, N SIDE OF, NORTH OF, 100 FT NORTH OF
+POSITION = re.compile(r"^(?:\d+\s*(?:FT|FEET|MI|MILES?)\s+)?(?:(?:N|S|E|W|NE|NW|SE|SW|NORTH|SOUTH|EAST|WEST)(?:LY)?\s+)?"
+                      r"(?:(?:CURB\s*LINE|CURBLINE|CURB|SIDE|EDGE|SHOULDER)\s+)?OF\s+(?!THE\b)")    # OF THE ...: a landmark
+# Text that is never a street (#305): a parking lot, a numbered utility pole (outside brackets)
+NOT_A_STREET = re.compile(r"\bPARKING (?:LOT|STRUCTURE|GARAGE)\b|\bPOLE\s*\d")
+# Two streets in one field (#305): SOUTH WESTBORO AVE AND NORWICH AVE, A & B
+TWO_STREETS = re.compile(r"\s+(?:AND|&)\s+")
 DIRECTIONAL = {"N": "N", "NORTH": "N", "S": "S", "SOUTH": "S", "E": "E", "EAST": "E", "W": "W", "WEST": "W"}
 ORDINAL_WORDS = {
     "FIRST": 1, "SECOND": 2, "THIRD": 3, "FOURTH": 4, "FIFTH": 5, "SIXTH": 6, "SEVENTH": 7,
@@ -50,7 +58,7 @@ NOISE = re.compile(
     r"PEDESTRIAN|ENTRANCE|EXIT|OF THE|THE|OF|AT|NEAR|AND)\b"
 )
 # TIGER/Line writes State Hwy 39, State Rte 1, US Hwy 101, I- 5 (#229)
-ROUTE = re.compile(r"^(STATE HWY|STATE HIGHWAY|STATE RTE|STATE ROUTE|US HWY|US HIGHWAY|US ROUTE|I|US|SR|CA|INTERSTATE|HWY|"
+ROUTE = re.compile(r"^(STATE HWY|STATE HIGHWAY|STATE RTE|STATE ROUTE|US HWY|US HIGHWAY|US ROUTE|I|US|SR|SH|CA|INTERSTATE|HWY|"
                    r"HIGHWAY|ROUTE|RT|RTE)[\s-]*(\d+)")
 
 
@@ -76,9 +84,9 @@ def use(name: str) -> None:
 
 # A route number anywhere in a road field: SR-1, RT 46, HWY 111, STATE ROUTE 1, "PCH - SR1", I-880 (#83). Three digits
 # at most, so a ZIP code ("CA 90249") is never a route.
-ROUTE_ANY = re.compile(r"\b(?:STATE ROUTE|INTERSTATE|HIGHWAY|ROUTE|HWY|RTE|RT|SR|CA|US|I)[\s-]*(\d{1,3})\b")
+ROUTE_ANY = re.compile(r"\b(?:STATE ROUTE|INTERSTATE|HIGHWAY|ROUTE|HWY|RTE|RT|SR|SH|CA|US|I)[\s-]*(\d{1,3})\b")
 _ROUTE_KEY = re.compile(r"^(I|US|SR) (\d+)$")
-ROUTE_SPELLINGS = {"SR": ("SR", "RT", "RTE", "HWY", "HIGHWAY", "ROUTE", "STATEROUTE", "CA"),
+ROUTE_SPELLINGS = {"SR": ("SR", "RT", "RTE", "HWY", "HIGHWAY", "ROUTE", "STATEROUTE", "CA", "SH"),
                    "I": ("I", "INTERSTATE"), "US": ("US", "HWY", "HIGHWAY")}
 
 
@@ -99,19 +107,34 @@ def street_key(raw: str | None, aliases: dict[str, str] | None = None) -> Street
     return _IMPL(raw) if _IMPL else _street_key_ours(raw)
 
 
+def street_keys(raw: str | None, aliases: dict[str, str] | None = None) -> list[StreetKey]:
+    """Every street a road field may name (#305): its key, then, when it holds two streets ("A AND B", "A & B"),
+    the key of each. The whole field comes first, so a name with AND in it (Lewis and Clark Dr) is tried as itself."""
+    k = street_key(raw, aliases)
+    out = [k] if k else []
+    parts = TWO_STREETS.split(str(raw or "").upper().strip())
+    if len(parts) == 2:
+        pk = [street_key(x) for x in parts]
+        if all(pk):
+            out += [x for x in pk if x not in out]
+    return out
+
+
 def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> StreetKey | None:
     if not raw:
         return None
-    s = raw.upper()
-    s = re.sub(r"\(.*?\)", " ", s)              # "(3100 BLOCK)", "(N)"
+    s = re.sub(r"\(.*?\)", " ", raw.upper())   # "(3100 BLOCK)", "(N)", "(IN-N-OUT PARKING LOT)"
+    if NOT_A_STREET.search(s):                  # outside brackets only: "8451 CRENSHAW BLVD (PARKING LOT)" names it
+        return None
     s = ROUTE_TAIL.sub("", s)
+    s = POSITION.sub("", s.strip())
     s = re.sub(r"[.,#'\"]", " ", s).replace("&", " ")
     s = re.sub(r"\s+", " ", s).strip()
     if aliases and s in aliases:
         s = aliases[s]
     route = ROUTE.match(s)
     if route:
-        kind = {"INTERSTATE": "I", "STATE ROUTE": "SR", "CA": "SR", "HWY": "SR", "HIGHWAY": "SR", "ROUTE": "SR", "RT": "SR",
+        kind = {"INTERSTATE": "I", "STATE ROUTE": "SR", "CA": "SR", "SH": "SR", "HWY": "SR", "HIGHWAY": "SR", "ROUTE": "SR", "RT": "SR",
                 "RTE": "SR", "STATE HWY": "SR", "STATE HIGHWAY": "SR", "STATE RTE": "SR", "US HWY": "US",
                 "US HIGHWAY": "US", "US ROUTE": "US"}.get(route.group(1), route.group(1))
         return StreetKey(f"{kind} {int(route.group(2))}", None)
@@ -123,7 +146,7 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     s = NOISE.sub(" ", s).replace("_", " ")
     s = s.replace("/", " ").replace("-", " ")    # Alvarado-Niles Road = ALVARADO NILES RD (#80); routes matched above
     toks = [t for t in s.split() if t]
-    if not toks:
+    if not toks or (len(toks) == 1 and toks[0] in SUFFIX):     # "- ALY": a street type alone names no street
         return None
     if len(toks) > 1 and toks[0] in DIRECTIONAL:  # keep it ("SOUTH VAN NESS" is its own street), spelled out
         toks[0] = {"N": "NORTH", "S": "SOUTH", "E": "EAST", "W": "WEST"}[DIRECTIONAL[toks[0]]]

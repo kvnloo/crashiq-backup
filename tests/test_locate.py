@@ -4,7 +4,7 @@ from crashiq.osm import Network, metres
 
 # Main St runs east-west through A(1)-B(2)-C(3); Oakland Ave runs north-south through B(2) and D(4).
 # Elm St crosses Main twice (at 1 and 3, ~180 m apart) to make an ambiguous pair.
-NET = Network({"elements": [
+ELS = [
     {"type": "node", "id": 1, "lat": 37.7700, "lon": -122.4210},
     {"type": "node", "id": 2, "lat": 37.7700, "lon": -122.4200},
     {"type": "node", "id": 3, "lat": 37.7700, "lon": -122.4190},
@@ -15,7 +15,8 @@ NET = Network({"elements": [
     {"type": "way", "id": 10, "nodes": [1, 2, 3], "tags": {"name": "Main Street"}},
     {"type": "way", "id": 11, "nodes": [5, 2, 4], "tags": {"name": "Oakland Avenue"}},
     {"type": "way", "id": 12, "nodes": [1, 6, 7, 3], "tags": {"name": "Elm Street"}},
-]})
+]
+NET = Network({"elements": ELS})
 
 
 def crash(p, s, ft=None, d=None):
@@ -117,3 +118,20 @@ def test_relaxed_keeps_suffix_before_dropping_it():
     p = locate.place(net, crash("ATLANTIC AV", "ATLANTIC PL"))
     assert p.node == 1
     assert p.tier == "unique_pair"      # only the left-out "North" differs, and they meet once (#203; was relaxed)
+
+
+def test_two_streets_in_one_field_place_at_their_intersection():          # #305
+    p = locate.place(NET, crash("MAIN ST AND OAKLAND AVE", None))
+    assert p.tier == "exact" and p.node == 2
+    p = locate.place(NET, crash("MAIN ST AND OAKLAND AVE", "OAKLAND AVE"))
+    assert p.tier == "exact" and p.node == 2
+
+
+def test_two_streets_in_one_field_and_a_third_place_only_when_one_pair_does():
+    p = locate.place(NET, crash("OAKLAND AVE AND PINE ST", "MAIN ST"))      # Pine St isn't on the map: Oakland & Main
+    assert p.tier == "exact" and p.node == 2
+    net = Network({"elements": ELS + [
+        {"type": "node", "id": 8, "lat": 37.7710, "lon": -122.4190},
+        {"type": "way", "id": 13, "nodes": [8, 3], "tags": {"name": "Pine Street"}}]})
+    p = locate.place(net, crash("OAKLAND AVE AND PINE ST", "MAIN ST"))      # both pairs meet Main: never a guess
+    assert p.tier == "review" and p.note == "two streets in one field: more than one pair fits"

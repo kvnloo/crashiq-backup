@@ -1,4 +1,4 @@
-from crashiq.names import StreetKey, route_numbers, same_core, same_street, similarity, street_key
+from crashiq.names import StreetKey, route_numbers, same_core, same_street, similarity, street_key, street_keys
 
 
 def test_suffix_variants_collapse():
@@ -107,3 +107,48 @@ def test_the_general_rules_dont_touch_what_they_shouldnt():
     assert street_key("ST JOHNS AVE").core == "SAINT JOHNS"            # #212 unchanged
     assert route_numbers("PACIFIC COAST HWY - SR1") == {"1"}            # the route still matches by number
     assert street_key("JR HIGH SCHOOL DR").core == "JUNIOR HIGH SCHOOL"
+
+
+# D3 wording (#305): forms that hide a mapped street. Synthetic names, one case per form.
+def test_a_route_tag_with_a_type_word_after_it():
+    assert street_key("BEACH BL - SR39 BLVD") == street_key("Beach Boulevard")
+    assert route_numbers("BEACH BL - SR39 BLVD") == {"39"}
+
+
+def test_pk_is_parkway():
+    assert street_key("HARBOR BAY PK") == street_key("Harbor Bay Parkway")
+    assert street_key("SAN MIGUEL CYN RD") == street_key("San Miguel Canyon Road")
+
+
+def test_state_routes_written_out():
+    assert street_key("STATE HIGHWAY 96") == street_key("SR 96") == StreetKey("SR 96", None)
+    assert street_key("STATE ROUTE 127") == StreetKey("SR 127", None)
+    assert street_key("SH-60") == street_key("SH 60") == StreetKey("SR 60", None)
+    assert route_numbers("SH-60") == {"60"}
+
+
+def test_position_words_before_the_name():
+    for raw in ("W CURB LINE OF LEMON ST", "WEST CURBLINE OF LEMON ST", "N SIDE OF LEMON ST", "NORTH OF LEMON ST",
+                "100 FT NORTH OF LEMON ST", "E EDGE OF LEMON ST"):
+        assert street_key(raw) == street_key("Lemon Street"), raw
+    assert street_key("AVENUE OF THE STARS") == street_key("Avenue of the Stars")      # OF in a name: unchanged
+
+
+def test_a_house_number_glued_to_the_street():
+    assert street_key("2038 SAN MIGUEL CYN ROAD") == street_key("San Miguel Canyon Road")
+
+
+def test_two_streets_in_one_field_are_each_tried():
+    ks = street_keys("SOUTH WESTBORO AVE AND NORWICH AVE")
+    assert street_key("South Westboro Avenue") in ks and street_key("Norwich Avenue") in ks
+    assert street_keys("WESTBORO AVE & NORWICH AVE")[1:] == [street_key("Westboro Avenue"), street_key("Norwich Avenue")]
+    assert street_keys("LEWIS AND CLARK DR")[0] == street_key("Lewis and Clark Drive")   # the whole name comes first
+    assert street_keys("MAIN ST") == [street_key("Main Street")]
+    assert street_keys(None) == []
+
+
+def test_non_street_text_is_never_a_street():
+    for raw in ("2 SOUTH GARFIELD PARKING LOT", "CITY POLE 120217634", "- ALY", "ALY", "PARKING STRUCTURE"):
+        assert street_key(raw) is None, raw
+        assert street_keys(raw) == [], raw
+    assert street_key("POLE LINE RD") == StreetKey("POLE LINE", "RD")                 # a real street (Davis)

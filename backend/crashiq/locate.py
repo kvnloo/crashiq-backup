@@ -21,8 +21,8 @@ import json
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from .names import (StreetKey, _flat, directions, drop_directional, route_number, same_core, same_street, similarity,
-                    street_key)
+from .names import (TWO_STREETS, StreetKey, _flat, directions, drop_directional, route_number, same_core, same_street,
+                    similarity, street_key, street_keys)
 from .osm import Network, bearing, metres, move
 
 FT = 0.3048
@@ -306,6 +306,33 @@ def _house_address(crash: dict) -> tuple[StreetKey, int] | None:
 
 def place(net: Network, crash: dict, fuzzy_min: float = 0.88, fuzzy_margin: float = 0.05,
           addresses: AddressIndex | None = None, aliases: dict[str, str] | None = None) -> Placement:
+    """Place a crash at the intersection of its two streets. A field naming two streets ("A AND B", #305) is tried
+    only when the fields as written don't place: with the other field empty or naming one of them, the pair is the
+    two; with a third street, each of the two is tried with it, and the crash places only when exactly one does."""
+    first = _place(net, crash, fuzzy_min, fuzzy_margin, addresses, aliases)
+    if first.tier != "review":
+        return first
+    for f, other in (("primary_road", "secondary_road"), ("secondary_road", "primary_road")):
+        parts = street_keys(crash.get(f), aliases)[1:]
+        if len(parts) != 2:
+            continue
+        a, b = TWO_STREETS.split(str(crash.get(f)).upper().strip())
+        ko = street_key(crash.get(other), aliases)
+        if ko is None or any(same_core(ko, x) for x in parts):
+            pairs = [(a, b)]
+        else:
+            pairs = [(x, crash.get(other)) for x in (a, b)]
+        got = [p for p in (_place(net, {**crash, f: x, other: y}, fuzzy_min, fuzzy_margin, None, aliases)
+                           for x, y in pairs) if p.tier != "review"]
+        if len(got) == 1:
+            return got[0]
+        if len(got) > 1:
+            return Placement("review", note="two streets in one field: more than one pair fits")
+    return first
+
+
+def _place(net: Network, crash: dict, fuzzy_min: float, fuzzy_margin: float, addresses: AddressIndex | None,
+           aliases: dict[str, str] | None) -> Placement:
     if addresses is not None:
         addr = _house_address(crash)
         if addr:

@@ -451,3 +451,19 @@ def test_ebike_and_escooter_are_their_own_road_users():
     assert m["bike"] and not m["ebike"]
     assert f(("Driver", "MiniVan"), iw="BICYCLE")["bike"]                   # no party coded: CHP's involved-with
     assert not f(("Driver", "MotorizedBicycle"))["ebike"]                     # still open in N9: unchanged
+
+
+def test_the_gps_street_check_reads_the_d3_wording():
+    # #305: the report names the street the GPS sits on, in a form the cleaner didn't read
+    cases = [("BEACH BL - SR39 BLVD", "Beach Boulevard"), ("HARBOR BAY PK", "Harbor Bay Parkway"),
+             ("SAN MIGUEL CYN RD", "San Miguel Canyon Road"), ("W CURB LINE OF LEMON ST", "Lemon Street"),
+             ("SOUTH WESTBORO AVE AND NORWICH AVE", "Norwich Avenue"),
+             ("SOUTH WESTBORO AVE AND NORWICH AVE", "South Westboro Avenue"),
+             ("2038 SAN MIGUEL CYN ROAD", "San Miguel Canyon Road")]
+    for raw, osm in cases:
+        assert crashes._names_street(raw, [street_key(osm)]), raw
+    assert crashes._names_street("STATE HIGHWAY 96", [street_key("CA 96")])
+    assert crashes._names_street("SH-60", [street_key("SR 60")])
+    assert not crashes._names_street("CITY POLE 120217634", [street_key("City Pole Road")])
+    assert not crashes._names_street("2 SOUTH GARFIELD PARKING LOT", [street_key("South Garfield Avenue")])
+    assert crashes._names_street("11202 S CRENSHAW BLVD (PARKING LOT)", [street_key("Crenshaw Boulevard")])  # names it
