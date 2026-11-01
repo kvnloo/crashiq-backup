@@ -443,10 +443,14 @@ def shs_rate_tables(net: dict, years: list[int], placed: list[dict], radius_ft: 
     # which crashes count (#304, user decision #297): mainline only; ramps are rated in T25, cross streets in none
     n_cls = Counter(k for k, _ in cls.values())
     n_ramp, n_cross = n_cls["ramp"], n_cls["cross_street"]
-    t22["scope"] = {"rated_crashes": tot_c, "ramp_crashes": n_ramp, "cross_street_crashes": n_cross,
+    unrated = n_cls["mainline"] - tot_c                       # mainline crashes on segments without Caltrans counts
+    t22["scope"] = {"rated_crashes": tot_c, "unrated_mainline_crashes": unrated, "ramp_crashes": n_ramp,
+                    "cross_street_crashes": n_cross,
                     "corridor_rate_all": avg, "small": tot_c < MIN_SHARE_N,
                     "classes": {cid: list(v) for cid, v in cls.items()},
-                    "text": f"Mainline crashes: {tot_c}. Not in this rate: {n_ramp} ramp crash"
+                    "text": f"Mainline crashes: {tot_c}"
+                            + (f" ({unrated} more on segments without Caltrans counts)" if unrated else "")
+                            + f". Not in this rate: {n_ramp} ramp crash"
                             f"{'es' if n_ramp != 1 else ''} (see Ramps), {n_cross} cross-street crash"
                             f"{'es' if n_cross != 1 else ''}."}
     t24 = _truck_rates(vols, segs, groups, years)

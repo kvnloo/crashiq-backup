@@ -142,8 +142,22 @@ def test_the_scope_line_counts_mainline_ramp_and_cross_street_crashes():
     sc = rated(20)["T22"]["scope"]
     assert sc["rated_crashes"] == 20 and sc["ramp_crashes"] == 0 and sc["cross_street_crashes"] == 30
     assert sc["text"] == "Mainline crashes: 20. Not in this rate: 0 ramp crashes (see Ramps), 30 cross-street crashes."
+    assert sc["unrated_mainline_crashes"] == 0
     assert set(map(tuple, sc["classes"].values())) == {("mainline", "on the highway"),
                                                        ("cross_street", "cross street, beyond 250 ft")}
+
+
+def test_the_scope_line_counts_mainline_crashes_on_segments_without_caltrans_counts():
+    study, n, pull, asg = shs_golden(at_x=("MAIN ST", "SR-1", None))
+    n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": False,
+                               "count_years": "2021–2024", "routes": ["1"], "source": "Caltrans Traffic Census Program"}}
+    n["segments"] = n["segments"] + [{**n["segments"][0], "id": "S2", "from_station_ft": 4168, "to_station_ft": 5000}]
+    asg = {**asg, "assignments": [{**a, "location_id": "S2"} if a["location_id"] == "S1" and i % 2 else a
+                                  for i, a in enumerate(asg["assignments"])]}
+    sc = {x["id"]: x for x in profile.build(study, n, pull, asg)["tables"]}["T22"]["scope"]
+    assert sc["unrated_mainline_crashes"] == 50 - sc["rated_crashes"] > 0
+    assert sc["text"].startswith(f"Mainline crashes: {sc['rated_crashes']} ({50 - sc['rated_crashes']} more on "
+                                 "segments without Caltrans counts). Not in this rate:")
 
 
 def test_intersection_crashes_at_the_highway_count_in_the_segment_rate():
