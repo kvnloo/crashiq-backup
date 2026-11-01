@@ -20,14 +20,50 @@ const routes = {
 const nf = new Intl.NumberFormat('en-US')
 
 describe('Crash profile screen', () => {
-  it('shows at most 4 KPIs and every KPI equals its T1 cell', async () => {
+  it('shows Crashes, KSI, Fatal (only when there is one) and per mile·year, each equal to its T1 cell (#269)', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')
     const kpis = await screen.findByLabelText('Key numbers')
     const values = within(kpis).getAllByText((_, el) => el.classList?.contains('sf-kpi__value'))
-    expect(values).toHaveLength(4)
-    const expected = Object.values(profile.kpis).map((a) => nf.format(cell(profile, a)))
-    values.forEach((el, i) => expect(el.textContent.startsWith(expected[i])).toBe(true))
+    const keys = ['crashes', 'ksi_crashes', ...(cell(profile, 'T1/fatal_crashes/value') ? ['fatal_crashes'] : []), 'crashes_per_mi_yr']
+    expect(values).toHaveLength(keys.length)
+    values.forEach((el, i) => expect(el.textContent.startsWith(nf.format(cell(profile, `T1/${keys[i]}/value`)))).toBe(true))
+    expect(within(kpis).queryByText(/Injury crashes/)).toBeNull()
+  })
+
+  it('a fatal crash gets its own KPI; none, no Fatal box (#269)', async () => {
+    const t1 = (n) => ({ ...profile, tables: profile.tables.map((t) => (t.id !== 'T1' ? t : { ...t, rows: t.rows.map((r) => (
+      r.key === 'fatal_crashes' ? { ...r, values: { ...r.values, value: n } } : r)) })) })
+    mockApi({ ...routes, 'GET /studies/:id/profile': t1(2) })
+    renderAt('/s/s1/profile')
+    const kpis = await screen.findByLabelText('Key numbers')
+    expect(within(kpis).getByText(/^Fatal/)).toBeInTheDocument()
+  })
+
+  it('tab 3 order: summary first, then ped/bike, where, pattern, how bad, why, trend, when (#269)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    await screen.findByLabelText('Key numbers')
+    const want = ['Key numbers', 'Data quality', 'Location ranking', 'Pedestrians and bicyclists', 'Crashes along the corridor',
+      'Collision type by location', 'Severity', 'Why did they crash?', 'Crashes by year', 'When crashes happen']
+    // "Why did they crash?" needs T18, which this fixture lacks: checked in order when present
+    const els = want.map((l) => (l === 'Why did they crash?' ? screen.queryByLabelText(l) : screen.getByLabelText(l))).filter(Boolean)
+    for (let i = 1; i < els.length; i++) {
+      expect(els[i - 1].compareDocumentPosition(els[i]) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy()
+    }
+    expect(screen.queryByRole('heading', { name: 'Collision type' })).toBeNull()        // the grid carries those counts
+  })
+
+  it('when crashes happen: 24 hour bars from T26 and 7 day bars from T27; the hour × day grid folded (#269)', async () => {
+    mockApi(routes)
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('When crashes happen')
+    const hours = within(within(sec).getByLabelText('Crashes by hour of day')).getAllByTestId('colbar')
+    expect(hours).toHaveLength(24)
+    table(profile, 'T26').rows.forEach((r, i) => expect(hours[i]).toHaveAttribute('aria-label', `${r.label}, ${r.values.crashes}`))
+    const days = within(within(sec).getByLabelText('Crashes by day of week')).getAllByTestId('colbar')
+    table(profile, 'T27').rows.forEach((r, i) => expect(days[i]).toHaveAttribute('aria-label', `${r.label}, ${r.values.crashes}`))
+    expect(within(sec).getByText('Show hour × day grid').closest('details').open).toBe(false)
   })
 
   it('renders the location table straight from T2 and collision bars from T4', async () => {
@@ -44,7 +80,10 @@ describe('Crash profile screen', () => {
       expect(cells.slice(1, 6)).toEqual(['crashes', 'ksi_crashes', 'injury_crashes', 'dark_crashes', 'crashes_per_year']
         .map((k) => nf.format(r.values[k])))
     })
-    for (const r of table(profile, 'T4').rows) expect(screen.getAllByText(r.label).length).toBeGreaterThan(0)
+    // #269: the collision-type totals are the grid's total row, from T4
+    const tot = within(screen.getByTestId('grid-total')).getAllByRole('cell')
+    const t4 = table(profile, 'T4')
+    tot.forEach((c) => expect(t4.rows.some((r) => r.label === c.getAttribute('title') && nf.format(r.values.crashes) === c.textContent)).toBe(true))
   })
 
   it('cites tables with a small ⓘ, not visible text', async () => {
@@ -64,6 +103,7 @@ describe('Crash profile screen', () => {
     expect(within(cav).queryByText(/COVID/)).toBeNull()                  // this fixture's caveats carry no COVID note
     const details = screen.getByText('Where these crashes come from').closest('details')
     expect(details.open).toBe(false)
+    expect(details.contains(cav)).toBe(true)                 // #269: at the bottom, in "Where these crashes come from"
     expect(within(details).getByText('Not placed yet (no coordinates)')).toBeInTheDocument()
   })
 
@@ -230,7 +270,7 @@ describe('Crash profile screen', () => {
     const src = within(screen.getByLabelText('Pedestrians and bicyclists')).getAllByRole('note')[0]          // the section's T19 mark
     expect(src).toHaveAttribute('title', expect.stringContaining('No CCRS party details for 2025'))
     expect(src.className).toContain('src-note')
-    expect(screen.getByLabelText('Caveats')).toHaveTextContent('No CCRS party details for 2025')
+    expect(screen.getByLabelText('Data limitations')).toHaveTextContent('No CCRS party details for 2025')   // #269: in the trust line
   })
 
   it('strip diagram: one dot per placed crash (= T1 crashes), hover, click to drill, color toggle (#102)', async () => {
@@ -358,8 +398,8 @@ describe('Crash profile screen', () => {
     renderAt('/s/s1/profile')
     await screen.findByLabelText('Key numbers')
     const v = screen.getByLabelText('Pedestrians and bicyclists')
-    // placed directly after "Can I trust these numbers?"
-    expect(screen.getByLabelText('Data quality').nextElementSibling).toBe(v)
+    // right after the summary: trust line, then the top locations (#269)
+    expect(screen.getByLabelText('Location ranking').nextElementSibling).toBe(v)
     const t19 = table(profile, 'T19')
     const val = (k) => t19.rows.find((x) => x.key === k).values
     for (const k of ['ped', 'bike', 'ebike', 'escooter', 'motorcycle']) {
@@ -485,6 +525,15 @@ describe('Safety tables on tab 3 (#265)', () => {
     expect(rows).toHaveLength(t('T18').rows.length)
     expect(within(rows[0]).getAllByRole('cell').map((c) => c.textContent))
       .toEqual(['crashes', 'ksi_crashes', 'share_pct'].map((k) => nf.format(t('T18').rows[0].values[k])))
+  })
+
+  it('"Why did they crash?" comes after severity and before the trend (#269)', async () => {
+    mockApi(sroutes)
+    renderAt('/s/s1/profile')
+    const why = await screen.findByLabelText('Why did they crash?')
+    const after = (a, b) => Boolean(a.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING)
+    expect(after(screen.getByLabelText('Severity'), why)).toBe(true)
+    expect(after(why, screen.getByLabelText('Crashes by year'))).toBe(true)
   })
 
   it('hit and run, DUI and speed from T14, each with its source mark', async () => {

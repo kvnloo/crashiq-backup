@@ -236,6 +236,23 @@ def test_t9_has_a_day_not_stated_row_only_when_needed():
     assert total == v_(p, "T1/crashes/value")
 
 
+def test_hour_and_day_tables_add_up_and_stack_by_severity():
+    # #269: the hour (24 bars) and day (7 bars) charts read these cells; nothing is summed on the screen
+    p = P()
+    tabs = {t["id"]: t for t in p["tables"]}
+    t9, hours, days = tabs["T9"], tabs["T26"], tabs["T27"]
+    assert [r["key"] for r in hours["rows"]][:24] == [str(h) for h in range(24)]
+    assert [r["key"] for r in days["rows"]][:7] == ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday",
+                                                    "Sunday"]
+    for h in range(24):
+        assert hours["rows"][h]["values"]["crashes"] == sum(r["values"][str(h)] for r in t9["rows"])
+    for r in days["rows"][:7]:
+        assert r["values"]["crashes"] == sum(v for v in next(x for x in t9["rows"] if x["key"] == r["key"])["values"].values())
+    for t in (hours, days):
+        assert sum(r["values"]["crashes"] for r in t["rows"]) == v_(p, "T1/crashes/value")
+        assert all(sum(r["values"][f"sev_{k}"] for k in "kabcuo") == r["values"]["crashes"] for r in t["rows"])
+
+
 def test_count_caveats_agree_in_number():
     # #266: "1 crash on this corridor (0.5%) have no coordinates and aren't placed yet"
     from crashiq.profile import unplaced_text
