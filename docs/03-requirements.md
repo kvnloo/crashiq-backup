@@ -596,6 +596,9 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     - the mirror wording "<local street> TO <route> <dir>" ("REDONDO BEACH BLVD. TO I-405 NB"): the **<dir> on-ramp
       from that street** (user 2026-11-01, on-ramp question, "1a"). For #300's strict match: direction <dir>, on,
       cross street = that street. Without a direction it isn't read as a ramp, as with the off-ramp form;
+    - police wording "<route> <dir> FROM <local street>" ("I-405 S/B FROM ARTESIA"): also the **<dir> on-ramp from
+      that street** (user 2026-11-01, "A yea"). Same strict-match reading: direction <dir>, on, cross street = that
+      street; no direction = not a ramp;
     - true connectors "<route> TO <route>" whose cross street is one of the two routes (2026-10-25).
   - **Stays mainline:** "<route> TO <route>" with a **local** cross street (2026-10-25: the local street passes under
     or over the freeway).
