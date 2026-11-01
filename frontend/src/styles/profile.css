@@ -23,6 +23,14 @@
 @keyframes grow { from { transform: scaleX(0); } }
 .bar .v { text-align: right; font-weight: 600; }
 
+/* hour (24) and day (7) bars, severity-stacked from the baseline (#269) */
+.colbars { display: flex; gap: 2px; align-items: flex-end; height: 92px; margin: 6px 0 4px; }
+.colbars .cb { flex: 1 1 0; min-width: 0; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; }
+.colbars .tr { flex: 1; display: flex; flex-direction: column-reverse; gap: 1px; overflow: hidden; }
+.colbars .tr i { display: block; width: 100%; }
+.colbars .tr i:last-child { border-radius: 3px 3px 0 0; }
+.colbars .lab { height: 14px; font: 10px var(--font-mono); color: var(--muted); text-align: center; white-space: nowrap; }
+
 .heat { display: grid; grid-template-columns: 34px repeat(24, minmax(0, 1fr)); gap: 2px; font: 10px var(--font-mono); color: var(--muted); }
 .heat .c { aspect-ratio: 1; border-radius: 2px; background: var(--surface-2); }
 .heat .lab { display: flex; align-items: center; }
@@ -62,6 +70,7 @@
 .profile .sf-kpi { padding: 12px 14px; }
 .profile .sf-kpi__value { font-size: 26px; }
 @media (max-width: 1180px) { .profile .sf-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+.profile .sf-kpis.n3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }   /* no fatal crash: 3 boxes, no empty one (#269) */
 
 /* ---------- 3D crash map: view tools (top right), color-by + filter legend (bottom left) ---------- */
 .pmap { position: absolute; inset: 0; }

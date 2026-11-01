@@ -243,6 +243,13 @@ def tables_for(crashes: list[dict], years: int, suffix: str = "", window: list[i
                       + ([_row("not_stated", "Day not stated", **{str(h): hd[(dd, h)] for h in range(24) for dd in [None]},
                                unknown_hour=hd[(None, None)])] if any(c.get("day_of_week") not in DOW for c in crashes) else []),
                       crashes))
+    # the same crashes by hour and by day, each severity-stacked (#269): every bar on tab 3 is one of these cells
+    hrs = [{**c, "_hr": "" if c.get("hour") is None else str(c["hour"])} for c in crashes]
+    out.append(_dist(f"T26{s}", "Crashes by hour of day", hrs, "_hr", lambda v: f"{int(v):02d}" if v else "Hour not stated",
+                     [str(h) for h in range(24)] + ([""] if any(c["_hr"] == "" for c in hrs) else [])))
+    days = [{**c, "_day": c.get("day_of_week") if c.get("day_of_week") in DOW else ""} for c in crashes]
+    out.append(_dist(f"T27{s}", "Crashes by day of week", days, "_day", lambda v: v or "Day not stated",
+                     DOW + ([""] if any(c["_day"] == "" for c in days) else [])))
     rows = []
     for key, label in MODES:
         sub = [c for c in crashes if c.get(key)]
