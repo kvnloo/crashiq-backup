@@ -375,7 +375,7 @@ function ShsRates({ p }) {
       </details>
       {tk?.rows?.length ? (
         <details className="showtable"><summary>Trucks (3+ axles)</summary>
-          <p className="muted small-note">Heavy-truck-involved crashes per million 3+ axle truck-miles. Truck AADT count years{' '}
+          <p className="muted small-note" data-testid="shs-trucks-scope">{tk.scope?.text} Truck AADT count years{' '}
             {[...new Set(tk.rows.map((r) => r.values.count_years))].join('; ')}.{' '}
             {tk.scope?.small ? `Corridor truck average: too few crashes to compare (${fmt(tk.scope.rated_crashes)}).`
               : `Corridor truck average ${fmt(tk.scope?.corridor_rate_truck)} per million truck-miles.`}</p>

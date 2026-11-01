@@ -707,7 +707,7 @@ describe('State-highway crash rates (#287)', () => {
 
   it('shows truck-involved rates per million 3+ axle truck-miles from T24, small segments as counts only', async () => {
     const T24 = { id: 'T24', title: 'State-highway truck-involved crash rates', columns: [], provenance: {},
-      scope: { rated_crashes: 14, corridor_rate_truck: 1.1, small: false }, rows: [
+      scope: { rated_crashes: 14, corridor_rate_truck: 1.1, small: false, text: 'Crashes involving a heavy truck per truck-mile.' }, rows: [
         { key: 'seg-a', label: 'A – B', values: { truck_crashes: 12, length_mi: 0.6, trucks_3plus: 5185, truck_mvm: 5.68,
           rate_truck: 2.11, corridor_rate_truck: 1.1, ratio_to_corridor: 1.92, count_years: '2021–2024', source: 'Caltrans Traffic Census Program' } },
         { key: 'seg-b', label: 'B – C', values: { truck_crashes: 2, length_mi: 0.4, trucks_3plus: 4800, truck_mvm: 3.5,
@@ -721,6 +721,7 @@ describe('State-highway crash rates (#287)', () => {
     expect(rows[0]).toHaveClass('over')
     expect(within(rows[1]).getAllByRole('cell').map((c) => c.textContent)).toEqual(['2', '4,800', '–', 'too few to compare'])
     expect(sec).toHaveTextContent('Corridor truck average 1.1 per million truck-miles')
+    expect(within(sec).getByTestId('shs-trucks-scope')).toHaveTextContent('Crashes involving a heavy truck per truck-mile.')
     expect(within(sec).getAllByLabelText('Source: table T24').length).toBeGreaterThan(0)
   })
 

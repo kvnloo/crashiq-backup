@@ -44,13 +44,14 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
         n = max(1, math.ceil((b - a) / (SAMPLE_MI * FT_PER_MI)))
         pms = [postmiles.lookup(*line.point_at(a + (i + 0.5) * (b - a) / n), routes) for i in range(n)]
         pm_cov = sum(pm is not None for pm in pms) / n
-        by_year, covered, latest, end, trucks = {}, [], False, False, {}
+        by_year, covered, latest, end, trucks, latest_t = {}, [], False, False, {}, False
         for y in years:
             tv = [[aadt_cache.truck_segment(pm["route"], pm["county"], pm["pm"], cy, pm.get("route_suffix") or "",
                                             pm.get("suffix") or "") if pm else None for cy in (y, y + 1)] for pm in pms]
             ok_t = [0.75 * a["trucks_3plus"] + 0.25 * b["trucks_3plus"] for a, b in tv
                     if a and b and a["trucks_3plus"] is not None and b["trucks_3plus"] is not None]
             trucks[y] = round(sum(ok_t) / n, 1) if len(ok_t) == n else None
+            latest_t = latest_t or any(g["latest_used"] for leg in tv for g in leg if g)
             vals = []
             for pm in pms:
                 legs = [aadt_cache.segment(pm["route"], pm["county"], pm["pm"], cy, pm.get("route_suffix") or "",
@@ -69,7 +70,7 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
                         "pm_coverage": round(pm_cov, 3),
                         "latest_used": latest, "end_tolerance": end, "routes": sorted(routes),
                         "count_years": _years_label(have, years, latest),
-                        "trucks_by_year": trucks, "truck_count_years": _years_label(have_t, years, False),
+                        "trucks_by_year": trucks, "truck_count_years": _years_label(have_t, years, latest_t),
                         "source": "Caltrans Traffic Census Program" if have else ""}
     return out
 

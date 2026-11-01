@@ -149,7 +149,7 @@ def test_a_segment_gets_its_3_plus_axle_truck_aadt_from_the_truck_point_behind(c
     v = shs.segment_volumes(net(13.3, 13.8), FakePM(), cache, [2021, 2024])["s1"]
     assert v["trucks_by_year"][2024] == 917 + 560 + 3708          # CARSON, JCT. RTE. 110 ahead leg: 3, 4, 5+ axles
     assert v["trucks_by_year"][2021] is None                       # the fixture has no 2021 truck file
-    assert v["truck_count_years"] == "2024"
+    assert v["truck_count_years"] == "2024; later count years use 2024"   # 2024 blends in count year 2025 (#299 r1)
 
 
 def trucked(n_truck, aadt3=1000, years=range(2021, 2026), whole=False):
@@ -179,6 +179,16 @@ def test_truck_involved_crash_rate_per_million_3_plus_axle_truck_miles():
     assert r["rate_truck"] == pytest.approx(round(12 / tmvm, 2)) and "small_base" not in r
     assert r["count_years"] == "2021–2024" and r["source"] == "Caltrans Traffic Census Program"
     assert trucked(3)["T24"]["rows"][0]["values"]["small_base"] == "n < 10: segment, corridor average"
+
+
+def test_the_truck_table_says_what_it_counts_over_what():
+    assert trucked(12)["T24"]["scope"]["text"] == ("Crashes involving a heavy truck (which can include trucks under 3 "
+                                                   "axles) per million miles driven by trucks with 3 or more axles.")
+
+
+def test_zero_truck_aadt_gives_no_rate_and_no_ratio():
+    r = trucked(12, aadt3=0)["T24"]["rows"][0]["values"]
+    assert r["truck_mvm"] == 0 and r["rate_truck"] is None and r["ratio_to_corridor"] is None
 
 
 def test_no_truck_counts_for_a_window_year_means_no_truck_rate():

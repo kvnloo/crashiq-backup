@@ -395,7 +395,8 @@ def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict
     tot_c, tot_m = sum(r["values"]["crashes"] for r in rows), sum(mvm_of[r["key"]] for r in rows)
     avg = r2(tot_c / tot_m) if tot_m else None
     for r in rows:
-        r["values"].update(corridor_rate_all=avg, ratio_to_corridor=r2(r["values"]["rate_all"] / avg) if avg else None)
+        r["values"].update(corridor_rate_all=avg, ratio_to_corridor=r2(r["values"]["rate_all"] / avg)
+                           if avg and r["values"]["rate_all"] is not None else None)
         # small numbers (docs/03, #271): a rate on fewer than MIN_SHARE_N crashes is kept and marked; the screen shows
         # the count only, "too few to compare"; so is a ratio to an average built on too few
         small = [x for x, n in (("segment", r["values"]["crashes"]), ("corridor average", tot_c)) if n < MIN_SHARE_N]
@@ -445,7 +446,8 @@ def _truck_rates(vols: dict, segs: dict, groups: dict, years: list[int]) -> dict
     avg = r2(tot_c / tot_m) if tot_m else None
     for r in rows:
         v = r["values"]
-        v.update(corridor_rate_truck=avg, ratio_to_corridor=r2(v["rate_truck"] / avg) if avg else None)
+        v.update(corridor_rate_truck=avg, ratio_to_corridor=r2(v["rate_truck"] / avg)
+                 if avg and v["rate_truck"] is not None else None)
         small = [x for x, n in (("segment", v["truck_crashes"]), ("corridor average", tot_c)) if n < MIN_SHARE_N]
         if small:
             v["small_base"] = f"{SMALL_MARK}: {', '.join(small)}"
@@ -456,7 +458,9 @@ def _truck_rates(vols: dict, segs: dict, groups: dict, years: list[int]) -> dict
                 ("rate_truck", "Truck-involved crashes per million truck-miles"),
                 ("corridor_rate_truck", "Corridor average"), ("ratio_to_corridor", "Rate ÷ corridor average"),
                 ("count_years", "Truck AADT count years"), ("source", "AADT source")], rows, on)
-    t["scope"] = {"rated_crashes": tot_c, "corridor_rate_truck": avg, "small": tot_c < MIN_SHARE_N}
+    t["scope"] = {"rated_crashes": tot_c, "corridor_rate_truck": avg, "small": tot_c < MIN_SHARE_N,
+                  "text": "Crashes involving a heavy truck (which can include trucks under 3 axles) per million miles "
+                          "driven by trucks with 3 or more axles."}
     return t
 
 
