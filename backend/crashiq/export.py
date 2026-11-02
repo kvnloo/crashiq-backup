@@ -294,6 +294,8 @@ RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_lim
                          "crossing)",
              "mile_marker": "a mile marker instead of a cross street (on the review list with its Caltrans postmile point "
                             "as the suggestion, until that placement is approved)",
+             "house_address": "a house address instead of a cross street, with no address point in the USDOT National "
+                              "Address Database (on the review list with the Census TIGER address-range point)",
              "user_excluded": "excluded by the engineer on the review list (reason in the Review decisions sheet)"}
 
 
@@ -337,6 +339,11 @@ def methodology(d: dict) -> str:
             "the reference street crosses the freeway, at the ramp terminal, or along the connector, plus the stated "
             "distance. Such crashes count on the corridor segments, never at an intersection, and intersection tables "
             "and collision diagrams leave them out. "
+            + "A report that gives a house address instead of a cross street is placed approximately (usually within "
+            "400 ft: 86% of tested crashes) at that address point in the USDOT National Address Database (NAD, "
+            "release r24) when NAD has it, in the crash's city; such crashes also count on segments only. Where NAD "
+            "has no point, the crash goes to the review list with the Census TIGER address-range point as a "
+            "suggestion. "
             + ("A report that gives a mile marker on the state route instead of a cross street is placed at that "
                "Caltrans postmile (SHN Postmiles Tenth layer), plus any stated distance along the route. "
                if "postmile" in locate.configured_tiers() else "")

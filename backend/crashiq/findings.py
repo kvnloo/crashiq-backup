@@ -364,6 +364,8 @@ def screen_findings(prof: dict, tables: list[dict]) -> list[Finding]:
                 f"{_num(v['reference_share_pct'])}% across the {v['reference']}.")
         if sg["location_id"] in (prof.get("approximate_locations") or []):     # #255, no number: nothing to cite
             text += " Some crashes here are freeway crashes placed approximately from the report (no usable GPS)."
+        if sg["location_id"] in (prof.get("address_nad_locations") or []):    # #283, likewise
+            text += " Some crashes here are placed approximately at the house address the report gives (no usable GPS)."
         cells = ("target_crashes", "location_crashes", "share_pct", "reference_share_pct")
         out.append(Finding(
             id="c7-" + signals_mod.slug(sg["row"]), location_id=sg["location_id"], text=text,

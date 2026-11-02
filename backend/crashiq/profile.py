@@ -364,6 +364,15 @@ def approximate_text(n: int) -> str:
             f"tables and collision diagrams leave {'it' if one else 'them'} out.")
 
 
+def address_nad_text(n: int) -> str:
+    """The NAD address-point caveat (#283), singular or plural by count."""
+    one = n == 1
+    return (f"{n} crash{' report gives' if one else ' reports give'} a house address instead of a cross street and "
+            f"{'is' if one else 'are'} placed approximately (usually within 400 ft) at the address point in the USDOT "
+            f"National Address Database. {'It counts' if one else 'They count'} on the corridor segments, never at an "
+            f"intersection, so intersection tables and collision diagrams leave {'it' if one else 'them'} out.")
+
+
 def gps_far_text(n: int, check_ft: float) -> str:
     """The GPS-far-from-stated caveat, singular or plural by count (#266)."""
     one = n == 1
@@ -697,9 +706,14 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
              "report: where the reference street crosses, the ramp terminal, or along the connector, plus the stated "
              "distance. Counted on segments only",
              value=sum(1 for c in placed if c.get("location_provenance") in ("approximate", "freeway_offset"))),
+        # house-address crashes at their NAD address point (#283, D5): approximate, segments only
+        _row("located_address_nad", "House-address crashes placed approximately (usually within 400 ft) at the "
+             "address point in the USDOT National Address Database. Counted on segments only",
+             value=sum(1 for c in placed if c.get("location_provenance") == "address_nad")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
              value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied", "fars", "exact",
-                                                                                 "unique_pair", "verified_typo", "freeway_offset", "approximate", "user"))),
+                                                                                 "unique_pair", "verified_typo", "freeway_offset", "approximate", "address_nad",
+                                                                                 "user"))),
         # placed by street names using a name or road only Census TIGER/Line has (#229); already in the rows above
         _row("located_tiger", "Of the crashes placed by street names, placed with a street name or road only "
              "TIGER/Line has", value=sum(1 for c in placed if c.get("placed_on") == "tiger")),
@@ -840,6 +854,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if approx:                             # #255: say what the precise-point analyses leave out
         caveats.append({"key": "approximate_freeway", "count": approx,
                         "text": approximate_text(approx)})
+    by_nad = sum(1 for c in placed if c.get("location_provenance") == "address_nad")
+    if by_nad:                             # #283: the same for NAD address points
+        caveats.append({"key": "address_nad", "count": by_nad, "text": address_nad_text(by_nad)})
     oc = sum(isinstance(c.get("outside_corner"), dict) for c in placed)
     if oc:                                    # #70: brought back onto the stretch by their reported distance
         one = oc == 1
@@ -922,9 +939,11 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                      "injury_crashes": "T1/injury_crashes/value", "crashes_per_mi_yr": "T1/crashes_per_mi_yr/value"},
             "tables": tables, "signals": scr["signals"], "screen_tests": scr["tests_run"], "caveats": caveats, "location_provenance": dict(sorted(prov.items())),
             "source": pull["source"], "pulled_at": pull["pulled_at"], "excluded_provenance": sorted(exclude),
-            # where approximate freeway placements are counted (#255): the findings say so
+            # where approximate placements are counted (#255 freeway, #283 NAD): the findings say so
             "approximate_locations": sorted({c["location_id"] for c in placed
-                                             if c.get("location_provenance") == "approximate" and c.get("location_id")})}
+                                             if c.get("location_provenance") == "approximate" and c.get("location_id")}),
+            "address_nad_locations": sorted({c["location_id"] for c in placed
+                                             if c.get("location_provenance") == "address_nad" and c.get("location_id")})}
 
 
 # Tables built from CCRS Parties (road users, trucks, movement, the diagram) or InjuredWitnessPassengers (injury level):

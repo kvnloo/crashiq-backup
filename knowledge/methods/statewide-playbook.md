@@ -60,6 +60,10 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   - freeway, from the report: "usually within 0.5 mi" (`methods/freeway-crashes.md`);
   - house-address crashes (D5) at USDOT NAD address points: "usually within 400 ft" (86.1% on police GPS). Where NAD
     doesn't cover, the crash goes to review with the Census/TIGER address-range point as a suggestion (#264, #283).
+    In CrashIQ (`backend/crashiq/nad.py`, `addrfeat.py`): a corridor field with a house number, the other field blank,
+    a placeholder or the same street (never a route, a numbered street or a distance) is D5. The NAD points with that
+    number on that street in the crash's city (its county when unincorporated) must be one place (within 1,000 ft);
+    the spot is their mean. The app's matching reproduces #264: 623 of 12,568 D5 placed, 86.2% within 400 ft.
 - **Mile markers (D3, user 2026-11-01, #319; off until measured):** "ANGELES CREST HWY & MILE MARKER 28.86" at that
   Caltrans postmile on the route the other field names (else the corridor's route), in the crash's county,
   interpolated between tenth points, plus a stated distance along the route (`mile_marker.py`). Two places for one

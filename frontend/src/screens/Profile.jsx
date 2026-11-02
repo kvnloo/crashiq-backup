@@ -20,6 +20,7 @@ const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from th
   postmile: 'At the Caltrans postmile of the mile marker the report gives, on the state route',
   crossing_rail: 'Where the corridor crosses the railway the report names',
   crossing_path: 'Where the corridor crosses the trail or path the report names (plus any distance along it)',
+  address_nad: 'Address point (NAD), approximate (usually within 400 ft): the house address the report gives',
   fars: 'FARS (NHTSA) point, checked against the report\'s streets', exact: 'Matched by street names', fuzzy: 'Fuzzy name match',
   user: 'Placed by you', unmatched: 'Not placed yet (no coordinates)' }
 const provLabel = (k) => PROV_LABEL[k] || (k.startsWith('jev') ? `Jev suggestion ${k.slice(3)}` : k)
@@ -601,6 +602,7 @@ const QUALITY = [['located_gps', 'GPS', 'q-gps', "Located by the officer's GPS"]
   ['located_fars', 'FARS', 'q-fars', 'Fatal crashes placed at their FARS point (NHTSA), checked against the streets the report names'], ['located_exact', 'exact', 'q-exact', 'Placed by exact street-name match'],
   ['located_unique_pair', 'one possible corner', 'q-pair', "Placed where the report's two streets meet at only one place (a direction or suffix the report leaves out may differ)"],
   ['located_freeway', 'freeway, approximate', 'q-other', 'Freeway crashes with no usable GPS, placed approximately (usually within 0.5 mi) by the report'],
+  ['located_address_nad', 'address, approximate', 'q-other', 'House-address crashes placed approximately (usually within 400 ft) at their address point in the USDOT National Address Database'],
   ['located_other', 'other', 'q-other', 'Placed by other matching tiers'], ['user_placed', 'by you', 'q-user', 'Placed by you on the review list'],
   ['unplaced', 'to review', 'q-review', 'Not placed yet: open the review list'], ['excluded', 'nearby, outside the corridor', 'q-ex', 'Nearby crashes outside the corridor: show the rules']]
 
