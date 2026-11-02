@@ -1022,7 +1022,8 @@ def stale(cached: dict, study: dict, now: datetime | None = None) -> bool:
 
 
 _STUDY_LOCKS: dict[str, threading.Lock] = {}
-_LOCKS_GUARD = threading.Lock()
+_LOCKS_GUARD = threading.Lock()       # the study locks and the background jobs; never held while calling out (#344)
+_CACHE_GUARD = threading.Lock()       # the shared caches (files, TIGER, postmiles, AADT, NAD): their own lock (#344)
 
 
 def study_lock(sid: str) -> threading.Lock:
@@ -1111,7 +1112,7 @@ def tiger_for(st):
     if getattr(st, "ckan", None) is not None:
         return None
     folder = str(st.settings.tiger_dir)
-    with _LOCKS_GUARD:
+    with _CACHE_GUARD:
         return _TIGER_CACHES.setdefault(folder, TigerCache(folder))
 
 
@@ -1126,7 +1127,7 @@ def files_for(st) -> ccrs_files.FileCache | None:
     if getattr(st, "ckan", None) is not None:
         return None
     folder = str(st.settings.ccrs_files_dir)
-    with _LOCKS_GUARD:
+    with _CACHE_GUARD:
         return _FILE_CACHES.setdefault(folder, ccrs_files.FileCache(folder))
 
 
@@ -1170,14 +1171,15 @@ def post_pull(sid: str, request: Request, response: Response, refresh: bool = Fa
             hit = fresh(db, sid)
             if hit:
                 return summary(hit, True)
+        # built before taking the lock: ckan_for reaches the cache helpers, which lock too (#344, a live-pull deadlock)
+        ckan, overpass = ckan_for(request), getattr(request.app.state, "overpass", None)
         with _LOCKS_GUARD:
             job = _JOBS.get(sid)
             if not job or job["state"] != "running":
                 job = {"state": "running", "step": "Starting", "done": 0, "total": 0,
                        "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
                 _JOBS[sid] = job
-                threading.Thread(target=_run_job, args=(db, sid, ckan_for(request), refresh, job,
-                                                         getattr(request.app.state, "overpass", None)), daemon=True).start()
+                threading.Thread(target=_run_job, args=(db, sid, ckan, refresh, job, overpass), daemon=True).start()
         response.status_code = 202
         return {"job": dict(job)}
     try:
@@ -1222,7 +1224,7 @@ def postmile_for(st):
     if getattr(st, "ckan", None) is not None:
         return None
     folder = str(st.settings.postmile_dir)
-    with _LOCKS_GUARD:
+    with _CACHE_GUARD:
         return _PM_CACHES.setdefault(folder, PostmileCache(folder))
 
 
@@ -1238,5 +1240,5 @@ def aadt_for(st):
     if getattr(st, "ckan", None) is not None:
         return None
     folder = str(st.settings.aadt_dir)
-    with _LOCKS_GUARD:
+    with _CACHE_GUARD:
         return _AADT_CACHES.setdefault(folder, AadtCache(folder))
