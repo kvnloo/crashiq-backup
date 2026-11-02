@@ -45,11 +45,19 @@ _NUM = re.compile(r"(?<![\w.])(?<!\w-)(-?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(e[+-]
                   r"(?:\s*(%|percent)|([kmb]|x|×))?(?![\w])", re.I)
 _SCALE = {"k": 3, "m": 6, "b": 9}
 _RATIO_COLS = ("ratio_to_corridor", "rate_to_critical", "ratio_to_statewide")   # what "3x" can stand for
-# Ratio and change words are numbers (user, 2026-11-02, docs/03 #359). Written at one decimal place: the quotient must
-# round to the word's value there ("doubled" = 1.95 to 2.049); that precision is the PM's proposal awaiting the user.
-RATIO_WORDS = {"doubled": "2.0", "twice": "2.0", "tripled": "3.0", "quadrupled": "4.0", "half": "0.5",
-               "a third": "0.3"}
+# Ratio and change words are numbers (user, 2026-11-02, docs/03 #359): a word is written at RATIO_WORD_DECIMALS, so
+# the ratio behind it must round to the word's value there (1: "doubled" = 1.95 to 2.049). Both RATIO_WORD_DECIMALS and
+# COUNT_WORDS are the PM's proposals in #362, awaiting the user: the word's own precision would be 0 here, and the
+# proposed count words are "a dozen", "dozens", "hundreds", "a handful" (each always rejected, as unbacked).
+RATIO_WORD_DECIMALS = 1
+RATIO_WORDS = {"doubled": 2, "twice": 2, "tripled": 3, "quadrupled": 4, "half": 0.5, "a third": 1 / 3}
+COUNT_WORDS: tuple[str, ...] = ()
 _RATIO_WORD = re.compile(r"\b(" + "|".join(RATIO_WORDS) + r")\b", re.I)
+
+
+def _ratio_written(word: str) -> str:
+    """'doubled' -> '2.0' at RATIO_WORD_DECIMALS: what matches() compares the ratio with."""
+    return str(round_half_up(RATIO_WORDS[word], RATIO_WORD_DECIMALS))
 _ORDINAL = re.compile(r"(?<![\w.])\d+(?:st|nd|rd|th)\b", re.I)
 _SPELLED = re.compile(r"\b(" + "|".join(SPELLED) + r")\b", re.I)
 _QUOTED = re.compile(r"[\"“]([^\"”]{1,120})[\"”]")
@@ -134,6 +142,8 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
            for m in _NUM.finditer(masked)]
     out += [str(SPELLED[m.group(1).lower()]) for m in _SPELLED.finditer(masked)]
     out += [m.group(1).lower() for m in _RATIO_WORD.finditer(masked)]
+    if COUNT_WORDS:
+        out += [m.group(1).lower() for m in re.finditer(r"\b(" + "|".join(COUNT_WORDS) + r")\b", masked, re.I)]
     return out
 
 
@@ -228,8 +238,10 @@ def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: 
         plain = w.replace(",", "")
         if plain.isdigit() and lo <= int(plain) <= hi:
             continue                                   # a year inside the study window
-        if w in RATIO_WORDS or w[-1] in "xX×":
-            ok = _backs_ratio(RATIO_WORDS.get(w) or plain, finding, tables, by_id)
+        if w in COUNT_WORDS:
+            ok = False                                 # a count word: write the cited number as digits
+        elif w in RATIO_WORDS or w[-1] in "xX×":
+            ok = _backs_ratio(_ratio_written(w) if w in RATIO_WORDS else plain, finding, tables, by_id)
         else:
             ok = False
             for n in finding.numbers:

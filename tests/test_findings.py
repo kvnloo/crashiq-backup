@@ -305,3 +305,18 @@ def test_a_ratio_word_without_cells_that_give_it_is_rejected(extra, word):
 def test_a_multiple_can_be_backed_by_the_two_cells_it_compares():
     assert check(**{**GOOD, "text": GOOD["text"] + " Crashes are 2x injury crashes.",
                     "numbers": GOOD["numbers"] + [INJ]}) == []
+
+
+def test_the_ratio_word_tolerance_is_one_constant(monkeypatch):
+    # 30 / 15 = 2.0 backs "doubled" at one decimal; 30 / 20 = 1.5 doesn't, but would at the word's own precision
+    t = {**GOOD, "text": GOOD["text"] + " Crashes doubled."}
+    assert any("number doubled" in r for r in check(**t))
+    monkeypatch.setattr(F, "RATIO_WORD_DECIMALS", 0)
+    assert check(**t) == []
+
+
+def test_count_words_are_rejected_once_listed(monkeypatch):
+    t = {**GOOD, "text": GOOD["text"] + " Dozens of crashes happened at night."}
+    assert check(**t) == []                                    # the list is empty until the user decides (#362)
+    monkeypatch.setattr(F, "COUNT_WORDS", ("a dozen", "dozens", "hundreds", "a handful"))
+    assert any("number dozens" in r for r in check(**t))
