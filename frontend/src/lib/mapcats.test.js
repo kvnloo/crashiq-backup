@@ -128,3 +128,27 @@ describe('level not stated is hollow (#108 round 2)', () => {
     expect(categories('type', [{ collision_type: 'BROADSIDE' }]).some((c) => c.hollow)).toBe(false)
   })
 })
+
+describe('locationPoints: segments at the study ends (#375)', () => {
+  const line = [[33.8628, -118.3205], [33.8708, -118.3405], [33.8895, -118.3592]]
+
+  it('a corridor with no intersections still gets a column for its one A–B segment', () => {
+    const net = { line, intersections: [], segments: [{ id: 'seg:A:B', from_id: 'A', to_id: 'B', name: 'Study start (A) – Study end (B)' }] }
+    const locs = locationPoints(net)
+    expect(locs.map((l) => l.id)).toEqual(['seg:A:B'])
+    expect(locs[0]).toMatchObject({ lat: (33.8628 + 33.8895) / 2, lon: (-118.3205 + -118.3592) / 2, kind: 'segment' })
+    expect(columns(locs, [{ crash_id: '1', location_id: 'seg:A:B', severity: 'O' }], 'severity',
+      [{ key: 'O', label: 'PDO', color: '#888' }]).features).toHaveLength(1)
+  })
+
+  it('the end segments (A to the first intersection, the last intersection to B) get columns too', () => {
+    const net = { line, intersections: [{ id: 'i1', name: 'Mid St', lat: 33.8708, lon: -118.3405, is_study: true }],
+      segments: [{ id: 'seg:A:i1', from_id: 'A', to_id: 'i1', name: 'A – Mid St' }, { id: 'seg:i1:B', from_id: 'i1', to_id: 'B', name: 'Mid St – B' }] }
+    expect(locationPoints(net).map((l) => l.id).sort()).toEqual(['i1', 'seg:A:i1', 'seg:i1:B'])
+  })
+
+  it('without a line the end segments are still skipped, not placed at a guess', () => {
+    const net = { intersections: [], segments: [{ id: 'seg:A:B', from_id: 'A', to_id: 'B' }] }
+    expect(locationPoints(net)).toEqual([])
+  })
+})
