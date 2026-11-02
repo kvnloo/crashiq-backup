@@ -49,10 +49,11 @@ _RATIO_COLS = ("ratio_to_corridor", "rate_to_critical", "ratio_to_statewide")   
 # the ratio behind it must round to the word's value there (1: "doubled" = 1.95 to 2.049, not the word's own precision;
 # user, 2026-11-02, "Yes, tight"; #362).
 RATIO_WORD_DECIMALS = 1
-RATIO_WORDS = {"doubled": 2, "twice": 2, "tripled": 3, "quadrupled": 4, "half": 0.5, "a third": 1 / 3}
-# Count words are always rejected: the finding writes the cited number as digits (user, 2026-11-02, "option A"; #362)
+RATIO_WORDS = {"doubled": 2, "twice": 2, "tripled": 3, "quadrupled": 4, "half": 0.5}
+# Always rejected; the finding writes the cited numbers as digits (user, 2026-11-02, #362): count words ("option A"),
+# and ratio words not exact at RATIO_WORD_DECIMALS ("a third" would pass for 0.25 in the 0.3 window).
 COUNT_WORDS: tuple[str, ...] = ("a dozen", "dozens", "a few dozen", "several dozen", "a hundred", "hundreds",
-                                "a few hundred", "several hundred", "a handful")
+                                "a few hundred", "several hundred", "a handful", "a third", "two thirds")
 _RATIO_WORD = re.compile(r"\b(" + "|".join(RATIO_WORDS) + r")\b", re.I)
 
 
@@ -139,13 +140,16 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
     for code in quoted_ok:            # "VC 22350": a record's own PCF code, written after VC (#346)
         masked = re.sub(rf"\bVC\s+{re.escape(code)}\b", lambda m: " " * len(m.group(0)), masked, flags=re.I)
     masked = _ORDINAL.sub(lambda m: " " * len(m.group(0)), masked)
+    counts = []                          # read and blanked first: "two thirds" is one claim, not the number 2
+    if COUNT_WORDS:
+        pat = r"\b(" + "|".join(sorted(COUNT_WORDS, key=len, reverse=True)) + r")\b"
+        counts = [m.group(1).lower() for m in re.finditer(pat, masked, re.I)]
+        masked = re.sub(pat, lambda m: " " * len(m.group(0)), masked, flags=re.I)
     out = [m.group(1) + m.group(2) + (m.group(3) or "") + (m.group(4) or "") + (m.group(6) or "")
            for m in _NUM.finditer(masked)]
     out += [str(SPELLED[m.group(1).lower()]) for m in _SPELLED.finditer(masked)]
     out += [m.group(1).lower() for m in _RATIO_WORD.finditer(masked)]
-    if COUNT_WORDS:
-        out += [m.group(1).lower() for m in re.finditer(r"\b(" + "|".join(sorted(COUNT_WORDS, key=len, reverse=True)) + r")\b",
-                                                         masked, re.I)]
+    out += counts
     return out
 
 

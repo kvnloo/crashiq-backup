@@ -295,7 +295,7 @@ def test_a_ratio_word_backed_by_two_cited_cells_passes(extra):
 
 @pytest.mark.parametrize("extra, word", [
     (" Crashes tripled.", "tripled"), (" Crashes quadrupled.", "quadrupled"), (" Crashes doubled.", "doubled"),
-    (" A third of crashes were at night.", "a third"), (" Injury crashes are half of all crashes.", "half"),
+    (" Injury crashes are half of all crashes.", "half"),
 ])
 def test_a_ratio_word_without_cells_that_give_it_is_rejected(extra, word):
     # GOOD's cells are 20, 30, 3, 4: no pair gives 2, 3, 4, 1/2 or 1/3 at one decimal place
@@ -320,8 +320,18 @@ def test_the_ratio_word_tolerance_is_one_constant(monkeypatch):
     ("A few dozen crashes happened at night.", "a few dozen"), ("Several dozen crashes happened at night.", "several dozen"),
     ("A hundred crashes happened at night.", "a hundred"), ("Hundreds of crashes happened at night.", "hundreds"),
     ("Several hundred crashes happened at night.", "several hundred"), ("A handful of crashes were at night.", "a handful"),
+    ("A third of crashes were at night.", "a third"), ("Two thirds of crashes were in daylight.", "two thirds"),
 ])
 def test_count_words_are_always_rejected(phrase, word):
     # user, 2026-11-02 ("option A", #362): write the cited number as digits instead
     r = check(**{**GOOD, "text": GOOD["text"] + " " + phrase})
     assert [x for x in r if "number" in x] == [f"number {word} in the text is not backed by a cited table cell"]
+
+
+def test_a_third_is_rejected_even_when_the_cells_give_exactly_a_third():
+    # docs/03 #362: not exact at one decimal place, so never backed (in the 0.3 window it would pass for 0.25)
+    t = {**GOOD, "text": GOOD["text"] + " A third of crashes were injury crashes.",
+         "numbers": GOOD["numbers"] + [{"value": 5, "table_id": "T2", "cell": "I1/sev_b"},
+                                       {"value": 15, "table_id": "T2", "cell": "I1/sev_o"}]}      # 5 / 15 = 1/3
+    r = check(**t)
+    assert [x for x in r if "number" in x or "declared" in x] == ["number a third in the text is not backed by a cited table cell"]
