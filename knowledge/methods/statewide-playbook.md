@@ -144,7 +144,8 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
   - **GPS on the freeway line is not proof of mainline.** Ramp and cross-street crashes at interchanges often carry
     GPS on or beside the line. Classify by the report's road wording (`backend/crashiq/rate_class.py`, #304):
     - a ramp named, or "<route> <dir> TO <local street>" (= the <dir> off-ramp to that street), or "<local street>
-      TO <route> <dir>" (= the <dir> on-ramp from that street, user 2026-11-01, #331), or a connector
+      TO <route> <dir>" or "<route> <dir> FROM <local street>" (= the <dir> on-ramp from that street, user
+      2026-11-01, #331, #341), or a connector
       "<route> TO <route>" whose cross street is one of the routes → ramp (rated in the ramp table; a connector
       gets no ramp rate);
     - "<route> TO <route>" with a local cross street → mainline;
