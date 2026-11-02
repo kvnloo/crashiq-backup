@@ -1,0 +1,273 @@
+<meta charset=utf-8><title>CrashIQ Stage 5 test tracker</title><style>body{font-family:-apple-system,sans-serif;max-width:900px;margin:40px auto;line-height:1.5;padding:0 16px}table{border-collapse:collapse;display:block;overflow-x:auto}td,th{border:1px solid #ccc;padding:4px 8px;vertical-align:top}</style>
+<h1 dir="auto">CrashIQ Stage 5 test tracker, 2026-11-02</h1>
+<p dir="auto"><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164602385" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/357" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/357/hovercard" href="https://github.com/redhawkliger/crashiq/issues/357">#357</a> · Tester · build frozen by <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164585081" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/356" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/356/hovercard" href="https://github.com/redhawkliger/crashiq/pull/356">#356</a> · checked on main <strong><a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/redhawkliger/crashiq/commit/21ddcb1aa4518e4c6efc17da9839877164924d51/hovercard" href="https://github.com/redhawkliger/crashiq/commit/21ddcb1aa4518e4c6efc17da9839877164924d51"><tt>21ddcb1</tt></a></strong> (part B on <a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/redhawkliger/crashiq/commit/010ebb785b5b436ff3e70d20dafb718e7cf1e568/hovercard" href="https://github.com/redhawkliger/crashiq/commit/010ebb785b5b436ff3e70d20dafb718e7cf1e568"><tt>010ebb7</tt></a>; the only later change is docs/03)</p>
+<h2 dir="auto">Where it stands</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th></th>
+<th>Result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Six-condition "testing done" gate</strong></td>
+<td><strong>5 pass, 1 partial</strong>: condition 2 waits on the HSM Ch. 4 golden case (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165013192" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/360" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/360/hovercard" href="https://github.com/redhawkliger/crashiq/issues/360">#360</a>)</td>
+</tr>
+<tr>
+<td><strong>End-to-end click-through, 3 corridors</strong></td>
+<td><strong>2 pass, 1 fails on one screen item</strong>: the freeway's 3D map is empty (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6172321598" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/375" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/375/hovercard" href="https://github.com/redhawkliger/crashiq/issues/375">#375</a>); every other check passes</td>
+</tr>
+<tr>
+<td><strong>Open items blocking "done"</strong></td>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165013192" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/360" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/360/hovercard" href="https://github.com/redhawkliger/crashiq/issues/360">#360</a> (golden case), <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6172321598" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/375" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/375/hovercard" href="https://github.com/redhawkliger/crashiq/issues/375">#375</a> (map)</td>
+</tr>
+<tr>
+<td><strong>Filed in Stage 5</strong></td>
+<td>6 bugs (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164809017" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/358" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/358/hovercard" href="https://github.com/redhawkliger/crashiq/issues/358">#358</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164830483" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/359" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/359/hovercard" href="https://github.com/redhawkliger/crashiq/issues/359">#359</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169120333" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/369" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/369/hovercard" href="https://github.com/redhawkliger/crashiq/issues/369">#369</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169120707" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/370" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/370/hovercard" href="https://github.com/redhawkliger/crashiq/issues/370">#370</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169478903" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/372" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/372/hovercard" href="https://github.com/redhawkliger/crashiq/issues/372">#372</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6172321598" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/375" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/375/hovercard" href="https://github.com/redhawkliger/crashiq/issues/375">#375</a>): 5 fixed and re-verified, 1 open · 3 tasks (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165013192" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/360" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/360/hovercard" href="https://github.com/redhawkliger/crashiq/issues/360">#360</a> open; <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165145805" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/361" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/361/hovercard" href="https://github.com/redhawkliger/crashiq/issues/361">#361</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165546092" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/363" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/363/hovercard" href="https://github.com/redhawkliger/crashiq/issues/363">#363</a> closed)</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h2 dir="auto">A. Six-condition gate</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>#</th>
+<th>Condition</th>
+<th>Status</th>
+<th>Evidence</th>
+<th>Issues</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>1</td>
+<td>Every engine function has unit tests, incl. edge inputs</td>
+<td>✅ <strong>Pass</strong> (notes)</td>
+<td>Rates, critical rate, rate groups, AADT, LRSM cost and placement tiers all have unit tests incl. the missing-input case. T12 <code class="notranslate">binom_sf</code> no longer overflows (checked at n = 1,030 and 20,000 on main) and has a large-n test (<code class="notranslate">test_signals.py::test_binom_sf_stays_a_probability_for_large_n</code>). Notes, not filed: negative AADT/length/crashes and <code class="notranslate">p</code> outside 0–1 aren't guarded in the engine (the API rejects negative AADT). Probe: <code class="notranslate">edge_probe.txt</code></td>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164809017" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/358" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/358/hovercard" href="https://github.com/redhawkliger/crashiq/issues/358">#358</a> ✅ fixed</td>
+</tr>
+<tr>
+<td>2</td>
+<td>Every published golden case passes</td>
+<td>🟡 <strong>Partial</strong></td>
+<td>Caltrans rate groups: all <strong>178</strong> rows match the 2024 book PDF on every field (Tester script <code class="notranslate">golden_rate_groups.py</code>, 0 mismatches). LRSM 2026 costs: exact (<code class="notranslate">test_crash_cost.py</code>). HSM Ch. 4 critical-rate published example: <strong>none in the tests</strong></td>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165013192" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/360" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/360/hovercard" href="https://github.com/redhawkliger/crashiq/issues/360">#360</a> open</td>
+</tr>
+<tr>
+<td>3</td>
+<td>Every API endpoint has a happy-path and a bad-input test</td>
+<td>✅ <strong>Pass</strong></td>
+<td>Route trace of the full suite on main <a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/redhawkliger/crashiq/commit/21ddcb1aa4518e4c6efc17da9839877164924d51/hovercard" href="https://github.com/redhawkliger/crashiq/commit/21ddcb1aa4518e4c6efc17da9839877164924d51"><tt>21ddcb1</tt></a> (<code class="notranslate">route_trace.py</code>): <strong>40 routes</strong>, every one has a happy-path test; every route that takes input has a bad-input test (7 routes take no input). The one route without a bad-input test is the app-page catch-all <code class="notranslate">GET /{full_path:path}</code> (not an API endpoint). A Tester probe shows its path-traversal guard holds (<code class="notranslate">../</code>, <code class="notranslate">%2e%2e</code>, <code class="notranslate">..%2f</code>, <code class="notranslate">/assets/../..</code> all return the app page) and it answers 401 without the password. A test of that guard would be cheap to add</td>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165145805" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/361" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/361/hovercard" href="https://github.com/redhawkliger/crashiq/issues/361">#361</a> ✅ closed</td>
+</tr>
+<tr>
+<td>4</td>
+<td>Validator rejects a finding whose numbers aren't in a cited table</td>
+<td>✅ <strong>Pass</strong></td>
+<td><code class="notranslate">test_findings.py</code> (117 pass) + Tester probe of 57 forms: $4.2M, 3x, -45%, 1e3, $5,000,000, ratio words held to one decimal, count words, "twenty-one", "twenty one", "twenty—one" are all rejected when unbacked; backed forms pass</td>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164830483" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/359" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/359/hovercard" href="https://github.com/redhawkliger/crashiq/issues/359">#359</a> <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169120333" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/369" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/369/hovercard" href="https://github.com/redhawkliger/crashiq/issues/369">#369</a> <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169120707" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/370" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/370/hovercard" href="https://github.com/redhawkliger/crashiq/issues/370">#370</a> <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169478903" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/372" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/372/hovercard" href="https://github.com/redhawkliger/crashiq/issues/372">#372</a> ✅ all fixed, re-verified</td>
+</tr>
+<tr>
+<td>5</td>
+<td>Every closed <code class="notranslate">bug</code> issue has a regression test</td>
+<td>✅ <strong>Pass</strong></td>
+<td><strong>35 / 35</strong> closed <code class="notranslate">bug</code> issues are cited by a test in <code class="notranslate">tests/</code> or <code class="notranslate">frontend/src</code></td>
+<td>—</td>
+</tr>
+<tr>
+<td>6</td>
+<td><code class="notranslate">make setup &amp;&amp; make test</code> from a fresh clone</td>
+<td>✅ <strong>Pass</strong></td>
+<td>Fresh GitHub clone of <a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/redhawkliger/crashiq/commit/c671aa0a9c4dd3c4ef128f33a5560352b5314d2d/hovercard" href="https://github.com/redhawkliger/crashiq/commit/c671aa0a9c4dd3c4ef128f33a5560352b5314d2d"><tt>c671aa0</tt></a> (python 3.15): 720 passed / 2 skipped, vitest 116. Fresh clone of the <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165546092" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/363" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/363/hovercard" href="https://github.com/redhawkliger/crashiq/issues/363">#363</a> dependency branch: 720 passed, vitest 116, <code class="notranslate">npm audit --omit=dev</code> 0 vulnerabilities. Main <a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/redhawkliger/crashiq/commit/21ddcb1aa4518e4c6efc17da9839877164924d51/hovercard" href="https://github.com/redhawkliger/crashiq/commit/21ddcb1aa4518e4c6efc17da9839877164924d51"><tt>21ddcb1</tt></a> today: pytest <strong>915 passed, 2 skipped</strong>; vitest <strong>116 / 116</strong></td>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165546092" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/363" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/363/hovercard" href="https://github.com/redhawkliger/crashiq/issues/363">#363</a> ✅ closed</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h2 dir="auto">B. End-to-end click-through (scripted, telemetry off, port 8001, Tester DB)</h2>
+<p dir="auto">From the Setup form to the Export button, per corridor. "Numbers trace" = every on-screen table compared cell by cell with the API table its ⓘ note cites.</p>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th></th>
+<th>Crenshaw Blvd, W 132nd St – W 147th St</th>
+<th>El Camino Real SR-82, Millbrae</th>
+<th>I-405 Torrance PM 15.1–18.1</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Kind</td>
+<td>City street, no state highway</td>
+<td>Conventional state highway</td>
+<td>Freeway with ramps</td>
+</tr>
+<tr>
+<td><strong>Result</strong></td>
+<td>✅ <strong>Pass</strong></td>
+<td>✅ <strong>Pass</strong></td>
+<td>❌ <strong>Fail: 3D map empty</strong> (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6172321598" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/375" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/375/hovercard" href="https://github.com/redhawkliger/crashiq/issues/375">#375</a>)</td>
+</tr>
+<tr>
+<td>Every tab loads (no page errors, no 4xx/5xx)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Corridor detected</td>
+<td>✅ 10 intersections, 9 segments</td>
+<td>✅ 13 intersections, 13 segments</td>
+<td>✅ 1 segment A–B (no at-grade intersections)</td>
+</tr>
+<tr>
+<td>Crashes pulled in the screen</td>
+<td>✅ 212 (6 KSI)</td>
+<td>✅ 80 (11 KSI, 1 fatal)</td>
+<td>✅ 719 (16 KSI, 5 fatal)</td>
+</tr>
+<tr>
+<td>Numbers trace to a table</td>
+<td>✅ 11 tables, 0 mismatches</td>
+<td>✅ 15 tables, 0 mismatches (incl. T22–T24 state-highway rates)</td>
+<td>✅ 14 tables, 0 mismatches (incl. T25 ramps, 7 ramps)</td>
+</tr>
+<tr>
+<td>Provenance shown (tier counts)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Map</td>
+<td>✅ 3D columns + 2D dots</td>
+<td>✅ 3D columns + 2D dots</td>
+<td>❌ 3D: <strong>0 columns</strong> for 719 crashes; 2D dots ✅</td>
+</tr>
+<tr>
+<td>Location panel</td>
+<td>✅</td>
+<td>✅ (Center Street = T2)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td>Findings tab</td>
+<td>✅ 8 findings</td>
+<td>✅ 7 findings</td>
+<td>✅ 5 findings</td>
+</tr>
+<tr>
+<td>Export opens (PDF + XLSX)</td>
+<td>✅ 2 s</td>
+<td>✅ 6 s</td>
+<td>✅ 14 s</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h2 dir="auto">Issues filed in Stage 5</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>Issue</th>
+<th>What</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164809017" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/358" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/358/hovercard" href="https://github.com/redhawkliger/crashiq/issues/358">#358</a></td>
+<td>T12 binomial overflow at 1,030+ crashes</td>
+<td>✅ fixed, re-checked on main</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164830483" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/359" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/359/hovercard" href="https://github.com/redhawkliger/crashiq/issues/359">#359</a></td>
+<td>Validator missed $4.2M, 3x, -45%, 1e3</td>
+<td>✅ fixed, re-verified</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169120333" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/369" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/369/hovercard" href="https://github.com/redhawkliger/crashiq/issues/369">#369</a></td>
+<td>"2x" checked at whole-number precision</td>
+<td>✅ fixed, re-verified</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169120707" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/370" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/370/hovercard" href="https://github.com/redhawkliger/crashiq/issues/370">#370</a></td>
+<td>"twenty-one" read as 20</td>
+<td>✅ fixed, re-verified</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169478903" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/372" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/372/hovercard" href="https://github.com/redhawkliger/crashiq/issues/372">#372</a></td>
+<td>"twenty one" / "twenty—one" read as 20</td>
+<td>✅ fixed, re-verified</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6172321598" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/375" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/375/hovercard" href="https://github.com/redhawkliger/crashiq/issues/375">#375</a></td>
+<td>Segment at A or B gets no 3D column: freeway map empty</td>
+<td>❌ open (Engineering); Tester re-checks I-405 after merge</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165013192" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/360" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/360/hovercard" href="https://github.com/redhawkliger/crashiq/issues/360">#360</a></td>
+<td>HSM Ch. 4 golden case missing</td>
+<td>❌ open</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165145805" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/361" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/361/hovercard" href="https://github.com/redhawkliger/crashiq/issues/361">#361</a></td>
+<td>Route tests missing (1 happy, 18 bad-input)</td>
+<td>✅ closed</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165546092" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/363" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/363/hovercard" href="https://github.com/redhawkliger/crashiq/issues/363">#363</a></td>
+<td>npm advisories in shipped dependencies</td>
+<td>✅ closed (0 vulnerabilities)</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h2 dir="auto">PRs checked during Stage 5</h2>
+<markdown-accessiblity-table><table role="table">
+<thead>
+<tr>
+<th>PR</th>
+<th>What it changed</th>
+<th>Tester result</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6155763382" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/354" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/354/hovercard" href="https://github.com/redhawkliger/crashiq/pull/354">#354</a></td>
+<td>Outside-corner crashes</td>
+<td>116 crashes in 45 corridors, all outside-corner; 57 of them sit at study intersections under another name, so the profile caveat ("just outside the study stretch") is wrong for them (reported on <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6155763382" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/354" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/354/hovercard" href="https://github.com/redhawkliger/crashiq/pull/354">#354</a>). Follow-up <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6171834636" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/374" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/374/hovercard" href="https://github.com/redhawkliger/crashiq/issues/374">#374</a> (backlog)</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6165398038" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/362" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/362/hovercard" href="https://github.com/redhawkliger/crashiq/pull/362">#362</a></td>
+<td>docs/03: number words in findings</td>
+<td>Clean after 3 rounds (head <a class="commit-link" data-hovercard-type="commit" data-hovercard-url="https://github.com/redhawkliger/crashiq/commit/05b7bb3dc50a28dd1d47129c27e8c260dfce86ac/hovercard" href="https://github.com/redhawkliger/crashiq/commit/05b7bb3dc50a28dd1d47129c27e8c260dfce86ac"><tt>05b7bb3</tt></a>)</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6166140405" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/367" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/367/hovercard" href="https://github.com/redhawkliger/crashiq/pull/367">#367</a></td>
+<td>Shipped dependency upgrades</td>
+<td>Clean: fresh clone, all tabs, exports, 0 vulnerabilities</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6153126744" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/339" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/339/hovercard" href="https://github.com/redhawkliger/crashiq/pull/339">#339</a></td>
+<td>Roundabout detection</td>
+<td>Clean on the yield-free head: 2 intersections → roundabout, Blue Lake +$1,405,000, 12/12 roundabouts right. Yield rule parked (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6168996491" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/368" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/368/hovercard" href="https://github.com/redhawkliger/crashiq/issues/368">#368</a>)</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6151010800" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/315" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/315/hovercard" href="https://github.com/redhawkliger/crashiq/pull/315">#315</a></td>
+<td>D5 house-address crashes (NAD)</td>
+<td>Clean: 2,137 crashes in 182 corridors, 4 fatal crashes kept, 15/15 route/ramp cases right</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6149810205" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/310" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/310/hovercard" href="https://github.com/redhawkliger/crashiq/pull/310">#310</a></td>
+<td>Name cleaner (D3 wording)</td>
+<td>Parked by PM as a draft until after shipping</td>
+</tr>
+<tr>
+<td><a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6154306570" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/348" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/348/hovercard" href="https://github.com/redhawkliger/crashiq/pull/348">#348</a></td>
+<td>docs/03: 2016–2020 counts, Crash Data book</td>
+<td>Accurate; wording fix merged</td>
+</tr>
+</tbody>
+</table></markdown-accessiblity-table>
+<h2 dir="auto">Not in Stage 5 (parked or backlog)</h2>
+<p dir="auto">Per-crash location source in the crash list (parked 2026-11-02; docs/03 asks for tier counts only) · <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6168996491" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/368" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/368/hovercard" href="https://github.com/redhawkliger/crashiq/issues/368">#368</a> yield rule · <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6171834636" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/374" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/374/hovercard" href="https://github.com/redhawkliger/crashiq/issues/374">#374</a> outside-corner cross street · <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6148958212" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/306" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/306/hovercard" href="https://github.com/redhawkliger/crashiq/issues/306">#306</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6151476766" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/322" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/322/hovercard" href="https://github.com/redhawkliger/crashiq/pull/322">#322</a>/<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6151611847" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/324" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/324/hovercard" href="https://github.com/redhawkliger/crashiq/pull/324">#324</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5981453179" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/201" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/201/hovercard" href="https://github.com/redhawkliger/crashiq/issues/201">#201</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5980470893" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/199" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/199/hovercard" href="https://github.com/redhawkliger/crashiq/issues/199">#199</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5935983932" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/88" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/88/hovercard" href="https://github.com/redhawkliger/crashiq/issues/88">#88</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6150335991" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/313" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/313/hovercard" href="https://github.com/redhawkliger/crashiq/issues/313">#313</a> · the AI analyst (<a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="5916026015" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/55" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/55/hovercard" href="https://github.com/redhawkliger/crashiq/issues/55">#55</a>).</p>
+<p dir="auto">Evidence lives in the Tester work folder (scripts <code class="notranslate">screen357.mjs</code>, <code class="notranslate">numbers357.mjs</code>, <code class="notranslate">golden_rate_groups.py</code>, <code class="notranslate">validator_probe2.py</code>, <code class="notranslate">edge_probe.py</code>, <code class="notranslate">route_trace.py</code>) and in the comments on <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164602385" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/357" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/357/hovercard" href="https://github.com/redhawkliger/crashiq/issues/357">#357</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6151010800" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/315" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/315/hovercard" href="https://github.com/redhawkliger/crashiq/pull/315">#315</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6153126744" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/339" data-hovercard-type="pull_request" data-hovercard-url="/redhawkliger/crashiq/pull/339/hovercard" href="https://github.com/redhawkliger/crashiq/pull/339">#339</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6164830483" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/359" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/359/hovercard" href="https://github.com/redhawkliger/crashiq/issues/359">#359</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169120333" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/369" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/369/hovercard" href="https://github.com/redhawkliger/crashiq/issues/369">#369</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169120707" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/370" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/370/hovercard" href="https://github.com/redhawkliger/crashiq/issues/370">#370</a>, <a class="issue-link js-issue-link" data-error-text="Failed to load title" data-id="6169478903" data-permission-text="Title is private" data-url="https://github.com/redhawkliger/crashiq/issues/372" data-hovercard-type="issue" data-hovercard-url="/redhawkliger/crashiq/issues/372/hovercard" href="https://github.com/redhawkliger/crashiq/issues/372">#372</a>.</p>
