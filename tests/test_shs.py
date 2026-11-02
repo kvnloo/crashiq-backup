@@ -45,7 +45,7 @@ def test_a_state_highway_segment_gets_each_calendar_year_s_aadt(cache):
     assert v["by_year"][2024] == a24                                            # 2025's count year is past 2024: latest
     assert v["by_year"][2021] == pytest.approx(0.75 * a21 + 0.25 * cache.segment("405", "LA", 13.5, 2022)["aadt"])
     assert v["coverage"] == 1.0 and v["latest_used"] and v["routes"] == ["405"]
-    assert v["source"] == "Caltrans Traffic Census Program" and v["count_years"] == "2021–2024; later count years use 2024"
+    assert v["source"] == "Caltrans Traffic Census Program" and v["count_years"] == "2021–2024; 2022 uses 2021; 2025 uses 2024"   # #351: the years looked up
     assert v["pm_coverage"] == 1.0
 
 
@@ -197,7 +197,7 @@ def test_a_segment_gets_its_3_plus_axle_truck_aadt_from_the_truck_point_behind(c
     v = shs.segment_volumes(net(13.3, 13.8), FakePM(), cache, [2021, 2024])["s1"]
     assert v["trucks_by_year"][2024] == 917 + 560 + 3708          # CARSON, JCT. RTE. 110 ahead leg: 3, 4, 5+ axles
     assert v["trucks_by_year"][2021] is None                       # the fixture has no 2021 truck file
-    assert v["truck_count_years"] == "2024; later count years use 2024"   # 2024 blends in count year 2025 (#299 r1)
+    assert v["truck_count_years"] == "2024; 2025 uses 2024"   # 2024 blends in count year 2025 (#299 r1)
 
 
 def trucked(n_truck, aadt3=1000, years=range(2021, 2026), whole=False):
@@ -284,3 +284,14 @@ def test_a_window_older_than_the_caltrans_counts_says_so_not_no_aadt_entered():
     assert cav["text"] == (f"State-highway crash rates were not computed: Caltrans traffic counts start in {first}, so "
                            f"window year {early} has no count. Rates need a study window from {first} on.")
     assert cav["years_without_counts"] == [early] and "no AADT entered" not in cav["text"]
+
+
+def test_the_count_years_label_names_the_years_the_window_used_not_every_loaded_year(cache):
+    # #351: the cache holds 2021 and 2024; a 2024 window uses count year 2024, and 2025 falls back to it
+    v = shs.segment_volumes(net(13.3, 13.8), FakePM(), cache, [2024])["s1"]
+    assert v["count_years"] == "2024; 2025 uses 2024"
+    assert v["truck_count_years"] == "2024; 2025 uses 2024"
+    assert shs._years_label({2020: 2020, 2021: 2021, 2024: 2024, 2025: 2024}) == "2020–2024; 2025 uses 2024"
+    assert shs._years_label({2024: 2024, 2025: 2024, 2026: 2024}) == "2024; 2025–2026 use 2024"
+    assert shs._years_label({2021: 2021, 2022: 2021, 2023: 2023, 2024: 2023}) == "2021–2023; 2022 uses 2021; 2024 uses 2023"
+    assert shs._years_label({}) == ""
