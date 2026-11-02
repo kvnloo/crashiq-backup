@@ -534,7 +534,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   The prices sit in a cited reference table; every cost shown is computed by code from it.
 - **Traffic counts before 2021 and the Crash Data book DECIDED (user, 2026-11-01, PM session; #345, #287):** "a, ok".
   (a) Load Caltrans Traffic Census volume and truck workbooks for count years **2016–2020** too, so a study window
-  that starts before 2021 (the default is 2020–2024) still gets state-highway rates. The ramp workbooks already carry
+  that starts before 2021 (today's default, the last 5 final years, is 2020–2024) still gets state-highway rates. The ramp workbooks already carry
   ten years per edition. (ok) Download the **2024 Crash Data on California State Highways** book for its Basic Average
   Crash Rate Table (#294/#298). Both were downloaded by the PM session on 2026-11-01 into
   `data/cache/caltrans_downloads_2026-11-01/` with SHA-256 sums (never committed); only the extracted rate table, with
