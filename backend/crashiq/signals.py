@@ -107,7 +107,18 @@ def betainc(a: float, b: float, x: float) -> float:
 
 def binom_sf(x: int, n: int, p: float) -> float:
     """P(X >= x) for X ~ Binomial(n, p)."""
-    return sum(math.comb(n, k) * p ** k * (1 - p) ** (n - k) for k in range(x, n + 1))
+    try:
+        return sum(math.comb(n, k) * p ** k * (1 - p) ** (n - k) for k in range(x, n + 1))
+    except OverflowError:               # #358: math.comb(n, k) passes the largest float from n = 1,030
+        pass
+    if p <= 0 or p >= 1:
+        return float(x <= (0 if p <= 0 else n))
+    lp, lq, lc = math.log(p), math.log1p(-p), math.lgamma(n + 1)
+    logs = [lc - math.lgamma(k + 1) - math.lgamma(n - k + 1) + k * lp + (n - k) * lq for k in range(max(x, 0), n + 1)]
+    if not logs:
+        return 0.0
+    top = max(logs)
+    return min(1.0, math.exp(top) * math.fsum(math.exp(v - top) for v in logs))
 
 
 def hsm_variance(sites: list[tuple[int, int]]) -> float | None:
