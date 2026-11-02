@@ -602,18 +602,22 @@ def house_address(roads: list, on_idx: list[int], corridor_keys) -> dict | None:
     """D5 (#283): a road field naming the corridor with a house number ("8451 S CRENSHAW BLVD", "GENEVA AV 1677"),
     the other field blank, a placeholder, 1-2 letters, or the same street. {"number", "street"} or None. Never a
     route ("RT 101"), a numbered street ("AVENUE 200"), or a distance ("100 FT N OF ..."); private property stays
-    excluded under its own rule (#94). A report naming a route designation ("I-380", "SR-82") or a ramp in either field
-    has no house number: "380 EB OFF-RAMP TO EL CAMINO REAL" is I-380, not 380 El Camino Real (PR #315 Tester)."""
+    excluded under its own rule (#94). No house number when the number field is a ramp phrase ("380 EB OFF-RAMP TO EL
+    CAMINO REAL" is I-380, not 380 El Camino Real), when the number is a route the report names, or when the report names
+    a route that isn't one of the corridor's own: "18972 BEACH BLVD (SR-39)" on Beach Blvd (SR-39) stays D5 (PR #315)."""
     if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd):
         return None
-    if any(rd and (route_numbers(str(rd)) or grade.is_ramp({"primary_road": rd})) for rd in roads):
-        return None
+    named = set().union(*(route_numbers(str(rd)) for rd in roads if rd))
+    if named - {route_number(x) for x in corridor_keys}:
+        return None                       # another route (I-380 on El Camino Real): not an address on the corridor
     for i in on_idx:
         raw = re.sub(r"\(.*?\)", " ", str(roads[i] or "")).strip()
         m = _HOUSE.match(raw)
         if not m or _NOT_A_NUMBER.match(raw):
             continue
         num, street = (m.group(1), m.group(2)) if m.group(1) else (m.group(4), m.group(3))
+        if grade.is_ramp({"primary_road": raw}) or str(int(num)) in named:
+            continue                      # the "number" is the route: "380 EB OFF-RAMP ...", "HWY 18 ... 18"
         k = street_key(street)
         if k is None or route_number(k) is not None or k.core in SUFFIX_WORDS or re.fullmatch(r"[A-Z]", k.core) \
                 or not _names_street(street, corridor_keys):

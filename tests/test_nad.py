@@ -219,3 +219,30 @@ def test_lookups_from_many_threads_at_once_match_one_thread(index):
     for t in ts:
         t.join()
     assert not errors and not wrong, f"{len(errors)} errors, {len(wrong)} wrong; first: {errors[:2]}"
+
+
+# PR #315 Tester: the 15 reports the first route/ramp guard (c7abb77) changed. On a state-highway corridor the route
+# named is the corridor itself, so the house number stands; only Millbrae's "380 EB OFF-RAMP" is the route.
+@pytest.mark.parametrize("corridor, p, s, kept", [
+    (("Happy Trails Highway", "CA 18"), "OUTER HWY 18 N", "OUTER HWY 18 N 19170", 19170),            # 2806012
+    (("San Gabriel Canyon Road", "CA 39"), "RT 39", "N SAN GABRIEL CANYON RD 2350", 2350),          # 2730879
+    (("San Mateo Road", "CA 92"), "SR-92 (SAN MATEO RD)", "501 SAN MATEO RD", 501),                 # 1531528
+    (("San Mateo Road", "CA 92"), "501 SAN MATEO RD", "SR-92", 501),                                # 1779268
+    (("San Mateo Road", "CA 92"), "501 SAN MATEO RD", "SOUTHERN FOG LINE OF HWY 92", 501),          # 1848161
+    (("San Mateo Road", "CA 92"), "211 SAN MATEO RD", "SR-92", 211),                                # 1891168
+    (("San Mateo Road", "CA 92"), "196 SAN MATEO RD", "SR-92", 196),                                # 4999749
+    (("Beach Boulevard", "CA 39"), "18972 BEACH BLVD (SR-39)", "NOT STATED", 18972),                # 1392969
+    (("Beach Boulevard", "CA 39"), "19640 BEACH (SR-39)", "NOT STATED", 19640),                     # 1437506
+    (("Beach Boulevard", "CA 39"), "17642 BEACH BLVD - SR39", "NOT STATED", 17642),                 # 4522412
+    (("East Palm Canyon Drive", "CA 111"), "72840 STREET HWY 111", "NOT STATED", 72840),            # 2204295
+    (("East Palm Canyon Drive", "CA 111"), "72845 ST HIGHWAY 111", "NOT STATED", 72845),            # 2273165
+    (("East Palm Canyon Drive", "CA 111"), "72840  ST HWY 111", "NOT STATED", 72840),               # 4470370
+    (("Pacific Coast Highway", "CA 1"), "699 SOUTH COAST HWY SR1", "NOT STATED", 699),              # 4715351
+    (("El Camino Real", "CA 82"), "EL CAMINO REAL", "380 EB OFF-RAMP TO EL CAMINO REAL", None),     # 4542837
+])
+def test_the_corridor_s_own_route_keeps_the_house_number(corridor, p, s, kept):
+    k = [street_key(n) for n in corridor]
+    roads = [p, s]
+    on = [i for i, r in enumerate(roads) if crashes._names_street(r, k)]
+    got = crashes.house_address(roads, on, k)
+    assert (got and got["number"]) == kept, got
