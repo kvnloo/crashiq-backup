@@ -15,7 +15,7 @@ import math
 import re
 from collections import Counter
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 
 from . import pcf, assign as assign_mod
 from . import study as study_mod
@@ -1021,6 +1021,10 @@ def diagram_table(lid: str, diagram: dict, crashes: list[dict]) -> dict:
 @router.get("/studies/{sid}/profile/locations/{lid}")
 def get_location_profile(sid: str, lid: str, request: Request) -> dict:
     study, net, pull, a = assign_mod.for_study(request.app.state.db, sid)
+    known = {i["id"] for i in net["intersections"]} | {s["id"] for s in net["segments"]} | \
+        {x["location_id"] for x in a["assignments"]}
+    if lid not in known:
+        raise HTTPException(404, "Location not found.")
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
     placed = [{**by_id[x["crash_id"]], "location_id": x["location_id"], "location_provenance": x["location_provenance"]}
               for x in a["assignments"] if x["location_id"] == lid]
