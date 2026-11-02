@@ -59,3 +59,11 @@ def test_crashes_without_party_data_are_listed_not_drawn():
     d = diagram.build(NET, IT, cs)
     assert d["not_drawn"] == {"no_party_data": 1, "no_direction": 0, "no_room": 0}
     assert {r["crash_id"]: r["approach"] for r in d["crashes"]} == {"y": "SB", "x": "—"}
+
+
+def test_the_control_symbol_marks_a_roundabout_with_a_ring():
+    # #337: roundabout control now comes from OSM; the diagram draws a ring, a signal its circle, others a dot
+    cs = [C("1", "2023-01-01", "REAR END", [P(1, "N", fault=True), P(2, "N")])]
+    radius = lambda ctrl: next(s["r"] for s in diagram.build(NET, {**IT, "control": ctrl}, cs)["steps"]  # noqa: E731
+                               if s["op"] == "circle" and s["x"] == diagram.CX and s["y"] == diagram.CY)
+    assert radius("roundabout") == 18 and radius("signal") == 9 and radius("stop") == 3

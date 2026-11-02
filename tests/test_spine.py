@@ -83,3 +83,16 @@ def test_parse_geometry_forms():
     assert spine.parse_geometry([[1, 2], [3, 4]]) == [[1.0, 2.0], [3.0, 4.0]]
     assert spine.parse_geometry('{"type": "LineString", "coordinates": [[2, 1], [4, 3]]}') == [[1, 2], [3, 4]]
     assert spine.parse_geometry("s3://bucket/corridor.shp") is None
+
+
+def test_roundabout_control_goes_out_alongside_the_spines_control():
+    # #337: the spine's control is signal|stop|uncontrolled; a detected roundabout is control null (never
+    # guessed into its enum) plus control_detail, additively
+    from crashiq import spine
+    ints = [{"id": f"i{k}", "name": n, "station_ft": 100.0 * k, "control": ctl, "is_study": True, "provenance": "auto"}
+            for k, (n, ctl) in enumerate((("A St", "signal"), ("B St", "roundabout"), ("D St", "unknown")))]
+    net = {"line": [[34.0, -118.3], [34.01, -118.3]], "corridor_name": "Main Street", "length_mi": 0.69,
+           "intersections": ints}
+    out = spine.merge({}, {"network": net}, today="2026-11-01")["corridor"]["intersections"]
+    assert [(i["control"], i.get("control_detail")) for i in out] == \
+        [("signal", None), (None, "roundabout"), (None, None)]

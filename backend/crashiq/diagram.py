@@ -211,6 +211,8 @@ def build(net: dict, it: dict, crashes: list[dict]) -> dict:
     control = str(it.get("control") or "").lower()
     if "signal" in control:
         steps.append({"op": "circle", "x": CX, "y": CY, "r": 9, "fill": "paper", "stroke": "ink", "w": 2})
+    elif control == "roundabout":                          # a ring in the middle (#337)
+        steps.append({"op": "circle", "x": CX, "y": CY, "r": 18, "fill": "paper", "stroke": "ink", "w": 2})
     else:
         steps.append({"op": "circle", "x": CX, "y": CY, "r": 3, "fill": "ink", "stroke": "ink", "w": 1})
     ns_name, ew_name, _ = _arm_names(net, it)
