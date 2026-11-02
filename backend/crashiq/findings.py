@@ -40,7 +40,26 @@ SPELLED = {w: i for i, w in enumerate(
     "seventeen eighteen nineteen twenty".split())}
 SPELLED.update({"thirty": 30, "forty": 40, "fifty": 50})
 del SPELLED["one"]   # "one" is mostly a determiner ("one report", "one of the"); counts of one must use digits
-_NUM = re.compile(r"(?<![\w.$-])(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(?:\s*(%|percent))?(?![\w])", re.I)
+# #359: "$4.2M", "3x", "-45%" and "1e3" are figures too; "osm-123" and "2021-2025"'s 2025 are not
+_NUM = re.compile(r"(?<![\w.])(?<!\w-)(-?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(e[+-]?\d+)?"
+                  r"(?:\s*(%|percent)|([kmb]|x|×))?(?![\w])", re.I)
+_SCALE = {"k": 3, "m": 6, "b": 9}
+_RATIO_COLS = ("ratio_to_corridor", "rate_to_critical", "ratio_to_statewide")   # what "3x" can stand for
+# Ratio and change words are numbers (user, 2026-11-02, docs/03 #359): a word is written at RATIO_WORD_DECIMALS, so
+# the ratio behind it must round to the word's value there (1: "doubled" = 1.95 to 2.049, not the word's own precision;
+# user, 2026-11-02, "Yes, tight"; #362).
+RATIO_WORD_DECIMALS = 1
+RATIO_WORDS = {"doubled": 2, "twice": 2, "tripled": 3, "quadrupled": 4, "half": 0.5}
+# Always rejected; the finding writes the cited numbers as digits (user, 2026-11-02, #362): count words ("option A"),
+# and ratio words not exact at RATIO_WORD_DECIMALS ("a third" would pass for 0.25 in the 0.3 window).
+COUNT_WORDS: tuple[str, ...] = ("a dozen", "dozens", "a few dozen", "several dozen", "a hundred", "hundreds",
+                                "a few hundred", "several hundred", "a handful", "a third", "two thirds")
+_RATIO_WORD = re.compile(r"\b(" + "|".join(RATIO_WORDS) + r")\b", re.I)
+
+
+def _ratio_written(word: str) -> str:
+    """'doubled' -> '2.0' at RATIO_WORD_DECIMALS: what matches() compares the ratio with."""
+    return str(round_half_up(RATIO_WORDS[word], RATIO_WORD_DECIMALS))
 _ORDINAL = re.compile(r"(?<![\w.])\d+(?:st|nd|rd|th)\b", re.I)
 _SPELLED = re.compile(r"\b(" + "|".join(SPELLED) + r")\b", re.I)
 _QUOTED = re.compile(r"[\"“]([^\"”]{1,120})[\"”]")
@@ -95,9 +114,14 @@ def round_half_up(v: float, d: int) -> Decimal:
 
 
 def matches(written: str, cell_value) -> bool:
+    """The cell, rounded to the written precision, equals the written figure. "4.2M" is 4.2 millions (#359); a
+    multiple ("3x") is compared as written."""
     if cell_value is None or isinstance(cell_value, (str, bool)):
         return False
-    w = Decimal(written.replace(",", ""))
+    written = written.replace(",", "").rstrip("xX×")
+    if written[-1:].lower() in _SCALE:
+        cell_value, written = float(cell_value) / 10 ** _SCALE[written[-1].lower()], written[:-1]
+    w = Decimal(written)
     d = max(0, -w.as_tuple().exponent)
     return round_half_up(float(cell_value), d) == w
 
@@ -116,9 +140,35 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
     for code in quoted_ok:            # "VC 22350": a record's own PCF code, written after VC (#346)
         masked = re.sub(rf"\bVC\s+{re.escape(code)}\b", lambda m: " " * len(m.group(0)), masked, flags=re.I)
     masked = _ORDINAL.sub(lambda m: " " * len(m.group(0)), masked)
-    out = [m.group(1) + (m.group(2) or "") for m in _NUM.finditer(masked)]
+    counts = []                          # read and blanked first: "two thirds" is one claim, not the number 2
+    if COUNT_WORDS:
+        pat = r"\b(" + "|".join(sorted(COUNT_WORDS, key=len, reverse=True)) + r")\b"
+        counts = [m.group(1).lower() for m in re.finditer(pat, masked, re.I)]
+        masked = re.sub(pat, lambda m: " " * len(m.group(0)), masked, flags=re.I)
+    out = [m.group(1) + m.group(2) + (m.group(3) or "") + (m.group(4) or "") + (m.group(6) or "")
+           for m in _NUM.finditer(masked)]
     out += [str(SPELLED[m.group(1).lower()]) for m in _SPELLED.finditer(masked)]
+    out += [m.group(1).lower() for m in _RATIO_WORD.finditer(masked)]
+    out += counts
     return out
+
+
+def _backs_ratio(written: str, finding: Finding, tables: list[dict], by_id: dict) -> bool:
+    """A multiple ("3x", "doubled") is backed by a cited ratio cell, or by two cited cells whose quotient rounds to
+    it (docs/03 #359)."""
+    vals = []
+    for n in finding.numbers:
+        if n.table_id not in by_id:
+            continue
+        try:
+            v = profile_mod.cell(tables, f"{n.table_id}/{n.cell}")
+        except (StopIteration, KeyError, ValueError):
+            continue
+        if n.cell.rsplit("/", 1)[-1] in _RATIO_COLS and matches(written, v):
+            return True
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            vals.append(float(v))
+    return any(b and matches(written, a / b) for i, a in enumerate(vals) for j, b in enumerate(vals) if i != j)
 
 
 def select_records(crashes: list[dict], f: RecordFilter) -> list[dict]:
@@ -192,17 +242,22 @@ def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: 
     lo, hi = window
     for w in extract_numbers(finding.text, quoted_ok, _location_names(finding, tables)):
         plain = w.replace(",", "")
-        if "." not in plain and lo <= int(plain) <= hi:
+        if plain.isdigit() and lo <= int(plain) <= hi:
             continue                                   # a year inside the study window
-        ok = False
-        for n in finding.numbers:
-            if n.table_id in by_id:
-                try:
-                    if matches(plain, profile_mod.cell(tables, f"{n.table_id}/{n.cell}")):
-                        ok = True
-                        break
-                except (StopIteration, KeyError, ValueError):
-                    pass
+        if w in COUNT_WORDS:
+            ok = False                                 # a count word: write the cited number as digits
+        elif w in RATIO_WORDS or w[-1] in "xX×":
+            ok = _backs_ratio(_ratio_written(w) if w in RATIO_WORDS else plain, finding, tables, by_id)
+        else:
+            ok = False
+            for n in finding.numbers:
+                if n.table_id in by_id:
+                    try:
+                        if matches(plain, profile_mod.cell(tables, f"{n.table_id}/{n.cell}")):
+                            ok = True
+                            break
+                    except (StopIteration, KeyError, ValueError):
+                        pass
         if not ok:
             reasons.append(f"number {w} in the text is not backed by a cited table cell")
     return reasons
