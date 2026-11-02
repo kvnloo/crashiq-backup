@@ -625,3 +625,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     the butt").** This **replaces** the earlier 2026-11-01 answer (Engineering session) to translate compass and route directions (a CHP "S/B" on a
     route Caltrans signs EB/WB). A ramp crash whose reported direction doesn't match the ramp row's direction as
     written gets no ramp rate, with the reason. #308 is closed unbuilt.
+- **Number words in findings are checked like numbers DECIDED (user, 2026-11-02, PM session; #359):** "oh yes
+  Absolutely". Words that state a ratio or a change ("doubled", "twice", "tripled", "half", "a third", "quadrupled")
+  count as numbers: the validator rejects a finding that uses one unless its cited table backs the ratio, by the same
+  rounding rule as digits. The same applies to the compact forms Tester found unread ($4.2M, 3x, -45%, 1e3).
