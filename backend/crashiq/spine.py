@@ -100,8 +100,8 @@ def merge(base: dict, crash: dict, today: str | None = None) -> dict:
         put("corridor.length_mi", round(net["length_mi"], 3), "OSM")
         put("corridor.intersections", [
             {"name": i["name"], "legs": None, "control": CONTROL_OUT.get(i["control"]),
-             # the spine's control is signal|stop|uncontrolled; a roundabout or yield goes alongside, additively (#337)
-             **({"control_detail": i["control"]} if i["control"] in ("roundabout", "yield") else {}),
+             # the spine's control is signal|stop|uncontrolled; a roundabout goes alongside, additively (#337)
+             **({"control_detail": i["control"]} if i["control"] == "roundabout" else {}),
              "spacing_ft_to_next": (round(b["station_ft"] - i["station_ft"], 1) if b else None),
              "source_id": i["id"], "method": "auto" if i["provenance"] == "auto" else "manual"}
             for i, b in zip(study_ints, study_ints[1:] + [None])], "OSM")

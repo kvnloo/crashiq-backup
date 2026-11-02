@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 
-const CONTROL = { signal: 'Signal', stop: 'Stop', roundabout: 'Roundabout', yield: 'Yield', unknown: null }
+const CONTROL = { signal: 'Signal', stop: 'Stop', roundabout: 'Roundabout', unknown: null }
 const fmtMi = (mi) => `${mi.toFixed(2)} mi`
 
 function NameCell({ it, editing, setEditing, onRename }) {

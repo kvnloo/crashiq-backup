@@ -227,7 +227,7 @@ def test_a_freeway_buffer_is_measured_from_both_carriageways():
     assert {x["crash_id"]: x["rule"] for x in before["assignments"]}["far"] == "outside_buffer"
 
 
-# #337: roundabout and yield control from OSM tags; unknown stays unknown
+# #337: roundabout control from OSM tags; a give_way sign isn't read; unknown stays unknown
 def _control(build):
     o = OSM()
     build(o)
@@ -248,15 +248,15 @@ def test_a_mini_roundabout_node_is_roundabout_control():
     assert _control(lambda o: o.node(37.605, LON, highway="mini_roundabout")) == {"Oak Avenue": "roundabout"}
 
 
-def test_a_give_way_sign_at_the_intersection_is_yield_control():
-    assert _control(lambda o: o.node(37.60515, LON + 0.0001, highway="give_way")) == {"Oak Avenue": "yield"}
-    far = _control(lambda o: o.node(37.6062, LON + 0.0001, highway="give_way"))       # ~130 m away: not this one
-    assert far == {"Oak Avenue": "unknown"}
+def test_a_give_way_sign_alone_does_not_set_yield():
+    # the Tester's run: 6 of 6 give_way-based yields were crosswalk yield lines or slip lanes, so they aren't read
+    assert _control(lambda o: o.node(37.60515, LON + 0.0001, highway="give_way")) == {"Oak Avenue": "unknown"}
+    assert _control(lambda o: o.node(37.605, LON, highway="give_way")) == {"Oak Avenue": "unknown"}  # on the node
 
 
 def test_signals_still_win_and_no_tag_stays_unknown():
     def both(o):
         o.node(37.6051, LON, highway="traffic_signals")
-        o.node(37.60515, LON + 0.0001, highway="give_way")
+        o.node(37.605, LON, highway="mini_roundabout")
     assert _control(both) == {"Oak Avenue": "signal"}
     assert _control(lambda o: None) == {"Oak Avenue": "unknown"}

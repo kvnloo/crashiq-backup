@@ -66,4 +66,4 @@ def test_the_control_symbol_marks_a_roundabout_with_a_ring():
     cs = [C("1", "2023-01-01", "REAR END", [P(1, "N", fault=True), P(2, "N")])]
     radius = lambda ctrl: next(s["r"] for s in diagram.build(NET, {**IT, "control": ctrl}, cs)["steps"]  # noqa: E731
                                if s["op"] == "circle" and s["x"] == diagram.CX and s["y"] == diagram.CY)
-    assert radius("roundabout") == 18 and radius("signal") == 9 and radius("yield") == 3
+    assert radius("roundabout") == 18 and radius("signal") == 9 and radius("stop") == 3
