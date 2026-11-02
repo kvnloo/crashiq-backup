@@ -8,8 +8,8 @@ Conductor: `new-tool` (yours). Each stage has a lead skill plus helpers. A stage
 | 1 Kickoff | product-kickoff | spike (B) | docs/01-kickoff.md | done |
 | 2 Requirements | grill-me, brainstorming, prompt-me | decision-questionnaire (O) | docs/03-requirements.md (locked) | done |
 | 3 Design | ai-agent-validation, oracle-spine, caltrans-traffic-expert, architecture-design, ux-design | architecture-diagram (B): picture of the system | docs/04-design.md | done (F1 open) |
-| 4 Build | fastapi-react-builder, backend-build, frontend-build, web-design, viz-design, tdd, karpathy-guidelines | claude-code (B): hand big coding jobs to Claude Code · test-driven-development (B) · xlsx + pdf (B): the exports · subagent-driven-development (O) | schemas + happy-path run end to end | next |
-| 5 Test | tool-testing, testing-strategy, code-review | dogfood (B): click through the app and find bugs · requesting-code-review (B): security scan · systematic-debugging (B) · adversarial-ux-test (O) · evaluation (O): model bake-off scoring | six-condition testing gate | — |
+| 4 Build | fastapi-react-builder, backend-build, frontend-build, web-design, viz-design, tdd, karpathy-guidelines | claude-code (B): hand big coding jobs to Claude Code · test-driven-development (B) · xlsx + pdf (B): the exports · subagent-driven-development (O) | schemas + happy-path run end to end | done (frozen 2026-11-02) |
+| 5 Test | tool-testing, testing-strategy, code-review | dogfood (B): click through the app and find bugs · requesting-code-review (B): security scan · systematic-debugging (B) · adversarial-ux-test (O) · evaluation (O): model bake-off scoring | six-condition testing gate | next |
 | 6 Oracle onboard | oracle-spine | — | context object round-trip with provenance | — |
 | 7 Ship | ship-it, deploy-checklist | github (B) · docker-management (O) | pre-ship checklist passes | — |
 | Paid launch | system-design, ship-it | stripe-projects / stripe-link-cli (O): payments · web-pentest (O): security test before charging money | accounts + billing + spend caps + terms | — |
@@ -27,3 +27,8 @@ independently and files `bug` issues with a failing test, which go round the sam
 - **2026-10-18 (user, via Claude Code):** methodology correctness comes first. The mockup layout
   (`design/mockups/`) is approved in direction and will be refined later.
 - **2026-10-19 (user):** PM merges clean, tested PRs. A Tester session joins (docs/03 log).
+- **2026-11-02 (user, PM session): build frozen; move to testing and shipping.** "finish the 5 PRs, park fine-tuning,
+  move to testing and shipping". The five open feature PRs (#310, #315, #339, #354 and docs #348) finish through the
+  normal review loop. Remaining fine-tuning and research issues are labelled `backlog` and wait until after shipping
+  (placement refinements, extra measurements, state pack, nationwide research, #287 part 2, #52). Stage 5 (Test) starts
+  against the six-condition gate; Stage 7 (Ship) follows. The user is asked only for big decisions from here on.
