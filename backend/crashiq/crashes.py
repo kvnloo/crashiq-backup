@@ -602,8 +602,11 @@ def house_address(roads: list, on_idx: list[int], corridor_keys) -> dict | None:
     """D5 (#283): a road field naming the corridor with a house number ("8451 S CRENSHAW BLVD", "GENEVA AV 1677"),
     the other field blank, a placeholder, 1-2 letters, or the same street. {"number", "street"} or None. Never a
     route ("RT 101"), a numbered street ("AVENUE 200"), or a distance ("100 FT N OF ..."); private property stays
-    excluded under its own rule (#94)."""
+    excluded under its own rule (#94). A report naming a route designation ("I-380", "SR-82") or a ramp in either field
+    has no house number: "380 EB OFF-RAMP TO EL CAMINO REAL" is I-380, not 380 El Camino Real (PR #315 Tester)."""
     if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd):
+        return None
+    if any(rd and (route_numbers(str(rd)) or grade.is_ramp({"primary_road": rd})) for rd in roads):
         return None
     for i in on_idx:
         raw = re.sub(r"\(.*?\)", " ", str(roads[i] or "")).strip()

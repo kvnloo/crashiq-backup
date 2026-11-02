@@ -121,6 +121,28 @@ def test_routes_and_numbered_streets_are_not_house_addresses():
         assert crashes.house_address([raw, None], [0], k) is None, raw
 
 
+@pytest.mark.parametrize("raw", [
+    "380 EB OFF-RAMP TO EL CAMINO REAL",          # PR #315 Tester: the route number read as house number 380
+    "I-380 EB OFF-RAMP TO EL CAMINO REAL",
+    "I 380 EL CAMINO REAL",
+    "US-101 EL CAMINO REAL",
+    "SR-82 EL CAMINO REAL",
+    "CA-82 EL CAMINO REAL",
+    "EL CAMINO REAL ONR 82",
+    "82 NB ON RAMP EL CAMINO REAL",
+])
+def test_a_route_designation_or_a_ramp_is_never_a_house_number(raw):
+    k = [street_key("El Camino Real")]
+    for roads in ([raw, None], [raw, "EL CAMINO REAL"]):
+        on = [i for i, r in enumerate(roads) if crashes._names_street(r, k)]
+        assert crashes.house_address(roads, on, k) is None, roads
+
+
+def test_a_plain_address_on_el_camino_real_is_still_d5():
+    k = [street_key("El Camino Real")]
+    assert crashes.house_address(["380 EL CAMINO REAL", None], [0], k) == {"number": 380, "street": "EL CAMINO REAL"}
+
+
 class FakeAddrfeat:
     def lookup(self, county, number, k):
         return {"lat": 38.1, "lon": -122.1}
