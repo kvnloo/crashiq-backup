@@ -15,7 +15,7 @@ import math
 import re
 from collections import Counter
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 
 from . import pcf, assign as assign_mod
 from . import study as study_mod
@@ -840,6 +840,14 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if approx:                             # #255: say what the precise-point analyses leave out
         caveats.append({"key": "approximate_freeway", "count": approx,
                         "text": approximate_text(approx)})
+    oc = sum(isinstance(c.get("outside_corner"), dict) for c in placed)
+    if oc:                                    # #70: brought back onto the stretch by their reported distance
+        one = oc == 1
+        caveats.append({"key": "outside_corner", "count": oc,
+                        "text": f"{oc} crash report{'' if one else 's'} name{'s' if one else ''} a cross street CrashIQ "
+                                "couldn't match by name to a study intersection (a corner just outside the stretch, or a "
+                                f"street the map names differently). The reported distance puts {'it' if one else 'them'} "
+                                "on the corridor: placed from that corner and counted by the usual rules."})
     u = sum(c["severity"] == "U" for c in placed)
     if u:
         caveats.append({"key": "injury_level_unknown", "count": u,
@@ -1013,6 +1021,10 @@ def diagram_table(lid: str, diagram: dict, crashes: list[dict]) -> dict:
 @router.get("/studies/{sid}/profile/locations/{lid}")
 def get_location_profile(sid: str, lid: str, request: Request) -> dict:
     study, net, pull, a = assign_mod.for_study(request.app.state.db, sid)
+    known = {i["id"] for i in net["intersections"]} | {s["id"] for s in net["segments"]} | \
+        {x["location_id"] for x in a["assignments"]}
+    if lid not in known:
+        raise HTTPException(404, "Location not found.")
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
     placed = [{**by_id[x["crash_id"]], "location_id": x["location_id"], "location_provenance": x["location_provenance"]}
               for x in a["assignments"] if x["location_id"] == lid]

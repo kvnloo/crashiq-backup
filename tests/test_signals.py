@@ -27,6 +27,36 @@ def test_binomial_tail():
     assert signals.binom_sf(0, 7, 0.4) == pytest.approx(1.0)
 
 
+def _mk(lid, n, wet):
+    return [dict(location_id=lid, collision_type="REAR END", surface="WET" if i < wet else "DRY", severity="O")
+            for i in range(n)]
+
+
+def test_t12_binomial_handles_a_location_with_more_than_1030_crashes():
+    # #358: two segments, no beta prior, so the binomial test runs; math.comb(1200, k) overflowed a float
+    placed = _mk("seg-1", 1200, 300) + _mk("seg-2", 400, 20)
+    out = signals.screen(placed, [("seg-1", "Mainline A"), ("seg-2", "Mainline B")])
+    assert any(s["location_id"] == "seg-1" and s["target"] == "wet" for s in out["signals"])
+
+
+def test_binom_sf_stays_a_probability_for_large_n():
+    p = signals.binom_sf(300, 1200, 0.1)
+    assert 0.0 <= p <= 1.0
+    assert signals.binom_sf(0, 5000, 0.3) == pytest.approx(1.0)
+    assert signals.binom_sf(5001, 5000, 0.3) == 0.0
+    assert signals.binom_sf(1500, 5000, 0.3) == pytest.approx(0.5, abs=0.02)     # the mean: about half
+
+
+def _exact_sf(x, n, p):
+    return sum(math.comb(n, k) * p ** k * (1 - p) ** (n - k) for k in range(x, n + 1))
+
+
+@pytest.mark.parametrize("x, n, p", [(0, 0, 0.5), (3, 10, 0.2), (0, 7, 0.0), (2, 7, 1.0), (40, 100, 0.33),
+                                     (300, 1029, 0.25), (600, 1029, 0.5), (11, 10, 0.4)])
+def test_binom_sf_is_unchanged_below_1030(x, n, p):
+    assert signals.binom_sf(x, n, p) == pytest.approx(_exact_sf(x, n, p), abs=1e-12)
+
+
 def test_hsm_variance_removes_sampling_noise():
     """Sites drawn from a known Beta(6, 14) (true between-site variance 0.01): the HSM variance recovers it,
     while the raw spread of observed shares also carries each site's binomial noise and overstates it."""
