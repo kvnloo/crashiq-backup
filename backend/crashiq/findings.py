@@ -75,7 +75,8 @@ def _ratio_written(word: str) -> str:
 _ORDINAL = re.compile(r"(?<![\w.])\d+(?:st|nd|rd|th)\b", re.I)
 _SPELLED = re.compile(r"\b(" + "|".join(SPELLED) + r")\b", re.I)
 _UNITS = "one two three four five six seven eight nine".split()
-_SPELLED_PAIR = re.compile(r"\b(" + "|".join(_TENS) + r")[-‐–](" + "|".join(_UNITS) + r")\b", re.I)   # "twenty-one" (#370)
+_SPELLED_PAIR = re.compile(r"\b(" + "|".join(_TENS) + r")(?:\s*[-‐–—]\s*|\s+)(" + "|".join(_UNITS) + r")\b",
+                          re.I)   # "twenty-one", "twenty one", "twenty—one" (#370, #372); not "twenty, one of"
 _QUOTED = re.compile(r"[\"“]([^\"”]{1,120})[\"”]")
 _DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 
