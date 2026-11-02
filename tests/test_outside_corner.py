@@ -130,4 +130,7 @@ def test_the_profile_says_how_many_crashes_came_back_from_an_outside_corner():
     pull = {**pull, "crashes": [{**c, "outside_corner": {"cross_street": "X ST", "offset_ft": 300, "offset_dir": "S"}}
                                 if c["crash_id"] in s1 else c for c in pull["crashes"]]}
     cav = {c["key"]: c for c in profile.build(study, n, pull, asg)["caveats"]}["outside_corner"]
-    assert cav["count"] == 2 and cav["text"].startswith("2 crash reports name a cross street just outside the study stretch")
+    assert cav["count"] == 2 and cav["text"] == (
+        "2 crash reports name a cross street CrashIQ couldn't match by name to a study intersection (a corner just "
+        "outside the stretch, or a street the map names differently). The reported distance puts them on the corridor: "
+        "placed from that corner and counted by the usual rules.")

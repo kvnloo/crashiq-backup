@@ -799,10 +799,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if oc:                                    # #70: brought back onto the stretch by their reported distance
         one = oc == 1
         caveats.append({"key": "outside_corner", "count": oc,
-                        "text": f"{oc} crash report{'' if one else 's'} name{'s' if one else ''} a cross street just "
-                                f"outside the study stretch, but {'its' if one else 'their'} reported distance puts "
-                                f"{'it' if one else 'them'} on the corridor: placed from that corner and counted by the "
-                                "usual rules."})
+                        "text": f"{oc} crash report{'' if one else 's'} name{'s' if one else ''} a cross street CrashIQ "
+                                "couldn't match by name to a study intersection (a corner just outside the stretch, or a "
+                                f"street the map names differently). The reported distance puts {'it' if one else 'them'} "
+                                "on the corridor: placed from that corner and counted by the usual rules."})
     u = sum(c["severity"] == "U" for c in placed)
     if u:
         caveats.append({"key": "injury_level_unknown", "count": u,
