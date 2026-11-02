@@ -315,8 +315,13 @@ def test_the_ratio_word_tolerance_is_one_constant(monkeypatch):
     assert check(**t) == []
 
 
-def test_count_words_are_rejected_once_listed(monkeypatch):
-    t = {**GOOD, "text": GOOD["text"] + " Dozens of crashes happened at night."}
-    assert check(**t) == []                                    # the list is empty until the user decides (#362)
-    monkeypatch.setattr(F, "COUNT_WORDS", ("a dozen", "dozens", "hundreds", "a handful"))
-    assert any("number dozens" in r for r in check(**t))
+@pytest.mark.parametrize("phrase, word", [
+    ("Dozens of crashes happened at night.", "dozens"), ("A dozen crashes happened at night.", "a dozen"),
+    ("A few dozen crashes happened at night.", "a few dozen"), ("Several dozen crashes happened at night.", "several dozen"),
+    ("A hundred crashes happened at night.", "a hundred"), ("Hundreds of crashes happened at night.", "hundreds"),
+    ("Several hundred crashes happened at night.", "several hundred"), ("A handful of crashes were at night.", "a handful"),
+])
+def test_count_words_are_always_rejected(phrase, word):
+    # user, 2026-11-02 ("option A", #362): write the cited number as digits instead
+    r = check(**{**GOOD, "text": GOOD["text"] + " " + phrase})
+    assert [x for x in r if "number" in x] == [f"number {word} in the text is not backed by a cited table cell"]

@@ -46,12 +46,13 @@ _NUM = re.compile(r"(?<![\w.])(?<!\w-)(-?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(e[+-]
 _SCALE = {"k": 3, "m": 6, "b": 9}
 _RATIO_COLS = ("ratio_to_corridor", "rate_to_critical", "ratio_to_statewide")   # what "3x" can stand for
 # Ratio and change words are numbers (user, 2026-11-02, docs/03 #359): a word is written at RATIO_WORD_DECIMALS, so
-# the ratio behind it must round to the word's value there (1: "doubled" = 1.95 to 2.049). Both RATIO_WORD_DECIMALS and
-# COUNT_WORDS are the PM's proposals in #362, awaiting the user: the word's own precision would be 0 here, and the
-# proposed count words are "a dozen", "dozens", "hundreds", "a handful" (each always rejected, as unbacked).
+# the ratio behind it must round to the word's value there (1: "doubled" = 1.95 to 2.049, not the word's own precision;
+# user, 2026-11-02, "Yes, tight"; #362).
 RATIO_WORD_DECIMALS = 1
 RATIO_WORDS = {"doubled": 2, "twice": 2, "tripled": 3, "quadrupled": 4, "half": 0.5, "a third": 1 / 3}
-COUNT_WORDS: tuple[str, ...] = ()
+# Count words are always rejected: the finding writes the cited number as digits (user, 2026-11-02, "option A"; #362)
+COUNT_WORDS: tuple[str, ...] = ("a dozen", "dozens", "a few dozen", "several dozen", "a hundred", "hundreds",
+                                "a few hundred", "several hundred", "a handful")
 _RATIO_WORD = re.compile(r"\b(" + "|".join(RATIO_WORDS) + r")\b", re.I)
 
 
@@ -143,7 +144,8 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
     out += [str(SPELLED[m.group(1).lower()]) for m in _SPELLED.finditer(masked)]
     out += [m.group(1).lower() for m in _RATIO_WORD.finditer(masked)]
     if COUNT_WORDS:
-        out += [m.group(1).lower() for m in re.finditer(r"\b(" + "|".join(COUNT_WORDS) + r")\b", masked, re.I)]
+        out += [m.group(1).lower() for m in re.finditer(r"\b(" + "|".join(sorted(COUNT_WORDS, key=len, reverse=True)) + r")\b",
+                                                         masked, re.I)]
     return out
 
 
