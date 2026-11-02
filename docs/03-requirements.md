@@ -560,6 +560,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. This **replaces** the user's earlier answer "B" (2026-10-26, Engineering chat, on #294, never recorded in docs/03).
   A map-data suggestion may still pre-fill the field, but only as a labelled suggestion the engineer confirms. Comparisons use Caltrans' on-highway counting rule
   or are labelled approximate.
+  - **Expected F+I and fatal rates DECIDED (user, 2026-11-01, PM session; #353 point 1):** "Ok" to the PM's
+    recommendation. Besides the expected total rate, CrashIQ shows the expected fatal+injury rate = expected total rate
+    × the rate group's PCT F+I ÷ 100 and the expected fatal rate = expected total rate × PCT FAT ÷ 100, both
+    percentages read from the same row of the published table (pp. 83–90). Computed by code, labelled with the table
+    citation, and approximate on the same terms as the total.
 - **Ramp identification and ramp rates DECIDED (user, 2026-10-30, Engineering session; #300):** option **B**, "A +
   engineer picks". A crash's ramp is identified when its report names a ramp (ON/OFF RAMP, ONR/OFR), its direction of
   travel and its cross street, and **exactly one** Caltrans ramp row (district ramp ADT file) within 0.3 mi on the same
