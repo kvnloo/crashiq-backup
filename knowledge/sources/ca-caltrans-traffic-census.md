@@ -43,6 +43,15 @@
 - **Formats:** the column names change between years (`ROUTE`/`RTE`, `COUNTY`/`CNTY`, `LOCATION DESCRIPTION`/
   `DESCRIPTION`, `POSTMILE`/`PM`); blanks come as empty, a space or nothing; postmiles as text (".129") or numbers;
   routes zero-padded ("001"). The first sheet is a preface.
+- **Count years 2016–2020 (#345, user OK 2026-11-01):** the volume and truck workbooks of those years, downloaded by
+  the PM session into `data/cache/caltrans_downloads_2026-11-01/` with `SHA256SUMS`; `aadt.py` reads a workbook from
+  there first (by the URL's file name, checksum matched), so it is never downloaded twice. Their layouts differ:
+  2016's volume sheet has no header row (2017's columns); 2018 writes 0 where other years leave a count blank (read
+  as no count); 2016–2018 truck sheets have a three-row header and a combined postmile ("R0.129", "R.78") with no
+  suffix columns; 2019–2020 truck sheets spell POSTMILE_PFX / POSTMILE_SFX / TRUCK_AADT_TOTAL. Parsed (Engineering,
+  2026-11-01): count points 2016 7,056 / 2017 7,093 / 2018 7,154 / 2019 7,120 / 2020 7,114 (about 6,400 a year
+  with an ahead AADT); truck points 3,429–3,482. LA-405 at PM 13.5: 285,000–286,000 AADT 2016–2019, 256,000 in 2020.
+  Ramp counts for those years come from the 2021+ ramp editions (ten years each).
 - **Vintage:** the download date. Engineering's check copy, 2026-10-26: count years 2021 (7,116 points, 3,467 truck
   rows), 2022 (7,116 / 3,467), 2023 (7,134 / 3,461), 2024 (7,258 / 3,463). The app downloads into
   `data/cache/aadt/caltrans_aadt_<date>.sqlite` and refreshes after a year.
