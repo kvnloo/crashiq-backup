@@ -280,3 +280,28 @@ def test_a_multiple_is_backed_by_a_ratio_cell_not_a_count():
     # "3x" next to a cited count of 3 (BROADSIDE/ksi_crashes) is still unbacked
     r = check(**{**GOOD, "text": GOOD["text"] + " Rear ends are 3x the corridor share."})
     assert any("number 3x" in x for x in r)
+
+
+# -- ratio and change words are numbers (user, 2026-11-02, docs/03 #359) -------------------------------------------
+INJ = {"value": 15, "table_id": "T2", "cell": "I1/injury_crashes"}           # I1: 30 crashes, 15 injury
+
+
+@pytest.mark.parametrize("extra", [
+    " Crashes here are twice the injury crashes.", " Crashes doubled.", " Injury crashes are half of all crashes.",
+])
+def test_a_ratio_word_backed_by_two_cited_cells_passes(extra):
+    assert check(**{**GOOD, "text": GOOD["text"] + extra, "numbers": GOOD["numbers"] + [INJ]}) == []
+
+
+@pytest.mark.parametrize("extra, word", [
+    (" Crashes tripled.", "tripled"), (" Crashes quadrupled.", "quadrupled"), (" Crashes doubled.", "doubled"),
+    (" A third of crashes were at night.", "a third"), (" Injury crashes are half of all crashes.", "half"),
+])
+def test_a_ratio_word_without_cells_that_give_it_is_rejected(extra, word):
+    # GOOD's cells are 20, 30, 3, 4: no pair gives 2, 3, 4, 1/2 or 1/3 at one decimal place
+    assert any(f"number {word}" in r for r in check(**{**GOOD, "text": GOOD["text"] + extra}))
+
+
+def test_a_multiple_can_be_backed_by_the_two_cells_it_compares():
+    assert check(**{**GOOD, "text": GOOD["text"] + " Crashes are 2x injury crashes.",
+                    "numbers": GOOD["numbers"] + [INJ]}) == []

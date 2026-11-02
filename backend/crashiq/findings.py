@@ -45,6 +45,11 @@ _NUM = re.compile(r"(?<![\w.])(?<!\w-)(-?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(e[+-]
                   r"(?:\s*(%|percent)|([kmb]|x|×))?(?![\w])", re.I)
 _SCALE = {"k": 3, "m": 6, "b": 9}
 _RATIO_COLS = ("ratio_to_corridor", "rate_to_critical", "ratio_to_statewide")   # what "3x" can stand for
+# Ratio and change words are numbers (user, 2026-11-02, docs/03 #359). Written at one decimal place: the quotient must
+# round to the word's value there ("doubled" = 1.95 to 2.049); that precision is the PM's proposal awaiting the user.
+RATIO_WORDS = {"doubled": "2.0", "twice": "2.0", "tripled": "3.0", "quadrupled": "4.0", "half": "0.5",
+               "a third": "0.3"}
+_RATIO_WORD = re.compile(r"\b(" + "|".join(RATIO_WORDS) + r")\b", re.I)
 _ORDINAL = re.compile(r"(?<![\w.])\d+(?:st|nd|rd|th)\b", re.I)
 _SPELLED = re.compile(r"\b(" + "|".join(SPELLED) + r")\b", re.I)
 _QUOTED = re.compile(r"[\"“]([^\"”]{1,120})[\"”]")
@@ -128,7 +133,26 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
     out = [m.group(1) + m.group(2) + (m.group(3) or "") + (m.group(4) or "") + (m.group(6) or "")
            for m in _NUM.finditer(masked)]
     out += [str(SPELLED[m.group(1).lower()]) for m in _SPELLED.finditer(masked)]
+    out += [m.group(1).lower() for m in _RATIO_WORD.finditer(masked)]
     return out
+
+
+def _backs_ratio(written: str, finding: Finding, tables: list[dict], by_id: dict) -> bool:
+    """A multiple ("3x", "doubled") is backed by a cited ratio cell, or by two cited cells whose quotient rounds to
+    it (docs/03 #359)."""
+    vals = []
+    for n in finding.numbers:
+        if n.table_id not in by_id:
+            continue
+        try:
+            v = profile_mod.cell(tables, f"{n.table_id}/{n.cell}")
+        except (StopIteration, KeyError, ValueError):
+            continue
+        if n.cell.rsplit("/", 1)[-1] in _RATIO_COLS and matches(written, v):
+            return True
+        if isinstance(v, (int, float)) and not isinstance(v, bool):
+            vals.append(float(v))
+    return any(b and matches(written, a / b) for i, a in enumerate(vals) for j, b in enumerate(vals) if i != j)
 
 
 def select_records(crashes: list[dict], f: RecordFilter) -> list[dict]:
@@ -204,17 +228,18 @@ def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: 
         plain = w.replace(",", "")
         if plain.isdigit() and lo <= int(plain) <= hi:
             continue                                   # a year inside the study window
-        ok = False
-        for n in finding.numbers:
-            if w[-1] in "xX×" and n.cell.rsplit("/", 1)[-1] not in _RATIO_COLS:
-                continue                               # a multiple is backed by a ratio cell, not a count (#359)
-            if n.table_id in by_id:
-                try:
-                    if matches(plain, profile_mod.cell(tables, f"{n.table_id}/{n.cell}")):
-                        ok = True
-                        break
-                except (StopIteration, KeyError, ValueError):
-                    pass
+        if w in RATIO_WORDS or w[-1] in "xX×":
+            ok = _backs_ratio(RATIO_WORDS.get(w) or plain, finding, tables, by_id)
+        else:
+            ok = False
+            for n in finding.numbers:
+                if n.table_id in by_id:
+                    try:
+                        if matches(plain, profile_mod.cell(tables, f"{n.table_id}/{n.cell}")):
+                            ok = True
+                            break
+                    except (StopIteration, KeyError, ValueError):
+                        pass
         if not ok:
             reasons.append(f"number {w} in the text is not backed by a cited table cell")
     return reasons
