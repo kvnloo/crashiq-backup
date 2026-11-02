@@ -32,6 +32,7 @@ from pydantic import BaseModel, Field
 
 from . import assign as assign_mod
 from . import profile as profile_mod
+from . import pcf as pcf_mod
 from . import signals as signals_mod
 
 SPELLED = {w: i for i, w in enumerate(
@@ -112,6 +113,8 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
     for m in _QUOTED.finditer(text):
         if m.group(1).strip().lower() in quoted_ok:
             masked = masked.replace(m.group(0), " " * len(m.group(0)))
+    for code in quoted_ok:            # "VC 22350": a record's own PCF code, written after VC (#346)
+        masked = re.sub(rf"\bVC\s+{re.escape(code)}\b", lambda m: " " * len(m.group(0)), masked, flags=re.I)
     masked = _ORDINAL.sub(lambda m: " " * len(m.group(0)), masked)
     out = [m.group(1) + (m.group(2) or "") for m in _NUM.finditer(masked)]
     out += [str(SPELLED[m.group(1).lower()]) for m in _SPELLED.finditer(masked)]
@@ -308,6 +311,19 @@ ROAD_USERS = (("ped", "a pedestrian"), ("bike", "a bicyclist"), ("ebike", "an e-
 APPROX = ("approximate", "address_nad")
 
 
+def _reported_elsewhere(c: dict, row: dict) -> str | None:
+    """The report's own location, quoted as written (title case), when neither road it names is a street of the
+    intersection its GPS placed it at (#346: "RT 82 / CARMELITA AV" placed by GPS at Broadway). None otherwise."""
+    if row["values"].get("kind") != "intersection" or c.get("location_source") in APPROX:
+        return None
+    from .names import same_core, street_key
+    roads = [r for r in (c.get("primary_road"), c.get("secondary_road")) if r and str(r).strip()]
+    keys = [k for k in (street_key(p) for p in str(row["label"]).split(" / ")) if k]
+    if not roads or not keys or any(street_key(r) and same_core(street_key(r), k) for r in roads for k in keys):
+        return None
+    return " / ".join(f'"{str(r).strip().title()}"' for r in roads)
+
+
 def fatal_findings(prof: dict, tables: list[dict], placed: list[dict]) -> list[Finding]:
     """#274 (user decision 2026-10-25, docs/03): every fatal crash placed at a study location is its own finding,
     written by code from the crash record, with no statistical test. It cites the record (Collision Id) and the
@@ -318,14 +334,17 @@ def fatal_findings(prof: dict, tables: list[dict], placed: list[dict]) -> list[F
                     key=lambda c: (str(c.get("date") or ""), str(c["crash_id"]))):
         row = t2[c["location_id"]]
         what = [(c.get("collision_type") or "collision type not stated").lower()]
-        if c.get("pcf"):
-            what.append(f'primary collision factor "{c["pcf"]}"' + (f" ({c['pcf_category']})" if c.get("pcf_category")
-                                                                     and not any(ch.isdigit() for ch in str(c["pcf_category"])) else ""))
+        if c.get("pcf"):                  # the category label, as tab 3's chart shows it, and the code (#346)
+            label = pcf_mod.labels().get(c.get("pcf_class") or "")
+            what.append(f"primary collision factor {label.lower()} (VC {c['pcf']})" if label
+                        else f'primary collision factor "{c["pcf"]}"')
         users = [w for k, w in ROAD_USERS if c.get(k)]
         what.append("involving " + " and ".join(users) if users else "vehicles only")
         approx = c.get("location_source") in APPROX
+        reported = _reported_elsewhere(c, row)
         text = (f"Fatal crash at {row['label']} on {str(c.get('date'))[:10]}: {', '.join(what)}."
-                + (" Approximate location: no usable GPS, placed from the report." if approx else ""))
+                + (" Approximate location: no usable GPS, placed from the report." if approx else "")
+                + (f" Reported at {reported}; the officer's GPS places it at {row['label']}." if reported else ""))
         out.append(Finding(
             id=f"fatal-{c['crash_id']}", location_id=c["location_id"], text=text,
             title=f"Fatal crash at {row['label']}",
