@@ -28,7 +28,8 @@ independently and files `bug` issues with a failing test, which go round the sam
   (`design/mockups/`) is approved in direction and will be refined later.
 - **2026-10-19 (user):** PM merges clean, tested PRs. A Tester session joins (docs/03 log).
 - **2026-11-02 (user, PM session): build frozen; move to testing and shipping.** "finish the 5 PRs, park fine-tuning,
-  move to testing and shipping". The five open feature PRs (#310, #315, #339, #354 and docs #348) finish through the
+  move to testing and shipping". The four open feature PRs (#310, #315, #339, #354) and docs PR #348 finish through the
   normal review loop. Remaining fine-tuning and research issues are labelled `backlog` and wait until after shipping
-  (placement refinements, extra measurements, state pack, nationwide research, #287 part 2, #52). Stage 5 (Test) starts
+  (placement refinements, extra measurements, state pack, nationwide research, #287 part 2, #52). The merged
+  features behind switches (#322 mile markers at postmiles, #324 railway/trail crossings) ship with their switches off. Stage 5 (Test) starts
   against the six-condition gate; Stage 7 (Ship) follows. The user is asked only for big decisions from here on.
