@@ -414,3 +414,16 @@ def test_an_unsourced_range_end_is_rejected_and_window_years_still_pass():
     r = check(**{**GOOD, "text": GOOD["text"] + " Between 20-25 were at night."})
     assert [x for x in r if "number" in x] == ["number 25 in the text is not backed by a cited table cell"]
     assert check(**{**GOOD, "text": GOOD["text"] + " Crashes from 2021-2025."}) == []
+
+
+# -- #372: a tens word and a units word are one number across a space, hyphen, en dash or em dash --------------------
+@pytest.mark.parametrize("extra", [" Twenty one were at night.", " Twenty—one were at night.", " Twenty–one were at night.",
+                                   " Twenty-one were at night.", " Twenty  one were at night."])
+def test_a_spelled_number_with_a_space_or_dash_is_read_whole(extra):
+    assert F.extract_numbers(extra, set()) == ["21"]
+    assert any("number 21" in r for r in check(**{**GOOD, "text": GOOD["text"] + extra}))
+
+
+def test_a_comma_keeps_a_tens_word_and_one_apart():
+    assert F.extract_numbers("Twenty, one of which was at night.", set()) == ["20"]
+    assert F.extract_numbers("Twenty were at night.", set()) == ["20"]
