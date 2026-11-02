@@ -49,6 +49,8 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   - apply the cleaner rules of #242 (PKY/PW, EXPWY, HW, TRL, RT as a trailing word, JR, CYN, MTN, HTS);
   - route suffixes such as "PACIFIC COAST HWY - SR1" and "BEACH BL - SR39 BLVD";
   - more wording forms in #305 ("STATE HIGHWAY 96", "W CURB LINE OF …", two streets in one field).
+  - a bare route in a freeway report ("405 SB", "99 HWY", "1-15 S/B" for I-15) is that route, read only for the
+    corridor's own route (#334); never a house number, a numbered street or a number alone.
 - Tiers that auto-place: **exact** and **unique_pair** (the two streets, allowing only what the report leaves out, meet
   once). unique_pair added +108,547 crashes at accuracy equal to or better than exact.
 - **Alias table** of local spellings, city-scoped, every entry approved by the user (912 in CA,
@@ -128,7 +130,8 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
 
 ## 6. Crash rates on state highways — `sources/ca-caltrans-traffic-census.md`
 - **Exposure:** the state DOT's traffic census. In CA, Caltrans AADT by route, county and postmile (back and ahead
-  legs), truck AADT by axle, and ramp ADT by district. Each crash joins through its derived postmile.
+  legs), truck AADT by axle, and ramp ADT by district. Each crash joins through its derived postmile. Count years
+  2016–2024 (#345); a window year before the oldest count has no rate, and the caveat names the year.
 - **Join rules** (#289):
   - the nearer count point's facing leg, split at the midpoint;
   - 0.05 mi tolerance at a line's ends;
@@ -141,7 +144,8 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
   - **GPS on the freeway line is not proof of mainline.** Ramp and cross-street crashes at interchanges often carry
     GPS on or beside the line. Classify by the report's road wording (`backend/crashiq/rate_class.py`, #304):
     - a ramp named, or "<route> <dir> TO <local street>" (= the <dir> off-ramp to that street), or "<local street>
-      TO <route> <dir>" (= the <dir> on-ramp from that street, user 2026-11-01, #331), or a connector
+      TO <route> <dir>" or "<route> <dir> FROM <local street>" (= the <dir> on-ramp from that street, user
+      2026-11-01, #331, #341), or a connector
       "<route> TO <route>" whose cross street is one of the routes → ramp (rated in the ramp table; a connector
       gets no ramp rate);
     - "<route> TO <route>" with a local cross street → mainline;

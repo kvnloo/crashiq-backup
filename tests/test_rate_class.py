@@ -24,6 +24,8 @@ def c(p, s, ft=None):
     (FWY, c("I-405 S/B TO VERMONT AVE", "VERMONT AVE"), ("ramp", "<route> <dir> TO <street>: the off-ramp")),
     (FWY, c("I-405 NB TO I-110", "I-110"), ("ramp", "freeway connector")),
     (FWY, c("REDONDO BEACH BLVD. TO I-405 NB", "REDONDO BEACH BLVD."), ("ramp", "<street> TO <route> <dir>: the on-ramp")),
+    (FWY, c("I-405 S/B FROM ARTESIA", "ARTESIA BLVD"), ("ramp", "<route> <dir> FROM <street>: the on-ramp")),
+    (FWY, c("I-405 S/B FROM I-110", "ARTESIA BLVD"), ("ramp", "freeway connector")),
     # conventional highway: a cross-street primary at the intersection counts (answer 3; blank = 0; within radius)
     (CONV, c("MAIN ST", "PACIFIC COAST HWY"), ("mainline", "at an intersection")),
     (CONV, c("MAIN ST", "PACIFIC COAST HWY", 0), ("mainline", "at an intersection")),
@@ -33,6 +35,8 @@ def c(p, s, ft=None):
     # #314 review: the route by number though the field adds the freeway's name; another route's main lanes are out
     (FWY, c("NORTHBOUND I-405 SAN DIEGO FREEWAY", "HAWTHORNE BLVD"), ("mainline", "on the highway")),
     (FWY, c("I-110 S/B TO I-405 N/B", "190TH ST"), ("cross_street", "on another route's main lanes (I-110)")),
+    (FWY, c("405 SB", "ARTESIA BLVD"), ("mainline", "on the highway")),                       # #334
+    (FWY, c("110 SB", "ARTESIA BLVD"), ("cross_street", "cross street on a freeway")),
     # freeway: any cross-street primary is out, whatever the distance
     (FWY, c("VERMONT AVE", "I-405", 0), ("cross_street", "cross street on a freeway")),
 ])

@@ -30,7 +30,7 @@ from . import network as network_mod
 from . import study as study_mod
 from .db import Database
 from .geo import LocalProjection, Polyline
-from .names import ROUTE_SPELLINGS, drop_directional, route_number, route_numbers, same_core, street_key
+from .names import ROUTE_SPELLINGS, bare_route, drop_directional, route_number, route_numbers, same_core, street_key
 from . import aliases as aliases_mod
 from . import gps_rules
 from . import union as union_mod
@@ -67,7 +67,7 @@ def bbox(line: list[tuple[float, float]], margin: float) -> tuple[float, float, 
     return s, w, n, e
 
 
-PULL_FORMAT = 31    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319; 30: #318; 31: #329)
+PULL_FORMAT = 32    # bump when the cleaning changes what a cached pull holds (2: #75; 3: #80-#83, #94; 4: #113; 5: #111; 6: #121; 7: #52 heavy truck; 8: #52 PCF category; 9: #52 trailers; 10: #52 PCF 2024; 11: #132; 12: #142; 13: #147; 14: #154, #155; 15: #143; 16: #169; 17: #174; 18: #191; 19: #195; 20: #212; 21: unique_pair on; 22: #218; 23: #229; 24: #235; 25: name-cleaner rules; 26: TIGER union off, #243; 27: #247; 28: #255; 29: #319; 30: #318; 31: #329; 32: #70)
 
 
 def cache_key(study: dict, net: dict) -> str:
@@ -349,7 +349,7 @@ def _names_street(raw: str | None, keys) -> bool:
     if k and any(same_core(k, x) for x in keys):
         return True
     routes = {route_number(x) for x in keys} - {None}
-    if routes & route_numbers(raw):        # SR-1, RT 1, HWY 1, "PCH - SR1" for a corridor tagged CA 1 (#83)
+    if routes & (route_numbers(raw) | ({bare_route(raw)} - {None})):      # "405 SB" on an I-405 corridor (#334)        # SR-1, RT 1, HWY 1, "PCH - SR1" for a corridor tagged CA 1 (#83)
         return True
     sq, sp = _squeeze(raw), _spaced(raw)
     return any(route_number(x) is None and len(_squeeze(x.core)) >= 4
@@ -603,7 +603,7 @@ def _no_cross_street(roads: list, on_idx: list[int]) -> bool:
     return all(_squeeze(rd) in NO_CROSS or len(_squeeze(rd)) <= 2 for rd in others)
 
 
-def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
+def pull(study: dict, net: dict, ckan: Ckan, progress=None, raw: dict | None = None) -> dict:
     """`progress(step, done, total)`, when given, is told what the pull is doing (#54, background pulls)."""
     tell = progress or (lambda step, done, total: None)
     if not net.get("line"):
@@ -697,6 +697,9 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
                 # listed under its rule (#39, docs/03).
                 log["no_coords_off_study_stretch"] += 1
                 c["exclude_rule"] = "cross_street_not_on_corridor"
+                if (c.get("offset_ft") or 0) > 0 and c.get("offset_dir"):
+                    # its reported distance may bring it back onto the stretch (#70): tried below, before the lookups
+                    c["outside_corner"] = True
             recs.append((c, "unmatched"))
 
     ignored: dict[str, dict] = {}         # collision id -> the GPS point not used, and why (#218)
@@ -910,6 +913,14 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None) -> dict:
         raise PullError(f"{log['bad_dates_dropped']} of {log['rows_read']} crash records have a Crash Date Time in a "
                         "format CrashIQ doesn't recognize. The data layout changed; update the CCRS adapter.")
 
+    # #70: a report at an outside corner with a reported distance, placed from that corner on the locator's map (`raw`)
+    # and kept when the normal assignment puts it on the stretch; decided before the lookups, so only those kept cost one
+    cands = [c for c in crashes.values() if c.pop("outside_corner", False)]
+    if cands and raw is not None:
+        from .placement import outside_corners
+        log["outside_corner"] = outside_corners(net, cands, raw)
+        log["no_coords_off_study_stretch"] -= log["outside_corner"]["kept"]
+
     # Parties + IWP, per year
     by_year: dict[int, list[str]] = {}
     for c in crashes.values():
@@ -1022,7 +1033,8 @@ def stale(cached: dict, study: dict, now: datetime | None = None) -> bool:
 
 
 _STUDY_LOCKS: dict[str, threading.Lock] = {}
-_LOCKS_GUARD = threading.Lock()
+_LOCKS_GUARD = threading.Lock()       # the study locks and the background jobs; never held while calling out (#344)
+_CACHE_GUARD = threading.Lock()       # the shared caches (files, TIGER, postmiles, AADT, NAD): their own lock (#344)
 
 
 def study_lock(sid: str) -> threading.Lock:
@@ -1062,7 +1074,7 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
                 raw, ninfo = union_mod.corridor_network(db, net, tiger)
                 alt = union_mod.alt_names(raw, net) if tiger is not None else None
                 net = union_mod.with_alt(net, alt)
-            result = pull(study, net, ckan, progress)
+            result = pull(study, net, ckan, progress, raw)
             if ninfo is not None:
                 result["cleaning"]["network"] = ninfo
                 result["cleaning"].setdefault("files_pending", {}).update(ninfo["tiger_pending"])
@@ -1111,7 +1123,7 @@ def tiger_for(st):
     if getattr(st, "ckan", None) is not None:
         return None
     folder = str(st.settings.tiger_dir)
-    with _LOCKS_GUARD:
+    with _CACHE_GUARD:
         return _TIGER_CACHES.setdefault(folder, TigerCache(folder))
 
 
@@ -1126,7 +1138,7 @@ def files_for(st) -> ccrs_files.FileCache | None:
     if getattr(st, "ckan", None) is not None:
         return None
     folder = str(st.settings.ccrs_files_dir)
-    with _LOCKS_GUARD:
+    with _CACHE_GUARD:
         return _FILE_CACHES.setdefault(folder, ccrs_files.FileCache(folder))
 
 
@@ -1170,14 +1182,15 @@ def post_pull(sid: str, request: Request, response: Response, refresh: bool = Fa
             hit = fresh(db, sid)
             if hit:
                 return summary(hit, True)
+        # built before taking the lock: ckan_for reaches the cache helpers, which lock too (#344, a live-pull deadlock)
+        ckan, overpass = ckan_for(request), getattr(request.app.state, "overpass", None)
         with _LOCKS_GUARD:
             job = _JOBS.get(sid)
             if not job or job["state"] != "running":
                 job = {"state": "running", "step": "Starting", "done": 0, "total": 0,
                        "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
                 _JOBS[sid] = job
-                threading.Thread(target=_run_job, args=(db, sid, ckan_for(request), refresh, job,
-                                                         getattr(request.app.state, "overpass", None)), daemon=True).start()
+                threading.Thread(target=_run_job, args=(db, sid, ckan, refresh, job, overpass), daemon=True).start()
         response.status_code = 202
         return {"job": dict(job)}
     try:
@@ -1222,7 +1235,7 @@ def postmile_for(st):
     if getattr(st, "ckan", None) is not None:
         return None
     folder = str(st.settings.postmile_dir)
-    with _LOCKS_GUARD:
+    with _CACHE_GUARD:
         return _PM_CACHES.setdefault(folder, PostmileCache(folder))
 
 
@@ -1238,5 +1251,5 @@ def aadt_for(st):
     if getattr(st, "ckan", None) is not None:
         return None
     folder = str(st.settings.aadt_dir)
-    with _LOCKS_GUARD:
+    with _CACHE_GUARD:
         return _AADT_CACHES.setdefault(folder, AadtCache(folder))

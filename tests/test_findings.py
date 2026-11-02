@@ -154,3 +154,184 @@ def test_route_number_in_a_cited_location_name_is_not_a_figure_but_other_numbers
     assert bad == ["number 41 in the text is not backed by a cited table cell"]
     bad = findings.validate(f(ok + " 12 were at night."), tables, crashes_, (2021, 2025))
     assert bad == ["number 12 in the text is not backed by a cited table cell"]
+
+
+# #274: every fatal crash is its own finding; the validator checks its date against the record
+def _fatal_setup():
+    placed = [dict(c) for c in PLACED]
+    k = next(c for c in placed if c["location_id"] == "I1")
+    k.update(severity="K", date="2023-04-05", collision_type="BROADSIDE", pcf="22350", ped=True)
+    pull = {**PULL, "crashes": [{**BY[c["crash_id"]], **({"severity": "K", "date": "2023-04-05",
+                                                           "collision_type": "BROADSIDE", "pcf": "22350", "ped": True}
+                                                          if c["crash_id"] == k["crash_id"] else {})}
+                                for c in PULL["crashes"]]}
+    prof = profile.build(STUDY, NET, pull, A)
+    return prof, prof["tables"], placed, k
+
+
+def test_a_fatal_crash_is_its_own_finding_and_passes_the_validator():
+    prof, tables, placed, k = _fatal_setup()
+    fs = F.fatal_findings(prof, tables, placed)
+    assert [f.id for f in fs] == [f"fatal-{k['crash_id']}"]
+    f = fs[0]
+    label = next(r["label"] for r in next(t for t in tables if t["id"] == "T2")["rows"] if r["key"] == "I1")
+    assert f.text == (f'Fatal crash at {label} on 2023-04-05: broadside, primary collision factor "22350", '
+                      "involving a pedestrian.")
+    assert f.source == "screen" and f.meta["kind_of_finding"] == "fatal" and f.evidence_refs.tables == ["T2"]
+    assert F.validate(f, tables, placed, WINDOW) == []
+    assert [c["crash_id"] for c in F.select_records(placed, f.evidence_refs.records)] == [k["crash_id"]]
+
+
+def test_a_fatal_finding_with_a_wrong_date_is_rejected():
+    prof, tables, placed, _ = _fatal_setup()
+    f = F.fatal_findings(prof, tables, placed)[0]
+    f.text = f.text.replace("2023-04-05", "2023-04-06")
+    assert "date 2023-04-06 in the text is not the date of a cited crash record" in F.validate(f, tables, placed, WINDOW)
+
+
+def test_an_approximate_fatal_crash_says_so():
+    prof, tables, placed, k = _fatal_setup()
+    k["location_source"] = "approximate"
+    f = F.fatal_findings(prof, tables, placed)[0]
+    assert f.text.endswith("Approximate location: no usable GPS, placed from the report.") and f.meta["approximate"]
+
+
+def test_fatal_findings_sort_first():
+    fatal = {"meta": {"kind_of_finding": "fatal"}, "rank": {"location_fatal_crashes": 1, "ksi_crashes": 1}}
+    strong = {"meta": {"probability": 0.99}, "rank": {"location_fatal_crashes": 1, "ksi_crashes": 5, "crashes": 9}}
+    stale = {**fatal, "stale": True}
+    assert sorted([strong, stale, fatal], key=F._order) == [fatal, strong, stale]
+
+
+def test_a_location_with_4_of_8_ksi_crashes_gets_a_ksi_finding():
+    from crashiq import signals
+    def crashes(lid, n, ksi):
+        return [{"crash_id": f"{lid}-{i}", "location_id": lid, "severity": "A" if i < ksi else "O",
+                 "collision_type": "REAR END"} for i in range(n)]
+    placed = crashes("osm-1", 8, 4) + crashes("osm-2", 12, 0) + crashes("osm-3", 12, 1) + crashes("osm-4", 10, 0)
+    out = signals.screen(placed, [("osm-1", "A St"), ("osm-2", "B St"), ("osm-3", "C St"), ("osm-4", "D St")])
+    ksi = [s for s in out["signals"] if s["target"] == "ksi"]
+    assert [s["location_id"] for s in ksi] == ["osm-1"]
+    row = next(r for r in out["table"]["rows"] if r["key"] == "osm-1~ksi")["values"]
+    assert (row["target_crashes"], row["location_crashes"]) == (4, 8)
+
+
+def test_the_fatal_finding_reads_the_pcf_label_and_says_where_the_report_put_it():
+    # #346 (PM end-to-end, SR-82): the raw code "22350", and "at Broadway" for a report reading "RT 82 / CARMELITA AV"
+    prof, tables, placed, k = _fatal_setup()
+    k.update(pcf_class="03", primary_road="RT 82", secondary_road="CARMELITA AV", location_source="gps")
+    f = F.fatal_findings(prof, tables, placed)[0]
+    label = next(r["label"] for r in next(t for t in tables if t["id"] == "T2")["rows"] if r["key"] == "I1")
+    assert f.text == (f"Fatal crash at {label} on 2023-04-05: broadside, primary collision factor unsafe speed "
+                      f'(VC 22350), involving a pedestrian. Reported at "Rt 82" / "Carmelita Av"; the officer\'s GPS '
+                      f"places it at {label}.")
+    assert F.validate(f, tables, placed, WINDOW) == []                    # the code and the route number are the record's
+    k["pcf"] = "22107"                                                     # a code the text doesn't match is caught
+    assert any("22350" in r for r in F.validate(f, tables, placed, WINDOW))
+
+
+def test_no_reported_at_note_when_the_report_names_the_intersection():
+    prof, tables, placed, k = _fatal_setup()
+    label = next(r["label"] for r in next(t for t in tables if t["id"] == "T2")["rows"] if r["key"] == "I1")
+    k.update(primary_road="CRENSHAW BL", secondary_road=label.split(" / ")[0].upper(), location_source="gps")
+    assert "Reported at" not in F.fatal_findings(prof, tables, placed)[0].text
+
+
+@pytest.mark.parametrize("extra", [
+    " The crash cost here is $4.2M.",
+    " Rear ends are 3x the corridor share.",
+    " Night crashes fell -45%.",
+    " Night crashes changed by 1e3.",
+])
+def test_a_figure_written_with_a_sign_symbol_or_suffix_is_still_checked(extra):
+    # #359: the lookbehind/lookahead hid these from the validator
+    assert check(**{**GOOD, "text": GOOD["text"] + extra}) != []
+
+
+def test_a_dollar_amount_is_read_whole():
+    assert F.extract_numbers("costs $5,000,000 a year", set()) == ["5,000,000"]
+
+
+@pytest.mark.parametrize("text, want", [
+    ("cost $4.2M", ["4.2M"]), ("3x the share", ["3x"]), ("fell -45%", ["-45"]), ("by 1e3", ["1e3"]),
+    ("about 12k", ["12k"]), ("node osm-123 and 2021-2025", ["2021"]),
+])
+def test_number_forms_as_written(text, want):
+    assert F.extract_numbers(text, set()) == want
+
+
+@pytest.mark.parametrize("written, cell, ok", [
+    ("4.2M", 4_210_000, True), ("4.2M", 4_300_000, False), ("12k", 12_400, True), ("3x", 3.04, True),
+    ("3x", 2.4, False), ("-45", -45.0, True), ("-45", 45.0, False), ("1e3", 1000, True), ("1e3", 999, False),
+    ("1e3", 1600, False),
+])
+def test_a_scaled_figure_matches_its_cell_at_the_written_precision(written, cell, ok):
+    assert F.matches(written, cell) is ok
+
+
+def test_a_sourced_dollar_figure_in_millions_passes_and_a_wrong_one_is_rejected():
+    cost = {"value": 9_349_000, "table_id": "T2", "cell": "I1/crash_cost"}
+    t = dict(GOOD, numbers=GOOD["numbers"] + [cost])
+    assert check(**{**t, "text": GOOD["text"] + " Crash cost $9.3M."}) == []
+    assert any("number 9.5M" in r for r in check(**{**t, "text": GOOD["text"] + " Crash cost $9.5M."}))
+
+
+def test_a_multiple_is_backed_by_a_ratio_cell_not_a_count():
+    # "3x" next to a cited count of 3 (BROADSIDE/ksi_crashes) is still unbacked
+    r = check(**{**GOOD, "text": GOOD["text"] + " Rear ends are 3x the corridor share."})
+    assert any("number 3x" in x for x in r)
+
+
+# -- ratio and change words are numbers (user, 2026-11-02, docs/03 #359) -------------------------------------------
+INJ = {"value": 15, "table_id": "T2", "cell": "I1/injury_crashes"}           # I1: 30 crashes, 15 injury
+
+
+@pytest.mark.parametrize("extra", [
+    " Crashes here are twice the injury crashes.", " Crashes doubled.", " Injury crashes are half of all crashes.",
+])
+def test_a_ratio_word_backed_by_two_cited_cells_passes(extra):
+    assert check(**{**GOOD, "text": GOOD["text"] + extra, "numbers": GOOD["numbers"] + [INJ]}) == []
+
+
+@pytest.mark.parametrize("extra, word", [
+    (" Crashes tripled.", "tripled"), (" Crashes quadrupled.", "quadrupled"), (" Crashes doubled.", "doubled"),
+    (" Injury crashes are half of all crashes.", "half"),
+])
+def test_a_ratio_word_without_cells_that_give_it_is_rejected(extra, word):
+    # GOOD's cells are 20, 30, 3, 4: no pair gives 2, 3, 4, 1/2 or 1/3 at one decimal place
+    assert any(f"number {word}" in r for r in check(**{**GOOD, "text": GOOD["text"] + extra}))
+
+
+def test_a_multiple_can_be_backed_by_the_two_cells_it_compares():
+    assert check(**{**GOOD, "text": GOOD["text"] + " Crashes are 2x injury crashes.",
+                    "numbers": GOOD["numbers"] + [INJ]}) == []
+
+
+def test_the_ratio_word_tolerance_is_one_constant(monkeypatch):
+    # 30 / 15 = 2.0 backs "doubled" at one decimal; 30 / 20 = 1.5 doesn't, but would at the word's own precision
+    t = {**GOOD, "text": GOOD["text"] + " Crashes doubled."}
+    assert any("number doubled" in r for r in check(**t))
+    monkeypatch.setattr(F, "RATIO_WORD_DECIMALS", 0)
+    assert check(**t) == []
+
+
+@pytest.mark.parametrize("phrase, word", [
+    ("Dozens of crashes happened at night.", "dozens"), ("A dozen crashes happened at night.", "a dozen"),
+    ("A few dozen crashes happened at night.", "a few dozen"), ("Several dozen crashes happened at night.", "several dozen"),
+    ("A hundred crashes happened at night.", "a hundred"), ("Hundreds of crashes happened at night.", "hundreds"),
+    ("Several hundred crashes happened at night.", "several hundred"), ("A handful of crashes were at night.", "a handful"),
+    ("A third of crashes were at night.", "a third"), ("Two thirds of crashes were in daylight.", "two thirds"),
+])
+def test_count_words_are_always_rejected(phrase, word):
+    # user, 2026-11-02 ("option A", #362): write the cited number as digits instead
+    r = check(**{**GOOD, "text": GOOD["text"] + " " + phrase})
+    assert [x for x in r if "number" in x] == [f"number {word} in the text is not backed by a cited table cell"]
+
+
+def test_a_third_is_rejected_even_when_the_cells_give_exactly_a_third():
+    # docs/03 #362: not exact at one decimal place, so never backed (in the 0.3 window it would pass for 0.25)
+    t = {**GOOD, "text": GOOD["text"] + " A third of crashes were injury crashes.",
+         "numbers": GOOD["numbers"] + [{"value": 5, "table_id": "T2", "cell": "I1/sev_b"},
+                                       {"value": 15, "table_id": "T2", "cell": "I1/sev_o"}]}      # 5 / 15 = 1/3
+    r = check(**t)
+    assert [x for x in r if "number" in x or "declared" in x] == ["number a third in the text is not backed by a cited table cell"]

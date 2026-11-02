@@ -29,6 +29,7 @@ from __future__ import annotations
 import io
 import json
 import os
+import re
 import sqlite3
 import threading
 import time
@@ -43,13 +44,43 @@ END_TOLERANCE_MI = 0.05     # PM decision on #289 (a): at a line's first and las
 REFRESH_DAYS = 365
 RETRY_MINUTES = 60
 SOURCE = "Caltrans Traffic Census Program"
-SCHEMA = 2                  # 2: ramp table (#287 ramps)
+SCHEMA = 3                  # 2: ramp table (#287 ramps); 3: count years 2016–2020 (#345)
 RAMP_PLACEHOLDERS = (999, 1001)
 RAMP_MAX_AGE = 5                    # years; an older ramp count gives no rate (user decision 2026-11-01)
 
 # the workbooks name the same column differently from year to year
 ALIASES = {"ROUTE": "RTE", "ROUTE_SFX": "RTE_SFX", "COUNTY": "CNTY", "LOCATION DESCRIPTION": "DESCRIPTION",
-           "POSTMILE": "PM", "DIST": "DISTRICT"}
+           "POSTMILE": "PM", "DIST": "DISTRICT", "POSTMILE_PFX": "PM_PFX", "POSTMILE_SFX": "PM_SFX",
+           "TRUCK_AADT_TOTAL": "TOT_TRK_AADT"}
+# Older editions (#345: 2016–2020 loaded on the user's OK, 2026-11-01). 2016's volume sheet has no header row; its
+# columns are 2017's. 2016–2018 truck sheets have a three-row header and a combined postmile ("R0.129", "R.78") with
+# no suffix columns; their columns, in order:
+VOLUME_COLUMNS = ["DISTRICT", "RTE", "RTE_SFX", "CNTY", "PM_PFX", "PM", "PM_SFX", "DESCRIPTION", "BACK_PEAK_HOUR",
+                  "BACK_PEAK_MADT", "BACK_AADT", "AHEAD_PEAK_HOUR", "AHEAD_PEAK_MADT", "AHEAD_AADT"]
+OLD_TRUCK_COLUMNS = ["RTE", "DISTRICT", "CNTY", "PM_TEXT", "LEG", "DESCRIPTION", "VEHICLE_AADT_TOTAL", "TOT_TRK_AADT",
+                     "TRK_PERCENT_TOT", "TRK_2_AXLE", "TRK_3_AXLE", "TRK_4_AXLE", "TRK_5_AXLE", "TRK_2_AXLE_PCT",
+                     "TRK_3_AXLE_PCT", "TRK_4_AXLE_PCT", "TRK_5_AXLE_PCT", "EAL", "YEAR_VER"]
+
+
+def local_copy(url: str, folders: list[Path] | None = None) -> bytes | None:
+    """A workbook already downloaded with the user's OK (data/cache/caltrans_downloads_<date>/, by the URL's file name),
+    when its SHA-256 matches that folder's SHA256SUMS: never downloaded twice (#345)."""
+    import hashlib
+    from .settings import ROOT
+    name = url.rsplit("/", 1)[-1]
+    for d in folders if folders is not None else sorted((ROOT / "data" / "cache").glob("caltrans_downloads_*")):
+        f, sums = Path(d) / name, Path(d) / "SHA256SUMS"
+        if not f.is_file() or not sums.is_file():
+            continue
+        want = {ln.split()[1]: ln.split()[0] for ln in sums.read_text().splitlines() if len(ln.split()) == 2}
+        data = f.read_bytes()
+        if want.get(name) == hashlib.sha256(data).hexdigest():
+            return data
+    return None
+
+
+def fetch(url: str) -> bytes:
+    return local_copy(url) or http_get(url)
 
 
 def http_get(url: str) -> bytes:
@@ -84,16 +115,41 @@ def _int(v) -> int | None:
     return None if x is None else int(round(x))
 
 
+def _count(v) -> int | None:
+    x = _int(v)
+    return x if x else None
+
+
 def _rows(data: bytes):
-    """The data sheet's rows as dicts with one spelling of every column (the first sheet is the preface)."""
+    """The data sheet's rows as dicts with one spelling of every column (the first sheet is the preface). Reads the
+    current layout and the older ones (2016's headerless volume sheet, 2016–2018's three-row truck header)."""
     from openpyxl import load_workbook
     wb = load_workbook(io.BytesIO(data), read_only=True, data_only=True)
     ws = next(w for w in wb.worksheets if not w.title.strip().lower().startswith("preface"))
     it = ws.iter_rows(values_only=True)
-    head = [ALIASES.get(_txt(h).upper(), _txt(h).upper()) for h in next(it)]
-    for r in it:
+    first = next(it)
+    words = {_txt(h).upper() for h in first}
+    if _txt(first[0]).isdigit() and len(first) >= len(VOLUME_COLUMNS):       # 2016 volumes: data from row 1
+        head, pending = VOLUME_COLUMNS, [first]
+    elif "VEHICLE" in words and "TRUCK" in words:                              # 2016–2018 trucks: 3-row header
+        for r in it:
+            if _txt(r[0]).upper() == "RTE":
+                break
+        head, pending = OLD_TRUCK_COLUMNS, []
+    else:
+        head, pending = [ALIASES.get(_txt(h).upper(), _txt(h).upper()) for h in first], []
+    for r in (*pending, *it):
         if any(v not in (None, "", " ") for v in r):
-            yield {h: v for h, v in zip(head, r) if h}
+            row = {h: v for h, v in zip(head, r) if h}
+            if "PM_TEXT" in row:
+                row.update(_split_pm(row.pop("PM_TEXT")))
+            yield row
+
+
+def _split_pm(v) -> dict:
+    """A combined postmile ("R0.129", "R.78", "9.418", "12.3R") as PM_PFX, PM and PM_SFX."""
+    m = re.fullmatch(r"([A-Z]?)\s*(\d*\.?\d+)\s*([A-Z]?)", _txt(v).upper())
+    return {"PM_PFX": m.group(1), "PM": m.group(2), "PM_SFX": m.group(3)} if m else {"PM": None}
 
 
 def _key(r: dict) -> tuple:
@@ -106,7 +162,7 @@ class AadtCache:
                  now: Callable[[], float] = time.time, background: bool = True):
         self.folder = Path(folder)
         self.years = years or YEARS
-        self.get = get or http_get
+        self.get = get or fetch
         self.now, self.background = now, background
         self._lock = threading.Lock()
         self._running = False
@@ -132,6 +188,10 @@ class AadtCache:
                 row = con.execute("SELECT value FROM meta WHERE key = 'schema'").fetchone()
             self._schema_of = (p, int(row[0]) if row else 1)
         return self._schema_of[1]
+
+    def loading(self) -> bool:
+        """The download and build is running (first use, or a yearly refresh)."""
+        return self._running
 
     def error(self) -> str | None:
         return self._failed[1] if self._failed else None
@@ -187,11 +247,11 @@ class AadtCache:
                         k = _key(r)
                         if not k[0] or k[4] is None:
                             continue
-                        if kind == "volumes":
+                        if kind == "volumes":                   # 0 = no count (2018 writes 0 for blank, #345)
                             con.execute("INSERT INTO point VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
-                                        (year, *k, _txt(r.get("DESCRIPTION")), _int(r.get("BACK_AADT")),
-                                         _int(r.get("AHEAD_AADT")), _int(r.get("BACK_PEAK_HOUR")),
-                                         _int(r.get("AHEAD_PEAK_HOUR"))))
+                                        (year, *k, _txt(r.get("DESCRIPTION")), _count(r.get("BACK_AADT")),
+                                         _count(r.get("AHEAD_AADT")), _count(r.get("BACK_PEAK_HOUR")),
+                                         _count(r.get("AHEAD_PEAK_HOUR"))))
                         else:
                             con.execute("INSERT INTO truck VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)",
                                         (year, *k, _txt(r.get("LEG")).upper(), _txt(r.get("DESCRIPTION")),

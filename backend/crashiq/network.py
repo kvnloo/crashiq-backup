@@ -24,7 +24,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from collections import Counter, defaultdict
-from typing import Callable
+from typing import Callable, Literal
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -513,8 +513,13 @@ def _load(db: Database, sid: str) -> dict | None:
         i.pop("study_id", None)
     aadt = {r["segment_id"]: r["aadt"] for r in db.query("SELECT * FROM segment_aadt WHERE study_id = ?", (sid,))}
     segs = segments(ints, c["length_ft"])
+    groups = {(r["kind"], r["ref_id"]): r["rate_group"]
+              for r in db.query("SELECT * FROM rate_group WHERE study_id = ?", (sid,))}
     for s in segs:
         s["aadt"] = aadt.get(s["id"])
+        s["rate_group"] = groups.get(("segment", s["id"]))
+    for i in ints:
+        i["rate_group"] = groups.get(("intersection", i["id"]))
     line = json.loads(c["line_json"])
     hw, gs, cn = c.get("corridor_highway"), c.get("grade_separations_json"), c.get("corridor_names_json")
     if gs is None or cn is None:   # drawn before #67/#53: detect from the cached OSM response, never a new download
@@ -529,7 +534,8 @@ def _load(db: Database, sid: str) -> dict | None:
             "corridor_highway": hw, "is_freeway": hw == "motorway",
             "grade_separations": json.loads(gs) if gs else [],
             "corridor_names": json.loads(cn) if cn else ([c["corridor_name"]] if c["corridor_name"] else []),
-            "intersections": ints, "segments": segs, "detected_at": c["detected_at"]}
+            "intersections": ints, "segments": segs, "detected_at": c["detected_at"],
+            "ramp_rate_groups": {ref: g for (k, ref), g in groups.items() if k == "ramp"}}
 
 
 def network(db: Database, sid: str) -> dict:
@@ -548,6 +554,7 @@ def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: 
     with db.transaction() as conn:
         conn.execute("DELETE FROM intersection WHERE study_id = ?", (sid,))
         conn.execute("DELETE FROM segment_aadt WHERE study_id = ?", (sid,))
+        conn.execute("DELETE FROM rate_group WHERE study_id = ? AND kind IN ('segment', 'intersection')", (sid,))
         conn.execute("INSERT OR REPLACE INTO corridor (study_id, line_json, length_ft, corridor_name, detected_at, "
                      "corridor_highway, grade_separations_json, corridor_names_json) VALUES (?, ?, ?, ?, datetime('now'), ?, ?, ?)",
                      (sid, json.dumps([list(p) for p in line]), found["length_ft"], found["corridor_name"],
@@ -618,7 +625,15 @@ def remove_intersection(db: Database, sid: str, iid: str) -> dict:
     return network(db, sid)
 
 
+def _require_location(db: Database, sid: str, kind: str, ref_id: str) -> None:
+    """A segment or intersection id must be one of the study's (#361: a made-up id used to store a row)."""
+    net = network(db, sid)
+    if ref_id not in {x["id"] for x in net["segments" if kind == "segment" else "intersections"]}:
+        raise HTTPException(404, f"{kind.capitalize()} not found.")
+
+
 def set_segment_aadt(db: Database, sid: str, seg_id: str, aadt: float | None) -> dict:
+    _require_location(db, sid, "segment", seg_id)
     if aadt is not None and aadt < 0:
         raise ValueError("AADT can't be negative.")
     if aadt is None:
@@ -628,10 +643,24 @@ def set_segment_aadt(db: Database, sid: str, seg_id: str, aadt: float | None) ->
     return network(db, sid)
 
 
+def set_rate_group(db: Database, sid: str, kind: str, ref_id: str, group: str | None) -> dict:
+    """The engineer's Caltrans rate group for one segment, intersection or ramp (#287 part 1; docs/03 #294)."""
+    from . import rate_groups
+    if kind != "ramp":                    # a ramp is a Caltrans ramp id, not one of the study's own
+        _require_location(db, sid, kind, ref_id)
+    if group is None or not group.strip():
+        db.execute("DELETE FROM rate_group WHERE study_id = ? AND kind = ? AND ref_id = ?", (sid, kind, ref_id))
+    else:
+        db.execute("INSERT OR REPLACE INTO rate_group (study_id, kind, ref_id, rate_group) VALUES (?,?,?,?)",
+                   (sid, kind, ref_id, rate_groups.normalize(kind, group)))
+    return network(db, sid)
+
+
 def clear_corridor(db: Database, sid: str) -> dict:
     with db.transaction() as conn:
         for t in ("intersection", "segment_aadt", "corridor"):
             conn.execute(f"DELETE FROM {t} WHERE study_id = ?", (sid,))
+        conn.execute("DELETE FROM rate_group WHERE study_id = ? AND kind IN ('segment', 'intersection')", (sid,))
     return network(db, sid)
 
 
@@ -656,6 +685,10 @@ class IntersectionPatch(BaseModel):
 
 class SegmentPatch(BaseModel):
     aadt: float | None = None
+
+
+class RateGroupIn(BaseModel):
+    rate_group: str | None = None
 
 
 router = APIRouter()
@@ -714,3 +747,10 @@ def delete_intersection(sid: str, iid: str, request: Request) -> dict:
 def patch_segment(sid: str, seg_id: str, body: SegmentPatch, request: Request) -> dict:
     study_mod.require(_db(request), sid)
     return set_segment_aadt(_db(request), sid, seg_id, body.aadt)
+
+
+@router.put("/studies/{sid}/rate-groups/{kind}/{ref_id}")
+def put_rate_group(sid: str, kind: Literal["segment", "intersection", "ramp"], ref_id: str, body: RateGroupIn,
+                   request: Request) -> dict:
+    study_mod.require(_db(request), sid)
+    return set_rate_group(_db(request), sid, kind, ref_id, body.rate_group)

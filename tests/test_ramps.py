@@ -103,6 +103,33 @@ def test_street_to_route_dir_names_the_on_ramp(primary, secondary, want):
     assert (r["dir"], r["on_off"], r["cross"]) == want and r["from_street"]
 
 
+# "<route> <dir> FROM <street>" = the <dir> on-ramp from that street (user 2026-11-01, #341)
+@pytest.mark.parametrize("primary, secondary, want", [
+    ("I-405 S/B FROM ARTESIA", "ARTESIA BLVD", ("S", "ON", ["ARTESIA"])),
+    ("N/B FROM HAWTHORNE BLVD", "HAWTHORNE BLVD", ("N", "ON", ["HAWTHORNE"])),
+])
+def test_route_dir_from_a_street_names_the_on_ramp(primary, secondary, want):
+    r = ramps.report({"primary_road": primary, "secondary_road": secondary})
+    assert (r["dir"], r["on_off"], r["cross"]) == want and r["from_street"]
+
+
+def test_a_direction_on_the_street_part_of_from_is_dropped():
+    for p in ("I-405 N/B FROM W/B ROSECRANS AVENUE", "I-405 S/B FROM IMPERIAL HIGHWAY EASTBOUND"):
+        r = ramps.report({"primary_road": p, "secondary_road": ""})
+        assert r["on_off"] == "ON" and r["cross"] in (["ROSECRANS"], ["IMPERIAL", "HIGHWAY"]), p
+        assert not set(r["cross"]) & {"W", "B", "EASTBOUND"}
+
+
+def test_from_without_a_direction_or_from_a_route_is_not_a_ramp():
+    assert ramps.report({"primary_road": "I-405 FROM ARTESIA", "secondary_road": "ARTESIA BLVD"}) is None
+    conn = ramps.report({"primary_road": "I-405 S/B FROM I-110", "secondary_road": "ARTESIA BLVD"})
+    assert conn["connector"] is True and conn["on_off"] is None                 # a connector, never the mainline
+    assert ramps.report({"primary_road": "MAIN ST FROM OAK AVE", "secondary_road": "OAK AVE"}) is None
+    # a ramp word still reads as before; Caltrans descriptions with "ON FR" are unaffected
+    assert ramps.report({"primary_road": "SR-51 N/B ON RAMP FROM EL CAMINO AVE", "secondary_road": "EL CAMINO AVE"})["on_off"] == "ON"
+    assert ramps.describe("099/NB ON FR BELLEVUE RD")["on_off"] == "ON"
+
+
 def test_the_on_ramp_reading_leaves_the_other_to_forms_alone():
     off = ramps.report({"primary_road": "I-405 S/B TO VERMONT AVE", "secondary_road": "VERMONT AVE"})
     assert off["on_off"] == "OFF" and not off.get("from_street")

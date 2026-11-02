@@ -1,6 +1,26 @@
 {
-  "_doc": "Caltrans Traffic Census Program annual workbooks (public), by count year (October to September), for state-highway crash rates (#287, user decision 2026-10-26). Page: https://dot.ca.gov/programs/traffic-operations/census. Each year lists its volume and truck workbooks and the 12 district ramp ADT workbooks of that edition (ramps: user approved the 2021–2024 downloads 2026-10-30). A new year is added here when Caltrans publishes it; aadt.py downloads them into data/cache/aadt (never committed).",
+  "_doc": "Caltrans Traffic Census Program annual workbooks (public), by count year (October to September), for state-highway crash rates (#287, user decision 2026-10-26). Page: https://dot.ca.gov/programs/traffic-operations/census. Each year lists its volume and truck workbooks and the 12 district ramp ADT workbooks of that edition (ramps: user approved the 2021–2024 downloads 2026-10-30). A new year is added here when Caltrans publishes it; aadt.py downloads them into data/cache/aadt (never committed). 2016–2020 volume and truck workbooks added 2026-11-01 (user OK, #345; downloaded by the PM session into data/cache/caltrans_downloads_2026-11-01/ with SHA256SUMS, which aadt.py reads first). Their ramp counts come from the 2021+ ramp editions, which hold ten years each.",
   "years": {
+    "2016": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2016_aadt_xlsx.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2016_truck_aadtt_xlsx.xlsx"
+    },
+    "2017": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2017_aadt_xlsx.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2017_truck_aadtt_xlsx.xlsx"
+    },
+    "2018": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2018-traffic-aadt-v2.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2018-truck-aadt-a11y.xlsx"
+    },
+    "2019": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2019-traffic-volumes.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2019-truck-aadt.xlsx"
+    },
+    "2020": {
+      "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2020-traffic-volumes.xlsx",
+      "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2020-truck-aadt.xlsx"
+    },
     "2021": {
       "volumes": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2021/2021-traffic-volumes-ca-v2-a11y.xlsx",
       "trucks": "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/2021/2021-truck-aadtt-ca.xlsx",

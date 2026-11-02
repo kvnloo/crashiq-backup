@@ -560,6 +560,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. This **replaces** the user's earlier answer "B" (2026-10-26, Engineering chat, on #294, never recorded in docs/03).
   A map-data suggestion may still pre-fill the field, but only as a labelled suggestion the engineer confirms. Comparisons use Caltrans' on-highway counting rule
   or are labelled approximate.
+  - **Expected F+I and fatal rates DECIDED (user, 2026-11-01, PM session; #353 point 1):** "Ok" to the PM's
+    recommendation. Besides the expected total rate, CrashIQ shows the expected fatal+injury rate = expected total rate
+    × the rate group's PCT F+I ÷ 100 and the expected fatal rate = expected total rate × PCT FAT ÷ 100, both
+    percentages read from the same row of the published table (pp. 83–90). Computed by code, labelled with the table
+    citation, and approximate on the same terms as the total.
 - **Ramp identification and ramp rates DECIDED (user, 2026-10-30, Engineering session; #300):** option **B**, "A +
   engineer picks". A crash's ramp is identified when its report names a ramp (ON/OFF RAMP, ONR/OFR), its direction of
   travel and its cross street, and **exactly one** Caltrans ramp row (district ramp ADT file) within 0.3 mi on the same
@@ -596,6 +601,9 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     - the mirror wording "<local street> TO <route> <dir>" ("REDONDO BEACH BLVD. TO I-405 NB"): the **<dir> on-ramp
       from that street** (user 2026-11-01, on-ramp question, "1a"). For #300's strict match: direction <dir>, on,
       cross street = that street. Without a direction it isn't read as a ramp, as with the off-ramp form;
+    - police wording "<route> <dir> FROM <local street>" ("I-405 S/B FROM ARTESIA"): also the **<dir> on-ramp from
+      that street** (user 2026-11-01, "A yea"). Same strict-match reading: direction <dir>, on, cross street = that
+      street; no direction = not a ramp;
     - true connectors "<route> TO <route>" whose cross street is one of the two routes (2026-10-25).
   - **Stays mainline:** "<route> TO <route>" with a **local** cross street (2026-10-25: the local street passes under
     or over the freeway).
@@ -617,3 +625,16 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     the butt").** This **replaces** the earlier 2026-11-01 answer (Engineering session) to translate compass and route directions (a CHP "S/B" on a
     route Caltrans signs EB/WB). A ramp crash whose reported direction doesn't match the ramp row's direction as
     written gets no ramp rate, with the reason. #308 is closed unbuilt.
+- **Number words in findings are checked like numbers DECIDED (user, 2026-11-02, PM session; #359):** "oh yes
+  Absolutely". Words that state a ratio or a change ("doubled", "twice", "tripled", "half", "a third", "quadrupled")
+  count as numbers: the validator rejects a finding that uses one unless its cited table backs the ratio, by the
+  rule below. **Backed** means the finding cites either a ratio cell or the two cells it compares, and the
+  ratio (or their quotient) rounds to the word's value ("doubled" = 2, "half" = 0.5). The same applies to the compact
+  forms Tester found unread ($4.2M, 3x, -45%, 1e3).
+  - **Ratio precision DECIDED (user, 2026-11-02, PM session: "Yes, tight"):** the quotient must round to the word's
+    value at **one decimal place** ("doubled" = 1.95 to 2.049, "half" = 0.45 to 0.549), not the word's own precision,
+    which would let 6 → 9 read as "doubled". Otherwise the finding writes the actual numbers.
+    A word whose value isn't exact at one decimal ("a third", "two thirds") can't meet this rule, so it is rejected
+    and the finding writes the numbers (otherwise "a third" would pass for a quarter, 0.25).
+  - **Count words DECIDED (user, 2026-11-02, PM session: "option A"):** count words ("a dozen", "dozens",
+    "hundreds", "a handful") are always rejected; the finding writes the cited number as digits instead.

@@ -88,10 +88,12 @@ def create_app(settings: Settings | None = None, db: Database | None = None) -> 
 
 def _mount_routers(api: APIRouter, app: FastAPI) -> None:
     """Component routers register here (one line per issue)."""
-    from . import assign, budget, crashes, export, findings, network, profile, references, review, spine, study
+    from . import (assign, budget, crashes, export, findings, network, profile, rate_groups, references, review, spine,
+                   study)
 
     api.include_router(study.router)
     api.include_router(network.router)
+    api.include_router(rate_groups.router)
     api.include_router(crashes.router)
     api.include_router(assign.router)
     api.include_router(profile.router)
