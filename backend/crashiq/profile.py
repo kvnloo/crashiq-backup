@@ -840,6 +840,14 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if approx:                             # #255: say what the precise-point analyses leave out
         caveats.append({"key": "approximate_freeway", "count": approx,
                         "text": approximate_text(approx)})
+    oc = sum(isinstance(c.get("outside_corner"), dict) for c in placed)
+    if oc:                                    # #70: brought back onto the stretch by their reported distance
+        one = oc == 1
+        caveats.append({"key": "outside_corner", "count": oc,
+                        "text": f"{oc} crash report{'' if one else 's'} name{'s' if one else ''} a cross street CrashIQ "
+                                "couldn't match by name to a study intersection (a corner just outside the stretch, or a "
+                                f"street the map names differently). The reported distance puts {'it' if one else 'them'} "
+                                "on the corridor: placed from that corner and counted by the usual rules."})
     u = sum(c["severity"] == "U" for c in placed)
     if u:
         caveats.append({"key": "injury_level_unknown", "count": u,
