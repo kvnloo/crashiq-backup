@@ -295,3 +295,90 @@ def test_the_count_years_label_names_the_years_the_window_used_not_every_loaded_
     assert shs._years_label({2024: 2024, 2025: 2024, 2026: 2024}) == "2024; 2025–2026 use 2024"
     assert shs._years_label({2021: 2021, 2022: 2021, 2023: 2023, 2024: 2023}) == "2021–2023; 2022 uses 2021; 2024 uses 2023"
     assert shs._years_label({}) == ""
+
+
+# Statewide average (#287 part 1; user decision 2026-10-29, docs/03 #294): the engineer's rate group, approximate
+def shs_with_s1_volumes(group=None):
+    study, n, pull, asg = shs_golden()
+    n["shs_volumes"] = {"S1": {"by_year": {y: 20000 for y in range(2021, 2026)}, "coverage": 1.0, "latest_used": True,
+                               "count_years": "2021–2024; 2025 uses 2024", "routes": ["1"],
+                               "source": "Caltrans Traffic Census Program"}}
+    n["segments"] = [{**s, "rate_group": group if s["id"] == "S1" else None} for s in n["segments"]]
+    return study, n, pull, asg
+
+
+def test_a_segment_with_a_rate_group_is_compared_with_the_statewide_expected_rate_labelled_approximate():
+    p = profile.build(*shs_with_s1_volumes("H09"))           # 0.65 + 0.02 x ADT in thousands
+    t22 = {x["id"]: x for x in p["tables"]}["T22"]
+    r = {x["key"]: x["values"] for x in t22["rows"]}["S1"]
+    expected = 0.65 + 0.02 * 20                               # 1.05 crashes per MVM at 20,000 AADT
+    assert r["rate_group"] == "H09" and r["statewide_rate_all"] == round(expected, 2)
+    assert r["statewide_rate_fi"] == round(expected * 0.405, 2) and r["statewide_rate_fatal"] == round(expected * 0.016, 2)
+    assert r["ratio_to_statewide"] == round(r["rate_all"] / round(expected, 2), 2)
+    cols = [c["key"] for c in t22["columns"]]
+    assert {"rate_group", "statewide_rate_all", "statewide_rate_fi", "statewide_rate_fatal", "ratio_to_statewide"} <= set(cols)
+    assert t22["statewide"]["approximate"] is True
+    assert "Basic Average Crash Rate Table" in t22["statewide"]["source"] and "pp. 83–90" in t22["statewide"]["source"]
+    assert "approximate" in t22["statewide"]["text"] and "on-highway rule" in t22["statewide"]["text"]
+    assert "approximate" in {c["key"]: c["text"] for c in p["caveats"]}["shs_rates"]
+
+
+def test_no_rate_group_means_no_statewide_comparison():
+    p = profile.build(*shs_with_s1_volumes(None))
+    t22 = {x["id"]: x for x in p["tables"]}["T22"]
+    assert "statewide_rate_all" not in [c["key"] for c in t22["columns"]] and "statewide" not in t22
+    assert "statewide_rate_all" not in t22["rows"][0]["values"]
+
+
+def test_a_ramp_and_an_intersection_with_a_rate_group_are_compared_too():
+    from test_ramps import VERMONT
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    n["ramp_rate_groups"] = {VERMONT["id"]: "R10"}            # diamond off-ramp, urban: 1.04 per million vehicles
+    s1 = sorted(a["crash_id"] for a in asg["assignments"] if a["location_id"] == "S1")
+    n["shs_ramps"] = {cid: {"crash_id": cid, "status": "identified", "ramp": VERMONT, "picked": False} for cid in s1[:12]}
+    n["intersections"] = [{**i, "rate_group": "I14"} for i in n["intersections"]]   # signals, urban: 0.33 per MV
+    p = profile.build(study, n, pull, asg)
+    t = {x["id"]: x for x in p["tables"]}
+    v = t["T25"]["rows"][0]["values"]
+    assert v["rate_group"] == "R10" and v["statewide_rate_all"] == 1.04 and v["statewide_rate_fi"] == round(1.04 * 0.367, 2)
+    assert v["ratio_to_statewide"] == round(v["rate_all"] / 1.04, 2) and t["T25"]["statewide"]["approximate"]
+    i1 = {x["key"]: x["values"] for x in t["T2"]["rows"]}["I1"]
+    assert i1["rate"] == 0.41 and i1["rate_group"] == "I14" and i1["statewide_rate_all"] == 0.33
+    assert i1["ratio_to_statewide"] == round(0.41 / 0.33, 2) and t["T2"]["statewide"]["approximate"]
+    assert "statewide_rate_all" not in {x["key"]: x["values"] for x in t["T2"]["rows"]}["S1"]   # S1 has no group
+
+
+def test_while_the_caltrans_counts_load_the_caveat_says_so_not_no_aadt_entered():
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    n["segments"] = [{**s, "aadt": None} for s in n["segments"]]
+    n["intersections"] = [{**i, "major_aadt": None, "minor_aadt": None} for i in n["intersections"]]
+    n["corridor_names"] = ["CA 1"]
+    n["shs_loading"] = True
+    cav = {c["key"]: c for c in profile.build(study, n, pull, asg)["caveats"]}["rates_not_computed"]
+    assert cav["loading"] is True
+    assert cav["text"].startswith("Loading Caltrans counts:") and "no AADT entered" not in cav["text"]
+
+
+class LoadingCache:
+    def db(self):
+        return None
+
+    def loading(self):
+        return True
+
+
+def test_with_shs_marks_a_state_route_whose_counts_are_still_loading():
+    from test_profile import golden
+    _, n, pull, _ = golden()
+    n["corridor_names"] = ["CA 1"]
+    assert profile.with_shs(n, pull, FakePM(), LoadingCache())["shs_loading"] is True
+    n["corridor_names"] = ["Main Street"]
+    assert "shs_loading" not in profile.with_shs(n, pull, FakePM(), LoadingCache())
+
+
+def test_the_aadt_cache_says_when_it_is_loading(cache):
+    assert cache.loading() is False
+    cache._running = True
+    assert cache.loading() is True

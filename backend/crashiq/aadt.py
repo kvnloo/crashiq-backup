@@ -189,6 +189,10 @@ class AadtCache:
             self._schema_of = (p, int(row[0]) if row else 1)
         return self._schema_of[1]
 
+    def loading(self) -> bool:
+        """The download and build is running (first use, or a yearly refresh)."""
+        return self._running
+
     def error(self) -> str | None:
         return self._failed[1] if self._failed else None
 

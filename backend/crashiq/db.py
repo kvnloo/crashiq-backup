@@ -194,6 +194,16 @@ MIGRATIONS: list[str] = [
     """
     ALTER TABLE crash_decision ADD COLUMN source TEXT;
     """,
+    # 15 — #287 part 1: the Caltrans rate group the engineer enters per segment, intersection or ramp (docs/03 #294)
+    """
+    CREATE TABLE rate_group (
+        study_id   TEXT NOT NULL REFERENCES study(id) ON DELETE CASCADE,
+        kind       TEXT NOT NULL,
+        ref_id     TEXT NOT NULL,
+        rate_group TEXT NOT NULL,
+        PRIMARY KEY (study_id, kind, ref_id)
+    );
+    """,
 ]
 
 
