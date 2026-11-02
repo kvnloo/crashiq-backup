@@ -631,5 +631,5 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   rounding rule as digits. **Backed** means the finding cites either a ratio cell or the two cells it compares, and the
   ratio (or their quotient) rounds to the word's value ("doubled" = 2, "half" = 0.5). The same applies to the compact
   forms Tester found unread ($4.2M, 3x, -45%, 1e3). Count words ("a dozen", "dozens", "hundreds", "a handful") are
-  rejected unless the cited cell is in the word's range, or the finding uses the digit instead; the PM reads the
+  always rejected: the finding must write the cited number as digits instead. The PM reads the
   user's follow-up "There shouldn't be any need for numbers to be made up" as covering them.
