@@ -616,7 +616,15 @@ def remove_intersection(db: Database, sid: str, iid: str) -> dict:
     return network(db, sid)
 
 
+def _require_location(db: Database, sid: str, kind: str, ref_id: str) -> None:
+    """A segment or intersection id must be one of the study's (#361: a made-up id used to store a row)."""
+    net = network(db, sid)
+    if ref_id not in {x["id"] for x in net["segments" if kind == "segment" else "intersections"]}:
+        raise HTTPException(404, f"{kind.capitalize()} not found.")
+
+
 def set_segment_aadt(db: Database, sid: str, seg_id: str, aadt: float | None) -> dict:
+    _require_location(db, sid, "segment", seg_id)
     if aadt is not None and aadt < 0:
         raise ValueError("AADT can't be negative.")
     if aadt is None:
@@ -629,6 +637,8 @@ def set_segment_aadt(db: Database, sid: str, seg_id: str, aadt: float | None) ->
 def set_rate_group(db: Database, sid: str, kind: str, ref_id: str, group: str | None) -> dict:
     """The engineer's Caltrans rate group for one segment, intersection or ramp (#287 part 1; docs/03 #294)."""
     from . import rate_groups
+    if kind != "ramp":                    # a ramp is a Caltrans ramp id, not one of the study's own
+        _require_location(db, sid, kind, ref_id)
     if group is None or not group.strip():
         db.execute("DELETE FROM rate_group WHERE study_id = ? AND kind = ? AND ref_id = ?", (sid, kind, ref_id))
     else:

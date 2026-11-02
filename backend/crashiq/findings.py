@@ -447,6 +447,8 @@ def _order(f: dict):
 @router.get("/studies/{sid}/findings")
 def get_findings(sid: str, request: Request) -> dict:
     db = request.app.state.db
+    from . import study as study_mod
+    study_mod.require(db, sid)
     rej = db.one("SELECT COUNT(*) AS n FROM finding_rejected WHERE study_id = ?", (sid,))["n"]
     return {"findings": check_stored(db, sid), "rejected_count": rej}
 
