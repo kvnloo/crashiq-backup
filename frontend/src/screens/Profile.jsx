@@ -385,13 +385,16 @@ function Ranking({ p, onOpen, sort, setSort }) {
 function RateGroupSelect({ rg, kind, id, value, name }) {
   const prefix = { segment: 'highway', intersection: 'intersection', ramp: 'ramp' }[kind]
   const opts = (rg?.groups || []).filter((g) => g.kind === prefix)
-  return (
-    <select className="input rg" aria-label={`Caltrans rate group, ${name}`} value={value || ''} disabled={!rg || rg.busy}
+  const domId = `rg-${kind}-${id}`.replace(/[^A-Za-z0-9_-]/g, '_')
+  return (<>
+    {/* a real label: the row's name, not the selected option, names the picker for screen readers (#353 review) */}
+    <label htmlFor={domId} className="sr-only">Caltrans rate group, {name}</label>
+    <select id={domId} className="input rg" title={`Caltrans rate group, ${name}`} value={value || ''} disabled={!rg || rg.busy}
       onChange={(e) => rg.set(kind, id, e.target.value || null)}>
       <option value="">Rate group…</option>
       {opts.map((g) => <option key={g.group} value={g.group}>{g.group} · {g.label}</option>)}
     </select>
-  )
+  </>)
 }
 function StatewideNote({ t }) {
   if (!t?.statewide) return null

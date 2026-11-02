@@ -400,8 +400,8 @@ def _statewide_note(t: dict, cols: list[tuple[str, str]] = STATEWIDE_COLS) -> No
     t["statewide"] = {"approximate": True, "source": f"{rate_groups.SOURCE} (pp. 83–90)",
                       "text": "Statewide averages are Caltrans' expected rates for the rate group the engineer "
                               "entered (base rate + ADT factor). The comparison is approximate: CrashIQ counts crashes "
-                              "as it places them on the corridor, not by Caltrans' on-highway rule (no 'associated "
-                              "with' crashes, suicides or beat 902 incidents)."}
+                              "as it places them on the corridor, not by Caltrans' on-highway rule (Caltrans leaves "
+                              "out 'associated with' crashes, suicides and beat 902 incidents)."}
 
 
 def mainline_groups(net: dict, placed: list[dict], radius_ft: float) -> tuple[dict, dict]:
