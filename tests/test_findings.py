@@ -335,3 +335,66 @@ def test_a_third_is_rejected_even_when_the_cells_give_exactly_a_third():
                                        {"value": 15, "table_id": "T2", "cell": "I1/sev_o"}]}      # 5 / 15 = 1/3
     r = check(**t)
     assert [x for x in r if "number" in x or "declared" in x] == ["number a third in the text is not backed by a cited table cell"]
+
+
+# -- #369: a written multiple is held to one decimal place, like a ratio word (docs/03 #359, "Yes, tight") -----------
+@pytest.mark.parametrize("extra, word", [
+    (" Crashes are 2x injury crashes.", "2x"),             # 30 / 20 = 1.5
+    (" Night crashes are 8x the corridor rate.", "8x"),    # 30 / 4 = 7.5
+    (" Night crashes are 7x the corridor rate.", "7x"),    # 20 / 3 = 6.67
+    (" Crashes are 2 x injury crashes.", "2x"),            # "2 x" with a space is the same claim
+])
+def test_a_compact_multiple_is_held_to_one_decimal_like_a_ratio_word(extra, word):
+    assert any(f"number {word} " in r for r in check(**{**GOOD, "text": GOOD["text"] + extra}))
+
+
+@pytest.mark.parametrize("extra", [" Crashes are 2x injury crashes.", " Crashes are 2 x injury crashes.",
+                                   " Crashes are 2.0x injury crashes."])
+def test_a_compact_multiple_backed_at_one_decimal_still_passes(extra):
+    assert check(**{**GOOD, "text": GOOD["text"] + extra, "numbers": GOOD["numbers"] + [INJ]}) == []   # 30 / 15
+
+
+def test_a_multiple_written_at_one_decimal_or_more_keeps_its_own_precision():
+    assert check(**{**GOOD, "text": GOOD["text"] + " Crashes are 1.5x the broadside crashes."}) == []   # 30 / 20
+    r = check(**{**GOOD, "text": GOOD["text"] + " Crashes are 1.48x the broadside crashes."})
+    assert any("number 1.48x" in x for x in r)
+
+
+# -- #370: a hyphenated spelled number is one number ------------------------------------------------------------------
+@pytest.mark.parametrize("extra, n", [(" Twenty-one were at night.", "21"), (" Thirty-four were at night.", "34"),
+                                      (" Twenty-three were at night.", "23"), (" Ninety-nine were at night.", "99")])
+def test_a_hyphenated_spelled_number_is_read_whole(extra, n):
+    assert F.extract_numbers(extra, set()) == [n]
+    assert any(f"number {n} " in r for r in check(**{**GOOD, "text": GOOD["text"] + extra}))
+
+
+def test_a_spelled_number_alone_still_reads_as_itself():
+    assert F.extract_numbers("Twenty were at night; sixty were not.", set()) == ["20", "60"]
+    assert check(**{**GOOD, "text": GOOD["text"] + " Twenty were broadsides."}) == []      # 20 is cited
+
+
+# -- inflections and spellings of the decided words (docs/03 #359, #362) --------------------------------------------
+@pytest.mark.parametrize("extra", [" Crashes doubles injury crashes.", " Crashes keep doubling.",
+                                   " Injury crashes halved crashes.", " Halving crashes gives injury crashes."])
+def test_ratio_word_inflections_backed_by_two_cited_cells_pass(extra):
+    assert check(**{**GOOD, "text": GOOD["text"] + extra, "numbers": GOOD["numbers"] + [INJ]}) == []
+
+
+@pytest.mark.parametrize("word", ["doubles", "doubling", "halved", "halving", "triple", "triples", "tripling",
+                                  "quadruple", "quadruples", "quadrupling"])
+def test_ratio_word_inflections_without_cells_that_give_them_are_rejected(word):
+    assert any(f"number {word} " in r for r in check(**{**GOOD, "text": GOOD["text"] + f" Crashes are {word}."}))
+
+
+@pytest.mark.parametrize("phrase, word", [
+    ("A quarter of crashes were at night.", "a quarter"), ("Three quarters were in daylight.", "three quarters"),
+    ("Three-quarters were in daylight.", "three-quarters"), ("One-third were at night.", "one-third"),
+    ("One third were at night.", "one third"), ("Two-thirds were in daylight.", "two-thirds"),
+    ("Dozen crashes were at night.", "dozen"), ("Thousands of trips pass daily.", "thousands"),
+    ("A thousand trips pass daily.", "a thousand"), ("Several thousand trips pass daily.", "several thousand"),
+    ("A couple were at night.", "a couple"), ("A couple of crashes were at night.", "a couple of"),
+    ("Scores of crashes were at night.", "scores of"),
+])
+def test_count_word_variants_are_always_rejected(phrase, word):
+    r = check(**{**GOOD, "text": GOOD["text"] + " " + phrase})
+    assert [x for x in r if "number" in x] == [f"number {word} in the text is not backed by a cited table cell"]

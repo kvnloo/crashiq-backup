@@ -38,30 +38,43 @@ from . import signals as signals_mod
 SPELLED = {w: i for i, w in enumerate(
     "zero one two three four five six seven eight nine ten eleven twelve thirteen fourteen fifteen sixteen "
     "seventeen eighteen nineteen twenty".split())}
-SPELLED.update({"thirty": 30, "forty": 40, "fifty": 50})
+_TENS = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90}
+SPELLED.update(_TENS)
 del SPELLED["one"]   # "one" is mostly a determiner ("one report", "one of the"); counts of one must use digits
-# #359: "$4.2M", "3x", "-45%" and "1e3" are figures too; "osm-123" and "2021-2025"'s 2025 are not
+# #359: "$4.2M", "3x" (or "3 x", #369), "-45%" and "1e3" are figures too; "osm-123" and "2021-2025"'s 2025 are not
 _NUM = re.compile(r"(?<![\w.])(?<!\w-)(-?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(e[+-]?\d+)?"
-                  r"(?:\s*(%|percent)|([kmb]|x|×))?(?![\w])", re.I)
+                  r"(?:\s*(%|percent)|([kmb])|\s*(x|×))?(?![\w])", re.I)
 _SCALE = {"k": 3, "m": 6, "b": 9}
 _RATIO_COLS = ("ratio_to_corridor", "rate_to_critical", "ratio_to_statewide")   # what "3x" can stand for
 # Ratio and change words are numbers (user, 2026-11-02, docs/03 #359): a word is written at RATIO_WORD_DECIMALS, so
 # the ratio behind it must round to the word's value there (1: "doubled" = 1.95 to 2.049, not the word's own precision;
 # user, 2026-11-02, "Yes, tight"; #362).
 RATIO_WORD_DECIMALS = 1
-RATIO_WORDS = {"doubled": 2, "twice": 2, "tripled": 3, "quadrupled": 4, "half": 0.5}
+RATIO_WORDS = {"doubled": 2, "doubles": 2, "doubling": 2, "twice": 2,
+               "tripled": 3, "triple": 3, "triples": 3, "tripling": 3,
+               "quadrupled": 4, "quadruple": 4, "quadruples": 4, "quadrupling": 4,
+               "half": 0.5, "halved": 0.5, "halving": 0.5}
 # Always rejected; the finding writes the cited numbers as digits (user, 2026-11-02, #362): count words ("option A"),
 # and ratio words not exact at RATIO_WORD_DECIMALS ("a third" would pass for 0.25 in the 0.3 window).
-COUNT_WORDS: tuple[str, ...] = ("a dozen", "dozens", "a few dozen", "several dozen", "a hundred", "hundreds",
-                                "a few hundred", "several hundred", "a handful", "a third", "two thirds")
+COUNT_WORDS: tuple[str, ...] = ("dozen", "a dozen", "dozens", "a few dozen", "several dozen", "a hundred", "hundreds",
+                                "a few hundred", "several hundred", "a thousand", "thousands", "a few thousand",
+                                "several thousand", "a handful", "a couple", "a couple of", "scores of",
+                                "a third", "one third", "one-third", "two thirds", "two-thirds",
+                                "a quarter", "three quarters", "three-quarters")
 _RATIO_WORD = re.compile(r"\b(" + "|".join(RATIO_WORDS) + r")\b", re.I)
 
 
 def _ratio_written(word: str) -> str:
-    """'doubled' -> '2.0' at RATIO_WORD_DECIMALS: what matches() compares the ratio with."""
-    return str(round_half_up(RATIO_WORDS[word], RATIO_WORD_DECIMALS))
+    """'doubled' -> '2.0' at RATIO_WORD_DECIMALS: what matches() compares the ratio with. A multiple ("2x") is held to
+    the same precision, or its own when finer ("1.25x"; #369)."""
+    if word in RATIO_WORDS:
+        return str(round_half_up(RATIO_WORDS[word], RATIO_WORD_DECIMALS))
+    w = Decimal(word.replace(",", "").rstrip("xX×"))
+    return str(w.quantize(Decimal(1).scaleb(-RATIO_WORD_DECIMALS))) if -w.as_tuple().exponent < RATIO_WORD_DECIMALS else str(w)
 _ORDINAL = re.compile(r"(?<![\w.])\d+(?:st|nd|rd|th)\b", re.I)
 _SPELLED = re.compile(r"\b(" + "|".join(SPELLED) + r")\b", re.I)
+_UNITS = "one two three four five six seven eight nine".split()
+_SPELLED_PAIR = re.compile(r"\b(" + "|".join(_TENS) + r")[-‐–](" + "|".join(_UNITS) + r")\b", re.I)   # "twenty-one" (#370)
 _QUOTED = re.compile(r"[\"“]([^\"”]{1,120})[\"”]")
 _DATE = re.compile(r"\b(\d{4}-\d{2}-\d{2})\b")
 
@@ -145,8 +158,10 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
         pat = r"\b(" + "|".join(sorted(COUNT_WORDS, key=len, reverse=True)) + r")\b"
         counts = [m.group(1).lower() for m in re.finditer(pat, masked, re.I)]
         masked = re.sub(pat, lambda m: " " * len(m.group(0)), masked, flags=re.I)
-    out = [m.group(1) + m.group(2) + (m.group(3) or "") + (m.group(4) or "") + (m.group(6) or "")
+    out = [m.group(1) + m.group(2) + (m.group(3) or "") + (m.group(4) or "") + (m.group(6) or m.group(7) or "")
            for m in _NUM.finditer(masked)]
+    out += [str(_TENS[m.group(1).lower()] + _UNITS.index(m.group(2).lower()) + 1) for m in _SPELLED_PAIR.finditer(masked)]
+    masked = _SPELLED_PAIR.sub(lambda m: " " * len(m.group(0)), masked)        # read whole, not as 20 and 1
     out += [str(SPELLED[m.group(1).lower()]) for m in _SPELLED.finditer(masked)]
     out += [m.group(1).lower() for m in _RATIO_WORD.finditer(masked)]
     out += counts
@@ -247,7 +262,7 @@ def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: 
         if w in COUNT_WORDS:
             ok = False                                 # a count word: write the cited number as digits
         elif w in RATIO_WORDS or w[-1] in "xX×":
-            ok = _backs_ratio(_ratio_written(w) if w in RATIO_WORDS else plain, finding, tables, by_id)
+            ok = _backs_ratio(_ratio_written(w), finding, tables, by_id)
         else:
             ok = False
             for n in finding.numbers:
