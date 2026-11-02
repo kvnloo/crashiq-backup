@@ -129,9 +129,15 @@ export function topLocations(locations, crashes, n = 5) {
     .slice(0, n).map((l) => l.id)
 }
 
-// Locations with coordinates: intersections at their node, segments at the midpoint of their end intersections.
+// Locations with coordinates: intersections at their node, segments at the midpoint of their ends. The study ends A
+// and B are the corridor line's first and last points (#375: a freeway study is one A–B segment).
 export function locationPoints(net) {
   const ints = new Map((net?.intersections || []).map((i) => [i.id, i]))
+  const line = net?.line || []
+  if (line.length) {
+    ints.set('A', { lat: line[0][0], lon: line[0][1] })
+    ints.set('B', { lat: line[line.length - 1][0], lon: line[line.length - 1][1] })
+  }
   const out = (net?.intersections || []).filter((i) => i.is_study !== false && i.lat != null)
     .map((i) => ({ id: i.id, name: i.name, lat: i.lat, lon: i.lon, kind: 'intersection' }))
   for (const s of net?.segments || []) {
