@@ -631,7 +631,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   rounding rule as digits. **Backed** means the finding cites either a ratio cell or the two cells it compares, and the
   ratio (or their quotient) rounds to the word's value ("doubled" = 2, "half" = 0.5). The same applies to the compact
   forms Tester found unread ($4.2M, 3x, -45%, 1e3).
-  - *Proposed, awaiting user:* the quotient must round to the word's value at **one decimal place** ("doubled" = 1.95
-    to 2.049, "half" = 0.45 to 0.549), not the word's own precision, which would let 6 → 9 read as "doubled".
+  - **Ratio precision DECIDED (user, 2026-11-02, PM session: "Yes, tight"):** the quotient must round to the word's
+    value at **one decimal place** ("doubled" = 1.95 to 2.049, "half" = 0.45 to 0.549), not the word's own precision,
+    which would let 6 → 9 read as "doubled". Otherwise the finding writes the actual numbers.
   - **Count words DECIDED (user, 2026-11-02, PM session: "option A"):** count words ("a dozen", "dozens",
     "hundreds", "a handful") are always rejected; the finding writes the cited number as digits instead.
