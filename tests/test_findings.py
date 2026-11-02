@@ -214,3 +214,24 @@ def test_a_location_with_4_of_8_ksi_crashes_gets_a_ksi_finding():
     assert [s["location_id"] for s in ksi] == ["osm-1"]
     row = next(r for r in out["table"]["rows"] if r["key"] == "osm-1~ksi")["values"]
     assert (row["target_crashes"], row["location_crashes"]) == (4, 8)
+
+
+def test_the_fatal_finding_reads_the_pcf_label_and_says_where_the_report_put_it():
+    # #346 (PM end-to-end, SR-82): the raw code "22350", and "at Broadway" for a report reading "RT 82 / CARMELITA AV"
+    prof, tables, placed, k = _fatal_setup()
+    k.update(pcf_class="03", primary_road="RT 82", secondary_road="CARMELITA AV", location_source="gps")
+    f = F.fatal_findings(prof, tables, placed)[0]
+    label = next(r["label"] for r in next(t for t in tables if t["id"] == "T2")["rows"] if r["key"] == "I1")
+    assert f.text == (f"Fatal crash at {label} on 2023-04-05: broadside, primary collision factor unsafe speed "
+                      f'(VC 22350), involving a pedestrian. Reported at "Rt 82" / "Carmelita Av"; the officer\'s GPS '
+                      f"places it at {label}.")
+    assert F.validate(f, tables, placed, WINDOW) == []                    # the code and the route number are the record's
+    k["pcf"] = "22107"                                                     # a code the text doesn't match is caught
+    assert any("22350" in r for r in F.validate(f, tables, placed, WINDOW))
+
+
+def test_no_reported_at_note_when_the_report_names_the_intersection():
+    prof, tables, placed, k = _fatal_setup()
+    label = next(r["label"] for r in next(t for t in tables if t["id"] == "T2")["rows"] if r["key"] == "I1")
+    k.update(primary_road="CRENSHAW BL", secondary_road=label.split(" / ")[0].upper(), location_source="gps")
+    assert "Reported at" not in F.fatal_findings(prof, tables, placed)[0].text

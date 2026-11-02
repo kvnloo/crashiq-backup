@@ -271,4 +271,6 @@ details.conditions .showtable summary::after { content: none; }
 .sf-table.shs { font-size: 12px; }
 .sf-table.shs th { white-space: normal; }
 .profile .datacol .sf-table.shs th, .profile .datacol .sf-table.shs td { padding: 6px 6px; }
-.sf-table.shs th[scope="row"] { font-weight: 500; }
+/* names as in the ranking list, not the design system's uppercase mono header style (#346) */
+.sf-table.shs th[scope="row"] { font: 500 13px/1.35 var(--font-body); text-transform: none; letter-spacing: normal;
+  color: var(--fg); background: none; }

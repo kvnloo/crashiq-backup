@@ -819,3 +819,15 @@ describe('State-highway crash rates (#287)', () => {
     expect(screen.queryByLabelText('State-highway crash rates')).toBeNull()
   })
 })
+
+describe('State-highway rate names (#346)', () => {
+  it('row names override the design system\'s uppercase mono header style, like the ranking list', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/profile.css'), 'utf8')
+    const rule = css.match(/\.sf-table\.shs th\[scope="row"\] \{([^}]*)\}/)
+    expect(rule).not.toBeNull()
+    expect(rule[1]).toContain('text-transform: none')
+    expect(rule[1]).toContain('var(--font-body)')
+  })
+})
