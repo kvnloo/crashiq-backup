@@ -40,7 +40,11 @@ SPELLED = {w: i for i, w in enumerate(
     "seventeen eighteen nineteen twenty".split())}
 SPELLED.update({"thirty": 30, "forty": 40, "fifty": 50})
 del SPELLED["one"]   # "one" is mostly a determiner ("one report", "one of the"); counts of one must use digits
-_NUM = re.compile(r"(?<![\w.$-])(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(?:\s*(%|percent))?(?![\w])", re.I)
+# #359: "$4.2M", "3x", "-45%" and "1e3" are figures too; "osm-123" and "2021-2025"'s 2025 are not
+_NUM = re.compile(r"(?<![\w.])(?<!\w-)(-?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(e[+-]?\d+)?"
+                  r"(?:\s*(%|percent)|([kmb]|x|×))?(?![\w])", re.I)
+_SCALE = {"k": 3, "m": 6, "b": 9}
+_RATIO_COLS = ("ratio_to_corridor", "rate_to_critical", "ratio_to_statewide")   # what "3x" can stand for
 _ORDINAL = re.compile(r"(?<![\w.])\d+(?:st|nd|rd|th)\b", re.I)
 _SPELLED = re.compile(r"\b(" + "|".join(SPELLED) + r")\b", re.I)
 _QUOTED = re.compile(r"[\"“]([^\"”]{1,120})[\"”]")
@@ -95,9 +99,14 @@ def round_half_up(v: float, d: int) -> Decimal:
 
 
 def matches(written: str, cell_value) -> bool:
+    """The cell, rounded to the written precision, equals the written figure. "4.2M" is 4.2 millions (#359); a
+    multiple ("3x") is compared as written."""
     if cell_value is None or isinstance(cell_value, (str, bool)):
         return False
-    w = Decimal(written.replace(",", ""))
+    written = written.replace(",", "").rstrip("xX×")
+    if written[-1:].lower() in _SCALE:
+        cell_value, written = float(cell_value) / 10 ** _SCALE[written[-1].lower()], written[:-1]
+    w = Decimal(written)
     d = max(0, -w.as_tuple().exponent)
     return round_half_up(float(cell_value), d) == w
 
@@ -116,7 +125,8 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
     for code in quoted_ok:            # "VC 22350": a record's own PCF code, written after VC (#346)
         masked = re.sub(rf"\bVC\s+{re.escape(code)}\b", lambda m: " " * len(m.group(0)), masked, flags=re.I)
     masked = _ORDINAL.sub(lambda m: " " * len(m.group(0)), masked)
-    out = [m.group(1) + (m.group(2) or "") for m in _NUM.finditer(masked)]
+    out = [m.group(1) + m.group(2) + (m.group(3) or "") + (m.group(4) or "") + (m.group(6) or "")
+           for m in _NUM.finditer(masked)]
     out += [str(SPELLED[m.group(1).lower()]) for m in _SPELLED.finditer(masked)]
     return out
 
@@ -192,10 +202,12 @@ def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: 
     lo, hi = window
     for w in extract_numbers(finding.text, quoted_ok, _location_names(finding, tables)):
         plain = w.replace(",", "")
-        if "." not in plain and lo <= int(plain) <= hi:
+        if plain.isdigit() and lo <= int(plain) <= hi:
             continue                                   # a year inside the study window
         ok = False
         for n in finding.numbers:
+            if w[-1] in "xX×" and n.cell.rsplit("/", 1)[-1] not in _RATIO_COLS:
+                continue                               # a multiple is backed by a ratio cell, not a count (#359)
             if n.table_id in by_id:
                 try:
                     if matches(plain, profile_mod.cell(tables, f"{n.table_id}/{n.cell}")):

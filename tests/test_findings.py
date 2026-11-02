@@ -235,3 +235,48 @@ def test_no_reported_at_note_when_the_report_names_the_intersection():
     label = next(r["label"] for r in next(t for t in tables if t["id"] == "T2")["rows"] if r["key"] == "I1")
     k.update(primary_road="CRENSHAW BL", secondary_road=label.split(" / ")[0].upper(), location_source="gps")
     assert "Reported at" not in F.fatal_findings(prof, tables, placed)[0].text
+
+
+@pytest.mark.parametrize("extra", [
+    " The crash cost here is $4.2M.",
+    " Rear ends are 3x the corridor share.",
+    " Night crashes fell -45%.",
+    " Night crashes changed by 1e3.",
+])
+def test_a_figure_written_with_a_sign_symbol_or_suffix_is_still_checked(extra):
+    # #359: the lookbehind/lookahead hid these from the validator
+    assert check(**{**GOOD, "text": GOOD["text"] + extra}) != []
+
+
+def test_a_dollar_amount_is_read_whole():
+    assert F.extract_numbers("costs $5,000,000 a year", set()) == ["5,000,000"]
+
+
+@pytest.mark.parametrize("text, want", [
+    ("cost $4.2M", ["4.2M"]), ("3x the share", ["3x"]), ("fell -45%", ["-45"]), ("by 1e3", ["1e3"]),
+    ("about 12k", ["12k"]), ("node osm-123 and 2021-2025", ["2021"]),
+])
+def test_number_forms_as_written(text, want):
+    assert F.extract_numbers(text, set()) == want
+
+
+@pytest.mark.parametrize("written, cell, ok", [
+    ("4.2M", 4_210_000, True), ("4.2M", 4_300_000, False), ("12k", 12_400, True), ("3x", 3.04, True),
+    ("3x", 2.4, False), ("-45", -45.0, True), ("-45", 45.0, False), ("1e3", 1000, True), ("1e3", 999, False),
+    ("1e3", 1600, False),
+])
+def test_a_scaled_figure_matches_its_cell_at_the_written_precision(written, cell, ok):
+    assert F.matches(written, cell) is ok
+
+
+def test_a_sourced_dollar_figure_in_millions_passes_and_a_wrong_one_is_rejected():
+    cost = {"value": 9_349_000, "table_id": "T2", "cell": "I1/crash_cost"}
+    t = dict(GOOD, numbers=GOOD["numbers"] + [cost])
+    assert check(**{**t, "text": GOOD["text"] + " Crash cost $9.3M."}) == []
+    assert any("number 9.5M" in r for r in check(**{**t, "text": GOOD["text"] + " Crash cost $9.5M."}))
+
+
+def test_a_multiple_is_backed_by_a_ratio_cell_not_a_count():
+    # "3x" next to a cited count of 3 (BROADSIDE/ksi_crashes) is still unbacked
+    r = check(**{**GOOD, "text": GOOD["text"] + " Rear ends are 3x the corridor share."})
+    assert any("number 3x" in x for x in r)
