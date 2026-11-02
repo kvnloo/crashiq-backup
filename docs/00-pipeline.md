@@ -9,7 +9,7 @@ Conductor: `new-tool` (yours). Each stage has a lead skill plus helpers. A stage
 | 2 Requirements | grill-me, brainstorming, prompt-me | decision-questionnaire (O) | docs/03-requirements.md (locked) | done |
 | 3 Design | ai-agent-validation, oracle-spine, caltrans-traffic-expert, architecture-design, ux-design | architecture-diagram (B): picture of the system | docs/04-design.md | done (F1 open) |
 | 4 Build | fastapi-react-builder, backend-build, frontend-build, web-design, viz-design, tdd, karpathy-guidelines | claude-code (B): hand big coding jobs to Claude Code · test-driven-development (B) · xlsx + pdf (B): the exports · subagent-driven-development (O) | schemas + happy-path run end to end | done (frozen 2026-11-02) |
-| 5 Test | tool-testing, testing-strategy, code-review | dogfood (B): click through the app and find bugs · requesting-code-review (B): security scan · systematic-debugging (B) · adversarial-ux-test (O) · evaluation (O): model bake-off scoring | six-condition testing gate | next |
+| 5 Test | tool-testing, testing-strategy, code-review | dogfood (B): click through the app and find bugs · requesting-code-review (B): security scan · systematic-debugging (B) · adversarial-ux-test (O) · evaluation (O): model bake-off scoring | six-condition testing gate | done except #360 (2026-11-02) |
 | 6 Oracle onboard | oracle-spine | — | context object round-trip with provenance | — |
 | 7 Ship | ship-it, deploy-checklist | github (B) · docker-management (O) | pre-ship checklist passes | — |
 | Paid launch | system-design, ship-it | stripe-projects / stripe-link-cli (O): payments · web-pentest (O): security test before charging money | accounts + billing + spend caps + terms | — |
@@ -33,3 +33,7 @@ independently and files `bug` issues with a failing test, which go round the sam
   (placement refinements, extra measurements, state pack, nationwide research, #287 part 2, #52). The merged
   features behind switches (#322 mile markers at postmiles, #324 railway/trail crossings) ship with their switches off. Stage 5 (Test) starts
   against the six-condition gate; Stage 7 (Ship) follows. The user is asked only for big decisions from here on.
+- **2026-11-02 (user, PM session): shipping waits for the HSM golden case.** Stage 5 ended with 5 of 6 gate conditions
+  passing and the 3-corridor click-through 3/3 (`reports/testing/stage5-2026-11-02.md`). Asked whether to ship with
+  #360 (the HSM Ch. 4 critical-rate published example) as a known gap or wait, the user said: "Wait." Stage 7 (Ship)
+  starts only after the user supplies the example and its golden test passes.
