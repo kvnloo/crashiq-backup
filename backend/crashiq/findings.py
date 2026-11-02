@@ -41,8 +41,9 @@ SPELLED = {w: i for i, w in enumerate(
 _TENS = {"twenty": 20, "thirty": 30, "forty": 40, "fifty": 50, "sixty": 60, "seventy": 70, "eighty": 80, "ninety": 90}
 SPELLED.update(_TENS)
 del SPELLED["one"]   # "one" is mostly a determiner ("one report", "one of the"); counts of one must use digits
-# #359: "$4.2M", "3x" (or "3 x", #369), "-45%" and "1e3" are figures too; "osm-123" and "2021-2025"'s 2025 are not
-_NUM = re.compile(r"(?<![\w.])(?<!\w-)(-?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(e[+-]?\d+)?"
+# #359: "$4.2M", "3x" (or "3 x", #369), "-45%" and "1e3" are figures too, and so is a range's end ("10-15"); a
+# letter-hyphen-number ("osm-123", "I-405", "SR-82") is a name, not a figure (#371)
+_NUM = re.compile(r"(?<![\w.])(?<![^\W\d]-)(-?)(\d{1,3}(?:,\d{3})+|\d+)(\.\d+)?(e[+-]?\d+)?"
                   r"(?:\s*(%|percent)|([kmb])|\s*(x|×))?(?![\w])", re.I)
 _SCALE = {"k": 3, "m": 6, "b": 9}
 _RATIO_COLS = ("ratio_to_corridor", "rate_to_critical", "ratio_to_statewide")   # what "3x" can stand for
@@ -153,6 +154,7 @@ def extract_numbers(text: str, quoted_ok: set[str], names: set[str] | None = Non
     for code in quoted_ok:            # "VC 22350": a record's own PCF code, written after VC (#346)
         masked = re.sub(rf"\bVC\s+{re.escape(code)}\b", lambda m: " " * len(m.group(0)), masked, flags=re.I)
     masked = _ORDINAL.sub(lambda m: " " * len(m.group(0)), masked)
+    masked = _DATE.sub(lambda m: " " * len(m.group(0)), masked)   # a date is checked against the cited records instead
     counts = []                          # read and blanked first: "two thirds" is one claim, not the number 2
     if COUNT_WORDS:
         pat = r"\b(" + "|".join(sorted(COUNT_WORDS, key=len, reverse=True)) + r")\b"

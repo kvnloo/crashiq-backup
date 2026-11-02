@@ -254,7 +254,7 @@ def test_a_dollar_amount_is_read_whole():
 
 @pytest.mark.parametrize("text, want", [
     ("cost $4.2M", ["4.2M"]), ("3x the share", ["3x"]), ("fell -45%", ["-45"]), ("by 1e3", ["1e3"]),
-    ("about 12k", ["12k"]), ("node osm-123 and 2021-2025", ["2021"]),
+    ("about 12k", ["12k"]), ("node osm-123 and 2021-2025", ["2021", "2025"]),
 ])
 def test_number_forms_as_written(text, want):
     assert F.extract_numbers(text, set()) == want
@@ -398,3 +398,19 @@ def test_ratio_word_inflections_without_cells_that_give_them_are_rejected(word):
 def test_count_word_variants_are_always_rejected(phrase, word):
     r = check(**{**GOOD, "text": GOOD["text"] + " " + phrase})
     assert [x for x in r if "number" in x] == [f"number {word} in the text is not backed by a cited table cell"]
+
+
+# -- a range "10-15" is two figures; only a letter-hyphen-number (osm-123, I-405, SR-82) is a name (PM review, #371) ----
+@pytest.mark.parametrize("text, want", [
+    ("Between 10-15 crashes were at night.", ["10", "15"]), ("Between 3–7 crashes were at night.", ["3", "7"]),
+    ("Node osm-123 on I-405 near SR-82.", []), ("Crashes from 2021-2025.", ["2021", "2025"]),
+    ("A fatal crash on 2024-10-27.", []),                        # a date is checked against the records, not as figures
+])
+def test_a_range_end_is_read_and_a_letter_hyphen_number_is_not(text, want):
+    assert F.extract_numbers(text, set()) == want
+
+
+def test_an_unsourced_range_end_is_rejected_and_window_years_still_pass():
+    r = check(**{**GOOD, "text": GOOD["text"] + " Between 20-25 were at night."})
+    assert [x for x in r if "number" in x] == ["number 25 in the text is not backed by a cited table cell"]
+    assert check(**{**GOOD, "text": GOOD["text"] + " Crashes from 2021-2025."}) == []
