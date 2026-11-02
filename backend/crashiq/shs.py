@@ -71,6 +71,7 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
                         "latest_used": latest, "end_tolerance": end, "routes": sorted(routes),
                         "count_years": _years_label(have, years, latest),
                         "trucks_by_year": trucks, "truck_count_years": _years_label(have_t, years, latest_t),
+                        "first_count_year": have[0] if have else None,       # window years before it have no count (#345)
                         "source": "Caltrans Traffic Census Program" if have else ""}
     return out
 

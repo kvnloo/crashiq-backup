@@ -822,7 +822,17 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         why = (" This corridor isn't a state highway, so local traffic counts are needed." if not routes else
                f" Route {', '.join(routes)} isn't in Caltrans' state-highway postmiles here (for example a relinquished "
                "stretch), so Caltrans traffic counts don't apply and local traffic counts are needed." if off_pm else "")
-        caveats.append({"key": "rates_not_computed", "text": "Crash rates were not computed (no AADT entered)." + why})
+        first = min((v["first_count_year"] for v in vols.values() if v.get("first_count_year")), default=None)
+        window_yrs = [y for y in pull["years"] if y not in years_missing]
+        early = [y for y in window_yrs if first and y < first]
+        if routes and vols and not off_pm and early:      # the Caltrans counts don't reach back to the window (#345)
+            caveats.append({"key": "rates_not_computed", "years_without_counts": early,
+                            "text": f"State-highway crash rates were not computed: Caltrans traffic counts start in "
+                                    f"{first}, so window year{'s' if len(early) != 1 else ''} "
+                                    f"{', '.join(map(str, early))} {'have' if len(early) != 1 else 'has'} no count. "
+                                    f"Rates need a study window from {first} on."})
+        else:
+            caveats.append({"key": "rates_not_computed", "text": "Crash rates were not computed (no AADT entered)." + why})
     elif peak:
         caveats.append({"key": "aadt_from_peak_hour", "k_factor": kf,
                         "text": f"AADT was estimated from peak-hour counts (AADT = peak-hour volume / K, K = {kf:.0%})."})

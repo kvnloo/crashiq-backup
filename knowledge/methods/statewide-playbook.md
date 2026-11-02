@@ -130,7 +130,8 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
 
 ## 6. Crash rates on state highways — `sources/ca-caltrans-traffic-census.md`
 - **Exposure:** the state DOT's traffic census. In CA, Caltrans AADT by route, county and postmile (back and ahead
-  legs), truck AADT by axle, and ramp ADT by district. Each crash joins through its derived postmile.
+  legs), truck AADT by axle, and ramp ADT by district. Each crash joins through its derived postmile. Count years
+  2016–2024 (#345); a window year before the oldest count has no rate, and the caveat names the year.
 - **Join rules** (#289):
   - the nearer count point's facing leg, split at the midpoint;
   - 0.05 mi tolerance at a line's ends;

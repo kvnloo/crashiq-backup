@@ -263,3 +263,24 @@ def test_with_shs_identifies_the_ramp_crashes_on_a_state_highway(tmp_path):
     pull = {"years": [2024], "cleaning": {"years_missing": []}, "crashes": crashes}
     on = profile.with_shs(net(13.3, 13.8), pull, PM(), rc)
     assert list(on["shs_ramps"]) == ["r1"] and on["shs_ramps"]["r1"]["ramp"]["description"] == "NB OFF TO NORMANDIE AVE"
+
+
+def test_a_window_older_than_the_caltrans_counts_says_so_not_no_aadt_entered():
+    # #345 (PM end-to-end, SR-82): the default window started a year before the oldest count year, so every
+    # segment-year before it had no AADT and no rate came out, while the caveat said "no AADT entered"
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    n["segments"] = [{**s, "aadt": None} for s in n["segments"]]
+    n["intersections"] = [{**i, "major_aadt": None, "minor_aadt": None} for i in n["intersections"]]
+    n["corridor_names"] = ["CA 82"]
+    first = min(pull["years"]) + 1
+    n["shs_volumes"] = {"S1": {"by_year": {y: (None if y < first else 20000) for y in pull["years"]}, "coverage": 0.0,
+                               "pm_coverage": 1.0, "first_count_year": first, "count_years": f"{first}–2024",
+                               "routes": ["82"], "source": "Caltrans Traffic Census Program"}}
+    p = profile.build(study, n, pull, asg)
+    assert "T22" not in {t["id"] for t in p["tables"]}
+    cav = {c["key"]: c for c in p["caveats"]}["rates_not_computed"]
+    early = min(pull["years"])
+    assert cav["text"] == (f"State-highway crash rates were not computed: Caltrans traffic counts start in {first}, so "
+                           f"window year {early} has no count. Rates need a study window from {first} on.")
+    assert cav["years_without_counts"] == [early] and "no AADT entered" not in cav["text"]

@@ -151,3 +151,73 @@ def test_a_segment_whose_ends_have_different_prefixes_takes_the_leg_of_the_crash
     s = cache._pick(aadt._around([(0.78, "R", "a", 38900, 38900), (8.43, "", "b", 37900, 37900)], 5.0), 5.0, "R")
     assert s["aadt"] == 38900
     assert con is not None
+
+
+# -- older editions (#345, user OK 2026-11-01): synthetic sheets in each year's layout ---------------------------
+def book(sheets: list[tuple[str, list[list]]]) -> bytes:
+    wb = Workbook()
+    wb.remove(wb.active)
+    for title, rows in sheets:
+        ws = wb.create_sheet(title)
+        for r in rows:
+            ws.append(r)
+    out = io.BytesIO()
+    wb.save(out)
+    return out.getvalue()
+
+
+def test_2016_volumes_have_no_header_row_and_read_in_2017s_columns():
+    data = book([("2016AADT", [["12", "001", None, "ORA", "R", ".129", None, "DANA POINT, JCT. RTE. 5", None, None, None,
+                                3800, 41000, 37750],
+                               ["12", "001", None, "ORA", "R", ".78", None, "DANA POINT, DOHENY PARK ROAD", 3800, 41000,
+                                37750, 3900, 42000, 38800]]), ("2016a", [[None] * 14])])
+    rows = list(aadt._rows(data))
+    assert len(rows) == 2 and aadt._key(rows[1]) == ("1", "", "ORA", "R", 0.78, "")
+    assert rows[1]["BACK_AADT"] == 37750 and rows[1]["AHEAD_AADT"] == 38800
+
+
+def test_2016_to_2018_trucks_read_the_three_row_header_and_the_combined_postmile():
+    head = [[None, None, None, None, "L", None, "VEHICLE", "TRUCK", "TRUCK", None, "TRUCK", "AADT"],
+            [None, None, None, "POST", "E", None, "AADT", "AADT", "% TOT"],
+            ["RTE", "DIST", "CNTY", "MILE", "G", "DESCRIPTION", "TOTAL", "TOTAL", "VEH", 2, 3, 4, "5+", 2, 3, 4, "5+",
+             "(1000)", "EST"], [None] * 19]
+    data = book([("PREFACE", [["x"]]), ("2018 AADTT", head + [
+        ["001", "12", "ORA", "R.129", "A", "DANA POINT, JCT. RTE. 5", "38250", "2379", 6.22, 807, 1126, 319, 128, 33.93,
+         47.32, 13.39, 5.36, 220, "18E"],
+        ["005", "07", "LA", "12.3R", "B", "SOMEWHERE", "50000", "900", 1.8, 400, 200, 100, 200, 44.4, 22.2, 11.1, 22.2,
+         90, "18E"]])])
+    rows = list(aadt._rows(data))
+    assert [aadt._key(r) for r in rows] == [("1", "", "ORA", "R", 0.129, ""), ("5", "", "LA", "", 12.3, "R")]
+    assert rows[0]["TOT_TRK_AADT"] == "2379" and (rows[0]["TRK_3_AXLE"], rows[0]["TRK_4_AXLE"], rows[0]["TRK_5_AXLE"]) == \
+        (1126, 319, 128) and rows[0]["LEG"] == "A"
+
+
+def test_2019_and_2020_trucks_spell_the_postmile_and_total_columns_differently():
+    data = book([("Preface", [["x"]]), ("2019 Truck AADT", [
+        ["RTE", "RTE_SFX", "DIST", "CNTY", "POSTMILE_PFX", "POSTMILE", "POSTMILE_SFX", "LEG", "DESCRIPTION",
+         "VEHICLE_AADT_TOTAL", "TRUCK_AADT_TOTAL", "TRK_PERCENT_TOT", "TRK_2_AXLE", "TRK_3_AXLE", "TRK_4_AXLE", "TRK_5_AXLE"],
+        ["001", None, "12", "ORA", "R", 0.129, None, "A", "DANA POINT, JCT. RTE. 5", 38250, 2379, 6.22, 807, 1126, 319, 128]])])
+    r = next(aadt._rows(data))
+    assert aadt._key(r) == ("1", "", "ORA", "R", 0.129, "") and r["TOT_TRK_AADT"] == 2379
+
+
+def test_a_zero_count_is_no_count_as_2018_writes_blanks():
+    assert aadt._count(0) is None and aadt._count("0") is None and aadt._count("38900") == 38900 and aadt._count(None) is None
+
+
+def test_a_workbook_already_downloaded_with_its_checksum_is_read_locally(tmp_path):
+    import hashlib
+    d = tmp_path / "caltrans_downloads_2026-11-01"
+    d.mkdir()
+    (d / "2019-traffic-volumes.xlsx").write_bytes(b"workbook")
+    (d / "SHA256SUMS").write_text(f"{hashlib.sha256(b'workbook').hexdigest()}  2019-traffic-volumes.xlsx\n")
+    url = "https://dot.ca.gov/-/media/dot-media/programs/traffic-operations/documents/census/aadt/2019-traffic-volumes.xlsx"
+    assert aadt.local_copy(url, [d]) == b"workbook"
+    (d / "2019-traffic-volumes.xlsx").write_bytes(b"changed")                    # a checksum mismatch: never used
+    assert aadt.local_copy(url, [d]) is None
+    assert aadt.local_copy(url.replace("2019", "2015"), [d]) is None
+
+
+def test_the_config_lists_2016_to_2024():
+    assert sorted(aadt.YEARS) == list(range(2016, 2025))
+    assert all({"volumes", "trucks"} <= set(aadt.YEARS[y]) for y in range(2016, 2021))
