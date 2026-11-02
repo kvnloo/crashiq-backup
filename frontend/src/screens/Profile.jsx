@@ -313,7 +313,10 @@ function Locations({ t, onOpen }) {
 const SEV_PARTS = [['k', 'Fatal'], ['a', 'Serious injury'], ['b', 'Minor injury'], ['c', 'Possible injury'],
   ['u', 'Injury, level not stated'], ['o', 'Property damage']]
 const SORTS = [['crashes', 'Crashes', (v) => v.crashes], ['ksi', 'KSI', (v) => v.ksi_crashes],
-  ['vru', 'Pedestrians + bicyclists', (v) => v.vru_crashes ?? 0], ['rate', 'Rate vs critical', (v) => v.rate_to_critical ?? -1]]
+  ['vru', 'Pedestrians + bicyclists', (v) => v.vru_crashes ?? 0], ['rate', 'Rate vs critical', (v) => v.rate_to_critical ?? -1],
+  ['cost', 'Crash cost', (v) => v.crash_cost ?? -1]]
+// #273: a T2 cell in dollars, short ("$5.2M"); the exact value is in the title and the table
+const money = (v) => (v == null ? '—' : v >= 1e6 ? `$${(v / 1e6).toFixed(1)}M` : `$${Math.round(v / 1e3)}k`)
 
 function SevBar({ v, max }) {
   return (
@@ -333,6 +336,7 @@ function ranked(t, sort) {
 function Ranking({ p, onOpen, sort, setSort }) {
   const t = table(p, 'T2')
   const hasCrit = t.rows.some((r) => r.values.rate_to_critical != null)
+  const hasCost = t.rows.some((r) => r.values.crash_cost != null)
   const [all, setAll] = useState(false)
   const rows = ranked(t, sort)
   const shown = all ? rows : rows.slice(0, 5)
@@ -343,7 +347,7 @@ function Ranking({ p, onOpen, sort, setSort }) {
     <section aria-label="Location ranking">
       <div className="sect-h"><h2 className="h3">Which locations need attention first?</h2><Src tid="T2" n={cell(p, 'T1/crashes/value')} p={p} /></div>
       <div className="seg strip-dim" role="radiogroup" aria-label="Rank by">
-        {SORTS.filter(([k]) => k !== 'rate' || hasCrit).map(([k, label]) => (
+        {SORTS.filter(([k]) => (k !== 'rate' || hasCrit) && (k !== 'cost' || hasCost)).map(([k, label]) => (
           <button key={k} type="button" role="radio" aria-checked={sort === k} className={sort === k ? 'on' : ''} onClick={() => setSort(k)}>{label}</button>
         ))}
       </div>
@@ -355,6 +359,9 @@ function Ranking({ p, onOpen, sort, setSort }) {
             <span className="mono n ksi" title="KSI crashes (fatal + serious)">{fmt(r.values.ksi_crashes)} KSI</span>
             <span className={`mono vrun${r.values.vru_crashes ? '' : ' zero'}`} data-testid="rank-vru"
               title="Crashes with a pedestrian or bicyclist (KSI among them)">◯ {fmt(r.values.vru_crashes || 0)} ped/bike{r.values.vru_ksi_crashes ? ` · ${fmt(r.values.vru_ksi_crashes)} KSI` : ''}</span>
+            {sort === 'cost' ? <span className="mono n cost" data-testid="rank-cost"
+              title={`Crash cost $${fmt(r.values.crash_cost)} (Caltrans LRSM 2026)${r.values.sev_u ? `; ${r.values.sev_u} injury crash${r.values.sev_u === 1 ? '' : 'es'} with the level not stated, priced as possible injury` : ''}${r.values.cost_control_unknown ? '; intersection control unknown, signalized price' : ''}`}>
+              {money(r.values.crash_cost)}{r.values.sev_u ? <small> · {fmt(r.values.sev_u)} U</small> : null}{r.values.cost_control_unknown ? <small> · control ?</small> : null}</span> : null}
             <SevBar v={r.values} max={max} />
             {hasCrit && r.values.critical_rate != null ? <RateBar v={r.values} max={maxBy[r.values.kind] || 1} /> : null}
           </li>
@@ -374,11 +381,57 @@ function Ranking({ p, onOpen, sort, setSort }) {
 // state-route corridor (T22) and the corridor's rate year by year (T23). Every number is a cell; a row above the
 // corridor average is marked. A rate on fewer than 10 crashes shows its count only (docs/03 small numbers, #296).
 // Trucks (T24): heavy-truck-involved crashes per million 3+ axle truck-miles, folded under "Trucks".
-// Segment crashes only until #297 (user); Caltrans' statewide averages wait for #294.
+// Mainline crashes only (#304, user decision #297). Statewide average (#287 part 1; user decision 2026-10-29, docs/03
+// #294): the engineer picks each location's Caltrans rate group; the server computes the expected rate (approximate).
+function RateGroupSelect({ rg, kind, id, value, name }) {
+  const prefix = { segment: 'highway', intersection: 'intersection', ramp: 'ramp' }[kind]
+  const opts = (rg?.groups || []).filter((g) => g.kind === prefix)
+  const domId = `rg-${kind}-${id}`.replace(/[^A-Za-z0-9_-]/g, '_')
+  return (<>
+    {/* a real label: the row's name, not the selected option, names the picker for screen readers (#353 review) */}
+    <label htmlFor={domId} className="sr-only">Caltrans rate group, {name}</label>
+    <select id={domId} className="input rg" title={`Caltrans rate group, ${name}`} value={value || ''} disabled={!rg || rg.busy}
+      onChange={(e) => rg.set(kind, id, e.target.value || null)}>
+      <option value="">Rate group…</option>
+      {opts.map((g) => <option key={g.group} value={g.group}>{g.group} · {g.label}</option>)}
+    </select>
+  </>)
+}
+function StatewideNote({ t }) {
+  if (!t?.statewide) return null
+  return <p className="muted small-note" data-testid={`statewide-${t.id}`}><b>Approximate.</b> {t.statewide.text} Source: {t.statewide.source}.</p>
+}
 const SHS_DETAIL = [['crashes', 'Crashes'], ['fi_crashes', 'Fatal + injury'], ['fatal_crashes', 'Fatal'], ['length_mi', 'Length (mi)'],
   ['aadt', 'AADT'], ['mvm', 'MVM'], ['rate_all', 'All / MVM'], ['rate_fi', 'Fatal + injury / MVM'], ['rate_fatal', 'Fatal / MVM'],
   ['corridor_rate_all', 'Corridor average'], ['ratio_to_corridor', '÷ average']]
-function ShsRates({ p }) {
+function Statewide({ v }) {
+  return (<>
+    <td className="sf-num mono">{fmt(v.statewide_rate_all)}</td>
+    {v.small_base || v.ratio_to_statewide == null ? <td className="sf-num muted small">{v.small_base ? 'too few to compare' : '–'}</td>
+      : <td className="sf-num mono">{fmt(v.ratio_to_statewide)}</td>}
+  </>)
+}
+// State-highway intersections: their Caltrans rate group, compared with T2's crashes per million entering vehicles
+function IntersectionGroups({ p, rg }) {
+  const t2 = table(p, 'T2')
+  const ints = t2.rows.filter((r) => r.values.control !== undefined)
+  if (!rg || !ints.length) return null
+  return (
+    <details className="showtable" open={Boolean(t2.statewide)}><summary>Intersections: statewide average</summary>
+      <p className="muted small-note">Crashes per million entering vehicles (T2), from the AADT entered for each intersection.</p>
+      <StatewideNote t={t2} />
+      <div className="sf-table-wrap"><table className="sf-table shs" data-testid="shs-intersections">
+        <thead><tr><th>Intersection</th><th className="sf-num">Crashes</th><th className="sf-num">Per MEV</th><th>Rate group</th>
+          <th className="sf-num">Statewide / MV</th><th className="sf-num">÷ statewide</th></tr></thead>
+        <tbody>{ints.map((r) => <tr key={r.key}><th scope="row">{titleCase(r.label)}</th>
+          <td className="sf-num mono">{fmt(r.values.crashes)}</td><td className="sf-num mono">{fmt(r.values.rate)}</td>
+          <td><RateGroupSelect rg={rg} kind="intersection" id={r.key} value={r.values.rate_group} name={titleCase(r.label)} /></td>
+          <Statewide v={r.values} /></tr>)}</tbody>
+      </table></div>
+    </details>
+  )
+}
+function ShsRates({ p, rg }) {
   const t = p.tables.find((x) => x.id === 'T22')
   const by = p.tables.find((x) => x.id === 'T23')
   const tk = p.tables.find((x) => x.id === 'T24')
@@ -394,11 +447,13 @@ function ShsRates({ p }) {
       <p className="muted small-note">Crashes per million vehicle-miles (MVM). AADT: {sources.join('; ')}, count years {years.join('; ')}.{' '}
         {sc.small ? `Corridor average: too few crashes to compare (${fmt(sc.rated_crashes)}).`
           : `Corridor average ${fmt(sc.corridor_rate_all ?? t.rows[0].values.corridor_rate_all)} crashes per MVM.`}{' '}
-        Caltrans&apos; statewide averages are not shown yet.</p>
+        {rg ? 'Pick a segment\'s Caltrans rate group to compare it with the statewide average.' : ''}</p>
       {sc.text ? <p className="muted small-note" data-testid="shs-scope">{sc.text}</p> : null}
+      <StatewideNote t={t} />
       <div className="sf-table-wrap"><table className="sf-table shs" data-testid="shs-rates">
         <thead><tr><th>Segment</th><th className="sf-num">Crashes</th><th className="sf-num">AADT</th><th className="sf-num">Length (mi)</th>
-          <th className="sf-num">All / MVM</th><th className="sf-num">Fatal + injury / MVM</th><th className="sf-num">÷ average</th></tr></thead>
+          <th className="sf-num">All / MVM</th><th className="sf-num">Fatal + injury / MVM</th><th className="sf-num">÷ average</th>
+          {rg ? <th>Rate group</th> : null}{t.statewide ? <><th className="sf-num">Statewide / MVM</th><th className="sf-num">÷ statewide</th></> : null}</tr></thead>
         <tbody>{t.rows.map((r) => {
           const v = r.values
           return (
@@ -409,10 +464,13 @@ function ShsRates({ p }) {
               <td className="sf-num mono">{rate(r, 'rate_all')}</td><td className="sf-num mono">{rate(r, 'rate_fi')}</td>
               {v.small_base ? <td className="sf-num muted small">too few to compare</td>
                 : <td className="sf-num mono">{fmt(v.ratio_to_corridor)}</td>}
+              {rg ? <td><RateGroupSelect rg={rg} kind="segment" id={r.key} value={v.rate_group} name={titleCase(r.label)} /></td> : null}
+              {t.statewide ? <Statewide v={v} /> : null}
             </tr>
           )
         })}</tbody>
       </table></div>
+      <IntersectionGroups p={p} rg={rg} />
       <details className="showtable"><summary>Show table</summary>
         <div className="sf-table-wrap"><table className="sf-table" data-testid="shs-detail">
           <thead><tr><th>Segment</th>{SHS_DETAIL.map(([k, l]) => <th key={k} className="sf-num">{l}</th>)}<MarkTh t={t} /></tr></thead>
@@ -465,7 +523,7 @@ function ShsRates({ p }) {
 // Ramps (#287; user decision 2026-10-30, docs/03, #300): crashes per million vehicles on each Caltrans ramp a crash
 // is identified on (T25), with the latest count at or before each year; the scope line counts every ramp crash.
 const rampName = (s) => titleCase(s).replace(/\b([NSEW])b\b/g, '$1B').replace(/\b(On|Off|To|From|Fr)\b/g, (m) => m.toLowerCase())
-function ShsRamps({ p }) {
+function ShsRamps({ p, rg }) {
   const t = p.tables.find((x) => x.id === 'T25')
   if (!t) return null
   const n = t.rows.reduce((a, r) => a + r.values.crashes, 0)
@@ -475,11 +533,13 @@ function ShsRamps({ p }) {
       <div className="sect-h"><h2 className="h3">Ramp crash rates</h2><Src tid="T25" n={n} p={p} /></div>
       <p className="muted small-note">Crashes per million vehicles (MV) on each Caltrans ramp, from the district ramp ADT: the
         latest count at or before each year. {t.scope?.text}</p>
+      <StatewideNote t={t} />
       {t.rows.length ? (
         <>
           <div className="sf-table-wrap"><table className="sf-table shs" data-testid="shs-ramps">
             <thead><tr><th>Ramp</th><th className="sf-num">Crashes</th><th className="sf-num">Ramp ADT</th>
-              <th className="sf-num">Per MV</th><th>Count years</th></tr></thead>
+              <th className="sf-num">Per MV</th><th>Count years</th>{rg ? <th>Rate group</th> : null}
+              {t.statewide ? <><th className="sf-num">Statewide / MV</th><th className="sf-num">÷ statewide</th></> : null}</tr></thead>
             <tbody>{t.rows.map((r) => {
               const v = r.values
               return (
@@ -487,6 +547,8 @@ function ShsRamps({ p }) {
                   <th scope="row">{rampName(r.label)}<br /><span className="muted small mono">{v.postmile}</span></th>
                   <td className="sf-num mono">{fmt(v.crashes)}</td><td className="sf-num mono">{fmt(v.adt)}</td>
                   <td className="sf-num mono">{rate(r)}</td><td className="muted small">{v.count_years}</td>
+                  {rg ? <td><RateGroupSelect rg={rg} kind="ramp" id={r.key} value={v.rate_group} name={rampName(r.label)} /></td> : null}
+                  {t.statewide ? <Statewide v={v} /> : null}
                 </tr>
               )
             })}</tbody>
@@ -900,6 +962,8 @@ export default function Profile() {
   const [picking, setPicking] = useState(null)    // { ids, done } while a map point is being picked
   const [mapMode, setMapMode] = useState(null)    // 'ped' | 'bike' | 'motorcycle': only those crashes on the map (#105)
   const [rankSort, setRankSort] = useState('crashes')   // the ranking's sort; the map labels its top 5 (#272)
+  const [groups, setGroups] = useState(null)      // Caltrans rate groups for the picker (#287 part 1)
+  const [rgBusy, setRgBusy] = useState(false)
 
   useEffect(() => {
     let alive = true
@@ -937,6 +1001,23 @@ export default function Profile() {
       api(`/studies/${studyId}/assignment`)])
     setState((s) => ({ ...s, profile: p, crashes: placedCrashes(cr.crashes, asg), excludedByRule: asg.excluded_by_rule || {} }))
   }
+
+  const shs = Boolean(state.profile?.tables?.some((t) => t.id === 'T22' || t.id === 'T25'))
+  useEffect(() => {
+    if (!shs || groups) return
+    api('/reference/rate-groups').then((r) => setGroups(r.groups)).catch(() => {})
+  }, [shs, groups])
+
+  async function setRateGroup(kind, id, group) {
+    setRgBusy(true)
+    try {
+      await api(`/studies/${studyId}/rate-groups/${kind}/${encodeURIComponent(id)}`, { method: 'PUT', body: { rate_group: group } })
+      await reload()
+    } catch (e) {
+      setState((s) => ({ ...s, refreshError: errorText(e) }))
+    } finally { setRgBusy(false) }
+  }
+  const rg = groups ? { groups, busy: rgBusy, set: setRateGroup } : null
 
   async function openReview() {
     setDrill(null)
@@ -992,8 +1073,8 @@ export default function Profile() {
             <Ranking p={p} onOpen={openLocation} sort={rankSort} setSort={setRankSort} />
             <Vru p={p} onMap={setMapMode} mapMode={mapMode} />
             <Strip p={p} net={state.net} crashes={state.crashes || []} onOpen={openLocation} />
-            <ShsRates p={p} />
-            <ShsRamps p={p} />
+            <ShsRates p={p} rg={rg} />
+            <ShsRamps p={p} rg={rg} />
             <Grid p={p} onOpen={openLocation} />
             <Severity p={p} />
             <Why p={p} n={cell(p, 'T1/crashes/value')} />

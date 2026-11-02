@@ -19,7 +19,7 @@ vi.mock('maplibre-gl', () => {
   }
   class Popup { setLngLat() { return this } setHTML() { return this } addTo() { return this } remove() {} }
   class Marker { constructor(o) { calls.push(['marker', o]) } setLngLat() { return this } addTo() { return this } remove() {} }
-  return { default: { Map, Popup, Marker } }
+  return { Map, Popup, Marker, setWorkerUrl: () => {} }   // maplibre-gl 6: named exports only (no default)
 })
 vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
 

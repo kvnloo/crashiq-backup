@@ -52,11 +52,11 @@ def test_progress_names_each_step(client, sid):
     gate = threading.Event()
     real = crashes.pull
 
-    def slow_pull(study, net, ckan, progress=None):
+    def slow_pull(study, net, ckan, progress=None, raw=None):
         def tell(step, done, total):
             steps.append(step)
             progress(step, done, total)
-        out = real(study, net, ckan, tell)
+        out = real(study, net, ckan, tell, raw)
         gate.set()
         return out
     crashes_pull = crashes.pull
@@ -76,11 +76,11 @@ def test_two_requests_share_one_pull(client, sid):
     started = threading.Event()
     release = threading.Event()
 
-    def held(study, net, ckan, progress=None):
+    def held(study, net, ckan, progress=None, raw=None):
         calls.append(1)
         started.set()
         release.wait(10)
-        return real(study, net, ckan, progress)
+        return real(study, net, ckan, progress, raw)
     crashes.pull = held
     try:
         a = client.post(f"/api/studies/{sid}/crashes/pull?background=true").json()["job"]
@@ -107,11 +107,11 @@ def test_a_study_edited_mid_pull_is_pulled_again_not_stored_stale(client, sid):
     real = crashes.pull
     n = []
 
-    def edit_during_first(study, net, ckan, progress=None):
+    def edit_during_first(study, net, ckan, progress=None, raw=None):
         n.append(study["from_year"])
         if len(n) == 1:      # the user changes the window while the first pull runs
             client.patch(f"/api/studies/{sid}", json={"from_year": 2023, "to_year": 2025})
-        return real(study, net, ckan, progress)
+        return real(study, net, ckan, progress, raw)
     crashes.pull = edit_during_first
     try:
         r = client.post(f"/api/studies/{sid}/crashes/pull").json()

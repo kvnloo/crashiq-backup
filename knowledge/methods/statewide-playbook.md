@@ -49,6 +49,8 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   - apply the cleaner rules of #242 (PKY/PW, EXPWY, HW, TRL, RT as a trailing word, JR, CYN, MTN, HTS);
   - route suffixes such as "PACIFIC COAST HWY - SR1" and "BEACH BL - SR39 BLVD";
   - more wording forms in #305 ("STATE HIGHWAY 96", "W CURB LINE OF …", two streets in one field).
+  - a bare route in a freeway report ("405 SB", "99 HWY", "1-15 S/B" for I-15) is that route, read only for the
+    corridor's own route (#334); never a house number, a numbered street or a number alone.
 - Tiers that auto-place: **exact** and **unique_pair** (the two streets, allowing only what the report leaves out, meet
   once). unique_pair added +108,547 crashes at accuracy equal to or better than exact.
 - **Alias table** of local spellings, city-scoped, every entry approved by the user (912 in CA,
@@ -58,6 +60,10 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   - freeway, from the report: "usually within 0.5 mi" (`methods/freeway-crashes.md`);
   - house-address crashes (D5) at USDOT NAD address points: "usually within 400 ft" (86.1% on police GPS). Where NAD
     doesn't cover, the crash goes to review with the Census/TIGER address-range point as a suggestion (#264, #283).
+    In CrashIQ (`backend/crashiq/nad.py`, `addrfeat.py`): a corridor field with a house number, the other field blank,
+    a placeholder or the same street (never a route, a numbered street or a distance) is D5. The NAD points with that
+    number on that street in the crash's city (its county when unincorporated) must be one place (within 1,000 ft);
+    the spot is their mean. The app's matching reproduces #264: 623 of 12,568 D5 placed, 86.2% within 400 ft.
 - **Mile markers (D3, user 2026-11-01, #319; off until measured):** "ANGELES CREST HWY & MILE MARKER 28.86" at that
   Caltrans postmile on the route the other field names (else the corridor's route), in the crash's county,
   interpolated between tenth points, plus a stated distance along the route (`mile_marker.py`). Two places for one
@@ -70,12 +76,8 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
   railroad) or that named trail or path (`crossings.py`), from OSM railway=rail/light_rail/tram/subway and named
   highway=cycleway/path/footway, kept apart from the street graph. A stated distance is walked along the path in the
   stated direction. Two or more crossings, or none, go to review with the reason, never the nearest guess. A bike
-  lane on the road is the road ("BIKE LANE" is dropped from the name). A crash on a separate bike-only path stays a
-  suggestion until the user confirms (`crossing_on_path`).
-    In CrashIQ (`backend/crashiq/nad.py`, `addrfeat.py`): a corridor field with a house number, the other field blank,
-    a placeholder or the same street (never a route, a numbered street or a distance) is D5. The NAD points with that
-    number on that street in the crash's city (its county when unincorporated) must be one place (within 1,000 ft);
-    the spot is their mean. The app's matching reproduces #264: 623 of 12,568 D5 placed, 86.2% within 400 ft.
+  lane on the road is the road ("BIKE LANE" is dropped from the name). A crash on a separate bike-only path is placed
+  on the path itself (user 2026-11-01, #331; `crossing_on_path`).
 - **Fatal crashes:** FARS coordinates as a fallback, only when the FARS point fits both named roads. FARS beats an
   approximate placement (#280/#281).
 - **Freeway crashes:** `methods/freeway-crashes.md`. In short:
@@ -93,7 +95,14 @@ In CA, 73% of everything on the map sits on the officer's own GPS. Check per age
 - Accuracy per tier with a Wilson 95% lower bound; 98% bar for a tier to auto-place unless the user decides otherwise.
   Below the bar, a tier can still be approximate if the user approves the label (freeway 0.5 mi, NAD 400 ft).
 - Every repair gets a chance control (shift the point randomly, count how often the "repair" still fits).
+- No-change proofs run every corridor in tests/statewide/corridors_frozen.json; report every crash whose placement or
+  assignment changes.
 - Claims that reach the website go in `knowledge/claims.md` with their run and basis.
+
+- **Freeway corridors (#328, #329):** a freeway corridor is its motorway ways only (#325). Its buffer is measured
+  from every motorway way of its route within 150 m, both carriageways, not only the drawn line; the study limits
+  still come from the drawn line. With no at-grade intersections, its known crossings are its grade separations: a
+  no-GPS report naming another cross street is off the stretch.
 
 ## 5. Sort what's left into named buckets, largest first
 CA after run 10 (#295; 134,249 difficult crashes):
@@ -125,7 +134,8 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
 
 ## 6. Crash rates on state highways — `sources/ca-caltrans-traffic-census.md`
 - **Exposure:** the state DOT's traffic census. In CA, Caltrans AADT by route, county and postmile (back and ahead
-  legs), truck AADT by axle, and ramp ADT by district. Each crash joins through its derived postmile.
+  legs), truck AADT by axle, and ramp ADT by district. Each crash joins through its derived postmile. Count years
+  2016–2024 (#345); a window year before the oldest count has no rate, and the caveat names the year.
 - **Join rules** (#289):
   - the nearer count point's facing leg, split at the midpoint;
   - 0.05 mi tolerance at a line's ends;
@@ -136,10 +146,19 @@ The first two groups need a non-GPS method; the third is fixed in the name clean
 - **Coverage:** a segment-year gets a rate only when every 0.05 mi sample has a count; never a partial guess.
 - **Which crashes count** (user 2026-10-31, #297): a mainline rate counts the highway's own mainline crashes only.
   - **GPS on the freeway line is not proof of mainline.** Ramp and cross-street crashes at interchanges often carry
-    GPS on or beside the line. Classify by the report's road wording:
-    - a ramp named → ramp; how "<route> <dir> TO <local street>" (no ramp word) is identified is pending the
-      user (#303 review);
-    - a cross street as the primary road → not in the mainline rate.
+    GPS on or beside the line. Classify by the report's road wording (`backend/crashiq/rate_class.py`, #304):
+    - a ramp named, or "<route> <dir> TO <local street>" (= the <dir> off-ramp to that street), or "<local street>
+      TO <route> <dir>" or "<route> <dir> FROM <local street>" (= the <dir> on-ramp from that street, user
+      2026-11-01, #331, #341), or a connector
+      "<route> TO <route>" whose cross street is one of the routes → ramp (rated in the ramp table; a connector
+      gets no ramp rate);
+    - "<route> TO <route>" with a local cross street → mainline;
+    - the highway as the primary road → mainline. On a conventional highway, the highway as the secondary road
+      with the distance blank or within the study's influence radius (250 ft) → mainline too (an intersection
+      crash, user 2026-11-01);
+    - any other primary road (a cross street, a frontage road) → in no rate; on a freeway, always.
+  - An intersection's mainline crashes count in the segment on their GPS side; with no GPS, or GPS within 25 ft of
+    the intersection, the segment after it; the last intersection, the segment before (user 2026-11-01).
   - Ramps are rated separately, by a strict match to one ramp row, else the engineer picks (#300). A year's ramp
     count is the latest at or before it; one more than 5 years older than the year gives no rate (user 2026-11-01).
 - **Small numbers:** under 10 crashes, show counts and mark the rate "too few to compare" (#271).

@@ -214,6 +214,8 @@ def to_xlsx(d: dict) -> bytes:
         sh.append(["Location sources"] + [f"{k}: {v}" for k, v in t["provenance"].items()])
         if t.get("note"):                       # a missing CCRS Parties / IWP year (#188)
             sh.append(["Note", t["note"]])
+        if t.get("source_note"):                # a reference table a column is priced from (#273)
+            sh.append(["Source", t["source_note"]])
             sh.cell(row=sh.max_row, column=1).font = Font(bold=True, color="C4261B")
         sh.column_dimensions["A"].width = 22
         sh.column_dimensions["B"].width = 44

@@ -22,7 +22,7 @@ import urllib.parse
 import urllib.request
 import uuid
 from collections import Counter, defaultdict
-from typing import Callable
+from typing import Callable, Literal
 
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
@@ -60,6 +60,28 @@ def crossing_query(line: list[tuple[float, float]]) -> str:
             f'way(around:{QUERY_RADIUS_M},{coords})["railway"~"^(rail|light_rail|tram|subway)$"];'
             f'way(around:{QUERY_RADIUS_M},{coords})["highway"~"^(cycleway|path|footway)$"]["name"];'
             f');out body;>;out body qt;')
+
+
+CARRIAGEWAY_M = 150      # a freeway's other carriageway lies this close to a line drawn along one of them (#329)
+
+
+def carriageway_query(line: list[tuple[float, float]]) -> str:
+    coords = ",".join(f"{lat:.6f},{lon:.6f}" for lat, lon in line)
+    return f'[out:json][timeout:90];way(around:{CARRIAGEWAY_M},{coords})["highway"="motorway"];out body;>;out body qt;'
+
+
+def carriageways(osm: dict, routes: set[str]) -> list[list[list[float]]]:
+    """The motorway ways of the corridor's route(s), both directions, as lines of [lat, lon] (#329): a freeway
+    corridor's buffer is measured from these, not only from the line the engineer drew along one carriageway."""
+    from .names import route_numbers
+    nodes = {e["id"]: (e["lat"], e["lon"]) for e in osm.get("elements", []) if e.get("type") == "node"}
+    out = []
+    for w in (e for e in osm.get("elements", []) if e.get("type") == "way"):
+        if route_numbers(str(w.get("tags", {}).get("ref") or "")) & routes:
+            pts = [list(nodes[n]) for n in w.get("nodes", []) if n in nodes]
+            if len(pts) >= 2:
+                out.append(pts)
+    return out
 
 
 def overpass_query(line: list[tuple[float, float]]) -> str:
@@ -228,6 +250,7 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
 
     # 2. corridor ways: enough of the way runs along the line
     corridor_ids: set[int] = set()
+    along: list[tuple[dict, float]] = []
     along_len: Counter = Counter()
     hw_len: Counter = Counter()
     for w in ways:
@@ -248,8 +271,15 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
         if run_len >= 50 and run_len >= 0.5 * near_len:
             corridor_ids.add(w["id"])
             hw_len[w.get("tags", {}).get("highway", "")] += run_len
-            for n in _names(w.get("tags", {})):
-                along_len[n] += run_len
+            along.append((w, run_len))
+    # a freeway corridor is its motorway ways only: a frontage or parallel surface street beside it (Freeman Ave on
+    # I-405, #325) never names the corridor or makes intersections with its own side streets
+    if hw_len and hw_len.most_common(1)[0][0] == "motorway":
+        along = [(w, n) for w, n in along if w.get("tags", {}).get("highway") == "motorway"]
+        corridor_ids = {w["id"] for w, _ in along}
+    for w, run in along:
+        for n in _names(w.get("tags", {})):
+            along_len[n] += run
     corridor_name = along_len.most_common(1)[0][0] if along_len else None
     corridor_cores = {c for c in (_core(n) for n in along_len) if c}
     corridor_highway = hw_len.most_common(1)[0][0] if hw_len else None
@@ -474,8 +504,13 @@ def _load(db: Database, sid: str) -> dict | None:
         i.pop("study_id", None)
     aadt = {r["segment_id"]: r["aadt"] for r in db.query("SELECT * FROM segment_aadt WHERE study_id = ?", (sid,))}
     segs = segments(ints, c["length_ft"])
+    groups = {(r["kind"], r["ref_id"]): r["rate_group"]
+              for r in db.query("SELECT * FROM rate_group WHERE study_id = ?", (sid,))}
     for s in segs:
         s["aadt"] = aadt.get(s["id"])
+        s["rate_group"] = groups.get(("segment", s["id"]))
+    for i in ints:
+        i["rate_group"] = groups.get(("intersection", i["id"]))
     line = json.loads(c["line_json"])
     hw, gs, cn = c.get("corridor_highway"), c.get("grade_separations_json"), c.get("corridor_names_json")
     if gs is None or cn is None:   # drawn before #67/#53: detect from the cached OSM response, never a new download
@@ -490,7 +525,8 @@ def _load(db: Database, sid: str) -> dict | None:
             "corridor_highway": hw, "is_freeway": hw == "motorway",
             "grade_separations": json.loads(gs) if gs else [],
             "corridor_names": json.loads(cn) if cn else ([c["corridor_name"]] if c["corridor_name"] else []),
-            "intersections": ints, "segments": segs, "detected_at": c["detected_at"]}
+            "intersections": ints, "segments": segs, "detected_at": c["detected_at"],
+            "ramp_rate_groups": {ref: g for (k, ref), g in groups.items() if k == "ramp"}}
 
 
 def network(db: Database, sid: str) -> dict:
@@ -509,6 +545,7 @@ def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: 
     with db.transaction() as conn:
         conn.execute("DELETE FROM intersection WHERE study_id = ?", (sid,))
         conn.execute("DELETE FROM segment_aadt WHERE study_id = ?", (sid,))
+        conn.execute("DELETE FROM rate_group WHERE study_id = ? AND kind IN ('segment', 'intersection')", (sid,))
         conn.execute("INSERT OR REPLACE INTO corridor (study_id, line_json, length_ft, corridor_name, detected_at, "
                      "corridor_highway, grade_separations_json, corridor_names_json) VALUES (?, ?, ?, ?, datetime('now'), ?, ?, ?)",
                      (sid, json.dumps([list(p) for p in line]), found["length_ft"], found["corridor_name"],
@@ -579,7 +616,15 @@ def remove_intersection(db: Database, sid: str, iid: str) -> dict:
     return network(db, sid)
 
 
+def _require_location(db: Database, sid: str, kind: str, ref_id: str) -> None:
+    """A segment or intersection id must be one of the study's (#361: a made-up id used to store a row)."""
+    net = network(db, sid)
+    if ref_id not in {x["id"] for x in net["segments" if kind == "segment" else "intersections"]}:
+        raise HTTPException(404, f"{kind.capitalize()} not found.")
+
+
 def set_segment_aadt(db: Database, sid: str, seg_id: str, aadt: float | None) -> dict:
+    _require_location(db, sid, "segment", seg_id)
     if aadt is not None and aadt < 0:
         raise ValueError("AADT can't be negative.")
     if aadt is None:
@@ -589,10 +634,24 @@ def set_segment_aadt(db: Database, sid: str, seg_id: str, aadt: float | None) ->
     return network(db, sid)
 
 
+def set_rate_group(db: Database, sid: str, kind: str, ref_id: str, group: str | None) -> dict:
+    """The engineer's Caltrans rate group for one segment, intersection or ramp (#287 part 1; docs/03 #294)."""
+    from . import rate_groups
+    if kind != "ramp":                    # a ramp is a Caltrans ramp id, not one of the study's own
+        _require_location(db, sid, kind, ref_id)
+    if group is None or not group.strip():
+        db.execute("DELETE FROM rate_group WHERE study_id = ? AND kind = ? AND ref_id = ?", (sid, kind, ref_id))
+    else:
+        db.execute("INSERT OR REPLACE INTO rate_group (study_id, kind, ref_id, rate_group) VALUES (?,?,?,?)",
+                   (sid, kind, ref_id, rate_groups.normalize(kind, group)))
+    return network(db, sid)
+
+
 def clear_corridor(db: Database, sid: str) -> dict:
     with db.transaction() as conn:
         for t in ("intersection", "segment_aadt", "corridor"):
             conn.execute(f"DELETE FROM {t} WHERE study_id = ?", (sid,))
+        conn.execute("DELETE FROM rate_group WHERE study_id = ? AND kind IN ('segment', 'intersection')", (sid,))
     return network(db, sid)
 
 
@@ -617,6 +676,10 @@ class IntersectionPatch(BaseModel):
 
 class SegmentPatch(BaseModel):
     aadt: float | None = None
+
+
+class RateGroupIn(BaseModel):
+    rate_group: str | None = None
 
 
 router = APIRouter()
@@ -675,3 +738,10 @@ def delete_intersection(sid: str, iid: str, request: Request) -> dict:
 def patch_segment(sid: str, seg_id: str, body: SegmentPatch, request: Request) -> dict:
     study_mod.require(_db(request), sid)
     return set_segment_aadt(_db(request), sid, seg_id, body.aadt)
+
+
+@router.put("/studies/{sid}/rate-groups/{kind}/{ref_id}")
+def put_rate_group(sid: str, kind: Literal["segment", "intersection", "ramp"], ref_id: str, body: RateGroupIn,
+                   request: Request) -> dict:
+    study_mod.require(_db(request), sid)
+    return set_rate_group(_db(request), sid, kind, ref_id, body.rate_group)

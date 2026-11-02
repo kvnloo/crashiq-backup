@@ -17,3 +17,9 @@ Freeways: 127,545 crashes (PDO 84,870; fatal 808; killed 882). Non-freeway: 26,0
 - Why: Caltrans counts only crashes *on* the state highway. It excludes crashes "associated with" it (CHP Collision
   Investigation Manual), suicides and beat 902 incidents. CCRS flags are the officer's and broader.
 - Rule: rates compared to Caltrans averages must use Caltrans's counting rule, or say they are approximate.
+
+## Basic average crash rates (rate groups)
+The book's "2024 Basic Average Crash Rate Table" (printed pp. 83–90: highways H01–H67, intersections I01–I31, ramps
+R01–R80; rates loaded into TSN on April 22, 2022) is in `data/reference/caltrans_rate_groups.csv`, built by code from
+the PDF (`scripts/extract_caltrans_rate_groups.py`); citation and use in `data/reference/caltrans_rate_groups.md`
+(#287 part 1, user decision 2026-10-29).

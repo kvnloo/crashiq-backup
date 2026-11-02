@@ -37,7 +37,6 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
         return None
     line = Polyline([tuple(p) for p in net["line"]])
     have = [y for (y,) in aadt_cache.db().execute("SELECT DISTINCT year FROM point ORDER BY year")]
-    have_t = [y for (y,) in aadt_cache.db().execute("SELECT DISTINCT year FROM truck ORDER BY year")]
     out = {}
     for s in net.get("segments", []):
         a, b = s["from_station_ft"], s["to_station_ft"]
@@ -45,6 +44,7 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
         pms = [postmiles.lookup(*line.point_at(a + (i + 0.5) * (b - a) / n), routes) for i in range(n)]
         pm_cov = sum(pm is not None for pm in pms) / n
         by_year, covered, latest, end, trucks, latest_t = {}, [], False, False, {}, False
+        used, used_t = {}, {}                                   # {wanted count year: year looked up} (#351)
         for y in years:
             tv = [[aadt_cache.truck_segment(pm["route"], pm["county"], pm["pm"], cy, pm.get("route_suffix") or "",
                                             pm.get("suffix") or "") if pm else None for cy in (y, y + 1)] for pm in pms]
@@ -52,6 +52,7 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
                     if a and b and a["trucks_3plus"] is not None and b["trucks_3plus"] is not None]
             trucks[y] = round(sum(ok_t) / n, 1) if len(ok_t) == n else None
             latest_t = latest_t or any(g["latest_used"] for leg in tv for g in leg if g)
+            used_t.update((g["wanted_year"], g["year"]) for leg in tv for g in leg if g)
             vals = []
             for pm in pms:
                 legs = [aadt_cache.segment(pm["route"], pm["county"], pm["pm"], cy, pm.get("route_suffix") or "",
@@ -61,6 +62,7 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
                     vals.append(None)
                     continue
                 latest = latest or any(g["latest_used"] for g in legs)
+                used.update((g["wanted_year"], g["year"]) for g in legs)
                 end = end or any(g["aadt_end_tolerance"] for g in legs)
                 vals.append(0.75 * legs[0]["aadt"] + 0.25 * legs[1]["aadt"])
             ok = [v for v in vals if v is not None]
@@ -69,17 +71,26 @@ def segment_volumes(net: dict, postmiles, aadt_cache, years: list[int]) -> dict 
         out[s["id"]] = {"by_year": by_year, "coverage": round(min(covered), 3) if covered else 0.0,
                         "pm_coverage": round(pm_cov, 3),
                         "latest_used": latest, "end_tolerance": end, "routes": sorted(routes),
-                        "count_years": _years_label(have, years, latest),
-                        "trucks_by_year": trucks, "truck_count_years": _years_label(have_t, years, latest_t),
+                        "count_years": _years_label(used),
+                        "trucks_by_year": trucks, "truck_count_years": _years_label(used_t),
+                        "first_count_year": have[0] if have else None,       # window years before it have no count (#345)
                         "source": "Caltrans Traffic Census Program" if have else ""}
     return out
 
 
-def _years_label(have: list[int], years: list[int], latest: bool) -> str:
-    if not have:
+def _years_label(used: dict[int, int]) -> str:
+    """'2020–2024; 2025 uses 2024': the count years the window's lookups returned (not every loaded year, #351), and
+    the count years past the last file that fell back to it."""
+    if not used:
         return ""
-    label = f"{have[0]}–{have[-1]}" if len(have) > 1 else str(have[0])
-    return label + (f"; later count years use {have[-1]}" if latest else "")
+    ys = sorted(set(used.values()))
+    label = f"{ys[0]}–{ys[-1]}" if len(ys) > 1 else str(ys[0])
+    for y in ys:
+        late = sorted(w for w, u in used.items() if u == y and w > y)
+        if late:
+            span = f"{late[0]}–{late[-1]}" if len(late) > 1 and late[-1] - late[0] == len(late) - 1 else ", ".join(map(str, late))
+            label += f"; {span} {'use' if len(late) > 1 else 'uses'} {y}"
+    return label
 
 
 def ramp_crashes(crashes: list[dict], postmiles, aadt_cache, picks: dict | None = None) -> dict:

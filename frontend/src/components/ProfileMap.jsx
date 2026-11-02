@@ -1,10 +1,15 @@
-import maplibregl from 'maplibre-gl'
+import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
+import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DIMENSIONS, categories, catOf, columns, corridorAzimuth, topLocations, visible } from '../lib/mapcats'
 import { HOLLOW } from '../lib/severity'
 import { RING_LEGEND, isVru, vruWho } from '../lib/vru'
 import { TILE_MAX_NATIVE_ZOOM, TILE_URL } from '../lib/tiles'
+
+// maplibre-gl 6 loads its worker from a file beside its own module, which the Vite build doesn't copy: point it at
+// the bundled asset (#363)
+maplibregl.setWorkerUrl(workerUrl)
 
 const TILE_ATTR_HTML = 'Tiles © Esri — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 const PITCH_3D = 55

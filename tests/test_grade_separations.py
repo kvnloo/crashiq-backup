@@ -176,3 +176,52 @@ def test_grade_separations_are_stored_and_backfilled_from_the_cache(client, db):
     again = client.get(f"/api/studies/{sid}/network").json()
     assert [g["name"] for g in again["grade_separations"]] == ["Nimitz Freeway / I 880"]
     assert again["corridor_highway"] == "primary"
+
+
+def test_a_frontage_street_beside_a_freeway_is_never_a_corridor_name():
+    # #325 (Tester, live I-405): Freeman Ave, a frontage street beside the freeway, became a corridor name, and its
+    # T-junctions with 164th and 165th St became study intersections with a 0.07 mi segment between them
+    o = OSM()
+    o.corridor("San Diego Freeway", "motorway", ref="I 405")
+    fx = LON + 0.0002                                                # ~60 ft east of the freeway
+    o.way([(la, fx) for la in (37.598, 37.601, 37.603, 37.605, 37.607, 37.609, 37.612)],
+          name="Freeman Avenue", highway="residential")
+    for la, nm in ((37.6045, "West 164th Street"), (37.6055, "West 165th Street")):
+        o.way([(la, fx), (la, fx + 0.002)], name=nm, highway="residential")         # T-junctions on the frontage
+    got = network.detect(o.osm(), LINE)
+    assert got["corridor_highway"] == "motorway"
+    assert "Freeman Avenue" not in got["corridor_names"] and got["corridor_name"] == "San Diego Freeway"
+    assert got["intersections"] == []
+
+
+def test_an_arterial_keeps_every_parallel_piece_of_its_own_name():
+    o = OSM()
+    o.corridor("Main Street")
+    o.way([(37.600, LON + 0.0001), (37.606, LON + 0.0001)], name="Main Street", highway="primary")   # a divided half
+    got = network.detect(o.osm(), LINE)
+    assert got["corridor_names"] == ["Main Street"]
+
+
+def test_a_freeway_buffer_is_measured_from_both_carriageways():
+    # #329 (Tester, live I-405): 174 mainline crashes on the far carriageway were outside the 100 ft buffer of the line
+    # drawn along the near one. Two I 405 motorway ways about 160 ft apart; the corridor is drawn on the first
+    o = OSM()
+    o.corridor("San Diego Freeway", "motorway", ref="I 405")
+    far = LON + 0.000555                                              # ~160 ft east
+    o.way([(la, far) for la in (37.598, 37.603, 37.607, 37.612)], name="San Diego Freeway", highway="motorway",
+          ref="I 405")
+    o.way([(37.598, LON - 0.003), (37.612, LON - 0.003)], name="Other Freeway", highway="motorway", ref="I 110")
+    osm = o.osm()
+    net = _net(network.detect(osm, LINE), is_freeway=True)
+    lanes = network.carriageways(osm, {"405"})
+    assert len(lanes) == 2                                            # both I 405 ways, not I 110
+    crashes = [_crash("far", 37.6040, "I-405", "MAIN ST", is_freeway=True),
+               _crash("out", 37.6040, "I-405", "MAIN ST", is_freeway=True)]
+    crashes[0]["lon"] = LON + 0.00052                                 # 150 ft from the drawn line, ~10 ft from the far way
+    crashes[1]["lon"] = LON - 0.00052                                 # 150 ft west: far from both
+    a = assign.assign(crashes, net, 250.0, 100.0, carriageways=lanes)
+    got = {x["crash_id"]: (x["kind"], x["rule"], x["distance_ft"]) for x in a["assignments"]}
+    assert got["far"][:2] == ("segment", "corridor_buffer") and got["far"][2] < 20
+    assert got["out"][:2] == ("excluded", "outside_buffer")
+    before = assign.assign(crashes, net, 250.0, 100.0)                # without the carriageways: as it was
+    assert {x["crash_id"]: x["rule"] for x in before["assignments"]}["far"] == "outside_buffer"

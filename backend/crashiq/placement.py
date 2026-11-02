@@ -165,7 +165,7 @@ def place_crossings(db: Database | None, net: dict, result: dict, gate: locate.G
     """#318 (user 2026-11-01): crashes at the corridor's crossing with a railway or a named trail or path. Placed as
     `crossing_rail` / `crossing_path` when that tier is on, else the spot is the review list's suggestion; two or more
     crossings, or none, leave the crash on the review list with the reason. A crash on a separate bike-only path
-    (the path is its primary road) stays a suggestion until the user confirms (`crossing_on_path`)."""
+    (the path is its primary road) is placed on the path (`crossing_on_path`, user 2026-11-01)."""
     from . import crossings
     todo = [c for c in result["crashes"] if c.get("review_reason") == "crossing" and not c.get("exclude_rule")]
     counts = {"tried": len(todo), "placed": 0, "suggested": 0, "no_spot": {}}
@@ -193,6 +193,31 @@ def place_crossings(db: Database | None, net: dict, result: dict, gate: locate.G
                                **({"on_path": True} if r["on_path"] else {})}
             counts["suggested"] += 1
     return counts
+
+
+def outside_corners(net: dict, cands: list[dict], raw: dict, gate: locate.Gate | None = None) -> dict:
+    """#70: reports at a cross street that isn't one of the corridor's intersections, with a reported distance. The
+    locator places each from that corner (auto-place tiers only) and the normal assignment decides: on a segment or at
+    a study intersection, it is kept, with the corner and distance recorded; still off the stretch, it keeps
+    `cross_street_not_on_corridor`."""
+    from . import assign
+    gate, onet, kept = gate or locate.Gate(), osm.Network(raw), 0
+    for c in cands:
+        pl = locate.place(onet, c)
+        if not gate.auto(pl):
+            continue
+        trial = {**c, "lat": pl.lat, "lon": pl.lon, "location_source": pl.tier, "exclude_rule": None}
+        if assign.assign([trial], net, net.get("radius_ft") or 250, net.get("buffer_ft") or 100)["assignments"][0]["kind"] \
+                not in ("intersection", "segment"):
+            continue
+        kept += 1
+        del c["exclude_rule"]
+        c.update(lat=pl.lat, lon=pl.lon, location_source=pl.tier,
+                 outside_corner={"cross_street": c.get("secondary_road"), "offset_ft": c.get("offset_ft"),
+                                 "offset_dir": c.get("offset_dir")})
+        if pl.tiger:
+            c["placed_on"] = "tiger"
+    return {"tried": len(cands), "kept": kept}
 
 
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,

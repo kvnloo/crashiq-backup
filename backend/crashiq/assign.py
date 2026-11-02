@@ -59,8 +59,14 @@ def _pick_intersection(cands: list[tuple[float, dict]]) -> tuple[float, dict, st
     return d, it, "influence_radius" if len(cands) == 1 else "nearest_of_overlapping_radii"
 
 
-def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, include_freeway: bool = False) -> dict:
+def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, include_freeway: bool = False,
+           carriageways: list | None = None) -> dict:
     line = Polyline([tuple(p) for p in net["line"]])
+    # a freeway corridor's buffer is measured from every carriageway of its route, not only the drawn line (#329);
+    # station, and so the study limits and the segment, still come from the drawn line
+    lanes = [Polyline([tuple(p) for p in cw], line.proj) for cw in (carriageways or [])] if net.get("is_freeway") else []
+    off_ft = lambda p, x, y: min([p.offset_ft] + [ln.project_xy(x, y).offset_ft for ln in lanes]) \
+        if lanes and p.offset_ft > buffer_ft else p.offset_ft                       # noqa: E731
     studies = [i for i in net["intersections"] if i["is_study"]]
     pts = {i["id"]: line.proj.to_xy(i["lat"], i["lon"]) for i in studies}
     segs = net["segments"]
@@ -120,8 +126,9 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
             out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": round(p.offset_ft, 1),
                         "rule": off_rule or "outside_study_limits"})
             continue
-        if p.offset_ft > buffer_ft:
-            out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": round(p.offset_ft, 1),
+        d_ft = off_ft(p, x, y)
+        if d_ft > buffer_ft:
+            out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": round(d_ft, 1),
                         "rule": off_rule or "outside_buffer"})
             continue
         seg = next((s for s in segs if s["from_station_ft"] <= p.station_ft <= s["to_station_ft"]), None)
@@ -136,7 +143,7 @@ def assign(crashes: list[dict], net: dict, radius_ft: float, buffer_ft: float, i
             out.append({**base, "kind": "excluded", "location_id": None, "distance_ft": round(p.offset_ft, 1),
                         "rule": "not_on_corridor_street"})
             continue
-        out.append({**base, "kind": "segment", "location_id": seg["id"], "distance_ft": round(p.offset_ft, 1),
+        out.append({**base, "kind": "segment", "location_id": seg["id"], "distance_ft": round(d_ft, 1),
                     "station_ft": round(p.station_ft, 1), "rule": "corridor_buffer"})
     counts = Counter(a["kind"] for a in out)
     totals = {k: counts.get(k, 0) for k in KINDS}
@@ -189,7 +196,7 @@ def for_study(db, sid: str) -> tuple[dict, dict, dict, dict]:
         pull = {**pull, "crashes": review_mod.overlay(pull["crashes"], decs)}
         anet = union_mod.with_alt(net, pull.get("network_alt"))      # the TIGER names the pull used (#229)
         hit = (pull, assign(pull["crashes"], anet, study["radius_ft"], study["buffer_ft"],
-                            bool(study.get("include_freeway"))), anet)
+                            bool(study.get("include_freeway")), pull.get("carriageways")), anet)
     _MEMO[key] = hit                                  # most recently used last
     while len(_MEMO) > _MEMO_MAX:
         _MEMO.pop(next(iter(_MEMO)))

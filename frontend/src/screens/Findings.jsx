@@ -70,6 +70,7 @@ function Detail({ f, i, lib, records, diagram, study, onDecide }) {
   const segment = f.meta?.kind === 'segment'
   const m = f.meta || {}
   const own = !entry && Array.isArray(m.factors) && m.factors.length ? m.factors : null   // factors the finding carries
+  const fatal = m.kind_of_finding === 'fatal'          // #274: every fatal crash is its own finding, no statistical test
   return (
     <div className="fdetail">
       <div className="sf-eyebrow">F{i + 1} · {locName(f)}</div>
@@ -83,7 +84,11 @@ function Detail({ f, i, lib, records, diagram, study, onDecide }) {
         {play ? 'Hide the pattern' : 'Play the pattern'}</button>
       {play ? <Replay anim={entry?.anim || 'generic'} segment={segment} records={records || []} /> : null}
       <Claim f={f} />
-      <div className="why">
+      {fatal ? (
+        <p className="muted small" data-testid="fatal-note">Every fatal crash at a study location is listed as its own finding,
+          whatever the statistics: no test is run. Review the record below{m.approximate ? ' (its location is approximate)' : ''}.</p>
+      ) : null}
+      <div className="why" hidden={fatal}>
         <div>
           <span className="k">Pattern library{lib?.status === 'draft' && entry ? ' · draft' : ''}</span>
           <span>{entry ? entry.ref : own ? 'Factors from this finding' : 'No library entry for this crash type yet.'}</span>
@@ -127,10 +132,11 @@ function Detail({ f, i, lib, records, diagram, study, onDecide }) {
             <dl className="card-pad audit">
               <dt>Data</dt><dd>CCRS {study?.from_year}–{study?.to_year} · {m.corridor_crashes ?? '—'} crashes placed on the corridor</dd>
               <dt>Assignment</dt><dd>{study?.radius_ft ?? 250} ft intersection influence area; {study?.buffer_ft ?? 100} ft corridor buffer</dd>
-              <dt>Test</dt><dd>Excess proportion of specific crash types (HSM Part B screening), compared with the {m.reference || 'corridor locations'}. {m.method}.</dd>
-              <dt>Result</dt><dd>{String(m.method || '').startsWith('Binomial') ? 'Binomial confidence' : 'P(true share > reference share)'} = {m.probability} · {m.strength} · excess {m.excess_pct} points</dd>
+              {fatal ? <><dt>Test</dt><dd>None: every fatal crash is listed (user decision 2026-10-25)</dd></> : <>
+                <dt>Test</dt><dd>Excess proportion of specific crash types (HSM Part B screening), compared with the {m.reference || 'corridor locations'}. {m.method}.</dd>
+                <dt>Result</dt><dd>{String(m.method || '').startsWith('Binomial') ? 'Binomial confidence' : 'P(true share > reference share)'} = {m.probability} · {m.strength} · excess {m.excess_pct} points</dd></>}
               <dt>Numbers</dt><dd>{f.numbers.map((n) => `${n.table_id}/${n.cell}`).join(' · ')}</dd>
-              <dt>Written by</dt><dd>{f.source === 'screen' ? 'Code, from table T12 (no AI)' : 'AI analyst; every number checked by the validator'}</dd>
+              <dt>Written by</dt><dd>{fatal ? 'Code, from the crash record and table T2 (no AI)' : f.source === 'screen' ? 'Code, from table T12 (no AI)' : 'AI analyst; every number checked by the validator'}</dd>
               <dt>Caveats</dt><dd>Small numbers; regression to the mean; police-reported crashes only, so injury counts are a lower bound.</dd>
             </dl>
           )}

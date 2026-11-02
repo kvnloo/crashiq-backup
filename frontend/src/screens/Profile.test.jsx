@@ -321,6 +321,24 @@ describe('Crash profile screen', () => {
     expect(full).toHaveLength(table(profile, 'T2').rows.length)
   })
 
+  it('ranks by Caltrans crash cost from T2: order, the cost and its U count (#273)', async () => {
+    const costs = { 0: 5233000, 1: 7027000, 2: 475000 }
+    const p2 = { ...profile, tables: profile.tables.map((t) => (t.id !== 'T2' ? t : { ...t, rows: t.rows.map((r, i) => (
+      { ...r, values: { ...r.values, crash_cost: costs[i] ?? 20000, sev_u: i === 1 ? 2 : 0, cost_control_unknown: i === 0 } })) })) }
+    mockApi({ ...routes, 'GET /studies/:id/profile': p2 })
+    renderAt('/s/s1/profile')
+    const rank = await screen.findByLabelText('Location ranking')
+    expect(within(rank).queryByTestId('rank-cost')).toBeNull()                    // the count ranking stays the default
+    fireEvent.click(within(rank).getByRole('radio', { name: 'Crash cost' }))
+    const t2 = table(p2, 'T2').rows.filter((r) => r.values.crashes > 0)
+    const byCost = [...t2].sort((a, b) => b.values.crash_cost - a.values.crash_cost || b.values.crashes - a.values.crashes || a.label.localeCompare(b.label))
+    const items = within(rank).getAllByRole('listitem')
+    items.forEach((li, i) => expect(li.querySelector('.rowlink').textContent).toBe(byCost[i].label))
+    const first = within(items[0]).getByTestId('rank-cost')
+    expect(first).toHaveTextContent('$7.0M · 2 U')
+    expect(first.getAttribute('title')).toContain('$7,027,000')
+  })
+
   it('severity bars equal T3 and KSI equals T1 (#103)', async () => {
     mockApi(routes)
     renderAt('/s/s1/profile')
@@ -706,8 +724,8 @@ describe('State-highway crash rates (#287)', () => {
       { key: 'seg-c', label: 'C – D', values: { crashes: 2, fi_crashes: 1, fatal_crashes: 0, length_mi: 0.1, aadt: 100000, mvm: 18.3,
         rate_all: 0.11, rate_fi: 0.05, rate_fatal: 0, corridor_rate_all: 0.2, ratio_to_corridor: 1.5, small_base: 'n < 10: segment',
         count_years: '2021–2024; later count years use 2024', source: 'Caltrans Traffic Census Program' } }],
-    scope: { rated_crashes: 42, corridor_crashes: 99, intersection_crashes: 57, corridor_rate_all: 0.2, small: false,
-      text: 'Segment crashes only: 57 of 99 crashes on this corridor are at intersections and aren\'t in these rates.' } }
+    scope: { rated_crashes: 42, ramp_crashes: 7, cross_street_crashes: 12, corridor_rate_all: 0.2, small: false,
+      text: 'Mainline crashes: 42. Not in this rate: 7 ramp crashes (see Ramps), 12 cross-street crashes.' } }
   const T23 = { id: 'T23', title: 'State-highway crash rate by year', columns: [], provenance: {}, rows: [
     { key: '2021', label: '2021', values: { crashes: 9, fi_crashes: 3, mvm: 42.1, rate_all: 0.21, rate_fi: 0.07 } },
     { key: '2022', label: '2022', values: { crashes: 12, fi_crashes: 2, mvm: 42.3, rate_all: 0.28, rate_fi: 0.05 } }] }
@@ -727,7 +745,7 @@ describe('State-highway crash rates (#287)', () => {
     expect(sec).toHaveTextContent('AADT: Caltrans Traffic Census Program, count years 2021–2024; later count years use 2024.')
     expect(sec.textContent.match(/count years/g)).toHaveLength(2)                // once in the header, once for "later"
     expect(sec).toHaveTextContent('Corridor average 0.2 crashes per MVM')
-    expect(sec).toHaveTextContent('Segment crashes only: 57 of 99 crashes on this corridor are at intersections')
+    expect(sec).toHaveTextContent('Mainline crashes: 42. Not in this rate: 7 ramp crashes (see Ramps), 12 cross-street crashes.')
     expect(within(sec).getAllByLabelText('Source: table T22').length).toBeGreaterThan(0)
     const by = within(sec.querySelector('[data-testid="shs-by-year"]')).getAllByRole('row').slice(1)
     expect(by.map((r) => r.firstChild.textContent)).toEqual(['2021', '2022'])
@@ -799,5 +817,80 @@ describe('State-highway crash rates (#287)', () => {
     renderAt('/s/s1/profile')
     await screen.findByLabelText('Key numbers')
     expect(screen.queryByLabelText('State-highway crash rates')).toBeNull()
+  })
+})
+
+describe('State-highway rate names (#346)', () => {
+  it('row names override the design system\'s uppercase mono header style, like the ranking list', async () => {
+    const { readFileSync } = await import('node:fs')
+    const { resolve } = await import('node:path')
+    const css = readFileSync(resolve(process.cwd(), 'src/styles/profile.css'), 'utf8')
+    const rule = css.match(/\.sf-table\.shs th\[scope="row"\] \{([^}]*)\}/)
+    expect(rule).not.toBeNull()
+    expect(rule[1]).toContain('text-transform: none')
+    expect(rule[1]).toContain('var(--font-body)')
+  })
+})
+
+// #287 part 1: the engineer picks a Caltrans rate group; the server's expected rate shows, labelled approximate
+describe('Statewide average from the Caltrans rate group (#287 part 1)', () => {
+  const GROUPS = { source: 'Caltrans, 2024 Crash Data on California State Highways, Basic Average Crash Rate Table', groups: [
+    { group: 'H09', kind: 'highway', label: 'Conventional 2 lanes or less, design speed >55, suburban', base_rate: 0.65, adt_factor: 0.02, adt_op: '*', pct_fatal: 1.6, pct_fi: 40.5, printed_page: 83 },
+    { group: 'I14', kind: 'intersection', label: 'Intersection F, M and S, signals, urban', base_rate: 0.33, adt_factor: 0, adt_op: '', pct_fatal: 0.6, pct_fi: 48.3, printed_page: 86 },
+    { group: 'R10', kind: 'ramp', label: 'Ramp diamond, 1-4 areas, off, urban', base_rate: 1.04, adt_factor: 0, adt_op: '', pct_fatal: 0.3, pct_fi: 36.7, printed_page: 88 }] }
+  const statewide = { approximate: true, source: 'Caltrans, 2024 Crash Data on California State Highways, Basic Average Crash Rate Table (pp. 83–90)',
+    text: 'Statewide averages are Caltrans\' expected rates for the rate group the engineer entered (base rate + ADT factor). The comparison is approximate.' }
+  const T22 = { id: 'T22', title: 'State-highway crash rates', columns: [], provenance: {}, statewide, scope: { rated_crashes: 30, corridor_rate_all: 0.23 }, rows: [
+    { key: 'S1', label: 'A – B', values: { crashes: 30, aadt: 20000, length_mi: 0.6, mvm: 21.9, rate_all: 1.37, rate_fi: 0.5, ratio_to_corridor: 1,
+      count_years: '2021–2024', source: 'Caltrans Traffic Census Program', rate_group: 'H09', statewide_rate_all: 1.05, statewide_rate_fi: 0.43,
+      statewide_rate_fatal: 0.02, ratio_to_statewide: 1.3 } },
+    { key: 'S2', label: 'B – C', values: { crashes: 12, aadt: 20000, length_mi: 0.4, mvm: 14.6, rate_all: 0.82, rate_fi: 0.3, ratio_to_corridor: 0.6,
+      count_years: '2021–2024', source: 'Caltrans Traffic Census Program' } }] }
+  const withT22 = (t22 = T22) => ({ ...profile, tables: [...profile.tables, t22] })
+
+  it('picks a segment\'s rate group with a select, sends it, and shows the statewide rate and ratio with the approximate note', async () => {
+    const calls = mockApi({ ...routes, 'GET /studies/:id/profile': withT22(), 'GET /reference/rate-groups': GROUPS,
+      'PUT /studies/:id/rate-groups/:kind/:ref': network })
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('State-highway crash rates')
+    const sel = await within(sec).findByLabelText('Caltrans rate group, A – B')
+    expect(sel).toHaveValue('H09')
+    expect(within(sel).getAllByRole('option').map((o) => o.textContent)).toEqual(['Rate group…', 'H09 · Conventional 2 lanes or less, design speed >55, suburban'])
+    const rows = within(sec.querySelector('[data-testid="shs-rates"]')).getAllByRole('row')
+    expect(within(rows[0]).getAllByRole('columnheader').map((c) => c.textContent).slice(-3)).toEqual(['Rate group', 'Statewide / MVM', '÷ statewide'])
+    expect(within(rows[1]).getAllByRole('cell').map((c) => c.textContent).slice(-2)).toEqual(['1.05', '1.3'])
+    expect(within(rows[2]).getAllByRole('cell').map((c) => c.textContent).slice(-2)).toEqual(['—', '–'])
+    expect(within(sec).getByTestId('statewide-T22')).toHaveTextContent('Approximate.')
+    expect(within(sec).getByTestId('statewide-T22')).toHaveTextContent('(pp. 83–90)')
+
+    fireEvent.change(within(sec).getByLabelText('Caltrans rate group, B – C'), { target: { value: 'H09' } })
+    await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
+    expect(calls.find((c) => c.method === 'PUT')).toEqual({ method: 'PUT', path: '/studies/s1/rate-groups/segment/S2', body: { rate_group: 'H09' } })
+  })
+
+  it('without the rate-group list there is no picker and no statewide column', async () => {
+    mockApi({ ...routes, 'GET /studies/:id/profile': withT22({ ...T22, statewide: undefined }) })
+    renderAt('/s/s1/profile')
+    const sec = await screen.findByLabelText('State-highway crash rates')
+    expect(within(sec).queryByLabelText('Caltrans rate group, A – B')).toBeNull()
+    expect(within(sec).queryByText('Statewide / MVM')).toBeNull()
+  })
+
+  it('offers intersection groups for the corridor\'s intersections, and ramp groups on each ramp', async () => {
+    const T25 = { id: 'T25', title: 'Ramp crash rates', columns: [], provenance: {}, scope: { text: '' }, rows: [
+      { key: 'r1', label: 'SB OFF TO VERMONT AVE', values: { crashes: 12, postmile: 'LA-405 PM 13.492', adt: 4780, mv: 8.72, rate_all: 1.38,
+        count_years: '2021–2023', source: 'x' } }] }
+    const calls = mockApi({ ...routes, 'GET /studies/:id/profile': { ...withT22(), tables: [...withT22().tables, T25] },
+      'GET /reference/rate-groups': GROUPS, 'PUT /studies/:id/rate-groups/:kind/:ref': network })
+    renderAt('/s/s1/profile')
+    const ramps = await screen.findByLabelText('Ramp crash rates')
+    const sel = await within(ramps).findByLabelText('Caltrans rate group, SB off to Vermont Ave')
+    expect(within(sel).getAllByRole('option').map((o) => o.value)).toEqual(['', 'R10'])
+    fireEvent.change(sel, { target: { value: 'R10' } })
+    await waitFor(() => expect(calls.some((c) => c.method === 'PUT')).toBe(true))
+    expect(calls.find((c) => c.method === 'PUT').path).toBe('/studies/s1/rate-groups/ramp/r1')
+    const ints = screen.getByTestId('shs-intersections')
+    const first = within(ints).getAllByRole('combobox')[0]
+    expect(within(first).getAllByRole('option').map((o) => o.value)).toEqual(['', 'I14'])
   })
 })

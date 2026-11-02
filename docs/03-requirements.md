@@ -507,9 +507,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     ("817 ft W of CITRUS AV" on "ESCONDIDO CREEK BIKE PATH") is measured from that crossing **along the path, in the
     stated direction**. Two or more possible crossings in the agency's area → review list, never the nearest guess. The
     user: the crash happens at the crossing whatever the vehicle, and which lane (bike lane, shared lane) doesn't
-    matter. Where the "path" is a bike lane on the road itself, the road is used. **Pending the user's confirmation:** a separate bike-only path is placed on the path itself (the user said "that's
-    different"; the PM reads it as placed on the path, not on a road). Until confirmed, those crashes go to review with
-    the path spot as the suggestion. Railway
+    matter. Where the "path" is a bike lane on the road itself, the road is used. A separate bike-only path is placed **on the path itself** (confirmed by
+    the user, 2026-11-01: "2a"). Railway
     and path lines come from the same OSM extract (railway=rail/light_rail, highway=cycleway/path/footway with a
     name), with TIGER rail features where OSM lacks them.
   - **Mile markers:** "ANGELES CREST HWY & MILE MARKER 28.86" is placed at that **Caltrans postmile** on the named
@@ -521,6 +520,18 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     with the user's OK, like every new tier. If they reach the 98% bar they auto-place as precise; otherwise the user
     decides whether they're labelled approximate. With zero misses, a Wilson 95% low of 98% needs at least 189 truth
     crashes; with fewer, Tester reports the numbers and the user decides.
+- **Crash cost ranking prices (#273) DECIDED (user, 2026-11-01, Engineering session):** locations are ranked by crash
+  cost using Caltrans' **Local Roadway Safety Manual v1.8 (May 2026), Appendix D, p. 100, 2026 dollars**: fatal +
+  serious (KA) priced by location type (signalized intersection $2,379,000; non-signalized intersection $3,784,000;
+  roadway $3,276,000), then B $213,000, C $121,000, O $20,000. As the app applies it: each K or A crash at the KA price
+  for its location type (as in the LRSM's worked examples); segment crashes at the roadway price; an intersection
+  with a signal = signalized; any other known control (stop, yield, roundabout) = non-signalized, which is what
+  "non-signalized" means. Two
+  gaps the LRSM leaves, decided by the user:
+  - **U (injury, level not stated)** is priced as C ($121,000), and the U count is shown beside the cost;
+  - a KA crash at an intersection whose **control isn't known** (no OSM signal or stop tag) gets the signalized price
+    ($2,379,000, the lower one), and the row is marked "control unknown".
+  The prices sit in a cited reference table; every cost shown is computed by code from it.
 - **State-highway crash rates from Caltrans AADT DECIDED (user, 2026-10-26, PM session, "BUILD IT"):** exposure for
   crash rates on the State Highway System comes from the **Caltrans Traffic Census Program**: AADT by route, county and
   postmile (back/ahead legs), plus truck AADT by axle class and ramp volumes by district. Annual .xlsx files, and the
@@ -549,6 +560,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   rate (base rate + ADT factor) and the comparison. Nothing is guessed: no rate group, no statewide comparison. This **replaces** the user's earlier answer "B" (2026-10-26, Engineering chat, on #294, never recorded in docs/03).
   A map-data suggestion may still pre-fill the field, but only as a labelled suggestion the engineer confirms. Comparisons use Caltrans' on-highway counting rule
   or are labelled approximate.
+  - **Expected F+I and fatal rates DECIDED (user, 2026-11-01, PM session; #353 point 1):** "Ok" to the PM's
+    recommendation. Besides the expected total rate, CrashIQ shows the expected fatal+injury rate = expected total rate
+    × the rate group's PCT F+I ÷ 100 and the expected fatal rate = expected total rate × PCT FAT ÷ 100, both
+    percentages read from the same row of the published table (pp. 83–90). Computed by code, labelled with the table
+    citation, and approximate on the same terms as the total.
 - **Ramp identification and ramp rates DECIDED (user, 2026-10-30, Engineering session; #300):** option **B**, "A +
   engineer picks". A crash's ramp is identified when its report names a ramp (ON/OFF RAMP, ONR/OFR), its direction of
   travel and its cross street, and **exactly one** Caltrans ramp row (district ramp ADT file) within 0.3 mi on the same
@@ -582,6 +598,12 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     - police wording "<route> <dir> TO <local street>" as the road, with no ramp word: the **<dir> off-ramp to that
       street** (answer 1a). For #300's strict match it counts as naming the ramp: direction <dir>, off, cross street =
       that street;
+    - the mirror wording "<local street> TO <route> <dir>" ("REDONDO BEACH BLVD. TO I-405 NB"): the **<dir> on-ramp
+      from that street** (user 2026-11-01, on-ramp question, "1a"). For #300's strict match: direction <dir>, on,
+      cross street = that street. Without a direction it isn't read as a ramp, as with the off-ramp form;
+    - police wording "<route> <dir> FROM <local street>" ("I-405 S/B FROM ARTESIA"): also the **<dir> on-ramp from
+      that street** (user 2026-11-01, "A yea"). Same strict-match reading: direction <dir>, on, cross street = that
+      street; no direction = not a ramp;
     - true connectors "<route> TO <route>" whose cross street is one of the two routes (2026-10-25).
   - **Stays mainline:** "<route> TO <route>" with a **local** cross street (2026-10-25: the local street passes under
     or over the freeway).
@@ -603,3 +625,16 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     the butt").** This **replaces** the earlier 2026-11-01 answer (Engineering session) to translate compass and route directions (a CHP "S/B" on a
     route Caltrans signs EB/WB). A ramp crash whose reported direction doesn't match the ramp row's direction as
     written gets no ramp rate, with the reason. #308 is closed unbuilt.
+- **Number words in findings are checked like numbers DECIDED (user, 2026-11-02, PM session; #359):** "oh yes
+  Absolutely". Words that state a ratio or a change ("doubled", "twice", "tripled", "half", "a third", "quadrupled")
+  count as numbers: the validator rejects a finding that uses one unless its cited table backs the ratio, by the
+  rule below. **Backed** means the finding cites either a ratio cell or the two cells it compares, and the
+  ratio (or their quotient) rounds to the word's value ("doubled" = 2, "half" = 0.5). The same applies to the compact
+  forms Tester found unread ($4.2M, 3x, -45%, 1e3).
+  - **Ratio precision DECIDED (user, 2026-11-02, PM session: "Yes, tight"):** the quotient must round to the word's
+    value at **one decimal place** ("doubled" = 1.95 to 2.049, "half" = 0.45 to 0.549), not the word's own precision,
+    which would let 6 → 9 read as "doubled". Otherwise the finding writes the actual numbers.
+    A word whose value isn't exact at one decimal ("a third", "two thirds") can't meet this rule, so it is rejected
+    and the finding writes the numbers (otherwise "a third" would pass for a quarter, 0.25).
+  - **Count words DECIDED (user, 2026-11-02, PM session: "option A"):** count words ("a dozen", "dozens",
+    "hundreds", "a handful") are always rejected; the finding writes the cited number as digits instead.

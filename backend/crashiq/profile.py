@@ -15,10 +15,12 @@ import math
 import re
 from collections import Counter
 
-from fastapi import APIRouter, Request
+from fastapi import APIRouter, HTTPException, Request
 
 from . import pcf, assign as assign_mod
 from . import study as study_mod
+from . import crash_cost
+from .geo import Polyline
 
 SEVERITY_LABELS = {"K": "Fatal (K)", "A": "Suspected serious injury (A)", "B": "Suspected minor injury (B)",
                    "C": "Possible injury (C)", "U": "Injury, level not reported", "O": "Property damage only (O)"}
@@ -379,14 +381,70 @@ def gps_far_text(n: int, check_ft: float) -> str:
             f"{'it' if one else 'them'}; check {'it' if one else 'them'} on the map.")
 
 
-def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict]) -> list[dict]:
+STATEWIDE_COLS = [("rate_group", "Caltrans rate group"), ("statewide_rate_all", "Statewide average (expected rate)"),
+                  ("statewide_rate_fi", "Statewide average, fatal + injury"),
+                  ("statewide_rate_fatal", "Statewide average, fatal"), ("ratio_to_statewide", "Rate ÷ statewide average")]
+
+
+def _statewide(v: dict, group: str | None, adt: float | None, rate_key: str = "rate_all") -> bool:
+    """The statewide expected rate of the engineer's Caltrans rate group at the location's ADT, and the location's
+    rate over it (#287 part 1; user decision 2026-10-29, docs/03 #294). No rate group, no comparison."""
+    from . import rate_groups
+    if not group:
+        return False
+    e = rate_groups.expected(group, adt)
+    v["rate_group"] = group
+    if e is None:                                    # an ADT factor and no ADT
+        return True
+    exp = r2(e["expected_all"])
+    v.update(statewide_rate_all=exp, statewide_rate_fi=r2(e["expected_fi"]), statewide_rate_fatal=r2(e["expected_fatal"]),
+             ratio_to_statewide=r2(v[rate_key] / exp) if v.get(rate_key) is not None and exp else None)
+    return True
+
+
+def _statewide_note(t: dict, cols: list[tuple[str, str]] = STATEWIDE_COLS) -> None:
+    """Add the comparison columns and say where the averages come from, and that the comparison is approximate."""
+    from . import rate_groups
+    t["columns"] += [{"key": k, "label": lbl} for k, lbl in cols]
+    t["statewide"] = {"approximate": True, "source": f"{rate_groups.SOURCE} (pp. 83–90)",
+                      "text": "Statewide averages are Caltrans' expected rates for the rate group the engineer "
+                              "entered (base rate + ADT factor). The comparison is approximate: CrashIQ counts crashes "
+                              "as it places them on the corridor, not by Caltrans' on-highway rule (Caltrans leaves "
+                              "out 'associated with' crashes, suicides and beat 902 incidents)."}
+
+
+def mainline_groups(net: dict, placed: list[dict], radius_ft: float) -> tuple[dict, dict]:
+    """({segment id: its mainline crashes}, {crash id: (rate class, reason)}) on a state-highway corridor (#304,
+    rate_class.py). A mainline crash at a study intersection counts in the segment on its GPS side (answer 2a)."""
+    from . import rate_class
+    cls = {c["crash_id"]: rate_class.classify(c, net, radius_ft) for c in placed}
+    its = {i["id"]: i for i in net.get("intersections", [])}
+    line = Polyline([tuple(p) for p in net["line"]]) if net.get("line") else None
+    out: dict[str, list] = {}
+    for c in placed:
+        if cls[c["crash_id"]][0] != rate_class.MAINLINE:
+            continue
+        sid = c["location_id"]
+        if c["kind"] == "intersection" and sid in its:
+            st = line.project(c["lat"], c["lon"]).station_ft \
+                if line is not None and c.get("lat") is not None and c.get("lon") is not None else None
+            sid = rate_class.segment_for(its[sid], net.get("segments", []), st)
+        out.setdefault(sid, []).append(c)
+    return out, cls
+
+
+def shs_rate_tables(net: dict, years: list[int], placed: list[dict], radius_ft: float,
+                    ramp_out: list[dict] = ()) -> list[dict]:
     """T22 / T23: crash rates on a state-highway corridor from Caltrans AADT (#287; user decision 2026-10-26).
     Crashes per million vehicle-miles: all, fatal + injury (K, A, B, C and injury level not stated) and fatal, per
     study segment with Caltrans exposure for every window year; each against the corridor's own average (crashes over
     vehicle-miles of the segments that have rates), and the corridor's rate year by year. Every row carries the count
-    years and source. The entered AADT (T2) is untouched."""
+    years and source. The entered AADT (T2) is untouched. Mainline crashes only (#304, user decision #297)."""
     vols = net.get("shs_volumes") or {}
+    if not vols:
+        return []
     segs = {s["id"]: s for s in net.get("segments", [])}
+    groups, cls = mainline_groups(net, placed, radius_ft)
     fi = lambda cs: sum(c["severity"] in "KABCU" for c in cs)                       # noqa: E731
     rows, mvm_y, crashes_y, fi_y, mvm_of = [], Counter(), Counter(), Counter(), {}
     for sid, v in vols.items():
@@ -425,12 +483,22 @@ def shs_rate_tables(net: dict, groups: dict, years: list[int], placed: list[dict
             ("corridor_rate_all", "Corridor average per MVM"), ("ratio_to_corridor", "Rate ÷ corridor average"),
             ("count_years", "AADT count years"), ("source", "AADT source")]
     t22 = _table("T22", "State-highway crash rates (Caltrans AADT; crashes per million vehicle-miles)", cols, rows, on)
-    # segment crashes only for now; which crashes a state-highway rate counts is decision #297 (user)
-    at_x = sum(c["kind"] == "intersection" for c in placed)
-    t22["scope"] = {"rated_crashes": tot_c, "corridor_crashes": len(placed), "intersection_crashes": at_x,
+    window_aadt = {sid: sum(v["by_year"][y] for y in years) / len(years) for sid, v in vols.items() if sid in mvm_of}
+    if [_statewide(r["values"], segs[r["key"]].get("rate_group"), window_aadt[r["key"]]) for r in rows].count(True):
+        _statewide_note(t22)
+    # which crashes count (#304, user decision #297): mainline only; ramps are rated in T25, cross streets in none
+    n_cls = Counter(k for k, _ in cls.values())
+    n_ramp, n_cross = n_cls["ramp"] + len(ramp_out), n_cls["cross_street"]
+    unrated = n_cls["mainline"] - tot_c                       # mainline crashes on segments without Caltrans counts
+    t22["scope"] = {"rated_crashes": tot_c, "unrated_mainline_crashes": unrated, "ramp_crashes": n_ramp,
+                    "cross_street_crashes": n_cross,
                     "corridor_rate_all": avg, "small": tot_c < MIN_SHARE_N,
-                    "text": f"Segment crashes only: {at_x} of {len(placed)} crashes on this corridor are at "
-                            "intersections and aren't in these rates."}
+                    "classes": {cid: list(v) for cid, v in cls.items()},
+                    "text": f"Mainline crashes: {tot_c}"
+                            + (f" ({unrated} more on segments without Caltrans counts)" if unrated else "")
+                            + f". Not in this rate: {n_ramp} ramp crash"
+                            f"{'es' if n_ramp != 1 else ''} (see Ramps), {n_cross} cross-street crash"
+                            f"{'es' if n_cross != 1 else ''}."}
     t24 = _truck_rates(vols, segs, groups, years)
     yrows = [_row(y, str(y), crashes=crashes_y[y], fi_crashes=fi_y[y], mvm=round(mvm_y[y], 2),
                   rate_all=r2(crashes_y[y] / mvm_y[y]) if mvm_y[y] else None,
@@ -519,6 +587,11 @@ def ramp_rate_tables(net: dict, placed: list[dict], years: list[int]) -> list[di
                 ("rate_fi", "Fatal + injury per MV"), ("count_years", "Ramp count years"),
                 ("picked", "Crashes on a ramp the engineer picked"), ("source", "ADT source")], rows,
                [c for _, cs in by_ramp.values() for c in cs])
+    ramp_groups = net.get("ramp_rate_groups") or {}
+    if [_statewide(r["values"], ramp_groups.get(r["key"]), r["values"]["adt"]) for r in rows].count(True):
+        _statewide_note(t, [c for c in STATEWIDE_COLS if c[0] != "statewide_rate_fatal"])
+        for r in rows:
+            r["values"].pop("statewide_rate_fatal", None)
     n, k, pk, no = len(mine), outcome["identified"], outcome["pick"], outcome["none"]
     reasons = "; ".join(f"{w}: {m}" for w, m in why.most_common())
     t["scope"] = {"ramp_crashes": n, "identified": k, "pick": pk, "none": no, "none_why": dict(why),
@@ -558,6 +631,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     exclude = exclude or set()
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
     placed, unmatched, excluded_n, excluded_prov, gps_far = [], [], 0, 0, 0
+    ramp_out = []         # named-ramp crashes the freeway rules exclude (rule "ramp"): still rated in T25 (#314)
     for a in assignment["assignments"]:
         c = {**by_id[a["crash_id"]], **{k: a[k] for k in ("kind", "location_id", "location_provenance")}}
         prov = c["location_provenance"] or ""
@@ -572,6 +646,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             unmatched.append(c)
         else:
             excluded_n += 1
+            if a.get("rule") == "ramp":
+                ramp_out.append(c)
     years_missing = pull["cleaning"].get("years_missing", [])
     years = len(pull["years"]) - len(years_missing)
     length_mi = net["length_mi"]
@@ -667,7 +743,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     peak = study.get("volume_basis") == "peak_hour"
     kf = study.get("k_factor") or 0.10
     daily = (lambda v: v / kf if v is not None else None) if peak else (lambda v: v)
-    rates_any = False
+    rates_any = statewide_any = False
     loc_rows = []
     expo: dict[str, tuple[str, int, float | None, float | None]] = {}   # id -> (kind, crashes, exposure, rate)
     for kind, lid, _ in order:
@@ -684,6 +760,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             seg_aadt = daily(s.get("aadt"))
             rate = segment_rate(k["crashes"], years, seg_aadt, s["length_mi"])
             expo[lid] = (kind, k["crashes"], exposure(kind, years, seg_aadt, s["length_mi"]), rate)
+            vals.update(**crash_cost.location_cost(cs, "segment", None))         # LRSM crash cost (#273)
             vals.update(length_mi=round(s["length_mi"], 3),
                         crashes_per_mi_yr=r2(k["crashes"] / s["length_mi"] / years) if years and s["length_mi"] else None,
                         aadt=round(seg_aadt) if seg_aadt is not None else None, rate=r2(rate),
@@ -695,8 +772,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             rate = intersection_rate(k["crashes"], years, maj, mnr, it.get("legs"))
             tev = entering_volume(maj, mnr, it.get("legs"))
             expo[lid] = (kind, k["crashes"], exposure(kind, years, tev), rate)
+            vals.update(**crash_cost.location_cost(cs, "intersection", it["control"]))
             vals.update(length_mi=None, crashes_per_mi_yr=None, control=it["control"], rate=r2(rate),
                         rate_unit="per MEV" if rate is not None else None)
+            statewide_any |= _statewide(vals, it.get("rate_group"), tev, "rate")
             label = it["name"]
         rates_any |= rate is not None
         loc_rows.append(_row(lid, label, **vals))
@@ -725,9 +804,17 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         ("reference_rate", "Average rate, similar sites"), ("critical_rate", "Critical rate (95%)"),
         ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),
         ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"), ("sev_c", "Possible (C)"),
-        ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")], loc_rows, placed))
-    shs_tables = shs_rate_tables(net, groups, [y for y in pull["years"] if y not in years_missing], placed)
-    shs_tables += ramp_rate_tables(net, placed, [y for y in pull["years"] if y not in years_missing])
+        ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)"),
+        ("crash_cost", "Crash cost ($, Caltrans LRSM 2026)"), ("cost_control_unknown", "Cost: intersection control unknown")],
+        loc_rows, placed))
+    tables[-1]["source_note"] = crash_cost.SOURCE                     # the crash-cost basis (#273)
+    if statewide_any:                         # intersections with a Caltrans rate group (per million entering)
+        _statewide_note(tables[-1], [c for c in STATEWIDE_COLS if c[0] != "statewide_rate_fatal"])
+        for r in loc_rows:
+            r["values"].pop("statewide_rate_fatal", None)
+    shs_tables = shs_rate_tables(net, [y for y in pull["years"] if y not in years_missing], placed,
+                                 study.get("radius_ft") or 250, ramp_out)
+    shs_tables += ramp_rate_tables(net, placed + ramp_out, [y for y in pull["years"] if y not in years_missing])
     tables += shs_tables
     # T13: collision type x location (#105 grid): one row per T2 location, one column per collision type with crashes
     tcount = Counter((c.get("collision_type") or "") for c in placed)
@@ -770,6 +857,14 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     by_nad = sum(1 for c in placed if c.get("location_provenance") == "address_nad")
     if by_nad:                             # #283: the same for NAD address points
         caveats.append({"key": "address_nad", "count": by_nad, "text": address_nad_text(by_nad)})
+    oc = sum(isinstance(c.get("outside_corner"), dict) for c in placed)
+    if oc:                                    # #70: brought back onto the stretch by their reported distance
+        one = oc == 1
+        caveats.append({"key": "outside_corner", "count": oc,
+                        "text": f"{oc} crash report{'' if one else 's'} name{'s' if one else ''} a cross street CrashIQ "
+                                "couldn't match by name to a study intersection (a corner just outside the stretch, or a "
+                                f"street the map names differently). The reported distance puts {'it' if one else 'them'} "
+                                "on the corridor: placed from that corner and counted by the usual rules."})
     u = sum(c["severity"] == "U" for c in placed)
     if u:
         caveats.append({"key": "injury_level_unknown", "count": u,
@@ -786,10 +881,13 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if shs_tables:
         tids = ", ".join(t["id"] for t in shs_tables)
         trucks = " (T24: heavy-truck-involved crashes over 3+ axle truck AADT)" if "T24" in tids else ""
+        compared = [t["id"] for t in tables if t.get("statewide")]
         caveats.append({"key": "shs_rates", "text": f"State-highway crash rates ({tids}) use Caltrans Traffic Census "
                         f"AADT{trucks}; each row names its count years. They count crashes as CrashIQ places them on the "
-                        "corridor, not by Caltrans' on-highway rule, so they are not comparable with Caltrans' "
-                        "published averages."})
+                        "corridor, not by Caltrans' on-highway rule, so "
+                        + (f"the comparison with Caltrans' statewide averages ({', '.join(compared)}) is approximate."
+                           if compared else "they are compared with Caltrans' statewide averages only where the "
+                           "engineer enters a rate group, and then only approximately.")})
     if not rates_any and not shs_tables:
         routes = sorted(corridor_routes(net))
         vols = net.get("shs_volumes") or {}
@@ -797,7 +895,21 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         why = (" This corridor isn't a state highway, so local traffic counts are needed." if not routes else
                f" Route {', '.join(routes)} isn't in Caltrans' state-highway postmiles here (for example a relinquished "
                "stretch), so Caltrans traffic counts don't apply and local traffic counts are needed." if off_pm else "")
-        caveats.append({"key": "rates_not_computed", "text": "Crash rates were not computed (no AADT entered)." + why})
+        first = min((v["first_count_year"] for v in vols.values() if v.get("first_count_year")), default=None)
+        window_yrs = [y for y in pull["years"] if y not in years_missing]
+        early = [y for y in window_yrs if first and y < first]
+        if routes and net.get("shs_loading"):              # first use: the counts are being built (#287 part 1)
+            caveats.append({"key": "rates_not_computed", "loading": True,
+                            "text": "Loading Caltrans counts: state-highway crash rates appear once Caltrans' traffic "
+                                    "counts are downloaded and indexed (first use). Reload the profile then."})
+        elif routes and vols and not off_pm and early:      # the Caltrans counts don't reach back to the window (#345)
+            caveats.append({"key": "rates_not_computed", "years_without_counts": early,
+                            "text": f"State-highway crash rates were not computed: Caltrans traffic counts start in "
+                                    f"{first}, so window year{'s' if len(early) != 1 else ''} "
+                                    f"{', '.join(map(str, early))} {'have' if len(early) != 1 else 'has'} no count. "
+                                    f"Rates need a study window from {first} on."})
+        else:
+            caveats.append({"key": "rates_not_computed", "text": "Crash rates were not computed (no AADT entered)." + why})
     elif peak:
         caveats.append({"key": "aadt_from_peak_hour", "k_factor": kf,
                         "text": f"AADT was estimated from peak-hour counts (AADT = peak-hour volume / K, K = {kf:.0%})."})
@@ -908,6 +1020,8 @@ def with_shs(net: dict, pull: dict, postmiles, aadt_cache) -> dict:
     years = [y for y in pull["years"] if y not in pull["cleaning"].get("years_missing", [])]
     if not shs.corridor_routes(net):
         return net
+    if aadt_cache is not None and aadt_cache.db() is None and aadt_cache.loading():
+        return {**net, "shs_loading": True}          # first use: the Caltrans counts are still being built
     vols = shs.segment_volumes(net, postmiles, aadt_cache, years)
     found = shs.ramp_crashes(pull["crashes"], postmiles, aadt_cache)
     return {**net, **({"shs_volumes": vols} if vols else {}), **({"shs_ramps": found} if found else {})}
@@ -926,6 +1040,10 @@ def diagram_table(lid: str, diagram: dict, crashes: list[dict]) -> dict:
 @router.get("/studies/{sid}/profile/locations/{lid}")
 def get_location_profile(sid: str, lid: str, request: Request) -> dict:
     study, net, pull, a = assign_mod.for_study(request.app.state.db, sid)
+    known = {i["id"] for i in net["intersections"]} | {s["id"] for s in net["segments"]} | \
+        {x["location_id"] for x in a["assignments"]}
+    if lid not in known:
+        raise HTTPException(404, "Location not found.")
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
     placed = [{**by_id[x["crash_id"]], "location_id": x["location_id"], "location_provenance": x["location_provenance"]}
               for x in a["assignments"] if x["location_id"] == lid]
