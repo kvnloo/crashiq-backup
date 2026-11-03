@@ -65,3 +65,29 @@ def test_pdf_shows_critical_rates_and_says_what_they_compare(client):
     assert "Critical (95%) Over?" in text                                 # the T2 columns
     assert "compared with its critical rate (HSM Ch. 4, 95% confidence)" in text
     assert "does not compare rates with statewide averages" in text
+
+
+# ODOT Analysis Procedures Manual v2, Ch. 4 (12/2025), Example 4-3 "HSM Critical Rate for Intersections with Internal
+# Reference Population", pp. 4-27 to 4-32: the six unsignalized intersections on Main St. (Type 1 population), 5 years
+# (2005-2009). Daily entering volume, total crashes and Fatal + Injury-A crashes from the p. 4-30 table (F+A from the
+# severity table, p. 4-29); the book's critical rates from the tables on pp. 4-31 and 4-32.
+ODOT_4_3 = [  # (intersection, daily entering volume, all crashes, F+A crashes, book Rc all, book Rc F+A)
+    ("Water St.", 7600, 6, 2, 0.39, 0.17),
+    ("1st St.", 6700, 0, 0, 0.41, 0.18),
+    ("2nd St.", 10900, 1, 0, 0.35, 0.14),
+    ("4th St.", 21500, 2, 0, 0.29, 0.11),
+    ("6th St.", 22300, 14, 5, 0.29, 0.11),
+    ("8th St.", 19800, 5, 0, 0.30, 0.11),
+]
+
+
+@pytest.mark.parametrize("col, book_ra, book_over", [
+    (2, 0.17, {"Water St.", "6th St."}),       # all crashes: Ra p. 4-30, Over p. 4-31
+    (3, 0.04, {"6th St."}),                     # Fatal + Injury-A: Ra p. 4-30, Over pp. 4-31 to 4-32
+])
+def test_odot_apm_example_4_3(col, book_ra, book_over):
+    mev = {r[0]: profile.exposure("intersection", 5, r[1]) for r in ODOT_4_3}   # MEV = volume × 365 × 5 / 10^6
+    ra, rc = profile.critical_rates([(r[0], r[col], mev[r[0]]) for r in ODOT_4_3])
+    assert round(ra, 2) == book_ra
+    assert {k: round(v, 2) for k, v in rc.items()} == {r[0]: r[col + 2] for r in ODOT_4_3}
+    assert {r[0] for r in ODOT_4_3 if r[col] / mev[r[0]] > rc[r[0]]} == book_over   # step 5: flagged for review
