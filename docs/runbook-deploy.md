@@ -5,7 +5,8 @@ One Docker service (docs/03 R8): the API and the built app on `$PORT`, the same 
 approves the cost.
 
 ## Build and run locally
-Needs a container tool. Which one is installed on this Mac is decision #384.
+Needs a container tool: Colima on this Mac (decision #384, 2026-11-03): `brew install colima docker docker-buildx`,
+then `colima start`.
 ```bash
 docker build -t crashiq .
 ```
@@ -38,8 +39,13 @@ Everything the app writes is under `/var/data`:
   - Caltrans postmiles (Caltrans GIS);
   - Traffic Census AADT workbooks (dot.ca.gov).
   OpenStreetMap streets come from Overpass for each study.
-- The NAD address points and TIGER ADDRFEAT ranges have no download yet. How they get onto the disk is decision #384.
-  Until then, house-address crashes go to review.
+- Address data for house-address crashes (decision #384 (b), 2026-11-03):
+  - **TIGER ADDRFEAT** address ranges (census.gov) download per county, in the background, the first time a crash in
+    that county needs one (Los Angeles, the largest, is 26 MB). Until a county's file lands, its house-address crashes go to review
+    without the suggestion, and the next study uses it. A failed download is retried after an hour.
+  - **NAD address points**: uploaded once by hand (426 MB). Copy the California extract `nad_ca_r24.csv` to
+    `/var/data/cache/nad/nad_ca_r24.csv` on the disk (Render Shell / `render ssh` + `scp`). The app builds its index
+    from it on first use. Without it, house-address crashes NAD would place go to review with the ADDRFEAT suggestion.
 
 The image holds no data except the committed tables in `data/reference/` and `data/aliases/`. `.dockerignore` keeps out
 `data/`, SQLite files, `.env`, `node_modules` and caches.
