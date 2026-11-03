@@ -1,5 +1,14 @@
 # Lessons (newest first)
 
+- 2026-11-03 · CCRS can republish every year at once with renamed columns: on 2026-11-03 Crashes_2017–2026 lost
+  "Collision Time" and "Primary Collision Factor Description" (new: "Crash Time Description", "Primary Collision Factor
+  Code"). A pull doesn't fail on optional columns, it only logs `missing_fields`, so check that log (or `test_live.py`)
+  after any data.ca.gov update before trusting a run (#389).
+- 2026-11-03 · Public Overpass can be full for long stretches ("All query workers are busy and the request queue is
+  full"; mirrors timed out too), and overpass-api.de answers 406 to a generic User-Agent. A corridor step's 502 is
+  usually Overpass, not our code: test the rest with the recorded Overpass answer (`CRASHIQ_FIXTURES_DIR`) and plan
+  our own Overpass server (#383 smoke test).
+
 - 2026-10-31 · A bucket named "street missing from the map" (D3, 26,631) was mostly crashes with **no GPS** (78%). Of the
   3,156 with GPS in the right city, up to ~700 failed on spelling (CHESEBRA = Chesebro, TEHON = Tejon) and up to ~700 on
   wording ("BEACH BL - SR39 BLVD", "STATE HIGHWAY 96", "W CURB LINE OF …"); the groups overlap and are upper bounds. The
