@@ -22,6 +22,8 @@ def _float(name: str, default: float) -> float:
 class Settings:
     db_path: Path = field(default_factory=lambda: Path(os.getenv("CRASHIQ_DB", ROOT / "data" / "crashiq.sqlite")))
     app_password: str | None = field(default_factory=lambda: os.getenv("APP_PASSWORD") or None)
+    # Set by the Docker image (#383): a hosted app refuses to start without APP_PASSWORD (fails closed).
+    hosted: bool = field(default_factory=lambda: os.getenv("CRASHIQ_HOSTED", "") not in ("", "0"))
     anthropic_api_key: str | None = field(default_factory=lambda: os.getenv("ANTHROPIC_API_KEY") or None, repr=False)
     typesafe_api_key: str | None = field(default_factory=lambda: os.getenv("TYPESAFE_API_KEY") or None, repr=False)
     # Per-study AI spend cap in USD (C15). Default proposed in PR #14, for the user to confirm.
