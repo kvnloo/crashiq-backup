@@ -1,5 +1,10 @@
 # Lessons (newest first)
 
+- 2026-11-03 · Our own Overpass (wiktorn/overpass-api) loads Southern California filtered to highway + railway +
+  admin boundaries in 27 min (5.1 GB disk) and answers CrashIQ's queries in 0.1–0.7 s, against 40 s or a 502 from the
+  public server. The default flush size (16) was OOM-killed on a 4 GB machine; flush size 2 peaked at 2.6 GB. After
+  the first load `/db` is mode 700 and queries fail with "open64: 13 Permission denied … osm3s_osm_base" until
+  `chmod 755 /db` (deploy/docker-compose.yml does it on every start) (#383).
 - 2026-11-03 · CCRS can republish every year at once with renamed columns: on 2026-11-03 Crashes_2017–2026 lost
   "Collision Time" and "Primary Collision Factor Description" (new: "Crash Time Description", "Primary Collision Factor
   Code"). A pull doesn't fail on optional columns, it only logs `missing_fields`, so check that log (or `test_live.py`)
