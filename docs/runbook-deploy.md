@@ -50,6 +50,30 @@ Everything the app writes is under `/var/data`:
 The image holds no data except the committed tables in `data/reference/` and `data/aliases/`. `.dockerignore` keeps out
 `data/`, SQLite files, `.env`, `node_modules` and caches.
 
+## One server (option 2: CrashIQ + our own Overpass + HTTPS)
+`deploy/docker-compose.yml` runs three containers on one Linux server with Docker (e.g. Hetzner CX33: 4 CPU, 8 GB,
+80 GB disk). Sizes measured 2026-11-03 on Southern California: Overpass load 27 min, 5.1 GB disk, 2.6 GB peak RAM;
+CrashIQ peaked at 1.4 GB over three studies. All of California should be roughly twice the Overpass load and disk.
+1. On the server, as a non-root user with Docker: `git clone https://github.com/redhawkliger/crashiq.git && cd crashiq`.
+2. Create `deploy/.env` **on the server only** (it's in `.gitignore`):
+   ```
+   APP_PASSWORD=<chosen by the user, typed on the server>
+   CRASHIQ_DOMAIN=<your domain, or the server IP with dashes + .sslip.io, e.g. 203-0-113-7.sslip.io>
+   ```
+3. `docker compose -f deploy/docker-compose.yml up -d --build`. CrashIQ is up at once on `https://$CRASHIQ_DOMAIN`
+   (Caddy gets the certificate). Until Overpass finishes its first load (estimated about an hour for California; Southern California took 27 min), corridors use
+   the public Overpass as before.
+4. Check: `docker compose -f deploy/docker-compose.yml logs overpass | tail` shows the dispatcher started; then
+   `docker compose -f deploy/docker-compose.yml exec crashiq python -c "import urllib.request,urllib.parse;print(urllib.request.urlopen('http://overpass/api/interpreter',urllib.parse.urlencode({'data':'[out:json];node(34,-118.3,34.001,-118.299);out 1;'}).encode()).read()[:80])"`.
+5. Update: `git pull && docker compose -f deploy/docker-compose.yml up -d --build crashiq`. Overpass applies
+   Geofabrik's daily changes by itself.
+6. Firewall: open 22, 80, 443 only. Overpass has no public port.
+
+End-to-end check (Setup → draw on the map → profile → findings → PDF + XLSX), against any running copy:
+`cd tests/screen && npm ci && APP_PASSWORD=... node userflow.mjs` (`CRASHIQ_URL=https://...` for a server; default :8001).
+2026-11-03 result with our Overpass: Crenshaw (drawn on the map), Sherman Way and Camino Capistrano all pass;
+corridor step 1 s, profile 51–88 s on an empty disk, both files download.
+
 ## Back up the disk
 - Render takes daily snapshots of a persistent disk; restore one from the service's Disks tab.
 - For your own copy, open the service's Shell and make a consistent copy of the database while the app runs. Then

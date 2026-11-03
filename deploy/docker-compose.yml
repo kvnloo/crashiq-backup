@@ -1,0 +1,50 @@
+# CrashIQ on one server (#383, option 2: e.g. a Hetzner CX33, 4 CPU / 8 GB / 80 GB): the app, our own Overpass
+# (OpenStreetMap streets for California, so drawing a corridor never waits on the public server), and Caddy for HTTPS.
+# Secrets live only in deploy/.env on the server (never committed): APP_PASSWORD, CRASHIQ_DOMAIN. Runbook:
+# docs/runbook-deploy.md "One server".
+services:
+  crashiq:
+    build: ..
+    restart: unless-stopped
+    environment:
+      APP_PASSWORD: ${APP_PASSWORD:?set APP_PASSWORD in deploy/.env}
+      CRASHIQ_OVERPASS_URL: http://overpass/api/interpreter     # ours first; the public server is the fallback
+    volumes:
+      - crashiq-data:/var/data
+  overpass:
+    # Tested 2026-11-03 with Southern California: 27 min load, 5.1 GB disk, 2.6 GB peak RAM, answers in 0.1–0.7 s.
+    image: wiktorn/overpass-api@sha256:9bb5f4a9b54cd225bf828c04c67e7f4010650ff4d70b72157a9473a9ba02d93c
+    restart: unless-stopped
+    # The image leaves /db unreadable to its web user after the first load ("open64: 13 Permission denied
+    # /db/db//osm3s_osm_base"): open it on every start.
+    entrypoint: ["/bin/sh", "-c", "chmod 755 /db; exec /app/docker-entrypoint.sh"]
+    environment:
+      OVERPASS_MODE: init
+      OVERPASS_META: "no"
+      OVERPASS_FLUSH_SIZE: "2"          # the default (16) ran out of memory on a 4 GB machine
+      OVERPASS_PLANET_URL: https://download.geofabrik.de/north-america/us/california-latest.osm.pbf
+      OVERPASS_DIFF_URL: https://download.geofabrik.de/north-america/us/california-updates/
+      # Keep only what CrashIQ asks for: roads/paths, railways, admin boundaries (cities, counties).
+      OVERPASS_PLANET_PREPROCESS: >-
+        mv /db/planet.osm.bz2 /db/planet.osm.pbf &&
+        osmium tags-filter -o /db/f.osm.pbf /db/planet.osm.pbf w/highway w/railway r/boundary=administrative &&
+        rm /db/planet.osm.pbf && osmium cat -o /db/planet.osm.bz2 /db/f.osm.pbf && rm /db/f.osm.pbf
+      OVERPASS_COMPRESSION: gz
+      OVERPASS_USE_AREAS: "true"
+      OVERPASS_UPDATE_SLEEP: "86400"     # apply Geofabrik's daily changes once a day
+      OVERPASS_STOP_AFTER_INIT: "false"
+    volumes:
+      - overpass-db:/db
+  caddy:
+    image: caddy:2
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      CRASHIQ_DOMAIN: ${CRASHIQ_DOMAIN:?set CRASHIQ_DOMAIN in deploy/.env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+volumes:
+  crashiq-data:
+  overpass-db:
+  caddy-data:
