@@ -7,7 +7,7 @@ services:
     name: crashiq
     runtime: docker
     dockerfilePath: ./Dockerfile
-    plan: starter
+    plan: standard        # 1 CPU, 2 GB: one study peaked at 568 MiB in the container (#383); starter is 512 MB
     healthCheckPath: /api/health
     autoDeploy: false
     envVars:
