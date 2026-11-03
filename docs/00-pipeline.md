@@ -37,3 +37,8 @@ independently and files `bug` issues with a failing test, which go round the sam
   passing and the 3-corridor click-through 3/3 (`reports/testing/stage5-2026-11-02.md`). Asked whether to ship with
   #360 (the HSM Ch. 4 critical-rate published example) as a known gap or wait, the user said: "Wait." Stage 7 (Ship)
   starts only after the user supplies the example and its golden test passes.
+- **2026-11-02 (user, PM session): the #360 golden case is Oregon DOT's worked example.** The PM proposed ODOT
+  *Analysis Procedures Manual v2*, Ch. 4, Example 4-3 ("HSM Critical Rate for Intersections with Internal Reference
+  Population", pp. 4-27 to 4-32), which applies the HSM 1st ed. Ch. 4 critical-rate equation, in place of the HSM
+  pages. Asked "Use Oregon DOT's Example 4-3 as the published check instead of the HSM pages?", the user said:
+  "Yes, use it". Stage 7 (Ship) starts once that golden test passes.
