@@ -93,6 +93,23 @@ def test_fetch_caches_and_retries(db):
     assert len(calls) == 2                                               # served from SQLite
 
 
+def test_own_overpass_server_first_then_the_public_one(db, monkeypatch):
+    """#391: CRASHIQ_OVERPASS_URL (ours) is asked first; a retry goes to the public server, then back."""
+    monkeypatch.setenv("CRASHIQ_OVERPASS_URL", "http://overpass:80/api/interpreter")
+    urls = []
+
+    def ours_down(url, data, timeout):
+        urls.append(url)
+        if url.startswith("http://overpass"):
+            raise urllib.error.HTTPError(url, 503, "busy", {}, None)
+        return json.dumps(OSM).encode()
+
+    network.fetch_overpass(db, network.overpass_query(LINE), transport=ours_down, sleep=lambda s: None)
+    assert urls == ["http://overpass:80/api/interpreter", network.OVERPASS_URL]
+    monkeypatch.delenv("CRASHIQ_OVERPASS_URL")
+    assert network.overpass_urls() == [network.OVERPASS_URL]
+
+
 def test_fetch_failure_raises_never_empty(db):
     def down(url, data, timeout):
         raise urllib.error.URLError("unreachable")

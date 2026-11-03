@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import time
 import urllib.error
 import urllib.parse
@@ -35,6 +36,13 @@ from .geo import FT_PER_MI, Polyline, angle_diff, buffer_ring
 from .names import street_key
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+
+
+def overpass_urls() -> list[str]:
+    """Overpass servers to ask, in order: CRASHIQ_OVERPASS_URL (comma-separated; our own server first, #391), then the
+    public one. Each retry moves to the next, so a full public server doesn't stop a corridor when ours answers."""
+    own = [u.strip() for u in os.getenv("CRASHIQ_OVERPASS_URL", "").split(",") if u.strip()]
+    return list(dict.fromkeys(own + [OVERPASS_URL]))
 ROAD_CLASSES = ("motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|road|"
                 "motorway_link|trunk_link|primary_link|secondary_link|tertiary_link")
 QUERY_RADIUS_M = 40       # ways this close to the drawn line are fetched
@@ -190,11 +198,12 @@ def fetch_overpass(db: Database, query: str, transport: Transport | None = None,
         return old
     transport = transport or _http_post
     payload = urllib.parse.urlencode({"data": query}).encode()
+    urls = overpass_urls()
     last = "no response"
     for attempt in range(retries + 1):
         wait = backoff_s * 2 ** attempt
         try:
-            data = json.loads(transport(OVERPASS_URL, payload, 120))
+            data = json.loads(transport(urls[attempt % len(urls)], payload, 120))
             if not isinstance(data.get("elements"), list):
                 raise ValueError("response has no elements")
             if not data["elements"] and not allow_empty:
