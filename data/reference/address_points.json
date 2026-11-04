@@ -1,0 +1,32 @@
+{
+  "_doc": "County address-point layers that fill the gaps in USDOT NAD (#393): house-address crashes in counties NAD doesn't cover. backend/scripts/fetch_address_points.py turns each into data/cache/nad/addr_<name>.csv in NAD's columns; nad.NadIndex reads every addr_*.csv next to the NAD file. Field mappings follow OpenAddresses (github.com/openaddresses/openaddresses, sources/<oa>). Another state: add its layers here the same way. licence: what the publisher says; only sources with licence_ok true are fetched.",
+  "sources": [
+    {"name": "ca_riverside", "county": "Riverside", "oa": "us/ca/riverside.json",
+     "url": "https://gis.countyofriverside.us/arcgis_mapping/rest/services/OpenData/General/MapServer/10",
+     "where": "NOTES NOT IN ('UNASSIGNED', 'UNASSIGEND')",
+     "number": "HOUSE_NUMBER", "street": ["DIR", "STREET_NAME", "STREET_TYPE"], "inc": null, "post": "CITY",
+     "licence": "pending (#393)", "licence_ok": false},
+    {"name": "ca_orange", "county": "Orange", "oa": "us/ca/orange.json",
+     "url": "https://www.ocgis.com/arcpub/rest/services/Map_Layers/Address_Point_Final_Planning_Addressing/FeatureServer/0",
+     "where": "1=1",
+     "number": "AddressNumber", "street": ["StreetName"], "inc": null, "post": "City",
+     "licence": "pending (#393)", "licence_ok": false},
+    {"name": "ca_los_angeles", "county": "Los Angeles", "oa": "us/ca/los_angeles.json",
+     "url": "https://arcgis.gis.lacounty.gov/arcgis/rest/services/LACounty_Dynamic/CAMS/MapServer/1",
+     "where": "1=1",
+     "number": "Number", "street": ["PreDir", "PreType", "StArticle", "StreetName", "PostType", "PostDir"],
+     "inc": "LegalComm", "post": "PostComm1",
+     "licence": "pending (#393)", "licence_ok": false},
+    {"name": "ca_san_joaquin", "county": "San Joaquin", "oa": "us/ca/san_joaquin.json",
+     "url": "https://sjmap.org/server/rest/services/Apps/DistrictViewerSvc/MapServer/10",
+     "where": "1=1",
+     "number": "SITUSNUMBER", "street": ["SITUSDIRECTION", "SITUSTREET", "SITUSTYPE"], "inc": null, "post": "SITUSCITYNAME",
+     "licence": "pending (#393)", "licence_ok": false},
+    {"name": "ca_fresno", "county": "Fresno", "oa": "us/ca/fresno.json",
+     "url": "https://services3.arcgis.com/ibgDyuD2DLBge82s/arcgis/rest/services/REGIONAL_ADDRESS_VW/FeatureServer/1",
+     "where": "1=1",
+     "number": "ADDRESS_NUMBER", "street": ["STREET_DIRECTION", "STREET_NAME", "STREET_TYPE", "STREET_POST_DIRECTION"],
+     "inc": null, "post": "ADDRESS_ZIPCITY",
+     "licence": "pending (#393)", "licence_ok": false}
+  ]
+}

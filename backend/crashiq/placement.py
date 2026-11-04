@@ -62,7 +62,7 @@ def place_address(c: dict, addresses) -> bool:
     if p:
         c.update(lat=p["lat"], lon=p["lon"], location_source="address_nad", review_reason=None,
                  approximate={"method": "address_nad", "plus_minus_ft": nad.PLUS_MINUS_FT, "points": p["points"],
-                              "source": nad.SOURCE})
+                              "source": p.get("source") or nad.SOURCE})
         return True
     t = addresses.addrfeat.lookup(c.get("county_code"), ha["number"], k) if addresses.addrfeat else None
     if t:

@@ -3,13 +3,17 @@ suggestion. Synthetic fixtures only (no network)."""
 
 import csv
 import io
+import sys
 import zipfile
+from pathlib import Path
 
 import pytest
 import shapefile
 
 from crashiq import addrfeat, nad
 from crashiq.names import street_key
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "backend" / "scripts"))   # fetch_address_points
 
 COLS = ["Add_Number", "AddNum_Suf", "St_PreDir", "St_PreTyp", "St_Name", "St_PosTyp", "St_PosDir", "StNam_Full", "County",
         "Inc_Muni", "Post_City", "Zip_Code", "Longitude", "Latitude", "Placement", "NAD_Source", "DateUpdate"]
@@ -246,3 +250,61 @@ def test_the_corridor_s_own_route_keeps_the_house_number(corridor, p, s, kept):
     on = [i for i, r in enumerate(roads) if crashes._names_street(r, k)]
     got = crashes.house_address(roads, on, k)
     assert (got and got["number"]) == kept, got
+
+
+def _county_file(path, rows):
+    import fetch_address_points as fap
+
+    with path.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(fap.COLUMNS)
+        w.writerows(rows)
+
+
+def test_a_county_address_file_beside_nad_is_read_and_adding_one_rebuilds_the_index(index, tmp_path):
+    """#393: house addresses in counties NAD doesn't cover come from addr_<county>.csv next to the NAD file."""
+    la = (street_key("W MANCHESTER BLVD"), 440)
+    assert index.lookup(19, "Inglewood", la[1], la[0]) is None            # no LA County in NAD
+    _county_file(tmp_path / "addr_ca_los_angeles.csv",
+                 [["Los Angeles", 440, "West Manchester Boulevard", "Inglewood", "Inglewood", 33.9620, -118.3600,
+                   "Los Angeles County address points"]])
+    fresh = nad.NadIndex(index.db_path, index.csv_path)                   # what the next server start sees
+    pt = fresh.lookup(19, "Inglewood", la[1], la[0])
+    assert pt and abs(pt["lat"] - 33.9620) < 1e-6 and pt["source"] == "Los Angeles County address points"
+    assert fresh.lookup(48, "Fairfield", 5101, street_key("BUSINESS CENTER DR"))["source"] == nad.SOURCE  # NAD too
+
+
+def test_fetching_county_address_points_pages_by_object_id_and_keeps_whole_numbers(tmp_path):
+    import json as _json
+
+    import fetch_address_points as fap
+    src = {"name": "ca_test", "county": "Los Angeles", "url": "https://gis.example/MapServer/1", "where": "1=1",
+           "number": "Number", "street": ["PreDir", "StreetName"], "inc": "LegalComm", "post": None}
+    feats = [{"attributes": {"OBJECTID": 1, "Number": "440", "PreDir": "W", "StreetName": "MANCHESTER BLVD",
+                             "LegalComm": "Inglewood"}, "geometry": {"x": -118.36, "y": 33.962}},
+             {"attributes": {"OBJECTID": 2, "Number": "12-B", "StreetName": "OAK ST"}, "geometry": {"x": 0, "y": 0}},
+             {"attributes": {"OBJECTID": 3, "Number": "9", "StreetName": "ELM ST"},       # a parcel polygon
+              "geometry": {"rings": [[[-118.0, 34.0], [-118.0, 34.002], [-118.002, 34.002], [-118.002, 34.0]]]}}]
+    asked = []
+
+    class Resp:
+        def __init__(self, body):
+            self.body = body
+
+        def read(self):
+            return _json.dumps(self.body).encode()
+
+    def opener(req, timeout):
+        asked.append(req.full_url)
+        if "/query?" not in req.full_url:
+            return Resp({"objectIdField": "OBJECTID", "maxRecordCount": 2, "fields": []})
+        last = int(req.full_url.split("OBJECTID+%3E+")[1].split("&")[0])
+        return Resp({"features": [f for f in feats if f["attributes"]["OBJECTID"] > last][:2]})
+
+    assert fap.fetch(src, tmp_path, opener) == 2                          # "12-B" isn't a whole house number
+    out = list(csv.DictReader((tmp_path / "addr_ca_test.csv").open()))
+    assert [(r["Add_Number"], r["StNam_Full"], r["Inc_Muni"]) for r in out] == [("440", "W MANCHESTER BLVD", "Inglewood"),
+                                                                               ("9", "ELM ST", "")]
+    assert float(out[1]["Latitude"]) == pytest.approx(34.001) and float(out[1]["Longitude"]) == pytest.approx(-118.001)
+    assert sum("/query?" in u for u in asked) == 3                        # pages: ids 1-2, 3, then empty
+    assert not (tmp_path / "addr_ca_test.part").exists()
