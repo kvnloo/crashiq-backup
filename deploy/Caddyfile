@@ -1,6 +1,0 @@
-# HTTPS for CrashIQ (Let's Encrypt, automatic). The password is checked by the app; HTTPS keeps it from crossing the
-# internet in clear text. Without a domain yet, use <server-ip-with-dashes>.sslip.io as CRASHIQ_DOMAIN.
-{$CRASHIQ_DOMAIN} {
-	encode gzip
-	reverse_proxy crashiq:8000
-}
