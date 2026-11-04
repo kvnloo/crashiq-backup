@@ -45,7 +45,7 @@ HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
 DATA = ROOT / "data" / "statewide"
 YEARS = cw.YEARS
-BIN1 = ("gps_usable", "gps_usable_dms", "gps_usable_sign", "placed_approximate", "placed_exact", "placed_unique_pair", "placed_fars", "placed_verified_typo",
+BIN1 = ("gps_usable", "gps_usable_dms", "gps_usable_sign", "placed_approximate", "placed_address_nad", "placed_exact", "placed_unique_pair", "placed_fars", "placed_verified_typo",
         "placed_relaxed", "placed_near", "placed_fuzzy")
 GROUPS = ("statewide", "district", "county", "city", "agency", "road_type", "district_road_type")
 
@@ -173,6 +173,9 @@ class Outside:
 NETWORK, GATE_TIERS = "clipped", []          # set from the command line
 ALIASES, RULE2, TIGER = False, False, None
 RUN10, FWY = False, None       # run 10: #251 GPS repair for every agency + lost longitude minus; #258 approximate freeways
+# run 11 (#387): the app's placement step as on main: true connectors held (#261), FARS before an approximate spot
+# (#280), an approximate spot only for crashes with no usable GPS (PM 2026-10-25), house addresses at NAD (#283)
+RUN11, NAD = False, None
 AUTO_TIERS = ("exact", "unique_pair")          # the tiers the app auto-places (config/placement.json since #222)
 
 NO_CROSS = "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)"
@@ -288,6 +291,13 @@ def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db
         p = fars.point(fars_db, row) if status == "linked" else None
         if p is not None and fits(p[0], p[1], c):
             return "placed_fars", None
+    if RUN11 and (ha := locate._house_address(c)):
+        # shortcut: the locator's house-address reading, not crashes.house_address (that one needs a corridor)
+        p = NAD.lookup(c.get("county_code"), c.get("city"), ha[1], ha[0])
+        if p:
+            if not gps_note:
+                return "placed_address_nad", None
+            c["_approx"] = "nia:address_nad"          # GPS off its roads: the app keeps the officer's GPS
     pre = gps_note or ""
     if not usable(c.get("secondary_road")) or not usable(c.get("primary_road")):
         return "cant_place", pre + NO_CROSS
@@ -439,9 +449,14 @@ def main(only_counties: set[int] | None = None, shard: tuple[int, int] = (0, 1),
         for c, out, why, no_alias in sorted(deferred, key=lambda t: int(t[0].get("county_code") or 0)):
             raw_f = FWY.raw(c, cbox)
             sp = freeway_mod.place(raw_f, c) if raw_f else None
+            if RUN11 and sp is not None:
+                if sp.report not in FWY_AUTO_KINDS or out == "placed_fars":
+                    sp = None                         # true connector held (#261); a fitting FARS point wins (#280)
+                elif c["_fwy_try"] == "gps_off_roads":
+                    c["_approx"], sp = f"nia:{sp.report}", None    # the app keeps the officer's GPS
             if sp is not None:
                 out, why = "placed_approximate", None
-                c["_approx"] = f"{c['_fwy_try']}:{sp.kind}"
+                c["_approx"] = f"{c['_fwy_try']}:{sp.report if RUN11 else sp.kind}"
             emit(c, out, why, no_alias)
         print(f"[{i}/{len(names)} {time.time() - t0:.0f}s] {nm or '(blank)'}: {n} crashes "
               f"({'city map' if city else 'outside cities'})", flush=True)
@@ -606,8 +621,15 @@ if __name__ == "__main__":
     ap.add_argument("--tiger", action="store_true", help="OSM + TIGER/Line network per city (#229)")
     ap.add_argument("--run10", action="store_true", help="#251 GPS repair (every agency, lost minus) and #258 "
                     "approximate freeway placement")
+    ap.add_argument("--run11", action="store_true", help="--run10 + the app's placement step on main (#387)")
     a = ap.parse_args()
-    RUN10 = a.run10
+    RUN10 = a.run10 or a.run11
+    RUN11 = a.run11
+    if RUN11:
+        from crashiq import nad
+        from crashiq.placement import FWY_AUTO_KINDS
+        NAD = nad.NadIndex(ROOT / "data" / "cache" / "nad" / "nad_ca.sqlite", ROOT / "data" / "cache" / "nad" / "nad_ca_r24.csv")
+        assert NAD._built(), "NAD index missing: it would be built inside data/cache"
     NETWORK = a.network
     GATE_TIERS = [x for x in a.gate_tiers.split(",") if x]
     ALIASES, RULE2 = a.aliases, a.rule2
