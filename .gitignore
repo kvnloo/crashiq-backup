@@ -17,3 +17,4 @@ data/osm/
 tests/screen/node_modules/
 tests/screen/.e2e/
 tests/screen/fixtures/
+deploy/.env
