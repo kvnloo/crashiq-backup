@@ -104,7 +104,7 @@
     "addrsfx",
     "addrpostd"
    ],
-   "inc": "addrjur",
+   "inc": null,
    "post": "community",
    "licence": "SanGIS GIS Data End User Use Agreement (2015): businesses allowed, redistribution discouraged not prohibited; must not be named the sole source of altered data; no emergency-response or insurance-underwriting use.",
    "licence_ok": true,
