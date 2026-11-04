@@ -38,7 +38,7 @@ def house_address(p, s):
     return None
 
 
-COUNTIES = {19: "Los Angeles", 30: "Orange", 33: "Riverside", 39: "San Joaquin", 10: "Fresno"}
+COUNTIES = {19: "Los Angeles", 30: "Orange", 33: "Riverside", 39: "San Joaquin", 10: "Fresno", 37: "San Diego"}
 
 
 def wilson_low(k: int, n: int, z: float = 1.96) -> float:

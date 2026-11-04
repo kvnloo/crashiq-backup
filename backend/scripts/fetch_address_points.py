@@ -59,7 +59,7 @@ def rows(src: dict, attrs: dict, geom: dict) -> list | None:
         return None
     city = lambda f: (str(attrs.get(f) or "").strip() if f else "")  # noqa: E731
     return [src["county"], int(num), " ".join(street), city(src.get("inc")), city(src.get("post")),
-            round(xy[1], 7), round(xy[0], 7), f"{src['county']} County address points"]
+            round(xy[1], 7), round(xy[0], 7), src.get("label") or f"{src['county']} County address points"]
 
 
 def fetch(src: dict, out_dir: Path, opener=urllib.request.urlopen, page: int | None = None) -> int:
