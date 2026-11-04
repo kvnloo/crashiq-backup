@@ -186,7 +186,7 @@ IWP_COLS = {
 }
 
 SURFACE_CODES = {"A": "DRY", "B": "WET", "C": "SNOWY-ICY", "D": "SLIPPERY (MUDDY, OILY, ETC.)"}
-# Primary collision factor codes (SWITRS codebook PRIMARY_COLL_FACTOR, https://tims.berkeley.edu/help/SWITRS.php;
+# Primary collision factor codes (SWITRS codebook PRIMARY_COLL_FACTOR, https://tims.berkeley.edu/help/crashdata/switrs-codebook.php;
 # CHP 555 form): the wording the old "Primary Collision Factor Description" column carried (#389).
 PCF_CATEGORY_CODES = {"A": "(Vehicle) Code Violation", "B": "Other Improper Driving", "C": "Other Than Driver",
                       "D": "Unknown", "E": "Fell Asleep", "-": "Not Stated"}
