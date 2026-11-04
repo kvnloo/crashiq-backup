@@ -47,7 +47,15 @@ def main() -> None:
     rec = json.loads((DATA / "run11_reconcile.json").read_text())
     tiers = json.loads((DATA / "run11_tiers.json").read_text())
     acc = json.loads((DATA / "accuracy_by_agency_r11.json").read_text())
-    vg = {c: json.loads(p.read_text()) for c in ("sf", "la") if (p := RES / f"geocode_{c}_test_union_summary.json").exists()}
+    vg = {}                               # open data, right intersection per tier (the rows' int_ok), union network
+    for c in ("sf", "la"):
+        if (p := RES / f"geocode_{c}_test_union_rows.json").exists():
+            t = Counter()
+            for r in json.loads(p.read_text()):
+                if r.get("int_ok") is not None:
+                    t[(r["tier"], "n")] += 1
+                    t[(r["tier"], "k")] += bool(r["int_ok"])
+            vg[c] = t
     commit = subprocess.run(["git", "-C", str(ROOT), "rev-parse", "--short", "origin/main"], capture_output=True,
                             text=True).stdout.strip()
     pool = {t: Counter() for t in ("exact", "verified_typo")}
@@ -59,12 +67,22 @@ def main() -> None:
                 pool[t].update(a.get(f"{t}_counts") or {})
     ex, vt = pool["exact"], pool["verified_typo"]
     ex_int, ex_pt = low(ex["ok_consistent"], ex["n_consistent"]), low(ex["ok_point"], ex["n"])
+    ex_all = low(ex["ok_intersection"], ex["n"])     # verified_typo has no self-consistent truth (a typo never matches)
     c10, c11 = rec["coverage_10d"], rec["coverage_11"]
+    import csv
+    import re
+    form = re.compile(r"(?:MM|MILE ?MARKER)\s*\d+\s+[A-Z]{2,3}\s+\d")
+    tested = [r for r in csv.DictReader(open(DATA / "run11_tiers_rows.csv")) if r["tier"] == "postmile" and r["dist_ft"]
+              and r["consistent"] == "1"]
+    bad = [r for r in tested if form.search(f"{r['primary']} {r['secondary']}".upper())]
+    pm_bad = (len(bad), len(tested), sum(int(r["dist_ft"]) > 2640 for r in bad))
     L = [f"# Run 11: statewide placement on today's main + the switched-off tiers (2026-11-03)", "",
-         f"Tester session for #387, measure only. App code: main {commit} (since run 10: #212 abbreviations, D3 wording, "
-         "#259/#261 freeway fixes, #280 FARS before an approximate spot, #283 NAD house addresses, #318/#319 crossing "
-         "and postmile tiers, both off). Basis as run 10: CCRS mirror 2026-10-19, OSM 2026-10-18, TIGER/Line 2026. "
-         "Harness:", "", "```", "coverage.py --network box1km --aliases --rule2 --tiger --run11", "```", "",
+         f"Tester session for #387, measure only. App code: main {commit}. Placement changes since run 10 (2d110db): "
+         "#259/#261/#278 freeway fixes, #280 FARS before an approximate spot, #283 NAD house addresses, #325/#328/#329 "
+         "freeway corridors, #331/#334/#341 freeway report wording ('405 SB', 'X TO 101 N', 'FROM'), #318/#319 "
+         "crossing and postmile tiers (off). #212 (leading abbreviations) is not new: it merged 2026-10-22 and was "
+         "already in runs 8-10. The D3 wording changes (#317, #330) are docs only. Basis as run 10: CCRS mirror "
+         "2026-10-19, OSM 2026-10-18, TIGER/Line 2026. Harness:", "", "```", "coverage.py --network box1km --aliases --rule2 --tiger --run11", "```", "",
          "`--run11` = `--run10` plus the app's placement step as it is on main: true freeway connectors held (#261), a "
          "fitting FARS point beats an approximate spot (#280), approximate spots only for crashes with no usable GPS "
          "(PM 2026-10-25), and house-address crashes at their NAD point (#283, approximate). Compared with run 10d "
@@ -78,8 +96,13 @@ def main() -> None:
                  f"**{b['crashes_on_map_pct']:.2f}** | {b['fatal_on_map_pct']} | {b['ksi_on_map_pct']} | "
                  f"{b['police_gps_pct']} | {b['crashiq_pct']} |")
     cs, sh = c11["road city street"]["crashes_on_map_pct"], c11["road state highway (off freeway)"]["crashes_on_map_pct"]
+    vtg = rec["verified_typo_gain"]
+    if_vt = {k: c11[k]["crashes_on_map_pct"] + 100 * vtg.get(k, {}).get("crashes", 0) / c11[k]["crashes_n"]
+             for k in ("road city street", "road state highway (off freeway)")}
     L += ["", f"**Past 90%?** City streets {cs:.2f}% ({'yes' if cs >= 90 else 'no'}); state highway off freeway "
-          f"{sh:.2f}% ({'yes' if sh >= 90 else 'no'}).", "",
+          f"{sh:.2f}% ({'yes' if sh >= 90 else 'no'}). With verified_typo switched on (every crash it places, GPS or "
+          f"not): city streets {if_vt['road city street']:.2f}%, state highway off freeway "
+          f"{if_vt['road state highway (off freeway)']:.2f}%.", "",
           f"Approximate in run 11: {c11['all']['approx']:,} crashes ({rec['approximate_by_kind']}).", "",
           "| District | Run 10d % | Run 11 % | Fatal % | Fatal + serious % | Approximate |", "|---|---|---|---|---|---|"]
     for d in range(1, 13):
@@ -102,13 +125,12 @@ def main() -> None:
           f" on self-consistent GPS; exact final point within 250 ft {kn(ex['ok_point'], ex['n'])} on all GPS.", "",
           "| Tier | Crashes gained, no usable GPS (fatal / KSI) | Also GPS off its roads | Hidden police GPS | Open data (SF / LAPD) | Exact on the same truth (low) | Recommendation |",
           "|---|---|---|---|---|---|---|"]
-    vg_cell = " / ".join(f"{c.upper()} {kn(round(s['verified_typo']['accuracy'] * s['verified_typo']['n']), s['verified_typo']['n'])}"
-                         for c, s in vg.items())
-    vg_ex = " / ".join(f"{c.upper()} {100 * s['arms']['A  exact only (default gate)']['wilson_low']:.1f}%" for c, s in vg.items())
+    vg_cell = " / ".join(f"{c.upper()} {kn(t[('verified_typo', 'k')], t[('verified_typo', 'n')])}" for c, t in vg.items())
+    vg_ex = " / ".join(f"{c.upper()} {low(t[('exact', 'k')], t[('exact', 'n')]):.1f}%" for c, t in vg.items())
     gn, go = g.get("gps none", {}), g.get("gps off", {})
     L.append(f"| verified_typo (#233) | {gn.get('crashes', 0):,} ({gn.get('fatal', 0)} / {gn.get('ksi', 0)}) | "
-             f"{go.get('crashes', 0):,} | right intersection {kn(vt['ok_consistent'], vt['n_consistent'])} | {vg_cell} | "
-             f"{ex_int:.1f}%; {vg_ex} | {verdict(vt['ok_consistent'], vt['n_consistent'], ex_int)} |")
+             f"{go.get('crashes', 0):,} | right intersection, all GPS {kn(vt['ok_intersection'], vt['n'])} | {vg_cell} | "
+             f"{ex_all:.1f}% (all GPS); {vg_ex} | {verdict(vt['ok_intersection'], vt['n'], ex_all)} |")
     for t in ("postmile", "crossing_rail", "crossing_path"):
         r = tiers.get(t, {})
         gd = r.get("gained", {})
@@ -117,19 +139,27 @@ def main() -> None:
         L.append(f"| {t} ({'#319' if t == 'postmile' else '#318'}) | {gd.get('none_all', 0):,} ({gd.get('none_fatal', 0)} / "
                  f"{gd.get('none_ksi', 0)}) | {gd.get('off_roads_all', 0):,} | within 250 ft {kn(w['k'], w['n'])}; "
                  f"400 ft {kn(w4['k'], w4['n'])}; 0.5 mi {kn(w5['k'], w5['n'])} | not tested (see below) | "
-                 f"{ex_pt:.1f}% (final point, 250 ft) | {verdict(w['k'], w['n'], ex_pt)} |")
+                 f"{ex_int:.1f}% (point: {ex_pt:.1f}%) | {verdict(w['k'], w['n'], ex_int)} |")
     L += ["", "Notes:",
           "- Gained = crashes run 11 leaves off the map that the tier would place. The headline is crashes with no usable "
           "GPS, the only ones the app sends to these tiers (crashes.pull routes no-GPS reports); \"GPS off its roads\" "
           "is shown apart.",
           "- verified_typo runs inside the locator, so the statewide run records it per crash (`tier` column). Its "
-          "hidden-GPS figure is right intersection on self-consistent police GPS, the measure the exact tier's 92% is.",
+          "hidden-GPS figure is right intersection on all police GPS: a misspelled name never meets the other street "
+          "as written, so it has no self-consistent truth (as near and fuzzy in the difficult-bin report); the exact "
+          "tier is compared on the same all-GPS measure (its 92% is on self-consistent GPS).",
           "- postmile and the crossings run outside the locator, on a corridor. Statewide (`run11_tiers.py`) the "
           "corridor is the report's other road: for postmile the route it names by number (no number, no spot); for "
           "crossings every OSM way of that name in the city box + 1 km (else the county), with railways and named "
           "paths from the same OSM extract (`crossing_features.py`). A whole street crosses more often than a drawn "
           "stretch, so the crossing gain is a floor. Truth = police GPS that fits the report, hidden; scored as a "
-          "point (they place a point, not an intersection), against the exact tier's final point.",
+          "point (they place a point, not an intersection), self-consistent only (crossings: GPS also within 400 ft "
+          "of the railway / path). Bar: the exact tier's right-intersection low bound on self-consistent GPS; its "
+          "final-point figure on all GPS is shown in brackets (noisier truth, a lower bar).",
+          f"- postmile reads the first number after MM as the postmile, so the CHP form \"MM <route> <county> <pm>\" "
+          f"(\"MM 58 KER 0.50\") is read as postmile 58: {pm_bad[0]} of the {pm_bad[1]} tested reports, {pm_bad[2]} of "
+          f"them over half a mile off. A parse defect for Engineering; it doesn't change the call (the rest is far "
+          f"below the bar too).",
           "- SF DataSF and LAPD open data: these reports are city streets; mile markers and railway / trail reports "
           "barely occur there, so the open-data tests can't speak for postmile or the crossings.", "",
           "Why no spot (bin-2 reports), top reasons:", ""]
@@ -139,7 +169,17 @@ def main() -> None:
           "`run11_tiers.json`, `run11_tiers_rows.csv`, `accuracy_by_agency_r11.json`; `data/results/geocode_*_union_*`), "
           "not committed.", ""]
     OUT.write_text("\n".join(L))
+    a11 = c11["all"]
+    head = [f"Run 11 on main {commit} (statewide, measure only): on the map {a11['crashes_on_map_pct']:.2f}% "
+            f"(run 10b {RUN10['all']:.2f}%), fatal {a11['fatal_on_map_pct']}%, KSI {a11['ksi_on_map_pct']}%.",
+            f"City streets {cs:.2f}% (run 10 89.69%), state highway off freeway {sh:.2f}% (89.40%): "
+            f"{'both' if cs >= 90 and sh >= 90 else 'not both'} past 90%.",
+            f"verified_typo would add {gn.get('crashes', 0):,} no-GPS crashes ({gn.get('fatal', 0)} fatal / "
+            f"{gn.get('ksi', 0)} KSI); hidden police GPS {kn(vt['ok_intersection'], vt['n'])} vs exact low "
+            f"{ex_all:.1f}% (all GPS). postmile / crossing_rail / crossing_path: see the table (report: reports/testing/{OUT.name})."]
+    (DATA / "run11_headline.md").write_text("\n\n".join(head) + "\n")
     print(OUT.read_text())
+    print("\n".join(head))
 
 
 if __name__ == "__main__":

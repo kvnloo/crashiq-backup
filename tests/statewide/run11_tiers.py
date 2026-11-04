@@ -15,7 +15,10 @@ For every crash whose road fields give a mile marker / a crossing feature (alias
   gained    run 11 has it in bin 2 (coverage_crashes_r11_*.csv) and the tier finds a spot; split by no usable GPS (what
             the app's tier reaches: crashes.pull routes only no-GPS reports to it) and GPS off its roads
   accuracy  run 11 has its police GPS as fitting the report (gps_usable): hide it, place, distance to the GPS;
-            within 250 ft (the exact tier's point bound), 400 ft (GPS-check distance), 0.5 mi (approximate tier)
+            within 250 ft (the exact tier's point bound), 400 ft (GPS-check distance), 0.5 mi (approximate tier).
+            Self-consistent truth only, as the exact tier's: for a crossing the GPS also lies within 400 ft of a
+            railway / the named path (fitting GPS is only near the named street, anywhere along it); for postmile,
+            fitting GPS is on the named route already
 Writes data/statewide/run11_tiers.json and run11_tiers_rows.csv.
 
 Run: python tests/statewide/run11_tiers.py [--base r10d] [--sf38]
@@ -111,10 +114,28 @@ class Crossing:
             self.box_memo[city] = row
         return self.box_memo[city]
 
+    def near_feature(self, c: dict, pt: tuple[float, float], tol_ft: float = 400.0) -> bool:
+        """The police GPS lies within tol_ft of a railway / the named path the report gives: self-consistent truth,
+        as the exact tier's (GPS near the meeting point of the two named roads)."""
+        import citywide as cw
+        from crashiq import crossings
+        want = next((f for f in (crossings.read(c.get(x)) for x in ("primary_road", "secondary_road")) if f), None)
+        d = tol_ft / 364000 * 1.5
+        els, nodes = [], {}
+        for wid, tags, nids, cs in self.feat.execute(
+                "SELECT w.id, w.tags, w.nodes, w.coords FROM way_box b JOIN ways w ON w.id = b.id WHERE b.maxlat >= ? "
+                "AND b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ?", (pt[0] - d, pt[0] + d, pt[1] - d, pt[1] + d)):
+            nl = json.loads(nids)
+            els.append({"type": "way", "id": wid, "nodes": nl, "tags": json.loads(tags)})
+            for n, q in zip(nl, json.loads(cs)):
+                nodes[n] = {"type": "node", "id": n, "lat": q[0], "lon": q[1]}
+        paths = crossings.features({"elements": els + list(nodes.values())}, want) if want and els else []
+        return any(cw._seg_ft(pt, a, b) <= tol_ft for q in paths for a, b in zip(q, q[1:]))
+
     def place(self, c: dict) -> dict:
         from crashiq import crossings
         from crashiq.geo import Polyline
-        from crashiq.names import route_numbers
+        from crashiq.names import route_numbers, street_key
         fields = [f for f in ("primary_road", "secondary_road") if crossings.read(c.get(f))]
         if len(fields) != 1:
             return {"why": "no railway or path" if not fields else "both fields are features"}
@@ -136,36 +157,35 @@ class Crossing:
                     lines.append(cl)
         if not lines:
             return {"why": "street not on the map"}
-        pad = 0.002
-        la = [p[0] for ln in lines for p in ln]
-        lo = [p[1] for ln in lines for p in ln]
-        els, nodes = [], {}
-        for wid, tags, nids, cs in self.feat.execute(
-                "SELECT w.id, w.tags, w.nodes, w.coords FROM way_box b JOIN ways w ON w.id = b.id WHERE b.maxlat >= ? "
-                "AND b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ?", (min(la) - pad, max(la) + pad,
-                                                                         min(lo) - pad, max(lo) + pad)):
-            nl = json.loads(nids)
-            els.append({"type": "way", "id": wid, "nodes": nl, "tags": json.loads(tags)})
-            for n, p in zip(nl, json.loads(cs)):
-                nodes[n] = {"type": "node", "id": n, "lat": p[0], "lon": p[1]}
-        osm_x = {"elements": els + list(nodes.values())}
-        want = crossings.read(c.get(fields[0]))
-        paths = crossings.features(osm_x, want)       # once per crash (features joins ways pairwise)
-        boxes = [(min(p[0] for p in q), max(p[0] for p in q), min(p[1] for p in q), max(p[1] for p in q)) for q in paths]
-        hits = []                                      # (lat, lon, the street way it is on)
-        for ln in lines:
-            la0, la1 = min(p[0] for p in ln) - pad, max(p[0] for p in ln) + pad
-            lo0, lo1 = min(p[1] for p in ln) - pad, max(p[1] for p in ln) + pad
-            near = [q for q, bx in zip(paths, boxes) if bx[1] >= la0 and bx[0] <= la1 and bx[3] >= lo0 and bx[2] <= lo1]
-            if near:
+        fk = street_key(c.get(fields[0]))
+        if fk and fk.suffix and self.fr.keys(c.get(fields[0])) & cty["named"].keys():
+            return {"why": "the feature is a mapped street (RAILROAD AVE): the locator's, not a crossing"}
+        want, pad = crossings.read(c.get(fields[0])), 0.002
+        hits = []                                      # (lat, lon, the street way, the features around it)
+        for ln in lines:                               # per way: the features in its box only (features() is pairwise)
+            la, lo = [p[0] for p in ln], [p[1] for p in ln]
+            els, nodes = [], {}
+            for wid, tags, nids, cs in self.feat.execute(
+                    "SELECT w.id, w.tags, w.nodes, w.coords FROM way_box b JOIN ways w ON w.id = b.id WHERE b.maxlat >= ? "
+                    "AND b.minlat <= ? AND b.maxlon >= ? AND b.minlon <= ?", (min(la) - pad, max(la) + pad,
+                                                                             min(lo) - pad, max(lo) + pad)):
+                nl = json.loads(nids)
+                els.append({"type": "way", "id": wid, "nodes": nl, "tags": json.loads(tags)})
+                for n, q in zip(nl, json.loads(cs)):
+                    nodes[n] = {"type": "node", "id": n, "lat": q[0], "lon": q[1]}
+            if not els:
+                continue
+            osm_x = {"elements": els + list(nodes.values())}
+            paths = crossings.features(osm_x, want)
+            if paths:
                 pl = Polyline(ln)
-                hits += [(*pl.proj.to_ll(*h["xy"]), ln) for h in crossings.crossings(pl, near)]
+                hits += [(*pl.proj.to_ll(*h["xy"]), ln, osm_x) for h in crossings.crossings(pl, paths)]
         if not hits:
             return {"why": "the street doesn't cross it on the map"}
         # one crossing = every hit within ONE_CROSSING_FT of the first (the street's ways meet at their ends)
         if any(ft(h[:2], hits[0][:2]) > crossings.ONE_CROSSING_FT for h in hits[1:]):
             return {"why": "the street crosses it in more than one place"}
-        return crossings.place(c, {"line": hits[0][2]}, osm_x)    # the app's own spot, with the stated distance
+        return crossings.place(c, {"line": hits[0][2]}, hits[0][3])    # the app's own spot, with the stated distance
 
 
 def main() -> None:
@@ -210,11 +230,14 @@ def main() -> None:
         for tier, r in tiers:
             truth = (c["lat"], c["lon"]) if r11["outcome"] == "gps_usable" and c.get("lat") is not None else None
             d = ft((r["lat"], r["lon"]), truth) if truth and "lat" in r else None
+            # postmile: GPS that fits is on the named route already; crossings: also near the railway / path
+            cons = d is not None and (tier == "postmile" or xing.near_feature(c, truth))
             rows.append({"collision_id": cid, "tier": tier, "district": r11["district"], "road_type": r11["road_type"],
                          "killed": r11["killed"], "ksi": r11["ksi"], "outcome": r11["outcome"], "bin": r11["bin"],
                          "gps": "off_roads" if r11["reason"].startswith("police GPS off") else
                                 ("fits" if truth else "none"),
                          "spot": int("lat" in r), "why": r.get("why", ""), "dist_ft": round(d) if d is not None else "",
+                         "consistent": int(cons),
                          "routes": "/".join(sorted(route_numbers(c.get("primary_road")) | route_numbers(c.get("secondary_road")))),
                          "primary": c.get("primary_road"), "secondary": c.get("secondary_road")})
         if i % 500 == 0:
@@ -233,10 +256,12 @@ def main() -> None:
                 for k, on in (("all", True), ("fatal", r["killed"] == "1"), ("ksi", r["ksi"] == "1")):
                     g[f"{r['gps']}_{k}"] += on
         acc = [r for r in rs if r["gps"] == "fits"]
-        placed = [r for r in acc if r["spot"]]
+        placed = [r for r in acc if r["spot"] and r["consistent"]]     # self-consistent truth only
         res[tier] = {"reports": len(rs), "in_bin2": sum(r["bin"] == "2" for r in rs), "gained": dict(g),
                      "why_no_spot_bin2": dict(Counter(r["why"] for r in rs if r["bin"] == "2" and not r["spot"]).most_common(8)),
-                     "truth_gps_fits": len(acc), "truth_placed": len(placed),
+                     "truth_gps_fits": len(acc), "truth_placed_any": sum(bool(r["spot"]) for r in acc),
+                     "truth_placed": len(placed),
+                     "median_ft": sorted(int(r["dist_ft"]) for r in placed)[len(placed) // 2] if placed else None,
                      **{f"within_{b}ft": {"k": sum(int(r["dist_ft"]) <= b for r in placed), "n": len(placed),
                                           "pct": round(100 * sum(int(r["dist_ft"]) <= b for r in placed) / len(placed), 1)
                                           if placed else None,
