@@ -14,6 +14,7 @@ committed); the index is built from it into SQLite on first use, with no network
 from __future__ import annotations
 
 import csv
+import json
 import math
 import sqlite3
 import threading
@@ -38,6 +39,14 @@ def _county_codes() -> dict[str, int]:
     from .settings import ROOT
     with (ROOT / "data" / "reference" / "caltrans_districts.csv").open(newline="") as f:
         return {r["county"].upper(): int(r["ccrs_county_code"]) for r in csv.DictReader(f)}
+
+
+def auto_sources() -> set[str]:
+    """Source lines that place a crash by themselves: NAD, and county layers measured about as accurate (#393). Any
+    other source's point is only the review list's suggestion."""
+    from .settings import ROOT
+    reg = json.loads((ROOT / "data" / "reference" / "address_points.json").read_text())["sources"]
+    return {SOURCE} | {s.get("label") or f"{s['county']} County address points" for s in reg if s.get("placement") == "auto"}
 
 
 def ft(a: tuple[float, float], b: tuple[float, float]) -> float:

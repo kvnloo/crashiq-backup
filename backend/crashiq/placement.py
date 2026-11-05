@@ -64,6 +64,9 @@ def place_address(c: dict, addresses, line: list | None = None) -> bool:
     from .names import street_key
     ha, k = c["house_address"], street_key(c["house_address"]["street"])
     p = addresses.nad.lookup(c.get("county_code"), c.get("city"), ha["number"], k) if addresses.nad else None
+    if p and p.get("source", nad.SOURCE) not in nad.auto_sources():
+        c["suggestion"] = {"tier": "address_point", "lat": p["lat"], "lon": p["lon"], "source": p["source"]}
+        return False
     lat, lon, setback = (p["lat"], p["lon"], None) if p else (None, None, None)
     if p and line:
         pl = Polyline([tuple(x) for x in line])

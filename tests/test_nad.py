@@ -328,3 +328,23 @@ def test_an_address_point_set_back_from_the_corridor_counts_on_it_in_front_of_th
     result = {"crashes": [d5("b", 5101)], "cleaning": {}}
     placement.place_unmatched(None, far, result, addresses=nad.Addresses(index, FakeAddrfeat()))
     assert result["crashes"][0]["review_reason"] == "house_address" and result["crashes"][0]["lat"] is None
+
+
+def test_a_county_layer_less_accurate_than_nad_is_only_a_suggestion(tmp_path):
+    """#393: Orange's points were within 400 ft of police GPS 61% of the time (NAD 85%): they suggest, the engineer
+    places. Los Angeles (85%) places like NAD. An unknown source never places by itself."""
+    rows = [["Orange", 440, "Main Street", "Santa Ana", "Santa Ana", 33.75, -117.87, "OC Public Works address points"],
+            ["Los Angeles", 440, "Main Street", "Alhambra", "Alhambra", 34.09, -118.13,
+             "Los Angeles County GIS (CAMS) address points"],
+            ["Fresno", 440, "Main Street", "Clovis", "Clovis", 36.82, -119.70, "somebody's file"]]
+    _county_file(tmp_path / "addr_ca_mixed.csv", rows)
+    idx = nad.Addresses(nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "nad_ca_r24.csv"), None)
+    crashes = [d5("oc", 440, "MAIN ST", "Santa Ana", 30), d5("la", 440, "MAIN ST", "Alhambra", 19),
+               d5("x", 440, "MAIN ST", "Clovis", 10)]
+    result = {"crashes": crashes, "cleaning": {}}
+    placement.place_unmatched(None, {}, result, addresses=idx)
+    oc, la, x = result["crashes"]
+    assert oc["review_reason"] == "house_address" and oc["suggestion"]["tier"] == "address_point"
+    assert oc["suggestion"]["source"] == "OC Public Works address points"
+    assert la["location_source"] == "address_nad" and la["approximate"]["source"].startswith("Los Angeles County")
+    assert x["review_reason"] == "house_address"
