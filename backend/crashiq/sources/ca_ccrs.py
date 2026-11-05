@@ -138,7 +138,7 @@ CRASH_COLS = {
     "is_preliminary": ["Is Preliminary", "IsPreliminary"],
     "is_deleted": ["IsDeleted", "Is Deleted"],
     "datetime": ["Crash Date Time", "CrashDateTime"],
-    "collision_time": ["Collision Time", "CollisionTime"],
+    "collision_time": ["Collision Time", "CollisionTime", "Crash Time Description"],     # renamed 2026-11-03 (#389)
     "day_of_week": ["Day of Week", "DayOfWeek"],
     "lat": ["Latitude"],
     "lon": ["Longitude"],
@@ -158,7 +158,8 @@ CRASH_COLS = {
     "weather": ["Weather 1", "Weather1"],
     "surface": ["RoadwaySurfaceDescription", "Roadway Surface Description", "RoadwaySurfaceCode"],
     "pcf": ["PrimaryCollisionFactorViolation", "Primary Collision Factor Violation", "PCF Violation"],
-    "pcf_category": ["PrimaryCollisionFactorDescription", "Primary Collision Factor Description"],
+    "pcf_category": ["PrimaryCollisionFactorDescription", "Primary Collision Factor Description",
+                     "Primary Collision Factor Code"],                     # code only since 2026-11-03 (#389)
     "involved_with": ["MotorVehicleInvolvedWithDesc", "Motor Vehicle Involved With Desc"],
     "ped_action": ["PedestrianActionDesc"],
     "hit_run": ["HitRun", "Hit Run"],
@@ -185,6 +186,10 @@ IWP_COLS = {
 }
 
 SURFACE_CODES = {"A": "DRY", "B": "WET", "C": "SNOWY-ICY", "D": "SLIPPERY (MUDDY, OILY, ETC.)"}
+# Primary collision factor codes (SWITRS codebook PRIMARY_COLL_FACTOR, https://tims.berkeley.edu/help/crashdata/switrs-codebook.php;
+# CHP 555 form): the wording the old "Primary Collision Factor Description" column carried (#389).
+PCF_CATEGORY_CODES = {"A": "(Vehicle) Code Violation", "B": "Other Improper Driving", "C": "Other Than Driver",
+                      "D": "Unknown", "E": "Fell Asleep", "-": "Not Stated"}
 
 # Extent of injury -> KABCO, keyed on the value with spaces and punctuation removed. The live table
 # (`ExtentOfInjuryCode`) holds CODES, not the data dictionary's text (#75, 2026-10-19): Fatal, SuspectSerious,
@@ -392,7 +397,7 @@ def crash_record(raw: dict, cols: dict[str, dict]) -> dict:
         "weather": clean_coded(s(g("weather"))),
         "surface": clean_coded(s(surface)),
         "pcf": clean_violation(g("pcf")),
-        "pcf_category": s(g("pcf_category")),
+        "pcf_category": PCF_CATEGORY_CODES.get(s(g("pcf_category")) or "", s(g("pcf_category"))),
         "pcf_class": pcf.category(g("pcf")),         # SWITRS category code or why there is none (#52)
         "involved_with": clean_coded(s(g("involved_with"))),
         "ped_action": clean_coded(s(g("ped_action"))),

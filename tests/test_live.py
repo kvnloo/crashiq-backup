@@ -54,7 +54,9 @@ def test_live_ccrs_contract(capsys):
     assert all(c["year"] == 2023 and c["date"] for c in cs), "dates not parsed"
     assert log["bad_dates_dropped"] == 0
     assert not log["unknown_injury_values"], f"ExtentOfInjury values not mapped: {log['unknown_injury_values']}"
-    assert sum(bool(c["parties"]) for c in cs) >= 0.9 * len(cs), "Parties join rate under 90%: check Collision Id type"
+    kept = [c for c in cs if not c.get("exclude_rule")]      # excluded reports get no party lookups (#54)
+    assert kept and sum(bool(c["parties"]) for c in kept) >= 0.9 * len(kept), \
+        "Parties join rate under 90%: check Collision Id type"
     unknown = {c["collision_type"] for c in cs if c["collision_type"]} - KNOWN_TYPES
     assert not unknown, f"collision types not normalized: {unknown}"
     lit = [c["lighting"] for c in cs if c["lighting"]]
