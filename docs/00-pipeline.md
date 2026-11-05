@@ -24,6 +24,12 @@ independently and files `bug` issues with a failing test, which go round the sam
 (Hermes ran this until 2026-10-18; the "Hermes built-in" column is history.)
 
 ## User direction log
+- **2026-11-02 (user, PM chat): one TrafficIQ suite agent, later.** All tools will sit on the TrafficIQ website with
+  one agent for the whole suite (not a CrashIQ-only bot). Its first CrashIQ job: read messy crash locations on the
+  review list and suggest which real streets were meant; code places the crash, the engineer accepts or rejects,
+  accepted readings become alias rules. Tested on hidden-GPS / LAPD truth before it is shown. Comes after shipping,
+  after the cheaper rule fixes, and after the #55 guardrails. Rules and lesson sources: trafficiq `docs/AGENT.md`.
+  **Keep writing `knowledge/lessons.md`**: it is the agent's starting knowledge.
 - **2026-10-18 (user, via Claude Code):** methodology correctness comes first. The mockup layout
   (`design/mockups/`) is approved in direction and will be refined later.
 - **2026-10-19 (user):** PM merges clean, tested PRs. A Tester session joins (docs/03 log).
