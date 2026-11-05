@@ -44,6 +44,8 @@ def _strip_api_prefix(app):
 
 def create_app(settings: Settings | None = None, db: Database | None = None) -> FastAPI:
     settings = settings or Settings()
+    if settings.hosted and not settings.app_password:
+        raise RuntimeError("CRASHIQ_HOSTED is set but APP_PASSWORD isn't: refusing to start without a password (#383)")
     db = db or Database(settings.db_path)
     app = FastAPI(title="CrashIQ", version=VERSION, docs_url=None, redoc_url=None)
     app.state.settings = settings

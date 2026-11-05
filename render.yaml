@@ -1,0 +1,19 @@
+# Render blueprint (#383, docs/03 R8): one Docker web service with SQLite and caches on a persistent disk.
+# Part B (deploy) waits for the user: they sign in to Render and approve the cost. APP_PASSWORD is entered in Render
+# by the user (sync: false) and never committed; without it the app refuses to start (CRASHIQ_HOSTED in the image).
+# Runtime AI stays off (#55): no ANTHROPIC_API_KEY or TYPESAFE_API_KEY here.
+services:
+  - type: web
+    name: crashiq
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeploy: false
+    envVars:
+      - key: APP_PASSWORD
+        sync: false
+    disk:
+      name: crashiq-data
+      mountPath: /var/data
+      sizeGB: 10

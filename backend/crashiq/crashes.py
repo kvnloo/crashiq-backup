@@ -1155,8 +1155,8 @@ _ADDRESSES: dict[str, object] = {}
 
 
 def addresses_for(st):
-    """NAD + TIGER ADDRFEAT for house-address crashes (#283): local files only (downloaded once, user-approved
-    2026-10-25). A test or harness sets `app.state.addresses`; with a fake or recorded CKAN and none set, none."""
+    """NAD + TIGER ADDRFEAT for house-address crashes (#283): NAD from its local file (uploaded once, #384 (b)); ADDRFEAT
+    per county, downloaded on demand. A test or harness sets `app.state.addresses`; with a fake or recorded CKAN, none."""
     from .nad import addresses
     if getattr(st, "addresses", None) is not None:
         return st.addresses

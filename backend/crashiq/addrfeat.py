@@ -3,8 +3,11 @@ user decision 2026-10-25, docs/03, #283). A suggestion only, never an automatic 
 GPS in #264).
 
 The number is interpolated along the address-range feature whose range on the matching side (odd or even) holds it.
-Local files only (data/cache/tiger_addrfeat/<year>/tl_<year>_<county fips>_addrfeat.zip, downloaded once,
-user-approved 2026-10-25), so there are no runtime network calls.
+Files: data/cache/tiger_addrfeat/<year>/tl_<year>_<county fips>_addrfeat.zip (user-approved 2026-10-25). On a
+hosted disk a missing county is downloaded in the background the first time a crash in it needs a suggestion (user
+decision #384 (b), 2026-11-03), from https://www2.census.gov/geo/tiger/TIGER<year>/ADDRFEAT/ (public domain). Until
+it lands the crash goes to review without the suggestion, as before. Only when an opener is given (`nad.addresses`);
+a bare `Addrfeat(folder)` never touches the network.
 """
 
 from __future__ import annotations
@@ -12,13 +15,18 @@ from __future__ import annotations
 import csv
 import io
 import math
+import os
+import shutil
 import threading
+import time
 import zipfile
 from pathlib import Path
 
 from .names import StreetKey, drop_directional, same_core, street_key
 
 SOURCE = "Census TIGER/Line ADDRFEAT address ranges"
+URL = "https://www2.census.gov/geo/tiger/TIGER{v}/ADDRFEAT/tl_{v}_{fips}_addrfeat.zip"
+RETRY_MINUTES = 60
 
 
 def _fips() -> dict[int, str]:
@@ -47,10 +55,15 @@ def _along(pts: list[tuple[float, float]], f: float) -> tuple[float, float]:
 
 
 class Addrfeat:
-    def __init__(self, folder: Path):
+    def __init__(self, folder: Path, opener=None, vintage: int | None = None, now=time.time, background: bool = True):
+        from .sources.tiger_files import CONFIG
         self.folder = Path(folder)
+        self.opener, self.now, self.background = opener, now, background
+        self.vintage = int(vintage or CONFIG["vintage"])
         self._county: dict[str, dict[str, list]] = {}
         self._lock = threading.Lock()
+        self._running: set[str] = set()
+        self._failed: dict[str, float] = {}
 
     def _file(self, fips: str) -> Path | None:
         hits = sorted(self.folder.glob(f"**/tl_*_{fips}_addrfeat.zip")) if self.folder.exists() else []
@@ -62,6 +75,7 @@ class Addrfeat:
                 return self._county[fips]
             idx: dict[str, list] = {}
             path = self._file(fips)
+            start = path is None and self.opener is not None and self._claim(fips)
             if path is not None:
                 import shapefile
                 z = zipfile.ZipFile(path)
@@ -77,8 +91,40 @@ class Addrfeat:
                     feat = (rec["FULLNAME"], pts, *(_num(rec.get(c)) for c in ("LFROMHN", "LTOHN", "RFROMHN", "RTOHN")))
                     for key in {k.core.replace(" ", ""), drop_directional(k).core.replace(" ", "")}:
                         idx.setdefault(key, []).append(feat)
-            self._county[fips] = idx
-            return idx
+            if path is not None or self.opener is None:
+                self._county[fips] = idx       # a county still downloading isn't cached: the next lookup reads it
+        if start:
+            if self.background:
+                threading.Thread(target=self._download, args=(fips,), daemon=True).start()
+            else:
+                self._download(fips)
+        return idx
+
+    def _claim(self, fips: str) -> bool:
+        """Called with self._lock held: True if this caller should download the county now."""
+        if fips in self._running or self.now() - self._failed.get(fips, -1e18) < RETRY_MINUTES * 60:
+            return False
+        self._running.add(fips)
+        return True
+
+    def _download(self, fips: str) -> None:
+        out = self.folder / str(self.vintage) / f"tl_{self.vintage}_{fips}_addrfeat.zip"
+        tmp = out.with_suffix(".zip.tmp")
+        try:
+            out.parent.mkdir(parents=True, exist_ok=True)
+            with self.opener(URL.format(v=self.vintage, fips=fips)) as r, tmp.open("wb") as f:
+                shutil.copyfileobj(r, f, 1 << 20)
+            with zipfile.ZipFile(tmp) as z:   # a bad or partial file never replaces the cache
+                if not any(n.endswith(".shp") for n in z.namelist()):
+                    raise ValueError(f"county {fips}: no .shp in the ADDRFEAT zip")
+            os.replace(tmp, out)
+            self._failed.pop(fips, None)
+        except Exception:  # noqa: BLE001 - the crash stays in review without the suggestion; retried later
+            self._failed[fips] = self.now()
+        finally:
+            tmp.unlink(missing_ok=True)
+            with self._lock:
+                self._running.discard(fips)
 
     def lookup(self, county: int | None, number: int, k: StreetKey | None) -> dict | None:
         """{"lat", "lon"} interpolated on the one range that holds the number, or None."""
@@ -101,3 +147,4 @@ class Addrfeat:
         if len(hits) != 1:
             return None
         return {"lat": hits[0][0], "lon": hits[0][1]}
+
