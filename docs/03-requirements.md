@@ -658,3 +658,14 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   (1) Colima via Homebrew on this Mac for the image build and the Tester's click-through against the container.
   (2) Address data on a fresh hosted disk: an on-demand per-county TIGER ADDRFEAT fetcher, plus a one-time upload of
   the NAD California extract (426 MB) to the Render disk. Not baked into the image.
+- **County address points fill NAD's gaps DECIDED (user, 2026-11-04, CrashIQ chat; #393):** "I think 2 is easy. And
+  it can be carried over to other states as well, so let's get that going." House-address crashes (D5) in counties
+  USDOT NAD doesn't cover are placed at the county's own address points (`data/reference/address_points.json`), with
+  the same matching and the same approximate status as NAD. Only sources whose published terms allow a paid app are
+  used in the hosted app (`licence_ok`): Los Angeles, Orange, Fresno, San Diego (SanGIS wording on the source line).
+  - **No emails to the counties (user, 2026-11-04: "2) no emails"):** Riverside ("Public use." only) and San Joaquin
+    (no licence) stay measure-only; they are not used in the hosted app.
+  - **Onto the corridor, 500 ft cutoff (user, 2026-11-04: "yea 500 cut off"):** the address point (a building or a
+    lot) is moved onto the corridor in front of the address, keeping its position along the street; a point more than
+    500 ft off the corridor isn't used and the crash stays on the review list. Before, a point more than the 100 ft
+    buffer back was dropped as `outside_buffer`.

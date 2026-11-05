@@ -1,0 +1,126 @@
+{
+ "_doc": "County address-point layers that fill the gaps in USDOT NAD (#393): house-address crashes in counties NAD doesn't cover. backend/scripts/fetch_address_points.py turns each into data/cache/nad/addr_<name>.csv in NAD's columns; nad.NadIndex reads every addr_*.csv next to the NAD file. Field mappings follow OpenAddresses (github.com/openaddresses/openaddresses, sources/<oa>). Another state: add its layers here the same way. licence: what the publisher says (checked 2026-11-04, #393); only sources with licence_ok true are fetched without --measure. label: the source line shown on a placed crash (SanGIS prescribes its wording). placement: auto = placed like NAD (the source is within 400 ft of police GPS about as often as NAD, ~85%); suggest = the point is the review list's suggestion, the engineer places it (tests/statewide/address_points_check.py, 2026-11-04).",
+ "sources": [
+  {
+   "name": "ca_riverside",
+   "county": "Riverside",
+   "oa": "us/ca/riverside.json",
+   "url": "https://gis.countyofriverside.us/arcgis_mapping/rest/services/OpenData/General/MapServer/10",
+   "where": "NOTES NOT IN ('UNASSIGNED', 'UNASSIGEND')",
+   "number": "HOUSE_NUMBER",
+   "street": [
+    "DIR",
+    "STREET_NAME",
+    "STREET_TYPE"
+   ],
+   "inc": null,
+   "post": "CITY",
+   "licence": "Riverside County item 8b87fb0bc600497a8b8e8c99ae1e7799: licenseInfo 'Public use.'; no explicit commercial grant. Ask RCIT GIS for a written OK (#393).",
+   "licence_ok": false,
+   "placement": "suggest",
+   "measured": "61.1% within 400 ft (low 56.9%, n=552)"
+  },
+  {
+   "name": "ca_orange",
+   "county": "Orange",
+   "oa": "us/ca/orange.json",
+   "url": "https://www.ocgis.com/arcpub/rest/services/Map_Layers/Address_Point_Final_Planning_Addressing/FeatureServer/0",
+   "where": "1=1",
+   "number": "AddressNumber",
+   "street": [
+    "StreetName"
+   ],
+   "inc": null,
+   "post": "City",
+   "licence": "CC0 1.0 (OpenAddresses; OC Public Works items on the same server are CC0). Credit OC Public Works / OC Survey.",
+   "licence_ok": true,
+   "label": "OC Public Works address points",
+   "placement": "suggest",
+   "measured": "61.0% within 400 ft (low 53.7%, n=182)"
+  },
+  {
+   "name": "ca_los_angeles",
+   "county": "Los Angeles",
+   "oa": "us/ca/los_angeles.json",
+   "url": "https://arcgis.gis.lacounty.gov/arcgis/rest/services/LACounty_Dynamic/CAMS/MapServer/1",
+   "where": "1=1",
+   "number": "Number",
+   "street": [
+    "PreDir",
+    "PreType",
+    "StArticle",
+    "StreetName",
+    "PostType",
+    "PostDir"
+   ],
+   "inc": "LegalComm",
+   "post": "PostComm1",
+   "licence": "County of Los Angeles Open Data Terms of Use (2015) \u00a73: copy, publish, adapt, 'exploit the Data for commercial and/or personal use'; no endorsement implied; download once, don't proxy live queries (\u00a74).",
+   "licence_ok": true,
+   "label": "Los Angeles County GIS (CAMS) address points",
+   "placement": "auto",
+   "measured": "85.5% within 400 ft of police GPS (low 83.3%, n=1,117); NAD on the same check 84.8%"
+  },
+  {
+   "name": "ca_san_joaquin",
+   "county": "San Joaquin",
+   "oa": "us/ca/san_joaquin.json",
+   "url": "https://sjmap.org/server/rest/services/Apps/DistrictViewerSvc/MapServer/10",
+   "where": "1=1",
+   "number": "SITUSNUMBER",
+   "street": [
+    "SITUSDIRECTION",
+    "SITUSTREET",
+    "SITUSTYPE"
+   ],
+   "inc": null,
+   "post": "SITUSCITYNAME",
+   "licence": "sjmap.org disclaimer: public service, no licence grant (parcels with a situs address, not address points). Ask SJC GIS for a written OK (#393).",
+   "licence_ok": false,
+   "placement": "suggest",
+   "measured": "69.2% within 400 ft (low 62.2%, n=185)"
+  },
+  {
+   "name": "ca_fresno",
+   "county": "Fresno",
+   "oa": "us/ca/fresno.json",
+   "url": "https://services3.arcgis.com/ibgDyuD2DLBge82s/arcgis/rest/services/REGIONAL_ADDRESS_VW/FeatureServer/1",
+   "where": "1=1",
+   "number": "ADDRESS_NUMBER",
+   "street": [
+    "STREET_DIRECTION",
+    "STREET_NAME",
+    "STREET_TYPE",
+    "STREET_POST_DIRECTION"
+   ],
+   "inc": null,
+   "post": "ADDRESS_ZIPCITY",
+   "licence": "CC0 (Fresno County item aec096ac4c1543c0bb3598523634db33, licenseInfo).",
+   "licence_ok": true,
+   "label": "Fresno County address points",
+   "placement": "suggest",
+   "measured": "64.4% within 400 ft (low 57.5%, n=194)"
+  },
+  {
+   "name": "ca_san_diego",
+   "county": "San Diego",
+   "oa": "us/ca/san_diego.json",
+   "url": "https://geo.sandag.org/server/rest/services/Hosted/Address_Points/FeatureServer/0",
+   "where": "1=1",
+   "number": "addrnmbr",
+   "street": [
+    "addrpdir",
+    "addrname",
+    "addrsfx",
+    "addrpostd"
+   ],
+   "inc": null,
+   "post": "community",
+   "licence": "SanGIS GIS Data End User Use Agreement (2015): businesses allowed, redistribution discouraged not prohibited; must not be named the sole source of altered data; no emergency-response or insurance-underwriting use.",
+   "licence_ok": true,
+   "label": "Derived from SanGIS address point data - www.sangis.org",
+   "placement": "auto",
+   "measured": "84.1% within 400 ft (low 80.9%, n=567); NAD on the same check 84.8%"
+  }
+ ]
+}
