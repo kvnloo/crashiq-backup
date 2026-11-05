@@ -101,6 +101,7 @@ class NadIndex:
         con.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
         from .crashes import city_key
         batch, n = [], 0
+        sig = self._signature()         # before reading: a file that lands mid-build forces the next rebuild
         for src in self.sources():
             with src.open(newline="", encoding="utf-8") as f:
                 for r in csv.DictReader(f):
@@ -123,7 +124,7 @@ class NadIndex:
         con.execute("CREATE INDEX point_key ON point (county, number, key)")
         con.executemany("INSERT INTO meta VALUES (?,?)", [("schema", str(SCHEMA)), ("release", RELEASE),
                                                           ("points", str(n)), ("source", str(self.csv_path.name)),
-                                                          ("sources", self._signature())])
+                                                          ("sources", sig)])
         con.commit()
         con.close()
         tmp.replace(self.db_path)

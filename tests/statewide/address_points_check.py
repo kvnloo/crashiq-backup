@@ -42,6 +42,9 @@ def house_address(p, s):
 
 
 COUNTIES = {19: "Los Angeles", 30: "Orange", 33: "Riverside", 39: "San Joaquin", 10: "Fresno", 37: "San Diego"}
+# the NAD counties, for the same check on NAD itself (--counties nad, with nad_ca_r24.csv linked as addr_nad.csv)
+NAD_COUNTIES = {36: "San Bernardino", 34: "Sacramento", 56: "Ventura", 48: "Solano", 44: "Santa Cruz", 24: "Merced",
+                45: "Shasta", 42: "Santa Barbara"}
 
 
 def _foot(pt, edges):
@@ -84,8 +87,12 @@ def main() -> None:
     ap.add_argument("--mirror", type=Path, required=True)
     ap.add_argument("--outcomes", required=True)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--counties", choices=("gaps", "nad"), default="gaps")
     ap.add_argument("--tiger", type=Path, help="TIGER/Line county SQLite dir (data/cache/tiger/2026)")
     a = ap.parse_args()
+    global COUNTIES
+    if a.counties == "nad":
+        COUNTIES = NAD_COUNTIES
 
     outcome = {}
     for f in glob.glob(a.outcomes):
