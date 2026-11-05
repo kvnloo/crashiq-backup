@@ -7,6 +7,9 @@ the county files add).
   gained = crashes run 11 left off the map (not GPS, not placed) that the county points now place
   truth  = house-address crashes whose police GPS fits their roads (run 11 outcome gps_usable*): distance from the
            address point to that GPS, the #264 bar being NAD's 86% within 400 ft / 74.5% within 250 ft
+  snapped = the same, after moving the address point onto the named street (nearest TIGER/Line edge carrying the
+           name, as the app moves it onto the corridor); setback = how far the point sat off that street
+           (over 100 ft = outside the default corridor buffer, so the app dropped it before #393)
 
 Run:  PYTHONPATH=backend python tests/statewide/address_points_check.py --addr-dir DIR --mirror data/statewide/ccrs_mirror.sqlite \
         --outcomes 'data/statewide/coverage_crashes_r11_*.csv' --out data/statewide/address_points_check.json
@@ -41,6 +44,33 @@ def house_address(p, s):
 COUNTIES = {19: "Los Angeles", 30: "Orange", 33: "Riverside", 39: "San Joaquin", 10: "Fresno", 37: "San Diego"}
 
 
+def _foot(pt, edges):
+    """Nearest point to pt on any of the edges (lists of (lat, lon)), and its distance in feet."""
+    best = None
+    kx = 364000 * math.cos(math.radians(pt[0]))
+    for pts in edges:
+        for (a, b) in zip(pts, pts[1:]):
+            ax, ay, bx, by = (a[1] - pt[1]) * kx, (a[0] - pt[0]) * 364000, (b[1] - pt[1]) * kx, (b[0] - pt[0]) * 364000
+            dx, dy = bx - ax, by - ay
+            t = 0.0 if dx == dy == 0 else max(0.0, min(1.0, -(ax * dx + ay * dy) / (dx * dx + dy * dy)))
+            fx, fy = ax + t * dx, ay + t * dy
+            d = math.hypot(fx, fy)
+            if best is None or d < best[0]:
+                best = (d, (pt[0] + fy / 364000, pt[1] + fx / kx))
+    return best
+
+
+def snap(tiger: sqlite3.Connection, k, pt):
+    """pt moved onto the nearest TIGER edge named like street k within ~1,800 ft, with the setback; or None."""
+    from crashiq.names import same_core
+    r = 0.005
+    edges = [json.loads(p) for names, p in tiger.execute(
+        "SELECT names, pts FROM edge WHERE minlat <= ? AND maxlat >= ? AND minlon <= ? AND maxlon >= ?",
+        (pt[0] + r, pt[0] - r, pt[1] + r, pt[1] - r))
+        if any((nk := street_key(n)) and same_core(k, nk) for n in json.loads(names))]
+    return _foot(pt, edges) if edges else None
+
+
 def wilson_low(k: int, n: int, z: float = 1.96) -> float:
     if not n:
         return 0.0
@@ -54,6 +84,7 @@ def main() -> None:
     ap.add_argument("--mirror", type=Path, required=True)
     ap.add_argument("--outcomes", required=True)
     ap.add_argument("--out", type=Path, required=True)
+    ap.add_argument("--tiger", type=Path, help="TIGER/Line county SQLite dir (data/cache/tiger/2026)")
     a = ap.parse_args()
 
     outcome = {}
@@ -64,10 +95,13 @@ def main() -> None:
     assert idx.ready(), f"no addr_*.csv in {a.addr_dir}"
 
     db = sqlite3.connect(a.mirror)
+    tigers = {c: sqlite3.connect(a.tiger / f"{2 * c - 1:03d}.sqlite") for c in COUNTIES
+              if a.tiger and (a.tiger / f"{2 * c - 1:03d}.sqlite").exists()}
     tabs = [t for (t,) in db.execute("SELECT name FROM sqlite_master WHERE type='table'")
             if "Collision Id" in [c[1] for c in db.execute(f'PRAGMA table_info("{t}")')]]
     stats = defaultdict(Counter)
     dist = defaultdict(list)
+    sdist, setback = defaultdict(list), defaultdict(list)
     for t in tabs:
         for cid, cc, city, p, s, lat, lon in db.execute(
                 f'SELECT "Collision Id", "County Code", "City Name", PrimaryRoad, SecondaryRoad, Latitude, Longitude '
@@ -76,6 +110,7 @@ def main() -> None:
             if not ha:
                 continue
             name = COUNTIES[int(cc)]
+            tg = tigers.get(int(cc))
             o, fatal, ksi = outcome.get(str(cid), ("?", False, False))
             st = stats[name]
             st["house_address"] += 1
@@ -85,7 +120,12 @@ def main() -> None:
             if o.startswith("gps_usable"):
                 st["truth_pool"] += 1
                 if pt:
-                    dist[name].append(nad.ft((pt["lat"], pt["lon"]), (float(lat), float(lon))))
+                    gps = (float(lat), float(lon))
+                    dist[name].append(nad.ft((pt["lat"], pt["lon"]), gps))
+                    sn = snap(tg, ha[0], (pt["lat"], pt["lon"])) if tg else None
+                    if sn:
+                        setback[name].append(sn[0])
+                        sdist[name].append(nad.ft(sn[1], gps))
             elif not o.startswith("placed") and o != "?":
                 st["off_map"] += 1
                 if pt:
@@ -100,9 +140,22 @@ def main() -> None:
                      "within_400ft": round(w4 / len(d), 3) if d else None, "within_400ft_low": round(wilson_low(w4, len(d)), 3),
                      "within_250ft": round(w2 / len(d), 3) if d else None, "within_250ft_low": round(wilson_low(w2, len(d)), 3),
                      "median_ft": round(sorted(d)[len(d) // 2]) if d else None}
+        sd, sb = sdist[name], setback[name]
+        if sd:
+            k4, k2 = sum(x <= 400 for x in sd), sum(x <= 250 for x in sd)
+            out[name].update(snapped_n=len(sd), snapped_within_400ft=round(k4 / len(sd), 3),
+                             snapped_within_400ft_low=round(wilson_low(k4, len(sd)), 3),
+                             snapped_within_250ft=round(k2 / len(sd), 3),
+                             snapped_within_250ft_low=round(wilson_low(k2, len(sd)), 3),
+                             setback_median_ft=round(sorted(sb)[len(sb) // 2]),
+                             setback_over_100ft=round(sum(x > 100 for x in sb) / len(sb), 3))
     tot = {k: sum(v.get(k, 0) for v in out.values()) for k in ("house_address", "off_map", "gained", "gained_fatal",
                                                                 "gained_ksi", "truth_pool", "truth_found")}
     alld = [x for v in dist.values() for x in v]
+    alls = [x for v in sdist.values() for x in v]
+    if alls:
+        tot.update(snapped_within_400ft=round(sum(x <= 400 for x in alls) / len(alls), 3),
+                   snapped_within_250ft=round(sum(x <= 250 for x in alls) / len(alls), 3))
     tot.update(within_400ft=round(sum(x <= 400 for x in alld) / len(alld), 3) if alld else None,
                within_250ft=round(sum(x <= 250 for x in alld) / len(alld), 3) if alld else None)
     out["ALL"] = tot

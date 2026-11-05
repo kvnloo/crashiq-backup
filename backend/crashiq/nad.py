@@ -26,6 +26,7 @@ RELEASE = "r24"
 SCHEMA = 2                    # 2: a source per point (county address files, #393)
 ONE_PLACE_FT = 1000.0
 PLUS_MINUS_FT = 400
+MAX_SETBACK_FT = 500          # an address point farther off the corridor isn't its frontage (#393; measured there)
 SOURCE = f"USDOT National Address Database ({RELEASE})"
 
 

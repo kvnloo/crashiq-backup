@@ -308,3 +308,23 @@ def test_fetching_county_address_points_pages_by_object_id_and_keeps_whole_numbe
     assert float(out[1]["Latitude"]) == pytest.approx(34.001) and float(out[1]["Longitude"]) == pytest.approx(-118.001)
     assert sum("/query?" in u for u in asked) == 3                        # pages: ids 1-2, 3, then empty
     assert not (tmp_path / "addr_ca_test.part").exists()
+
+
+def test_an_address_point_set_back_from_the_corridor_counts_on_it_in_front_of_the_address(index):
+    """#393: the point is the building, ~200 ft back from Business Center Dr; the crash goes on the corridor in front
+    of it (before, it fell outside the 100 ft buffer and was dropped). A point far off the corridor isn't placed."""
+    from crashiq import assign
+    line = [[38.2395, -122.0700], [38.2395, -122.0500]]               # ~190 ft south of the address point
+    net = {"line": line, "is_freeway": False, "intersections": [],
+           "segments": [{"id": "S1", "from_station_ft": 0, "to_station_ft": 5740}]}
+    result = {"crashes": [d5("a", 5101)], "cleaning": {}}
+    placement.place_unmatched(None, net, result, addresses=nad.Addresses(index, FakeAddrfeat()))
+    a = result["crashes"][0]
+    assert a["location_source"] == "address_nad" and a["lat"] == pytest.approx(38.2395, abs=1e-6)
+    assert 150 < a["approximate"]["setback_ft"] < 230
+    assert assign.assign([a], net, 250, 100)["assignments"][0]["kind"] == "segment"
+
+    far = {**net, "line": [[38.2300, -122.0700], [38.2300, -122.0500]]}   # ~3,500 ft away: not this frontage
+    result = {"crashes": [d5("b", 5101)], "cleaning": {}}
+    placement.place_unmatched(None, far, result, addresses=nad.Addresses(index, FakeAddrfeat()))
+    assert result["crashes"][0]["review_reason"] == "house_address" and result["crashes"][0]["lat"] is None
