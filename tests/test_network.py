@@ -207,3 +207,17 @@ def test_corridor_cities_from_osm_boundaries(tmp_path):
     assert got == {"cities": ["Hawthorne"], "outside": True, "counties": ["Los Angeles County"]}
     assert network.corridor_cities(db, [(34.0, -118.0), (34.01, -118.0)], 100,
                                    lambda u, d, t: json.dumps({"elements": [{"type": "node", "id": 1}]}).encode()) is None
+
+
+def test_a_short_piece_of_the_corridor_street_is_not_an_intersection():
+    """A crossover or short bent piece of the corridor street meeting it mid-block made an "Unnamed road" stop
+    (Crenshaw, Sherman Way, Camino Capistrano, 2026-11-03). Only the real cross street counts."""
+    n = lambda i, lat, lon: {"type": "node", "id": i, "lat": lat, "lon": lon}  # noqa: E731
+    els = [n(1, 34.000, -118.300), n(2, 34.005, -118.300), n(3, 34.010, -118.300), n(4, 34.020, -118.300),
+           n(5, 34.0051, -118.2999),                                      # crossover to the other carriageway
+           n(6, 34.010, -118.310), n(7, 34.010, -118.290),
+           {"type": "way", "id": 10, "nodes": [1, 2, 3, 4], "tags": {"highway": "primary", "name": "Main Street"}},
+           {"type": "way", "id": 11, "nodes": [2, 5], "tags": {"highway": "primary", "name": "Main Street"}},
+           {"type": "way", "id": 12, "nodes": [6, 3, 7], "tags": {"highway": "residential", "name": "1st Street"}}]
+    net = network.detect({"elements": els}, [(34.000, -118.300), (34.020, -118.300)])
+    assert [i["name"] for i in net["intersections"]] == ["1st Street"]

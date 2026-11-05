@@ -303,8 +303,9 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
             continue    # a ramp meeting a freeway corridor is a merge or diverge, not an intersection (N7, #67)
         all_names = _names(w.get("tags", {}))
         names = [n for n in all_names if _core(n) not in corridor_cores]
-        if freeway and all_names and not names:
-            continue    # a short piece of the freeway itself (too short to count as corridor), not a crossing road
+        if all_names and not names:
+            continue    # a short piece of the corridor street itself (too short or bent to count as corridor), not a
+                        # crossing road: it made "Unnamed road" stops mid-block on Crenshaw, Sherman Way, Camino Capistrano
         wn = w.get("nodes", [])
         for k, nid in enumerate(wn):
             if nid in corridor_nodes and nid in proj:
