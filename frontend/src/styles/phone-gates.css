@@ -1,0 +1,137 @@
+/* Existing Signal Flow palette and controls; phone-only accessibility conformance. */
+.top .brand,
+.top .toplink {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.rail a.step,
+.sf-btn {
+  min-height: 44px;
+}
+
+/* Corridor: tools, intersection names, checkbox hit areas and remove buttons. */
+.corridor .tool,
+.corridor .search .input,
+.corridor .search .hits button,
+.side .aadts .input {
+  min-height: 44px;
+}
+.side .loc .n,
+.side .loc .x {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.side .loc .n {
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: normal;
+  word-break: normal;
+}
+.side .loc .x {
+  width: 44px;
+  justify-content: center;
+  padding: 0;
+}
+.side .loc-check {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.side .loc-check input {
+  width: 18px;
+  height: 18px;
+  margin: 0;
+}
+.side .check,
+.side .slider,
+.side .vbasis .kf .input {
+  min-height: 44px;
+}
+.side .loc.off .n,
+.side .loc.off .pin {
+  opacity: 1;
+  color: var(--muted);
+}
+.side .loc.off .pin {
+  border-color: var(--muted);
+}
+
+/* Previously short links, tabs, map filters and review actions. */
+.side .linkbtn,
+.side details.adv > summary,
+.profile .rowlink,
+.profile .linkbtn,
+.profile .showtable summary,
+.profile .review .rv-head,
+.findings-screen .rowlink,
+.findings-screen .linkbtn {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  max-width: 100%;
+  white-space: normal;
+  word-break: normal;
+}
+.findings-screen .tabs button,
+.profile .tbtn,
+.profile .map-legend2 .seg button,
+.profile .chip,
+.profile .map-legend2 .link {
+  min-height: 44px;
+}
+.profile .tbtn {
+  min-width: 44px;
+}
+.profile .map-legend2 .link {
+  display: inline-flex;
+  align-items: center;
+}
+.profile .review .rv-act .sf-btn {
+  height: auto;
+  min-height: 44px;
+}
+/* Original 45% opacity is low contrast; line-through still marks filtered state. */
+.profile .chip.off {
+  opacity: 1;
+}
+
+@media (max-width: 480px) {
+  /* Search and two map actions must wrap inside a 390px phone viewport. */
+  .corridor .toolbar {
+    max-width: calc(100% - 32px);
+    flex-wrap: wrap;
+  }
+  .corridor .search {
+    flex: 1 1 180px;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Keep full words visible rather than truncating screen labels. */
+  .findings-screen .fcard .tt,
+  .profile .bar .lab {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+    word-break: normal;
+  }
+  .findings-screen .fcard .meta,
+  .profile .quality .qline {
+    flex-wrap: wrap;
+    white-space: normal;
+    overflow: visible;
+  }
+  .profile .quality .qline > :last-child {
+    white-space: normal;
+    overflow: visible;
+    text-overflow: clip;
+  }
+  .profile .sf-kpis.n3 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
