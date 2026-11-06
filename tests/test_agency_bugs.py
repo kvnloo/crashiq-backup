@@ -6,6 +6,8 @@ from __future__ import annotations
 import copy
 import json
 
+import pytest
+
 from crashiq import crashes
 from crashiq.names import same_core, street_key
 from crashiq.sources.ckan import Ckan
@@ -160,6 +162,35 @@ def test_gps_crash_with_not_stated_is_assigned_by_its_gps():
 
 def test_private_property_has_its_own_reason():
     assert _no_cross("PRIVATE PROPERTY")[1].get("exclude_rule") == "private_property"
+
+
+@pytest.mark.parametrize("p, s", [("440 W MANCHESTER BLVD (PARKING LOT)", "PRIVATE PROPERTY"),
+                                  ("PRIVATE PROPERTY", "440 W MANCHESTER BLVD (PARKING LOT)")])
+def test_private_property_with_a_house_address_on_the_corridor_is_d5(p, s):
+    # #397 (user 2026-11-04): it happened on the segment in front of that address
+    keys = [street_key("West Manchester Boulevard")]
+    roads = [p, s]
+    on = [i for i, r in enumerate(roads) if crashes._names_street(r, keys)]
+    assert crashes.house_address(roads, on, keys) == {"number": 440, "street": "W MANCHESTER BLVD"}
+
+
+def test_private_property_with_a_house_address_goes_to_d5_labelled_in_front_of_it():
+    d = _fixture(no_gps=True)
+    _, r = _row(d, 9200001)
+    r["PrimaryRoad"], r["SecondaryRoad"] = "11800 CRENSHAW BLVD (PARKING LOT)", "PRIVATE PROPERTY"
+    out = crashes.pull(STUDY, NET_X, Ckan(FakeCkan(d)))
+    c = next(c for c in out["crashes"] if c["crash_id"] == "9200001")
+    assert c.get("exclude_rule") is None and c["review_reason"] == "house_address"
+    assert c["house_address"] == {"number": 11800, "street": "CRENSHAW BLVD"}
+    assert c["location_label"] == "in front of 11800 CRENSHAW BLVD"
+    assert "no_coords_private_property" not in out["cleaning"]
+    from crashiq import export
+    assert export._roads(c) == "11800 CRENSHAW BLVD (PARKING LOT) / PRIVATE PROPERTY (in front of 11800 CRENSHAW BLVD)"
+
+
+def test_private_property_without_a_house_address_stays_excluded():
+    out, c = _no_cross("PRIVATE PROPERTY")                       # #94, unchanged by #397
+    assert c["exclude_rule"] == "private_property" and "location_label" not in c
 
 
 def test_a_real_side_street_is_still_a_side_street():

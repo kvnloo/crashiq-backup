@@ -6,6 +6,7 @@ import ReviewList from '../components/ReviewList'
 import StripDiagram from '../components/StripDiagram'
 import { locationPoints } from '../lib/mapcats'
 import { ApiError, api, errorText } from '../lib/api'
+import { roadsText } from '../lib/roads'
 import { shortName } from '../lib/strip'
 import { vruHeadline } from '../lib/vru'
 import { cell, fmt, table, titleCase } from '../lib/tables'
@@ -901,7 +902,7 @@ function Drill({ row, data, onClose }) {
           <tbody>{data.crashes.map((c) => (
             <tr key={c.crash_id}><td className="mono">{c.date}{c.hour != null ? ` ${String(c.hour).padStart(2, '0')}h` : ''}</td>
               <td>{titleCase(c.collision_type)}</td><td className="mono">{c.severity}</td>
-              <td className="muted">{c.primary_road} / {c.secondary_road}</td></tr>))}</tbody></table></div>
+              <td className="muted">{roadsText(c)}</td></tr>))}</tbody></table></div>
       </section>
     </div>
   )
