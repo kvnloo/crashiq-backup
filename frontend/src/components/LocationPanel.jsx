@@ -150,8 +150,10 @@ export default function LocationPanel({
                         ) : null}
                       </div>
                       <div className="acts">
-                        <input type="checkbox" checked={it.is_study} aria-label={`Study intersection: ${it.name}`}
-                          title="Study intersection" onChange={(e) => onToggleStudy(it.id, e.target.checked)} />
+                        <label className="loc-check">
+                          <input type="checkbox" checked={it.is_study} aria-label={`Study intersection: ${it.name}`}
+                            title="Study intersection" onChange={(e) => onToggleStudy(it.id, e.target.checked)} />
+                        </label>
                         <button type="button" className="x" aria-label={`Remove ${it.name}`} title="Remove"
                           onClick={() => onRemove(it.id)}>×</button>
                       </div>
