@@ -1,0 +1,6 @@
+{"_source": "Census TIGER/Line ADDRFEAT 2026, Los Angeles County (tl_2026_06037_addrfeat), interpolated along the one range holding the number, as addrfeat.lookup does; 1210 Crenshaw Blvd taken from its Torrance range (ZIP 90501, the crash's City Name), since LA County has a second 1210 in ZIP 90019. Computed 2026-11-07 for #410.",
+ "points": [
+  {"number": 11312, "street": "CRENSHAW BLVD", "lat": 33.932252896551724, "lon": -118.32641862068965},
+  {"number": 11306, "street": "CRENSHAW BLVD", "lat": 33.93230337931035, "lon": -118.32641872413794},
+  {"number": 1210, "street": "CRENSHAW BLVD", "lat": 33.8360265, "lon": -118.32865475}
+ ]}

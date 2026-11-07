@@ -63,17 +63,20 @@ def place_address(c: dict, addresses, line: list | None = None) -> bool:
     from . import nad
     from .names import street_key
     ha, k = c["house_address"], street_key(c["house_address"]["street"])
+    pl = Polyline([tuple(x) for x in line]) if line else None
     p = addresses.nad.lookup(c.get("county_code"), c.get("city"), ha["number"], k) if addresses.nad else None
+    if p and _off_the_stretch(c, pl, {"tier": "address_point", "lat": p["lat"], "lon": p["lon"],
+                                      "source": p.get("source") or nad.SOURCE}):
+        return False
     if p and p.get("source", nad.SOURCE) not in nad.auto_sources():
         c["suggestion"] = {"tier": "address_point", "lat": p["lat"], "lon": p["lon"], "source": p["source"]}
         return False
     lat, lon, setback = (p["lat"], p["lon"], None) if p else (None, None, None)
-    if p and line:
-        pl = Polyline([tuple(x) for x in line])
+    if p and pl:
         pr = pl.project(lat, lon)
         if pr.offset_ft > nad.MAX_SETBACK_FT:
             p = None
-        elif 0 <= pr.station_ext <= pl.length_ft:      # beyond the study limits: left as is (excluded as usual)
+        else:
             (lat, lon), setback = pl.point_at(pr.station_ft), round(pr.offset_ft)
     if p:
         c.update(lat=lat, lon=lon, location_source="address_nad", review_reason=None,
@@ -81,9 +84,23 @@ def place_address(c: dict, addresses, line: list | None = None) -> bool:
                               "source": p.get("source") or nad.SOURCE, "setback_ft": setback})
         return True
     t = addresses.addrfeat.lookup(c.get("county_code"), ha["number"], k) if addresses.addrfeat else None
-    if t:
+    if t and not _off_the_stretch(c, pl, {"tier": "address_tiger", "lat": t["lat"], "lon": t["lon"]}):
         c["suggestion"] = {"tier": "address_tiger", "lat": t["lat"], "lon": t["lon"]}
     return False
+
+
+def _off_the_stretch(c: dict, pl: Polyline | None, point: dict) -> bool:
+    """#410 (user 2026-11-07, "Exclude: outside limits"): a house address whose point lies past either end of the study
+    line is outside the study limits, by the same test as every other crash (assign: station before A or past B). Any
+    address list says so, a suggestion-only one or TIGER ADDRFEAT too: they're only too rough to place on the
+    stretch. The crash is excluded with the point kept as its evidence; it doesn't go to review."""
+    if pl is None:
+        return False
+    st = pl.project(point["lat"], point["lon"]).station_ext
+    if 0 <= st <= pl.length_ft:
+        return False
+    c.update(exclude_rule="outside_study_limits", review_reason=None, address_point=point)
+    return True
 
 
 def place_fatal_from_fars(db: Database | None, net: dict, result: dict, overpass=None, tiger=None) -> dict:
