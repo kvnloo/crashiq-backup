@@ -41,8 +41,9 @@ def test_live_severity_on_the_study_stretch(crenshaw):
     sev = Counter(c["severity"] for c in crenshaw["crashes"] if not c.get("exclude_rule"))
     # 4 GPS rows > 650 ft from the line dropped (#54); 16 no-cross-street reports now on the review list (#94);
     # 4 house addresses on Crenshaw written in both fields ("CRENSHAW BL" | "CRENSHAW BL 24413") were excluded as an
-    # off-corridor cross street: now D5, placed at a NAD point or reviewed (#283)
-    assert dict(sev) == {"K": 1, "A": 6, "B": 48, "C": 82, "O": 196}
+    # off-corridor cross street: now D5, placed at a NAD point or reviewed (#283); 3 private-property reports with a
+    # house address on Crenshaw (2000932, 2138243, 2301460) were excluded: now D5 too (user 2026-11-04, #393)
+    assert dict(sev) == {"K": 1, "A": 6, "B": 49, "C": 83, "O": 197}
 
 
 def test_live_replay_returns_every_recorded_crash(crenshaw):
