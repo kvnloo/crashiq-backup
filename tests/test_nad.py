@@ -379,3 +379,48 @@ def test_a_county_layer_less_accurate_than_nad_is_only_a_suggestion(tmp_path):
     assert oc["suggestion"]["source"] == "OC Public Works address points"
     assert la["location_source"] == "address_nad" and la["approximate"]["source"].startswith("Los Angeles County")
     assert x["review_reason"] == "house_address"
+
+
+# -- #408: a placement is credited to the address list it came from -------------------------------------------------
+SANGIS = "Derived from SanGIS address point data - www.sangis.org"
+
+
+def _profile_with_sources(*sources):
+    from crashiq import profile
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    seg = dict(zip([a["crash_id"] for a in asg["assignments"] if a["kind"] == "segment"], sources))
+    asg = {**asg, "assignments": [{**a, "location_provenance": "address_nad"} if a["crash_id"] in seg else a
+                                  for a in asg["assignments"]]}
+    pull = {**pull, "crashes": [{**c, "location_source": "address_nad",
+                                 "approximate": {"method": "address_nad", "plus_minus_ft": 400, "points": 1,
+                                                 "source": seg[c["crash_id"]]}} if c["crash_id"] in seg else c
+                                for c in pull["crashes"]]}
+    return study, n, pull, profile.build(study, n, pull, asg)
+
+
+def test_a_sangis_placement_is_credited_to_sangis_in_its_words():
+    """#408: a San Diego crash placed at a SanGIS point was explained as a USDOT NAD placement; the SanGIS line from
+    the source registry (docs/03 #393) was never shown."""
+    from crashiq import export
+    _, _, _, p = _profile_with_sources(SANGIS, SANGIS)
+    cav = {c["key"]: c for c in p["caveats"]}["address_nad"]
+    assert SANGIS in cav["text"] and "National Address Database" not in cav["text"]
+    t1 = {r["key"]: r for r in {x["id"]: x for x in p["tables"]}["T1"]["rows"]}["located_address_nad"]
+    assert SANGIS in t1["label"] and "National Address Database" not in t1["label"]
+    d = {"study": {"from_year": 2021, "to_year": 2025, "radius_ft": 250, "buffer_ft": 100},
+         "assignment": {"counts": {"unmatched": 0}}, "profile": p}
+    assert f"Address points used in this study: {SANGIS} (2 crashes)." in export.methodology(d)
+
+
+def test_each_list_used_is_credited_with_its_count_nad_first():
+    _, _, _, p = _profile_with_sources(SANGIS, nad.SOURCE, nad.SOURCE)
+    cav = {c["key"]: c for c in p["caveats"]}["address_nad"]
+    assert cav["sources"] == {nad.SOURCE: 2, SANGIS: 1}
+    assert f"Address points: {nad.SOURCE} (2), {SANGIS} (1)." in cav["text"]
+
+
+def test_an_older_placement_without_a_source_is_nad():
+    """Placements stored before #393 carry no source: they came from NAD, the only list then."""
+    _, _, _, p = _profile_with_sources(None)
+    assert {c["key"]: c for c in p["caveats"]}["address_nad"]["sources"] == {nad.SOURCE: 1}
