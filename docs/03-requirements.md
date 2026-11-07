@@ -654,3 +654,7 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     and the finding writes the numbers (otherwise "a third" would pass for a quarter, 0.25).
   - **Count words DECIDED (user, 2026-11-02, PM session: "option A"):** count words ("a dozen", "dozens",
     "hundreds", "a handful") are always rejected; the finding writes the cited number as digits instead.
+- **Stage 7 container tool and hosted address data DECIDED (user, 2026-11-03, PM chat; #384):** "1) A 2) b".
+  (1) Colima via Homebrew on this Mac for the image build and the Tester's click-through against the container.
+  (2) Address data on a fresh hosted disk: an on-demand per-county TIGER ADDRFEAT fetcher, plus a one-time upload of
+  the NAD California extract (426 MB) to the Render disk. Not baked into the image.
