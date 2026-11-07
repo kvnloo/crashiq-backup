@@ -27,7 +27,7 @@ independently and files `bug` issues with a failing test, which go round the sam
 - **2026-11-02 (user, PM chat): one TrafficIQ suite agent, later.** All tools will sit on the TrafficIQ website with
   one agent for the whole suite (not a CrashIQ-only bot). Its first CrashIQ job: read messy crash locations on the
   review list and suggest which real streets were meant; code places the crash, the engineer accepts or rejects,
-  accepted readings become alias rules. Tested on hidden-GPS / LAPD truth before it is shown. Comes after shipping,
+  accepted readings become alias rules after the user approves them (CLAUDE.md: nothing is learned without user approval). Tested on hidden-GPS / LAPD truth before it is shown. Comes after shipping,
   after the cheaper rule fixes, and after the #55 guardrails. Rules and lesson sources: trafficiq `docs/AGENT.md`.
   **Keep writing `knowledge/lessons.md`**: it is the agent's starting knowledge.
 - **2026-10-18 (user, via Claude Code):** methodology correctness comes first. The mockup layout
@@ -51,7 +51,8 @@ independently and files `bug` issues with a failing test, which go round the sam
 - **2026-11-06 (user, PM session): Kevin Lu (GitHub kvnloo) is the user's partner.** "Yes, Kevin Lu is my partner. So
   him and I are going to be working together." His PRs go through the same review and merge rules as any other.
 - **2026-11-06 (user, PM session): try placing county address points automatically (#393, PR #399).** "You can try placing
-  automatically if we have the address points." As that trial, every county source whose licence is cleared for the hosted app
-  (Los Angeles, San Diego, Orange, Fresno) places house-address crashes automatically (approximate, in front of the
-  address). Orange and Fresno measured 61–64% within 400 ft, against NAD's 85%. Riverside and San Joaquin stay
-  measure-only (licence; no emails).
+  automatically if we have the address points." Narrowed on 2026-11-07 (below): Los Angeles and San Diego place
+  automatically; Orange and Fresno only suggest. Riverside and San Joaquin stay measure-only (licence; no emails).
+- **2026-11-07 (user, PM session): the 2026-11-06 bulk merge.** Asked whether they merged #390, #391, #386, #388, #402,
+  #399, #392 and #405 together, the user answered "Yes, we did" (the user and Kevin). They stay merged; Tester and
+  Engineering check them on main, and anything wrong is fixed in new PRs (#406, #407, #408).
