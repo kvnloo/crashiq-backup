@@ -16,6 +16,7 @@ from . import fars, freeway, gps_rules, grade, locate, osm
 from . import network as network_mod
 from . import union as union_mod
 from .db import Database
+from .geo import Polyline
 
 
 def _at_named_intersection(c: dict, net: dict) -> bool:
@@ -51,18 +52,33 @@ def _gps_usable(c: dict, net: dict) -> bool:
 APPROX_SOURCES = ("approximate", "address_nad")
 
 
-def place_address(c: dict, addresses) -> bool:
-    """D5 (#283; user decision 2026-10-25): a house-address crash at its NAD address point, approximate ("usually
-    within 400 ft"). Where NAD has none, it stays on the review list with the TIGER address-range point as the
-    suggestion. True when placed."""
+def place_address(c: dict, addresses, line: list | None = None) -> bool:
+    """D5 (#283; user decision 2026-10-25): a house-address crash at its address point (NAD, or a county layer where
+    NAD has none, #393), approximate ("usually within 400 ft"). The point is a building or a lot, set back from the
+    street; the address is on the corridor street, so the crash goes on the corridor in front of it (#393: left where
+    it was, a point more than the 100 ft buffer back was dropped as outside_buffer). A point more than
+    nad.MAX_SETBACK_FT off the corridor isn't this street's frontage (a bad point, or the same number on a namesake
+    street): no placement. Where there's no point, it stays on the review list with the TIGER address-range point
+    as the suggestion. True when placed."""
     from . import nad
     from .names import street_key
     ha, k = c["house_address"], street_key(c["house_address"]["street"])
     p = addresses.nad.lookup(c.get("county_code"), c.get("city"), ha["number"], k) if addresses.nad else None
+    if p and p.get("source", nad.SOURCE) not in nad.auto_sources():
+        c["suggestion"] = {"tier": "address_point", "lat": p["lat"], "lon": p["lon"], "source": p["source"]}
+        return False
+    lat, lon, setback = (p["lat"], p["lon"], None) if p else (None, None, None)
+    if p and line:
+        pl = Polyline([tuple(x) for x in line])
+        pr = pl.project(lat, lon)
+        if pr.offset_ft > nad.MAX_SETBACK_FT:
+            p = None
+        elif 0 <= pr.station_ext <= pl.length_ft:      # beyond the study limits: left as is (excluded as usual)
+            (lat, lon), setback = pl.point_at(pr.station_ft), round(pr.offset_ft)
     if p:
-        c.update(lat=p["lat"], lon=p["lon"], location_source="address_nad", review_reason=None,
+        c.update(lat=lat, lon=lon, location_source="address_nad", review_reason=None,
                  approximate={"method": "address_nad", "plus_minus_ft": nad.PLUS_MINUS_FT, "points": p["points"],
-                              "source": nad.SOURCE})
+                              "source": p.get("source") or nad.SOURCE, "setback_ft": setback})
         return True
     t = addresses.addrfeat.lookup(c.get("county_code"), ha["number"], k) if addresses.addrfeat else None
     if t:
@@ -227,7 +243,7 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
     result["cleaning"]["crossings"] = place_crossings(db, net, result, gate, overpass)
     # house addresses (D5, #283): NAD address point, else review with the TIGER suggestion; never the street locator
     house = [c for c in result["crashes"] if c.get("review_reason") == "house_address" and not c.get("exclude_rule")]
-    by_nad = sum(place_address(c, addresses) for c in house) if addresses is not None else 0
+    by_nad = sum(place_address(c, addresses, net.get("line")) for c in house) if addresses is not None else 0
     # no cross street (#94): nothing for the locator to work with; the engineer places it from the review list
     todo = [c for c in result["crashes"] if c.get("location_source") == "unmatched" and not c.get("exclude_rule")
             and not c.get("review_reason")]

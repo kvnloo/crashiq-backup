@@ -14,6 +14,7 @@ committed); the index is built from it into SQLite on first use, with no network
 from __future__ import annotations
 
 import csv
+import json
 import math
 import sqlite3
 import threading
@@ -23,9 +24,10 @@ from pathlib import Path
 from .names import StreetKey, drop_directional, same_core, street_key
 
 RELEASE = "r24"
-SCHEMA = 1
+SCHEMA = 2                    # 2: a source per point (county address files, #393)
 ONE_PLACE_FT = 1000.0
 PLUS_MINUS_FT = 400
+MAX_SETBACK_FT = 500          # an address point farther off the corridor isn't its frontage (#393; measured there)
 SOURCE = f"USDOT National Address Database ({RELEASE})"
 
 
@@ -37,6 +39,14 @@ def _county_codes() -> dict[str, int]:
     from .settings import ROOT
     with (ROOT / "data" / "reference" / "caltrans_districts.csv").open(newline="") as f:
         return {r["county"].upper(): int(r["ccrs_county_code"]) for r in csv.DictReader(f)}
+
+
+def auto_sources() -> set[str]:
+    """Source lines that place a crash by themselves: NAD, and county layers measured about as accurate (#393). Any
+    other source's point is only the review list's suggestion."""
+    from .settings import ROOT
+    reg = json.loads((ROOT / "data" / "reference" / "address_points.json").read_text())["sources"]
+    return {SOURCE} | {s.get("label") or f"{s['county']} County address points" for s in reg if s.get("placement") == "auto"}
 
 
 def ft(a: tuple[float, float], b: tuple[float, float]) -> float:
@@ -52,13 +62,20 @@ class NadIndex:
         self._lock = threading.Lock()            # one build at a time
         self._local = threading.local()          # per-thread read-only connections (#323)
 
+    def sources(self) -> list[Path]:
+        """The NAD CSV and every county address-point CSV beside it (addr_*.csv, the gaps in NAD: #393)."""
+        return [p for p in [self.csv_path] if p.exists()] + sorted(self.csv_path.parent.glob("addr_*.csv"))
+
+    def _signature(self) -> str:
+        return ";".join(f"{p.name}:{p.stat().st_size}" for p in self.sources())
+
     def ready(self) -> bool:
-        """The index exists, or is built now from the CSV. False when there is no CSV (D5 then goes to review)."""
+        """The index exists, or is built now from the CSVs. False when there is none (D5 then goes to review)."""
         with self._lock:
             if self._ready:
                 return True
             if not self._built():
-                if not self.csv_path.exists():
+                if not self.sources():
                     return False
                 self._build()
             self._ready = True
@@ -76,8 +93,10 @@ class NadIndex:
             return False
         with sqlite3.connect(self.db_path) as con:
             try:
-                return int(con.execute("SELECT value FROM meta WHERE key = 'schema'").fetchone()[0]) >= SCHEMA
-            except (sqlite3.Error, TypeError):
+                meta = dict(con.execute("SELECT key, value FROM meta"))
+                # an added or re-downloaded address file rebuilds the index
+                return int(meta["schema"]) >= SCHEMA and meta.get("sources") == self._signature()
+            except (sqlite3.Error, TypeError, KeyError, ValueError):
                 return False
 
     def _build(self) -> None:
@@ -87,31 +106,34 @@ class NadIndex:
         tmp.unlink(missing_ok=True)
         con = sqlite3.connect(tmp)
         con.execute("CREATE TABLE point (county INTEGER, number INTEGER, key TEXT, name TEXT, inc TEXT, post TEXT, "
-                    "lat REAL, lon REAL)")
+                    "lat REAL, lon REAL, src TEXT)")
         con.execute("CREATE TABLE meta (key TEXT PRIMARY KEY, value TEXT)")
         from .crashes import city_key
         batch, n = [], 0
-        with self.csv_path.open(newline="", encoding="utf-8") as f:
-            for r in csv.DictReader(f):
-                cty = codes.get((r.get("County") or "").upper().replace(" COUNTY", "").strip())
-                k = street_key(r.get("StNam_Full"))
-                try:
-                    num, lat, lon = int(r["Add_Number"]), float(r["Latitude"]), float(r["Longitude"])
-                except (TypeError, ValueError):
-                    continue
-                if cty is None or k is None:
-                    continue
-                for key in _keys(k):
-                    batch.append((cty, num, key, r["StNam_Full"], city_key(r.get("Inc_Muni")),
-                                  city_key(r.get("Post_City")), lat, lon))
-                n += 1
-                if len(batch) >= 50000:
-                    con.executemany("INSERT INTO point VALUES (?,?,?,?,?,?,?,?)", batch)
-                    batch = []
-        con.executemany("INSERT INTO point VALUES (?,?,?,?,?,?,?,?)", batch)
+        sig = self._signature()         # before reading: a file that lands mid-build forces the next rebuild
+        for src in self.sources():
+            with src.open(newline="", encoding="utf-8") as f:
+                for r in csv.DictReader(f):
+                    cty = codes.get((r.get("County") or "").upper().replace(" COUNTY", "").strip())
+                    k = street_key(r.get("StNam_Full"))
+                    try:
+                        num, lat, lon = int(r["Add_Number"]), float(r["Latitude"]), float(r["Longitude"])
+                    except (TypeError, ValueError):
+                        continue
+                    if cty is None or k is None:
+                        continue
+                    for key in _keys(k):
+                        batch.append((cty, num, key, r["StNam_Full"], city_key(r.get("Inc_Muni")),
+                                      city_key(r.get("Post_City")), lat, lon, r.get("Source") or SOURCE))
+                    n += 1
+                    if len(batch) >= 50000:
+                        con.executemany("INSERT INTO point VALUES (?,?,?,?,?,?,?,?,?)", batch)
+                        batch = []
+        con.executemany("INSERT INTO point VALUES (?,?,?,?,?,?,?,?,?)", batch)
         con.execute("CREATE INDEX point_key ON point (county, number, key)")
         con.executemany("INSERT INTO meta VALUES (?,?)", [("schema", str(SCHEMA)), ("release", RELEASE),
-                                                          ("points", str(n)), ("source", str(self.csv_path.name))])
+                                                          ("points", str(n)), ("source", str(self.csv_path.name)),
+                                                          ("sources", sig)])
         con.commit()
         con.close()
         tmp.replace(self.db_path)
@@ -123,19 +145,22 @@ class NadIndex:
         from .crashes import city_key
         ck = city_key(city)
         rows = {r for key in _keys(k) for r in self._conn().execute(
-            "SELECT name, inc, post, lat, lon FROM point WHERE county = ? AND number = ? AND key = ?",
+            "SELECT name, inc, post, lat, lon, src FROM point WHERE county = ? AND number = ? AND key = ?",
             (int(county), int(number), key))}
         pts = []
-        for name, inc, post, lat, lon in rows:
+        srcs = []
+        for name, inc, post, lat, lon, src in rows:
             nk = street_key(name)
             if nk is None or not same_core(k, nk) or (k.suffix and nk.suffix and k.suffix != nk.suffix):
                 continue
             if ck and ck != "UNINCORPORATED" and ck not in (inc, post):
                 continue
             pts.append((lat, lon))
+            srcs.append(src)
         if not pts or max(ft(a, b) for a in pts for b in pts) > ONE_PLACE_FT:
             return None
-        return {"lat": sum(p[0] for p in pts) / len(pts), "lon": sum(p[1] for p in pts) / len(pts), "points": len(pts)}
+        return {"lat": sum(p[0] for p in pts) / len(pts), "lon": sum(p[1] for p in pts) / len(pts), "points": len(pts),
+                "source": max(set(srcs), key=srcs.count)}
 
 
 @dataclass
