@@ -44,8 +44,8 @@ independently and files `bug` issues with a failing test, which go round the sam
   "Yes, use it". Stage 7 (Ship) starts once that golden test passes.
 - **2026-11-06 (user, PM session): Kevin Lu (GitHub kvnloo) is the user's partner.** "Yes, Kevin Lu is my partner. So
   him and I are going to be working together." His PRs go through the same review and merge rules as any other.
-- **2026-11-06 (user, PM session): county address points place automatically (#393, PR #399).** "You can try placing
-  automatically if we have the address points." Every county source whose licence is cleared for the hosted app (Los
-  Angeles, San Diego, Orange, Fresno) places house-address crashes automatically (approximate, in front of the
+- **2026-11-06 (user, PM session): try placing county address points automatically (#393, PR #399).** "You can try placing
+  automatically if we have the address points." As that trial, every county source whose licence is cleared for the hosted app
+  (Los Angeles, San Diego, Orange, Fresno) places house-address crashes automatically (approximate, in front of the
   address). Orange and Fresno measured 61–64% within 400 ft, against NAD's 85%. Riverside and San Joaquin stay
   measure-only (licence; no emails).
