@@ -1,0 +1,160 @@
+[
+  {
+    "state": "Delaware",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "100% of 588,486 rows have latitude (0 nulls, queried 2026-11-02); no street names or route/milepost columns",
+    "kabco": "no",
+    "linkable": "no",
+    "years": "2009-2026 (2009 partial 19,115; ~31k-38k/yr 2010-2025; 2026 to 2026-04-01)",
+    "update": "monthly (5th of month), covers 2009 through ~6 months ago",
+    "licence": "UNVERIFIED - Socrata licence field empty; description says data 'is not an official record' and has no personal info",
+    "aadt_source": "DelDOT Vehicle Volume Summary book (PDF): https://deldot.gov/Publications/manuals/traffic_counts/pdfs/2025/Vehicle%20Volume%20Summary%20Book%20Introduction.pdf ; machine-readable AADT layer UNVERIFIED",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "Socrata 827n-m6xc (DSHS), mirrored on FirstMap ArcGIS. Severity is crash class only (Fatality 1,841 / Personal Injury 91,204 / PDO 334,436 / Non-Reportable 160,998), not KABCO; single crash table, no person/vehicle tables. A except KABCO.",
+    "urls": [
+      "https://data.delaware.gov/Transportation/Public-Crash-Data/827n-m6xc",
+      "https://data.delaware.gov/api/views/827n-m6xc.json",
+      "https://enterprise.firstmap.delaware.gov/arcgis/rest/services/Transportation/DE_Public_Crash_Data/FeatureServer/0",
+      "https://news.delaware.gov/2023/02/27/state-crash-data-now-available-to-public-through-open-data-portal/"
+    ]
+  },
+  {
+    "state": "South Dakota",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "100% of 399,194 rows have lat/long (0 null/0); also PrimaryHwyNbr + ILTMRM (milepost) on state highways",
+    "kabco": "yes",
+    "linkable": "no",
+    "years": "2004-2026 (~16k-21k/yr; 2026 partial 9,182)",
+    "update": "continuous - 'new crashes automatically added by BIT'; latest crash 2026-10-29",
+    "licence": "UNVERIFIED - ArcGIS licenseInfo/accessInformation empty",
+    "aadt_source": "https://sdgis.sd.gov/dot/rest/services/TIM/HR49_GisADT/FeatureServer (State Trunk Traffic, Truck Traffic)",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "Two public SDDOT layers from SDARS: HY11_IntersectionCrashDiagram (2004-2026, 399,194 rows, richer fields incl. FuncClass, speed limit) and TIM/DOT_Crashes (2022-2026, 84,653). InjurySeverity uses KABCO names (Fatal/Incapacitating/Non-incapacitating/Possible/No injury) but also 'Wild animal hit' (19,690 in DOT_Crashes) as a value - needs mapping. Flat crash rows with first-driver fields; no separate person table; maxRecordCount 3000 so page queries. Old safesd.gov raw-data zips (2008-2017) now 404.",
+    "urls": [
+      "https://sdgis.sd.gov/dot/rest/services/BITCustom/HY11_IntersectionCrashDiagram/MapServer/0",
+      "https://sdgis.sd.gov/dot/rest/services/TIM/DOT_Crashes/MapServer/0",
+      "https://sdgis.sd.gov/dot/rest/services/TIM/DOT_Crashes/MapServer/info/iteminfo",
+      "https://safesd.gov"
+    ]
+  },
+  {
+    "state": "North Dakota",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "unknown",
+    "gps_share": "UNVERIFIED",
+    "kabco": "unknown",
+    "linkable": "unknown",
+    "years": "UNVERIFIED",
+    "update": "UNVERIFIED",
+    "licence": "UNVERIFIED",
+    "aadt_source": "https://www.dot.nd.gov/travel-and-safety/traveling-north-dakota/traffic-data-program (traffic count maps/reports; GIS via https://gishubdata-ndgov.hub.arcgis.com/search?tags=nddot - AADT layer UNVERIFIED)",
+    "city_open_data": [],
+    "bucket": "D",
+    "notes": "No public record-level crash dataset found on NDDOT or ND GIS Hub. NDDOT Traffic Operations Manual: 'NDDOT will provide the crash data per the developer's request'; individual reports are purchased. (Note: geohub-ndot 'CrashData OpenData' is Nevada DOT, not ND.)",
+    "urls": [
+      "https://www.dot.nd.gov/travel-and-safety/highway-safety/highway-safety-programs",
+      "https://www.dot.nd.gov/sites/www/files/documents/construction-and-planning/Traffic-Operations-Manual.pdf",
+      "https://www.dot.nd.gov/travel-and-safety/safety/purchase-crash-report",
+      "https://www.statepatrol.nd.gov/request-crash-report"
+    ]
+  },
+  {
+    "state": "Alaska",
+    "record_level_public": "partial",
+    "access": "records_request",
+    "location": "county_city_only",
+    "gps_share": "0% in the public table (City + County_Borough only)",
+    "kabco": "no",
+    "linkable": "no",
+    "years": "public table 2013-2023 (106,364 rows); 'certified data years 2013-2022' per Highway Safety Office",
+    "update": "annual report snapshot (table built for the 2023 crash report story map)",
+    "licence": "UNVERIFIED - page notes data is compiled for safety planning and barred from litigation discovery (23 U.S.C. 407/148(h)(4)); no reuse licence found",
+    "aadt_source": "https://services.arcgis.com/r4A0V7UzH9fcLVvv/ArcGIS/rest/services/HPMS_DATA_2024/FeatureServer ; https://dot.alaska.gov/stwdplng/transdata/traffic.shtml",
+    "city_open_data": [],
+    "bucket": "D",
+    "notes": "Only public record-level data is AKDOT_GIS 'Crash_2023Table' (no coordinates, no crash ID, severity only as serious-injury/fatality flag). Anything usable comes from the crash data team (dot.crash.info@alaska.gov), so users must bring their own export. Anchorage crash open data not found.",
+    "urls": [
+      "https://dot.alaska.gov/dmio/hwysafety/data.shtml",
+      "https://services.arcgis.com/r4A0V7UzH9fcLVvv/arcgis/rest/services/Crash_2023Table/FeatureServer/0",
+      "https://data-soa-akdot.opendata.arcgis.com/",
+      "https://storymaps.arcgis.com/stories/8dad68e617eb405d9231ce3d718868d2"
+    ]
+  },
+  {
+    "state": "Vermont",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "~98.3% (3,037 of 182,721 rows lack lat/long); also street address, intersecting street, route + AOT milepoint; HOWMAPPED: LRS 116,494 / XY 42,858 / GEOCODE 19,082 / LATLONG 1,252",
+    "kabco": "no",
+    "linkable": "no",
+    "years": "2010-2026 (latest 2026-11-01); counts drop recently (2015 14,113 vs 2024 7,064) - completeness of recent years UNVERIFIED",
+    "update": "near-continuous (latest record 2026-11-01); exact cadence UNVERIFIED",
+    "licence": "UNVERIFIED - tool disclaimer: data 'exempt from discovery or admission under 23 U.S.C. 409', non-personal only; no commercial-use terms found",
+    "aadt_source": "https://maps.vtrans.vermont.gov/arcgis/rest/services/Master/General/MapServer/84 (AADT 2024; 2020-2023 in layers 71/73/74/82)",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "Public Query Tool is backed by an open ArcGIS layer CrashPQT (Query,Extract; maxRecordCount 2000). Severity is Fatal 983 / Injury 32,614 / PDO 124,619 / blank 24,505 - not KABCO; single crash table. A except KABCO.",
+    "urls": [
+      "https://apps.vtrans.vermont.gov/CrashPublicQueryTool/",
+      "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/arcgis/rest/services/CrashPQT/FeatureServer/0",
+      "https://vtrans.vermont.gov/operations/OSB/data/crash"
+    ]
+  },
+  {
+    "state": "Wyoming",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "unknown",
+    "gps_share": "UNVERIFIED",
+    "kabco": "unknown",
+    "linkable": "unknown",
+    "years": "UNVERIFIED (annual Report on Traffic Crashes published through 2025)",
+    "update": "annual publications; ad-hoc data requests (~10 business days)",
+    "licence": "UNVERIFIED",
+    "aadt_source": "https://dot.state.wy.us/home/planning_projects/Traffic_Data.html (Vehicle Miles Book PDFs with AADT)",
+    "city_open_data": [],
+    "bucket": "D",
+    "notes": "Public side is a standard crash-counts report (statewide/county/district, 8 topics) and a fatal-crash web app; detailed data only via WYDOT Highway Safety crash data request form. Users would upload a WYDOT export; FARS covers fatal only.",
+    "urls": [
+      "https://dot.state.wy.us/home/dot_safety/crash-data.html",
+      "https://dot.state.wy.us/home/dot_safety/crash-data/standard-crash-data.html",
+      "https://webapp.dot.state.wy.us/ao/r/fatalities/fatalitycrashinfo/counts",
+      "https://dot.state.wy.us/home/dot_safety/crash-data/publications.html"
+    ]
+  },
+  {
+    "state": "District of Columbia",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "100% of 356,724 crashes have LATITUDE (0 null/0); plus address, route/measure, nearest intersection, MAR address match",
+    "kabco": "no",
+    "linkable": "yes",
+    "years": "2009-2026 (2009: 12,014; ~18k-22k/yr 2015-2025; 2026 to 2026-10-31: 14,804)",
+    "update": "near-daily (latest REPORTDATE 2026-10-31)",
+    "licence": "CC0 1.0 - 'You can copy, modify, distribute, and perform the data, even for commercial purposes, all without asking permission' (dc.gov Terms for District Data)",
+    "aadt_source": "https://opendata.dc.gov/datasets/DCGIS::2024-traffic-volume",
+    "city_open_data": [
+      {
+        "city": "Washington, DC",
+        "url": "https://opendata.dc.gov/datasets/DCGIS::crashes-in-dc"
+      }
+    ],
+    "bucket": "A",
+    "notes": "DDOT/MPD 'Crashes in DC' (MapServer/24) relates 1:many to Crash Details (MapServer/25, 906,332 person rows) by CRIMEID. Severity is fatal/major/minor/unknown injury counts per mode, not KABCO (map major->A, minor->B/C is a judgement). Min REPORTDATE has bad 1825 dates - filter.",
+    "urls": [
+      "https://opendata.dc.gov/datasets/DCGIS::crashes-in-dc/about",
+      "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Public_Safety_WebMercator/MapServer/24",
+      "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Public_Safety_WebMercator/MapServer/25",
+      "https://dc.gov/page/terms-and-conditions-use-district-data"
+    ]
+  }
+]

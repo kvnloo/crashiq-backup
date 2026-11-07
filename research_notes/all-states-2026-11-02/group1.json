@@ -1,0 +1,188 @@
+[
+  {
+    "state": "Maryland",
+    "record_level_public": "yes",
+    "access": "open_download",
+    "location": "gps",
+    "gps_share": "Statewide MSP export: UNVERIFIED. Montgomery County ACRS feed: 100% of 2015-2026 rows have latitude (measured 2026-11-02, e.g. 10,629/10,629 in 2024).",
+    "kabco": "yes (ACRS person injury_severity uses MMUCC/KABCO labels: Fatal, Suspected Serious, Suspected Minor, Possible, No Apparent - verified in Montgomery County drivers table; statewide export assumed same, UNVERIFIED)",
+    "linkable": "yes (MSP: 'All data can be identified by the Report Number included in each dataset'; export has Reports, Vehicles, Occupants, NonMotorists, Contributing Circumstances tabs)",
+    "years": "2015-2026 (2015-2023 older MSP download; 2019-2023 and 2024-present via MSP public Tableau dashboards; statewide Socrata copy frozen May 2023 and removed)",
+    "update": "Dashboard 2024-present, refresh cadence UNVERIFIED; Montgomery County feed updated within days (last update 2026-10-30)",
+    "licence": "MSP statewide: UNVERIFIED (no terms found). Montgomery County datasets: 'Public Domain' (Socrata licence field).",
+    "aadt_source": "https://data-maryland.opendata.arcgis.com/datasets/maryland::mdot-sha-annual-average-daily-traffic-aadt-segments/explore",
+    "city_open_data": [
+      {
+        "city": "Montgomery County (county/local roads only)",
+        "url": "https://data.montgomerycountymd.gov/Public-Safety/Crash-Reporting-Incidents-Data/bhju-22kf",
+        "note": "Socrata API, ~10-12k crashes/yr 2015-2026, lat/long, road_name + cross_street_name; drivers mmzv-x632, non-motorists n7fk-dce5"
+      }
+    ],
+    "bucket": "A",
+    "notes": "Statewide record-level ACRS data is downloadable without login from MSP's public Tableau (analytics.mdsp.org guest view), but only by manual 'Download > Data' clicks (UTF-16 tab-separated files), no API. Montgomery County has a true open API with GPS. Confirm export columns include lat/long and licence before building.",
+    "urls": [
+      "https://opendata.maryland.gov/stories/s/Maryland-Crash-Data-Resources/ggbs-m2rv",
+      "https://mdsp.maryland.gov/Pages/Dashboards/CrashDataDashboard.aspx",
+      "https://mdsp.maryland.gov/Pages/Dashboards/CrashDataDownload.aspx",
+      "https://analytics.mdsp.org/t/Public/views/PublicCrashData/DownloadCrashData?%3Aembed=y&%3AisGuestRedirectFromVizportal=y",
+      "https://github.com/dlanderm-dal/md-crash-data",
+      "https://data.montgomerycountymd.gov/Public-Safety/Crash-Reporting-Incidents-Data/bhju-22kf"
+    ]
+  },
+  {
+    "state": "Minnesota",
+    "record_level_public": "yes",
+    "access": "open_download",
+    "location": "gps",
+    "gps_share": "UNVERIFIED (MnDOT guide maps the public MnCrash CSV export in Google Earth, implying coordinates; share not measured)",
+    "kabco": "yes (MnDOT/MN crash data use KABCO; field values in public export UNVERIFIED)",
+    "linkable": "unknown",
+    "years": "2016-present (MnCrash: 'Crash data is only available from January 1, 2016 forward'; MnCMAT2 range 01/01/2016-09/30/2026)",
+    "update": "MnCrash ongoing (refresh cadence UNVERIFIED); MnDOT request products prepared annually after DPS Crash Facts",
+    "licence": "MnCrash public portal: UNVERIFIED. MnCMAT2 terms: data 'as is', no warranty; access must be approved by a County/City Engineer sponsor.",
+    "aadt_source": "https://gisdata.mn.gov/dataset/trans-aadt-traffic-count-locs ; https://www.dot.state.mn.us/traffic/data/tdms.html",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "DPS MnCrash 'Public Crash Data Portal' lets anyone query and export CSV (no login), and 'complete public crash data sets' are offered by email (MNCrash.Team@state.mn.us). It is an ASP.NET query UI, not an API. MnCMAT2 (better mapping/analysis) is gated to MN county/city staff and contracted consultants with an engineer sponsor.",
+    "urls": [
+      "https://mncrash.state.mn.us/Pages/AdHocSearch.aspx",
+      "https://mncrash.state.mn.us/Pages/Tutorials.aspx",
+      "https://edocs-public.dot.state.mn.us/edocs_public/DMResultSet/download?docId=35091908",
+      "https://mncmat2.dot.state.mn.us/web/Identity/Account/NewUser",
+      "https://mncmat2.dot.state.mn.us/web/Identity/Account/Terms",
+      "https://www.dot.state.mn.us/trafficeng/safety/crashdata.html"
+    ]
+  },
+  {
+    "state": "Missouri",
+    "record_level_public": "partial",
+    "access": "aggregate_only",
+    "location": "unknown",
+    "gps_share": "UNVERIFIED (MoDOT internal crash points carry Travelway + Log (milepost) and landed lat/long, seen only in the public wildlife-collision subset layer)",
+    "kabco": "unknown (MSHP reports use Fatal / Personal Injury / Property Damage and 'disabling injury'; full KABCO mapping UNVERIFIED)",
+    "linkable": "unknown",
+    "years": "MSHP STARS statistics 2002-present (MUCR versions 2002-2011, 2012-2023, 2024-present)",
+    "update": "MSHP: crash data generally available for analysis within one week",
+    "licence": "UNVERIFIED",
+    "aadt_source": "https://mapsonline.modot.mo.gov/arcgis/rest/services/BusinessInt/TrafficInfoSegAADT/MapServer ; https://www.modot.org/traffic-volume-maps",
+    "city_open_data": [
+      {
+        "city": "Kansas City",
+        "url": "https://data.kcmo.org/d/62pj-bjfw",
+        "note": "MSHP STARS exports, injury/fatal only, 2019-2024 (~5k/yr), on_street/at_street, no coordinates, no PDO"
+      }
+    ],
+    "bucket": "D",
+    "notes": "Public side is MSHP STARS statistical reports plus a 'Traffic Crashes Online Mapping' tool (whether it exports record-level rows is UNVERIFIED) and MoDOT dashboards. MoDOT's only public crash point layer is the 2014-2023 wildlife-collision subset (BusinessInt/WVC), which shows the internal data has milepost + lat/long + severity. Treat as bring-your-own-export unless MoDOT/MSHP confirm a bulk release.",
+    "urls": [
+      "https://mshp.dps.missouri.gov/MSHPWeb/SAC/stars_index.html",
+      "https://www.mshp.dps.missouri.gov/TR15Map/index.jsp",
+      "https://www.savemolives.com/mcrs/dashboards",
+      "https://mapping.modot.org/arcgis/rest/services/BusinessInt/WVC/MapServer/0",
+      "https://data.kcmo.org/d/62pj-bjfw"
+    ]
+  },
+  {
+    "state": "Indiana",
+    "record_level_public": "no",
+    "access": "agency_or_consultant_login",
+    "location": "gps",
+    "gps_share": "UNVERIFIED (IMPO/INDOT use corrected lat/long for F&I crashes; statewide share unknown)",
+    "kabco": "unknown",
+    "linkable": "unknown",
+    "years": "ARIES statewide (range UNVERIFIED); ISP yearly statistics summaries through 2025",
+    "update": "UNVERIFIED",
+    "licence": "UNVERIFIED",
+    "aadt_source": "https://gis.indot.in.gov/ro/rest/services/DOT/RO_RandH_Organization_Default/FeatureServer/75 ; https://www.in.gov/indot/resources/traffic-data",
+    "city_open_data": [
+      {
+        "city": "Indianapolis region (IMPO)",
+        "url": "https://indympo.gov/regional-insights/crash/",
+        "note": "F&I crash dashboard only; record download UNVERIFIED"
+      }
+    ],
+    "bucket": "D",
+    "notes": "ARIES (LexisNexis) is government-only; INDOT's crash analysis runs in AASHTOWare Safety via an Access Indiana/ITAP account that external users may request (approval criteria UNVERIFIED). The public ARIES download is a 17 KB yearly statistics zip, not records; Indiana MPH data hub has no crash dataset.",
+    "urls": [
+      "https://ariesportal.com/Downloads/Download",
+      "https://support.numetric.com/en/articles/16946962-indot-how-to-request-crash-narratives-and-diagrams",
+      "https://support.numetric.com/en/articles/12384809-indot-how-to-log-into-aashtoware-safety-via-access-indiana-and-itap",
+      "https://in.gov/isp/crash-reports",
+      "https://in.gov/cji/research/crash-statistics"
+    ]
+  },
+  {
+    "state": "Tennessee",
+    "record_level_public": "partial",
+    "access": "agency_or_consultant_login",
+    "location": "gps",
+    "gps_share": "Public F&I layer: >99.9% have lat/long (measured 2026-11-02: 2024 45,518/45,524; 2025 45,053/45,060; 2026 36,408/36,410)",
+    "kabco": "no (public layer has only Fatality and Injury counts; full TITAN severity coding UNVERIFIED)",
+    "linkable": "no (public layer is crash-level only; MRN key present)",
+    "years": "Public layer 2024-01-01 to present (126,994 rows: 2024 45,524; 2025 45,060; 2026 36,410), fatal + injury crashes only, no PDO",
+    "update": "Searchable crash dashboard updated weekly (through 2026-10-21 at check)",
+    "licence": "UNVERIFIED; TITAN online services are 'for the exclusive use of law enforcement agencies... Membership is required'",
+    "aadt_source": "https://www.tn.gov/tdot/long-range-planning-home/longrange-road-inventory/longrange-road-inventory-traffic.html ; https://www.arcgis.com/home/item.html?id=e757073d965542c6bf9a1c70c36c722e",
+    "city_open_data": [
+      {
+        "city": "Nashville (Metro)",
+        "url": "https://data.nashville.gov/datasets/Nashville::traffic-accidents/explore",
+        "note": "ArcGIS FeatureServer Traffic_Accidents_2, 222,903 rows 2019-01-01 to 2026-10, Lat/Long, street address, injury/fatality counts incl. PDO, no KABCO"
+      }
+    ],
+    "bucket": "D",
+    "notes": "Full TITAN data is LE-only; consultants need a records request or agency export. A public, queryable ArcGIS layer (tnmap.tn.gov SAFETY/MapForDashboards/MapServer/0) gives GPS-placed fatal+injury crashes since 2024 with flags (ped, bike, speed, DUI) but no KABCO or PDO, usable as a limited Part A.",
+    "urls": [
+      "https://www.tn.gov/safety/stats/titan.html",
+      "https://www.tn.gov/safety/stats/crashdata.html",
+      "https://gis.safety.tn.gov",
+      "https://tnmap.tn.gov/arcgis/rest/services/SAFETY/MapForDashboards/MapServer/0",
+      "https://services2.arcgis.com/HdTo6HJqh92wn4D8/arcgis/rest/services/Traffic_Accidents_2/FeatureServer/0"
+    ]
+  },
+  {
+    "state": "Wisconsin",
+    "record_level_public": "yes",
+    "access": "open_download",
+    "location": "gps",
+    "gps_share": "UNVERIFIED (DT4000 crash file layout includes LATDECDG/LONDECDG; share not measured)",
+    "kabco": "yes (DT4000 is MMUCC-aligned with person INJSVR field; value list UNVERIFIED)",
+    "linkable": "yes (DT4000 extracts split into crash, person, vehicle, fixed-object files keyed by DOCTNMBR/UNITNMBR)",
+    "years": "Open annual CSV extracts 1994-2022 (DT4000 format 2017-2022, legacy 1994-2016); Community Maps public map 2010-current (fatal from 2001); TOPS Lab has 1994-current by request",
+    "update": "Open extracts annual but stale (last batch 2020-2022 posted Sept 2023); Community Maps nightly",
+    "licence": "WisDOT says it is 'making its annual motor vehicle crash data sets available as open data'; no formal licence found (UNVERIFIED for commercial use)",
+    "aadt_source": "https://data-wisdot.opendata.arcgis.com/search?categories=traffic (WisDOT Traffic Counts TCMap)",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "Best-structured of this group: public Box.com zips with linked crash/person/vehicle CSVs and decimal lat/long, no login. Gap is 2023-present: needs Community Maps advanced-user account (WisTransPortal) or a TOPS Lab request (open to the public, incl. consultants).",
+    "urls": [
+      "https://wi-state-patrol.atlassian.net/wiki/spaces/OPENDATA/pages/2069528581/Wisconsin+Motor+Vehicle+Crash+Annual+Data+Sets",
+      "https://transportal.cee.wisc.edu/services/crash-data/requests/",
+      "https://wisdot.box.com/s/57ojuczi71rffpehyjk39cfn8o6u44rd",
+      "https://transportal.cee.wisc.edu/partners/community-maps/",
+      "https://transportal.cee.wisc.edu/services/crash-data/"
+    ]
+  },
+  {
+    "state": "South Carolina",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "gps",
+    "gps_share": "UNVERIFIED (SCCATTS electronic reporting produces map-geocoded crashes per FHWA/Clemson research; public share unknown)",
+    "kabco": "unknown",
+    "linkable": "unknown",
+    "years": "Public: annual Traffic Collision Fact Books (PDF) through 2024; master file years UNVERIFIED",
+    "update": "SCDOT receives the master crash file from SCDPS quarterly (ED 75)",
+    "licence": "UNVERIFIED",
+    "aadt_source": "https://gis.scdot.org/hosting/rest/services/Average_Daily_Traffic/FeatureServer/3 ; https://www.scdot.org/travel/travel-trafficdata.html",
+    "city_open_data": [],
+    "bucket": "D",
+    "notes": "SCDPS is custodian of the master crash file; public output is fact books, a fatality dashboard and statistics on request (non-media requests go to OHSJP). No record-level public download or portal found. SCDOT consultants would need an agency-provided export.",
+    "urls": [
+      "https://scdps.sc.gov/ohsjp/stat_services",
+      "https://scdps.sc.gov/ohsjp/stat_services/factbooks",
+      "https://scdot.org/content/dam/scdot-legacy/business/pdf/engineering-directives/ED%2075.pdf",
+      "https://highways.dot.gov/media/10981"
+    ]
+  }
+]

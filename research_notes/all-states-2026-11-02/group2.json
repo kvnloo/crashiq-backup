@@ -1,0 +1,187 @@
+[
+  {
+    "state": "Alabama",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "838,309 of 971,202 rows (86%) have Latitude>0 (queried 2026-11-02); StreetName/CrossStreet1/Route/Milepost also present",
+    "kabco": "yes",
+    "linkable": "no (single flattened crash table with causal-unit (CU*) and 2nd-vehicle (V2*) columns; no separate person/vehicle tables found)",
+    "years": "2020-2025 (2025 partial; latest DateTime 2025-03-31)",
+    "update": "UNVERIFIED (latest record 2025-03-31 as of 2026-11-02, so the feed may be stale)",
+    "licence": "UNVERIFIED - the ArcGIS layer has no description or copyright text. The ALDOT Safety Data Access Guidebook cites 23 U.S.C. 409 and a state Supreme Court ruling that upheld ALDOT refusing to release crash data",
+    "aadt_source": "https://aldotgis.dot.state.al.us/atd",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "Public CARE/eCrash ArcGIS layer (no token): 971,202 rows with lat/long and severity values Fatal, Suspected Serious, Suspected Minor, Possible, PDO. Data quality: about 226k rows hold Year values 1-31 and CrashSev holds intersection-flag text, so some columns look shifted and need cleaning. The endpoint is undocumented (it looks like the back end of the CARE portal maps), so confirm with CAPS/ALDOT that it is allowed before relying on it. If not, fall back to D (CARE/SAFETY portal export).",
+    "urls": [
+      "https://care-esriext.aladata.com/arcgis/rest/services/eCrash/Red/MapServer/0",
+      "https://safety.aladata.com/DataSource/Index/eCrash",
+      "https://caps.ua.edu/analytics/portals",
+      "https://www.dot.state.al.us/publications/Design/pdf/TrafficSafetyOp/SafetyDataAccessGuidebook.pdf"
+    ]
+  },
+  {
+    "state": "Louisiana",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "gps",
+    "gps_share": "UNVERIFIED (DOTD publishes a Lat/Long user manual and LRS tools; statewide records not publicly viewable)",
+    "kabco": "UNVERIFIED",
+    "linkable": "UNVERIFIED",
+    "years": "UNVERIFIED (CARTS dashboards; 2023 summary report published)",
+    "update": "CARTS compiles crash data nightly (DOTD page)",
+    "licence": "Requests go to DOTDCrashData@la.gov. DOTD outputs are marked 'exempt from discovery or admission under 23 U.S.C. 407'. Commercial terms UNVERIFIED",
+    "aadt_source": "https://gis.dotd.la.gov/road/rest/services/Roads_and_Highways_OpenData/MapServer",
+    "city_open_data": [
+      {
+        "city": "Baton Rouge",
+        "url": "https://data.brla.gov/Public-Safety/Baton-Rouge-Traffic-Crash-Incidents/7wah-qncc",
+        "notes": "Socrata, licence Public Domain, latitude/longitude, has_injury/has_fatality flags (not KABCO); about 15k rows/yr 2023-2025, starts mid-2022"
+      }
+    ],
+    "bucket": "D",
+    "notes": "LSU CARTS manages the data for DOTD. The public sees only dashboards and reports. Record-level access goes through the DOTD Louisiana Crash Tool (LCT) or by emailing DOTDCrashData@la.gov. Baton Rouge open data is the only public record-level GPS source found.",
+    "urls": [
+      "https://dotd.louisiana.gov/about/office-of-project-delivery/planning/highway-safety/safety-data-analysis",
+      "https://carts.lsu.edu/datareports/",
+      "https://carts.lsu.edu/projects/lct",
+      "https://dotd.la.gov/media/tsoiljiu/class-introduction-to-crash-analysis-2025-10.pdf",
+      "https://dotd.louisiana.gov/media/cz2nqota/crash-data-analysis-guide-20250903.pdf"
+    ]
+  },
+  {
+    "state": "Kentucky",
+    "record_level_public": "partial",
+    "access": "open_download",
+    "location": "gps",
+    "gps_share": "UNVERIFIED (the extract layout has Latitude/Longitude decimal fields plus roadway number/milepoint and intersection/between streets)",
+    "kabco": "UNVERIFIED",
+    "linkable": "yes (Master File Number shared across the collision, unit and person records in the extract layout)",
+    "years": "Static yearly full extracts 2010-2015 confirmed. Recent years through the KSP query/'Generate Extract' tool are UNVERIFIED (the page is JS-driven and the browser was unavailable)",
+    "update": "UNVERIFIED",
+    "licence": "KSP site: 'no warranty, either expressed or implied, is given to the accuracy, completeness, reliability, or suitability for any particular purpose'. No licence found (UNVERIFIED)",
+    "aadt_source": "https://maps.kytc.ky.gov/arcgis/rest/services/Apps/TrafficCounts/MapServer",
+    "city_open_data": [
+      {
+        "city": "Louisville",
+        "url": "https://gis.lojic.org/maps/rest/services/LojicSolutions/OpenDataTransportation/MapServer/14",
+        "notes": "High Injury Network only (2018-2022), not crash points; the crash data comes from KYTC/KSP under an agreement"
+      }
+    ],
+    "bucket": "A",
+    "notes": "Provisional A: KSP's public Collision Analysis site has record-level query + extract with no login, and the layout carries lat/long and a Master File key. Before committing, check by hand that the extract covers 2020+ and holds KABCO values. If not, it becomes C/D. The KTC CDAT tool (crashtool.uky.edu) needs registration and is for KYTC staff and partners.",
+    "urls": [
+      "http://www.crashinformationky.org/",
+      "http://www.crashinformationky.org/AdvancedSearch",
+      "http://www.crashinformationky.org/Home/Extracts",
+      "http://www.crashinformationky.org/Downloads/Collision%20Extract%20Layout.xls",
+      "https://transportation.ky.gov/HighwaySafety/Pages/Resources.aspx",
+      "https://crashtool.uky.edu/"
+    ]
+  },
+  {
+    "state": "Oklahoma",
+    "record_level_public": "no",
+    "access": "agency_or_consultant_login",
+    "location": "gps",
+    "gps_share": "UNVERIFIED (statewide); the OKC layer has LATITUDE/LONGITUDE",
+    "kabco": "UNVERIFIED",
+    "linkable": "UNVERIFIED",
+    "years": "SAFE-T holds all reported crashes since 1998 (ODOT training deck). Public OHSO Crash Facts up to 2021",
+    "update": "UNVERIFIED",
+    "licence": "UNVERIFIED",
+    "aadt_source": "https://services6.arcgis.com/RBtoEUQ2lmN0K3GY/arcgis/rest/services/AADT_Network/FeatureServer",
+    "city_open_data": [
+      {
+        "city": "Oklahoma City",
+        "url": "https://services5.arcgis.com/2mOVdIcRtNH2JsSF/arcgis/rest/services/OKC_Crash_Map_WFL1/FeatureServer/0",
+        "notes": "Vision Zero layer, 49,249 crashes with lat/long, severity and on/at street. Dates run 2017-01-01 to 2021-12-31 (static snapshot)"
+      }
+    ],
+    "bucket": "D",
+    "notes": "ODOT crash data sits in SAFE-T (login at oksafe-t.org) and ODOT's Numetric Crash Query, which both need accounts. OHSO publishes only dashboards, story maps and Crash Facts PDFs, plus a few 2019 OHP-only ArcGIS layers.",
+    "urls": [
+      "https://www.oksafe-t.org/",
+      "https://www.odot.org/traffic/files/safe-t-training.pdf",
+      "https://support.numetric.com/en/articles/6150044-oklahoma-dot-crash-query-overview",
+      "https://oklahoma.gov/highwaysafety/data/current-crash-data.html",
+      "https://oklahoma.gov/odot/about-us/contact-us/traffic-engineering/traffic-engineering-collision-analysis-and-speed-studies.html"
+    ]
+  },
+  {
+    "state": "Oregon",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "269,607 of 273,810 (98.5%) located (UNLOCT_FLG=0). Unlocated crashes get a default off-network coordinate. Highway number + milepoint and street/intersecting street also present",
+    "kabco": "yes (KABCO field: K 3,045, A 14,120, B 60,627, C 69,475, O 126,543)",
+    "linkable": "yes (CRASH_ID. The CDS raw extract / Access decode DB carries crash, vehicle and participant records; the ArcGIS layer is crash-level only)",
+    "years": "2019-2024 in the ArcGIS layer (38k-50k/yr). ODOT keeps 10 years; the CDV holds the latest 10 published years",
+    "update": "Annual (2024 data released 2025; the data come in a yearly release)",
+    "licence": "UNVERIFIED - read the Crash Data Disclaimers PDF before launch. Oregon is a self-reporting state, so PDO coverage depends on DMV reports ($2,500 threshold since 2018)",
+    "aadt_source": "https://gis.odot.state.or.us/arcgis1006/rest/services/transgis/catalog/MapServer/155",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "The OTSDE_Crash ArcGIS MapServer is public: 273,810 crashes, KABCO, lat/long and milepoint, maxRecordCount 10,000. ODOT also posts downloadable Access decode databases and crash geodatabases on CrashDataProducts.aspx.",
+    "urls": [
+      "https://gis.odot.state.or.us/arcgis1006/rest/services/agol/OTSDE_Crash/MapServer/0",
+      "https://www.oregon.gov/odot/data/pages/crash.aspx",
+      "https://www.oregon.gov/odot/Data/Pages/CrashDataProducts.aspx",
+      "https://www.oregon.gov/odot/Data/Crash%20Data%20Products/CDS-ReadMe.pdf",
+      "https://www.oregon.gov/odot/Data/documents/Crash_Data_Disclaimers.pdf",
+      "https://tvc.odot.state.or.us/tvc/"
+    ]
+  },
+  {
+    "state": "Connecticut",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "UNVERIFIED share (point-geometry layers; NameOfRoadway/NameOfIntersectingRoadway also present)",
+    "kabco": "yes (MostSevereInjury: K 3,180; A 14,570; B 128,467; C 153,716; O 919,170; null 2,377)",
+    "linkable": "yes (CrashID on the Crash, Person and Vehicle layers)",
+    "years": "2015-2026 (100k-116k crashes/yr; 2020 83,791)",
+    "update": "Near-daily (latest CrashDate about 2026-10-30 when queried 2026-11-02)",
+    "licence": "UNVERIFIED - data.ct.gov listing has no licence. CTCDR describes itself as for 'research and informational purposes'",
+    "aadt_source": "https://services1.arcgis.com/FCaUeJ5SOVtImake/arcgis/rest/services/CTDOT_Traffic_Monitoring_Data/FeatureServer/1",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "UConn CTSRC's public ArcGIS MapServer has Crash (1,221,480), Person (2,863,884) and Vehicle layers, maxRecordCount 2,000, with no login. CTCDR web tool and CTDOT open-data crash layers are also available.",
+    "urls": [
+      "https://gis.cti.uconn.edu/arcgis/rest/services/Crash_Dashboards/ConnecticutCrash/MapServer",
+      "https://www.ctcrash.uconn.edu/",
+      "https://data.ct.gov/Transportation/Vehicle-Crash-Data-Repository/tusz-n3pv",
+      "https://connecticut-ctdot.opendata.arcgis.com/search?tags=crash"
+    ]
+  },
+  {
+    "state": "Utah",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "100% of rows have lat_utm_y in every year layer (UTM 12N). route_id + beg_mileage and main_road_name also present",
+    "kabco": "yes (crash_severity_desc: Fatal, Suspected Serious, Suspected Minor, Possible, No Injury/PDO)",
+    "linkable": "no in the public layer (crash-level only, PII removed). UDOT Numetric has the multi-table data but needs a login",
+    "years": "2019-2026 (one layer per year; 50k-65k/yr). The 2025 layer has only 19,962 rows, probably incomplete (UNVERIFIED why)",
+    "update": "Nightly (item description); latest crash_datetime 2026-10-31",
+    "licence": "Item terms: 'for informational purposes only and must be field verified prior to being used on a project'. Description: 'This data is protected under 23 USC 407'. Commercial use UNVERIFIED",
+    "aadt_source": "https://data-uplan.opendata.arcgis.com/datasets/uplan::aadt-unrounded-1/about",
+    "city_open_data": [
+      {
+        "city": "Salt Lake City",
+        "url": "https://maps.slc.gov/server/rest/services/Hosted/SLC_Crash_Data/FeatureServer",
+        "notes": "SLCPD crash points, snapshot dated 2023-03-13"
+      }
+    ],
+    "bucket": "A",
+    "notes": "UDOT's public 'Utah Crash Locations' FeatureServer (maxRecordCount 2,000, Query+Extract) is the best open source in this group, but it has no person/vehicle tables. Check why the 2025 layer is short before use. There is also a Socrata 2015-2019 dataset at opendata.utah.gov (7ihm-46s4).",
+    "urls": [
+      "https://services.arcgis.com/pA2nEVnB6tquxgOW/arcgis/rest/services/Utah_Crash_Locations/FeatureServer",
+      "https://www.arcgis.com/home/item.html?id=834f76028e934c7b84cd32498fe6a1eb",
+      "https://highwaysafety.utah.gov/crash-data-and-statistics/",
+      "https://support.numetric.com/en/articles/4730297-udot-crash-data-fields-by-data-table",
+      "https://opendata.utah.gov/Public-Safety/State-of-Utah-Crash-Data-2015-2019/7ihm-46s4/data"
+    ]
+  }
+]

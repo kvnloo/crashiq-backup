@@ -1,0 +1,179 @@
+[
+  {
+    "state": "Iowa",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "100% of 639,375 crash rows have XCOORD (0 null/zero, measured 2026-11-02); person/vehicle rows also carry ROUTEID + FROM/TO_MEASURE",
+    "kabco": "yes",
+    "linkable": "yes",
+    "years": "2015-01-01 to 2026-10-30 (rolling prior 10 years + current, per item description)",
+    "update": "daily (max REST_UPDATED = 2026-11-02)",
+    "licence": "CC BY 4.0 on the ArcGIS item, plus Iowa DOT GIS Data Terms of Use (https://iowadot.gov/policies_and_statements/terms-of-use#gis)",
+    "aadt_source": "https://data.iowa.gov/Transportation-Utilities/Traffic-Volume-Primary-Roads/3t8a-8kp7 ; https://data.iowa.gov/Transportation-Utilities/Traffic-Volume-Secondary-Municipal-Roads/39tc-nuts",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "Crash_Data FeatureServer (639,375 crashes) has CSEV 1-5 (1=K..5=O; K 3,611 / A 13,859 / B 59,071 / C 101,617 / O 461,216), CRASH_KEY links to Crash_Person_Data (640,188) and Crash_Vehicle_Data (1,099,571, VEH_CRASH_KEY). Street name in LITERAL field. maxRecordCount 2000 means paging; Extract capability enabled. ICAT (icat.iowadot.gov) is the analyst UI, limited to 500/50 crashes per list.",
+    "urls": [
+      "https://gis.iowadot.gov/agshost/rest/services/Traffic_Safety/Crash_Data/FeatureServer/0",
+      "https://gis.iowadot.gov/agshost/rest/services/Traffic_Safety/Crash_Person_Data/FeatureServer/0",
+      "https://gis.iowadot.gov/agshost/rest/services/Traffic_Safety/Crash_Vehicle_Data/FeatureServer/0",
+      "https://www.arcgis.com/home/item.html?id=7a1f786d55a2439a9bfa8f7a527936e8",
+      "https://cloud.iowadot.gov/gis/data/metadata/crash/Crash_Data.xlsx",
+      "https://icat.iowadot.gov/"
+    ]
+  },
+  {
+    "state": "Nevada",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "unknown",
+    "gps_share": "UNVERIFIED",
+    "kabco": "unknown",
+    "linkable": "unknown",
+    "years": "2020-2024 offered via request (NDOT page); earlier GeoHub app listed 2015-2020",
+    "update": "UNVERIFIED",
+    "licence": "No licence found. NDOT page: data protected under 23 U.S.C. 407; 'All users shall comply with ... all applicable laws and regulations ... in connection with any receipt and use of NDOT crash data.' UNVERIFIED for commercial use",
+    "aadt_source": "https://gis.dot.nv.gov/arcgis/rest/services/Applications/TRINA/FeatureServer/5 (TRINA_AADT; app https://gis.dot.nv.gov/trina/)",
+    "city_open_data": [
+      {
+        "city": "Las Vegas",
+        "url": "https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/Traffic_Crashes/FeatureServer/0",
+        "note": "70,888 polygon-geometry (null geometryType) rows, 2015-2020 only, primary/secondary street + distance; stale"
+      }
+    ],
+    "bucket": "D",
+    "notes": "NDOT's Crash Data Web Map is 'under construction and temporarily unavailable'; statewide data must be requested via a Survey123 form. No public record-level statewide layer found on NDOT GeoHub. Las Vegas city feed exists but ends 2020.",
+    "urls": [
+      "https://www.dot.nv.gov/safety/traffic-crash-data",
+      "https://survey123.arcgis.com/share/2361c89935aa497183387106ec46e18d",
+      "https://geohub-ndot.hub.arcgis.com/pages/ndot-divisions-traffic-safety-engineering-maps-and-apps",
+      "https://zerofatalitiesnv.com/app/uploads/2021/04/2021-01-NV-TRCC-Data-Dictionary.pdf"
+    ]
+  },
+  {
+    "state": "Arkansas",
+    "record_level_public": "partial",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "99.6% (1,467 of 401,279 lack Latitude, measured 2026-11-02); also AH_RoadID + AH_Logmile and IntersectingStreetName",
+    "kabco": "yes",
+    "linkable": "no",
+    "years": "2021-2025 (78k-82k crashes/yr)",
+    "update": "UNVERIFIED (5-year rolling window seen; no 2026 rows)",
+    "licence": "UNVERIFIED. Item disclaimer: 'The data contained in the web-based dashboard is not an official record for crash statistics ... please contact Arkansas State Police.'",
+    "aadt_source": "https://ardot.gov/divisions/tsmo/traffic-information-systems/maps/ (ADT maps); https://gis.ardot.gov/portal/home/item.html?id=8f959989728c48b39dff63281a94ad38",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "Public FeatureServer behind the ACAT dashboard ('NotForOfficialUse', layer 20, 401,279 crashes) is queryable without login: CrashSeverity is KABCO text (K 2,837 / A 11,173 / B 39,542 / C 43,950 / O 303,777), covers all road systems (171k city streets). Crash-level only, no person/vehicle tables. Undocumented service backing a dashboard, could change; official records go through Arkansas State Police ($10/$25 per report).",
+    "urls": [
+      "https://gis.ardot.gov/referenced/rest/services/TPP_TrafficSafety/NotForOfficialUse/FeatureServer/20",
+      "https://gis.ardot.gov/portal/apps/dashboards/3ae35f942fa340888abd27f26d405558",
+      "https://ardot.gov/divisions/planning/traffic-safety/",
+      "https://dps.arkansas.gov/law-enforcement/arkansas-state-police/services-programs/crash-records/"
+    ]
+  },
+  {
+    "state": "Mississippi",
+    "record_level_public": "yes",
+    "access": "open_download",
+    "location": "gps",
+    "gps_share": "100% of 74,968 2024 crashes have a lat/long inside MS bounds (measured); Street Name + Intersecting Street Name (17,050 with intersecting street) and Milepost also present",
+    "kabco": "yes",
+    "linkable": "yes",
+    "years": "eCrash 2019 (partial) - 2025 (DRAFT); older ReportBeam files 2004-2018 in a different schema (column mapping provided)",
+    "update": "annual static Excel files (2024 file dated 2026-02-05)",
+    "licence": "No licence found. Portal: datasets 'made available to the public free of charge' and contain no PII. UNVERIFIED for commercial use",
+    "aadt_source": "https://mdot.ms.gov/applications/trafficcounters/Default.aspx",
+    "city_open_data": [],
+    "bucket": "A",
+    "notes": "DPS public data posts one xlsx per year (2024 = 99 MB) with sheets Crashes, Drivers, Passengers, Non-Motorists, Vehicles, linked by Crash ID (GUID). Person 'Injury Status' is KABCO ('(K) Fatal Injury' ... '(O) No Apparent Injury'); crash severity must be derived from the worst person. 74,968 crashes in 2024; whether all agencies report via eCrash is UNVERIFIED.",
+    "urls": [
+      "https://publicdata.dps.ms.gov/Public-CrashData/eCrash/",
+      "https://publicdata.dps.ms.gov/Public-CrashData/ReportBeam/",
+      "https://publicdata.dps.ms.gov/"
+    ]
+  },
+  {
+    "state": "Kansas",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "100% of the 607,184 published rows have LATITUDE (0 null/zero); per item description only crashes whose location could be geocoded are shown, so share of all reported crashes is UNVERIFIED",
+    "kabco": "yes",
+    "linkable": "no",
+    "years": "2016-2026 (2026 partial, latest 2026-10-29); ~50k-63k crashes/yr",
+    "update": "continuous/near-real-time (latest crash date 2026-10-29); reports reach KDOT within ~10 days of investigation",
+    "licence": "UNVERIFIED. Item: 'This material may be protected from discovery ... 23 USC 407 ... Further Terms of Use: https://www.ksdot.gov/about/publications-and-reports/kdot-website-terms-of-use'",
+    "aadt_source": "https://kanplan.ksdot.gov/arcgis_web_adaptor/rest/services/Transportation/AADT_Flow_Map/FeatureServer ; https://kanplan.ksdot.gov/arcgis_web_adaptor/rest/services/Transportation/AADT_NonState/MapServer",
+    "city_open_data": [
+      {
+        "city": "Wichita",
+        "url": "https://gismaps.wichita.gov/ageweb/rest/services/OpenData/TrafficAccidents/FeatureServer",
+        "note": "yearly layers 2018-2026 + All; fields not checked"
+      }
+    ],
+    "bucket": "A",
+    "notes": "KDOT 'Crashes in Kansas' FeatureServer (607,184 rows, state system Y 223,792 / N 383,392, so local roads included). ACC_SEVERITY is only FATAL/INJURY/PDO, but per-crash counts FATALITIES, DISABLING_INJURIES, NON_INCAPACITATING_INJURIES, POSSIBLE_INJURIES give K/A/B/C. No person/vehicle tables; ACCIDENT_KEY + REPORT_IMAGE_LINK present. Full detail (KCDS) needs agency login or open-records request.",
+    "urls": [
+      "https://kanplan.ksdot.gov/arcgis_web_adaptor/rest/services/Transportation/Accidents/FeatureServer/0",
+      "https://www.arcgis.com/home/item.html?id=b79862ee9eaa46fa87d8afb8191b3834",
+      "https://hub.kansasgis.org/datasets/crashes-in-kansas-2",
+      "https://www.ksdot.gov/about/our-organization/divisions/transportation-safety/safety-data/kansas-crash-data-system-kscds"
+    ]
+  },
+  {
+    "state": "New Mexico",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "unknown",
+    "gps_share": "UNVERIFIED",
+    "kabco": "unknown",
+    "linkable": "unknown",
+    "years": "UNVERIFIED for full dataset (annual reports through 2024); public NMDOT VRU-only layer covers 2013-2023",
+    "update": "UNVERIFIED (annual reports)",
+    "licence": "UNVERIFIED. UNM-GPS cites 23 U.S.C. 409 non-discovery; 'UNM-GPS will not release traffic crash data directly to end users'",
+    "aadt_source": "https://gis.dot.nm.gov/epermit/rest/services/MS2/MS2_HPMS_TCDS/MapServer/5 (TrafficSection); https://planningdivisiongis-nmdot.hub.arcgis.com/datasets",
+    "city_open_data": [],
+    "bucket": "D",
+    "notes": "Record-level data only via NMDOT Crash Data Request Form; UNM-GPS publishes reports, dashboards and PDF/interactive maps. Public NMDOT ArcGIS has subsets only (VRU crashes 2013-2023, I-40 crashes 2016-2021) - not usable for general corridor studies. No Albuquerque open crash feed found (MRMPO layers are 2013-2018 smoothed/aggregate).",
+    "urls": [
+      "https://www.dot.nm.gov/traffic-records-system/",
+      "https://www.dot.nm.gov/traffic-records-system/crash-data-request-form/",
+      "https://gps.unm.edu/tru/request-traffic-crash-data.html",
+      "https://services.arcgis.com/hOpd7wfnKm16p9D9/arcgis/rest/services/VRU_crashes/FeatureServer"
+    ]
+  },
+  {
+    "state": "Nebraska",
+    "record_level_public": "partial",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "100% of 36,958 2024 crashes returned with lat/long (measured); also highway + reference post and street-pair location text",
+    "kabco": "yes",
+    "linkable": "no",
+    "years": "2021-present (portal limit 1/1/2021 to current date)",
+    "update": "UNVERIFIED (portal is live query; not measured)",
+    "licence": "Restrictive notice on portal: 'confidential, protected and/or privileged ... 23 U.S.C. §407 ... has not authorized further distribution of this document or its contents to anyone other than the original recipient.' Commercial use UNVERIFIED, likely needs NDOT permission",
+    "aadt_source": "https://www.nebraskamap.gov/datasets/nebraska::annual-average-daily-traffic-points/about?layer=0",
+    "city_open_data": [
+      {
+        "city": "Lincoln",
+        "url": "https://opendata.lincoln.ne.gov/datasets/LincolnNE::traffic-crashes-2026-/explore",
+        "note": "yearly datasets (2025, 2026 seen); fields not checked"
+      },
+      {
+        "city": "Omaha",
+        "url": "https://dcgis.org/server/rest/services/Hosted/Omaha_Crashes_view/FeatureServer/0",
+        "note": "only 414 rows (Vision Zero subset), not a full feed"
+      }
+    ],
+    "bucket": "A",
+    "notes": "NTIP public crash portal answers an unauthenticated POST /NTIP2021/Map/Crashes (fromDate/toDate, bbox, severity filters) with crash key, lat/long, severity 01-05 (K, A, B 'Visible', C, O) + 06 non-reportable, date/time and location text. 2024: 36,958 rows (K 228, A 997, B 5,032, C 2,813, O 21,756, non-reportable 6,132); a full-year query took ~53 s. Undocumented web-app endpoint, crash-level only, and the distribution notice is a licence risk - treat as A-data with a D fallback until NDOT confirms terms.",
+    "urls": [
+      "https://dot.nebraska.gov/safety/crash/",
+      "https://ntip2021.nebraska.gov/NTIP2021/",
+      "https://ntip2021.nebraska.gov/NTIP2021/Scripts/Source/Map/PointGenerator.js"
+    ]
+  }
+]
