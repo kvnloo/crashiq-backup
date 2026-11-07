@@ -296,6 +296,7 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
     cross_names: dict[int, list[str]] = defaultdict(list)
     cross_sides: dict[int, set[int]] = defaultdict(set)   # sides of the corridor the named cross streets leave on
     is_candidate: set[int] = set()
+    own: dict[int, float] = {}      # station where a short piece of the corridor street itself meets it
     for w in ways:
         if w["id"] in corridor_ids:
             continue
@@ -303,13 +304,17 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
             continue    # a ramp meeting a freeway corridor is a merge or diverge, not an intersection (N7, #67)
         all_names = _names(w.get("tags", {}))
         names = [n for n in all_names if _core(n) not in corridor_cores]
-        if freeway and all_names and not names:
-            continue    # a short piece of the freeway itself (too short to count as corridor), not a crossing road
+        own_piece = bool(all_names) and not names     # too short or bent to count as corridor, not a crossing road
+        if freeway and own_piece:
+            continue    # a short piece of the freeway itself
         wn = w.get("nodes", [])
         for k, nid in enumerate(wn):
             if nid in corridor_nodes and nid in proj:
                 p = proj[nid]
                 if p.offset_ft <= ALONG_FT and -END_TOL_FT <= p.station_ft <= line.length_ft + END_TOL_FT:
+                    if own_piece:
+                        own[nid] = p.station_ft
+                        continue
                     is_candidate.add(nid)
                     for n in names:
                         if n not in cross_names[nid]:
@@ -319,6 +324,19 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
                             side = _leaving_side(line, nodes, proj, corridor_nodes, wn, k, step)
                             if side:
                                 cross_sides[nid].add(side)
+    # A piece of the corridor street meeting it between cross streets (a crossover, a short split way) is not an
+    # intersection: it made "Unnamed road" stops mid-block on Crenshaw, Sherman Way, Camino Capistrano (#394). Past
+    # the first or last cross street, the outermost group stays, as the terminus: the real cross street is often just
+    # past it, beyond the map query (Cook St, Palm Desert; Atlantic Ave, Cudahy; #391), and its crashes count there.
+    lo = min((proj[n].station_ft for n in is_candidate), default=math.inf)
+    hi = max((proj[n].station_ft for n in is_candidate), default=-math.inf)
+    for outside, sign in (([n for n in own if own[n] < lo], 1), ([n for n in own if own[n] > hi], -1)):
+        group: list[int] = []
+        for n in sorted(outside, key=lambda n: sign * own[n]):     # from the drawn end inwards
+            if group and abs(own[n] - own[group[-1]]) > CLUSTER_FT:
+                break
+            group.append(n)
+        is_candidate.update(group)
 
     # 4. cluster along the line
     cands = sorted(is_candidate, key=lambda n: proj[n].station_ft)
