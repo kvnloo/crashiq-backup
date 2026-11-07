@@ -38,7 +38,7 @@ DATA = ROOT / "data" / "statewide"
 MIN_N, SAMPLE, SEED = 200, 400, 88
 TOL_M, CONSIST_M = 250 * 0.3048, 400 * 0.3048
 TIGER = False
-TIERS = ("exact", "unique_pair", "relaxed", "near", "fuzzy")   # unique_pair: #203, auto-places since 2026-10-22
+TIERS = ("exact", "unique_pair", "relaxed", "near", "fuzzy", "verified_typo")   # unique_pair: #203; verified_typo: #233 (run 11)
 COLS = ("Collision Id", "Report Version", "NCIC Code", "Crash Date Time", "Latitude", "Longitude", "PrimaryRoad",
         "SecondaryRoad", "SecondaryDistance", "SecondaryDirection", "SecondaryUnitOfMeasure", "IsFreeway", "IsDeleted")
 
