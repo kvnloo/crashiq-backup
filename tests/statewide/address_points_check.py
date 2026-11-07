@@ -97,7 +97,8 @@ def main() -> None:
     for f in glob.glob(a.outcomes):
         for r in csv.DictReader(open(f, newline="")):
             outcome[r["collision_id"]] = (r["outcome"], r["killed"] != "0", r["ksi"] != "0")
-    idx = nad.NadIndex(a.addr_dir / "nad_ca.sqlite", a.addr_dir / "no_nad_here.csv")   # county files only
+    idx = nad.NadIndex(a.addr_dir / "nad_ca.sqlite", a.addr_dir / "no_nad_here.csv",   # county files only,
+                       measuring=True)                                                  # measure-only ones too
     assert idx.ready(), f"no addr_*.csv in {a.addr_dir}"
 
     db = sqlite3.connect(a.mirror)

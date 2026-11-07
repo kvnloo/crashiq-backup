@@ -3,7 +3,8 @@ NAD's own columns, so nad.NadIndex reads them next to nad_ca_r24.csv. Sources an
 data/reference/address_points.json. ArcGIS REST layers only, paged by object id. Never committed (like NAD).
 
 Run:  python backend/scripts/fetch_address_points.py ca_orange [ca_los_angeles ...]   (or --all)
-      --measure   also fetch sources whose licence isn't cleared yet, for measuring only: never upload those files
+      --measure   also fetch sources whose licence isn't cleared yet, for measuring only, into <NAD dir>/measure/
+                  (the index never reads them, #407): never upload those files
       --out DIR   write somewhere else than the app's NAD directory
 Then rebuild the index: python backend/scripts/build_nad.py
 """
@@ -108,8 +109,9 @@ def main(argv=None) -> None:
         if not s.get("licence_ok") and not a.measure:
             print(f"skip {s['name']}: licence not cleared ({s.get('licence')}); --measure fetches it for measuring only")
             continue
+        dest = out if s.get("licence_ok") or a.out else out / "measure"     # kept out of the index folder (#407)
         t = time.time()
-        print(f"{s['name']}: {fetch(s, out):,} address points in {time.time() - t:.0f} s -> {out}", flush=True)
+        print(f"{s['name']}: {fetch(s, dest):,} address points in {time.time() - t:.0f} s -> {dest}", flush=True)
 
 
 if __name__ == "__main__":

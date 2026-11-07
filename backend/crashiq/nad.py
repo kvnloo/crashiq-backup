@@ -14,6 +14,7 @@ committed); the index is built from it into SQLite on first use, with no network
 from __future__ import annotations
 
 import csv
+import functools
 import json
 import math
 import sqlite3
@@ -41,12 +42,31 @@ def _county_codes() -> dict[str, int]:
         return {r["county"].upper(): int(r["ccrs_county_code"]) for r in csv.DictReader(f)}
 
 
+@functools.lru_cache(maxsize=1)
+def _registry() -> tuple[tuple[str, bool, str], ...]:
+    """(source line, licence cleared, placement) per county layer in data/reference/address_points.json."""
+    from .settings import ROOT
+    reg = json.loads((ROOT / "data" / "reference" / "address_points.json").read_text())["sources"]
+    return tuple((s.get("label") or f"{s['county']} County address points", bool(s.get("licence_ok")),
+                  s.get("placement") or "suggest") for s in reg)
+
+
 def auto_sources() -> set[str]:
     """Source lines that place a crash by themselves: NAD, and county layers measured about as accurate (#393). Any
     other source's point is only the review list's suggestion."""
-    from .settings import ROOT
-    reg = json.loads((ROOT / "data" / "reference" / "address_points.json").read_text())["sources"]
-    return {SOURCE} | {s.get("label") or f"{s['county']} County address points" for s in reg if s.get("placement") == "auto"}
+    return {SOURCE} | {label for label, ok, placement in _registry() if ok and placement == "auto"}
+
+
+def licensed_sources() -> set[str]:
+    """Source lines the app may use: NAD, and county layers whose licence is cleared. Riverside and San Joaquin are
+    measure-only (docs/03, #393): their rows are never indexed, even when their file sits in the NAD folder (#407)."""
+    return {SOURCE} | {label for label, ok, _ in _registry() if ok}
+
+
+def rank(source: str) -> int:
+    """Accuracy order of the address lists (user 2026-11-07, "Most accurate list"; #407): NAD 0, then the county
+    layers that place by themselves (Los Angeles, San Diego) 1, then those that only suggest (Orange, Fresno) 2."""
+    return 0 if source == SOURCE else 1 if source in auto_sources() else 2
 
 
 def ft(a: tuple[float, float], b: tuple[float, float]) -> float:
@@ -56,8 +76,9 @@ def ft(a: tuple[float, float], b: tuple[float, float]) -> float:
 
 
 class NadIndex:
-    def __init__(self, db_path: Path, csv_path: Path):
+    def __init__(self, db_path: Path, csv_path: Path, measuring: bool = False):
         self.db_path, self.csv_path = Path(db_path), Path(csv_path)
+        self.measuring = measuring               # tests/statewide only: index every row, measure-only layers too
         self._ready = False
         self._lock = threading.Lock()            # one build at a time
         self._local = threading.local()          # per-thread read-only connections (#323)
@@ -67,7 +88,9 @@ class NadIndex:
         return [p for p in [self.csv_path] if p.exists()] + sorted(self.csv_path.parent.glob("addr_*.csv"))
 
     def _signature(self) -> str:
-        return ";".join(f"{p.name}:{p.stat().st_size}" for p in self.sources())
+        # size and modification time: a re-download of the same size still rebuilds (#407)
+        files = ";".join(f"{p.name}:{p.stat().st_size}:{p.stat().st_mtime_ns}" for p in self.sources())
+        return ("measuring;" if self.measuring else "") + files
 
     def ready(self) -> bool:
         """The index exists, or is built now from the CSVs. False when there is none (D5 then goes to review)."""
@@ -111,9 +134,12 @@ class NadIndex:
         from .crashes import city_key
         batch, n = [], 0
         sig = self._signature()         # before reading: a file that lands mid-build forces the next rebuild
+        allowed = licensed_sources()
         for src in self.sources():
             with src.open(newline="", encoding="utf-8") as f:
                 for r in csv.DictReader(f):
+                    if not self.measuring and src != self.csv_path and r.get("Source") not in allowed:
+                        continue        # a measure-only or unknown county layer (#407)
                     cty = codes.get((r.get("County") or "").upper().replace(" COUNTY", "").strip())
                     k = street_key(r.get("StNam_Full"))
                     try:
@@ -147,20 +173,24 @@ class NadIndex:
         rows = {r for key in _keys(k) for r in self._conn().execute(
             "SELECT name, inc, post, lat, lon, src FROM point WHERE county = ? AND number = ? AND key = ?",
             (int(county), int(number), key))}
-        pts = []
-        srcs = []
+        by_src: dict[str, list[tuple[float, float]]] = {}
         for name, inc, post, lat, lon, src in rows:
             nk = street_key(name)
             if nk is None or not same_core(k, nk) or (k.suffix and nk.suffix and k.suffix != nk.suffix):
                 continue
             if ck and ck != "UNINCORPORATED" and ck not in (inc, post):
                 continue
-            pts.append((lat, lon))
-            srcs.append(src)
-        if not pts or max(ft(a, b) for a in pts for b in pts) > ONE_PLACE_FT:
+            by_src.setdefault(src, []).append((lat, lon))
+        if not by_src:
+            return None
+        # the most accurate list with the house is used, and only its points (#407); the name breaks a tie, so the
+        # same crash always gets the same answer
+        src = min(by_src, key=lambda s: (rank(s), s))
+        pts = by_src[src]
+        if max(ft(a, b) for a in pts for b in pts) > ONE_PLACE_FT:
             return None
         return {"lat": sum(p[0] for p in pts) / len(pts), "lon": sum(p[1] for p in pts) / len(pts), "points": len(pts),
-                "source": max(set(srcs), key=srcs.count)}
+                "source": src}
 
 
 @dataclass
