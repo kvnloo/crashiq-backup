@@ -38,6 +38,23 @@ def test_columns_resolve_across_spellings():
     assert cc.num_expr({"id": "Latitude", "type": "numeric"}) == '"Latitude"'
 
 
+def test_ccrs_2026_11_03_layout_time_and_pcf_code():
+    """#389: CCRS republished 2017–2026 on 2026-11-03 with 'Crash Time Description' and a one-letter
+    'Primary Collision Factor Code' (SWITRS codebook) in place of 'Collision Time' and the PCF description."""
+    names = ["Collision Id", "Crash Date Time", "Crash Time Description", "Primary Collision Factor Code"]
+    cols, missing = cc.resolve_columns([{"id": n, "type": "text"} for n in names], cc.CRASH_COLS)
+    assert "collision_time" not in missing and "pcf_category" not in missing
+    row = {"Collision Id": "1", "Crash Date Time": "2024-01-13T00:00:00.000", "Crash Time Description": "1605",
+           "Primary Collision Factor Code": "B"}
+    rec = cc.crash_record(row, cols)
+    assert rec["hour"] == 16 and rec["pcf_category"] == "Other Improper Driving"
+    old = cc.crash_record({"Collision Id": "1", "PrimaryCollisionFactorDescription": "Other Improper Driving"},
+                          cc.resolve_columns([{"id": "Collision Id", "type": "text"},
+                                              {"id": "PrimaryCollisionFactorDescription", "type": "text"}],
+                                             cc.CRASH_COLS)[0])
+    assert old["pcf_category"] == "Other Improper Driving"           # the old layout reads as before
+
+
 def test_pull_counts_and_cleaning_log(fake):
     out = crashes.pull(STUDY, NET, Ckan(fake))
     log = out["cleaning"]
