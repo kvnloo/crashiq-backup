@@ -137,7 +137,7 @@ KEYS = [street_key("Business Center Drive")]
     ("5101 BUSINESS CENTER DR (PARKING LOT)", "BUSINESS CENTER DR", {"number": 5101, "street": "BUSINESS CENTER DR"}),
     ("5101 BUSINESS CENTER DR", "WATNEY WAY", None),              # a cross street: a street pair, not D5
     ("100 FT N OF BUSINESS CENTER DR", None, None),                # a distance
-    ("5101 BUSINESS CENTER DR", "PRIVATE PROPERTY", None),         # private property: its own exclusion (#94)
+    ("5101 BUSINESS CENTER DR", "PRIVATE PROPERTY", {"number": 5101, "street": "BUSINESS CENTER DR"}),  # #397
 ])
 def test_a_house_address_on_the_corridor_is_d5(p, s, want):
     roads = [p, s]

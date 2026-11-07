@@ -1061,5 +1061,5 @@ def get_location_profile(sid: str, lid: str, request: Request) -> dict:
     return {"location_id": lid, "min_share_n": MIN_SHARE_N, "tables": tables, "diagram": diagram,
             "crashes": [{**{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
                                                   "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",
-                                                  "location_provenance")},
+                                                  "location_provenance", "location_label")},
                          **({"postmile": p} if pm is not None and (p := pm.for_crash(c)) else {})} for c in placed]}

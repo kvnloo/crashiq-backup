@@ -3,6 +3,7 @@
 // does every count. Decisions are undoable and survive a re-pull.
 import { useState } from 'react'
 import { api, errorText } from '../lib/api'
+import { roadsText } from '../lib/roads'
 import { fmt } from '../lib/tables'
 
 const REASON = {
@@ -27,7 +28,7 @@ function landed(o) {
 
 function where(c) {
   const off = c.offset_ft ? ` · ${fmt(Math.round(c.offset_ft))} ft ${c.offset_dir || ''}`.trimEnd() : ''
-  return `${c.primary_road || '—'} / ${c.secondary_road || '—'}${off}`
+  return `${roadsText(c, '—')}${off}`
 }
 
 // One place/exclude control row, for a single crash or a whole group. A fatal crash can only be placed with a
