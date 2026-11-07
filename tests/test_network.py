@@ -211,13 +211,25 @@ def test_corridor_cities_from_osm_boundaries(tmp_path):
 
 def test_a_short_piece_of_the_corridor_street_is_not_an_intersection():
     """A crossover or short bent piece of the corridor street meeting it mid-block made an "Unnamed road" stop
-    (Crenshaw, Sherman Way, Camino Capistrano, 2026-11-03). Only the real cross street counts."""
+    (Crenshaw, Sherman Way, Camino Capistrano, 2026-11-03). Only the real cross streets count."""
     n = lambda i, lat, lon: {"type": "node", "id": i, "lat": lat, "lon": lon}  # noqa: E731
-    els = [n(1, 34.000, -118.300), n(2, 34.005, -118.300), n(3, 34.010, -118.300), n(4, 34.020, -118.300),
+    els = [n(1, 34.000, -118.300), n(8, 34.003, -118.300), n(2, 34.005, -118.300), n(3, 34.010, -118.300),
+           n(4, 34.020, -118.300),
            n(5, 34.0051, -118.2999),                                      # crossover to the other carriageway
-           n(6, 34.010, -118.310), n(7, 34.010, -118.290),
-           {"type": "way", "id": 10, "nodes": [1, 2, 3, 4], "tags": {"highway": "primary", "name": "Main Street"}},
+           n(6, 34.010, -118.310), n(7, 34.010, -118.290), n(9, 34.003, -118.310), n(10, 34.003, -118.290),
+           {"type": "way", "id": 10, "nodes": [1, 8, 2, 3, 4], "tags": {"highway": "primary", "name": "Main Street"}},
            {"type": "way", "id": 11, "nodes": [2, 5], "tags": {"highway": "primary", "name": "Main Street"}},
-           {"type": "way", "id": 12, "nodes": [6, 3, 7], "tags": {"highway": "residential", "name": "1st Street"}}]
+           {"type": "way", "id": 12, "nodes": [6, 3, 7], "tags": {"highway": "residential", "name": "1st Street"}},
+           {"type": "way", "id": 13, "nodes": [9, 8, 10], "tags": {"highway": "residential", "name": "2nd Street"}}]
     net = network.detect({"elements": els}, [(34.000, -118.300), (34.020, -118.300)])
-    assert [i["name"] for i in net["intersections"]] == ["1st Street"]
+    assert [i["name"] for i in net["intersections"]] == ["2nd Street", "1st Street"]
+
+
+def test_the_corridor_street_bending_away_at_a_drawn_end_stays_the_terminus():
+    """#391: Country Club Dr, Palm Desert (Tester's frozen corridor, OSM as cached). At the west end the street bends
+    away towards Cook St, which is past the 40 ft map query; that piece's meeting is the terminus, and the Cook St
+    crashes count there. The other carriageway joining 158 ft in is mid-block: no stop."""
+    osm = json.loads((FIXTURES / "live" / "overpass_palmdesert.json").read_text())
+    line = [tuple(p) for p in json.loads((FIXTURES / "live" / "line_palmdesert.json").read_text())]
+    got = [(i["name"], round(i["station_ft"])) for i in network.detect(osm, line)["intersections"]]
+    assert got == [("Unnamed road", 0), ("The Lakes Drive", 1702), ("El Dorado Drive", 5081), ("Unnamed road", 5312)]
