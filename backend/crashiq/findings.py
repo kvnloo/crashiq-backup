@@ -542,7 +542,7 @@ def get_records(sid: str, fid: str, request: Request) -> dict:
     f = Finding(**json.loads(r["body"]))
     _, _, placed = context(db, sid)
     keys = ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity", "lighting", "surface", "pcf",
-            "primary_road", "secondary_road", "lat", "lon", "location_id")
+            "primary_road", "secondary_road", "location_label", "lat", "lon", "location_id")
     return {"records": [{k: c.get(k) for k in keys} for c in select_records(placed, f.evidence_refs.records)]}
 
 

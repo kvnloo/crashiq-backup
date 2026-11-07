@@ -172,5 +172,6 @@ class Addresses:
 
 def addresses(nad_dir: Path, addrfeat_dir: Path) -> Addresses:
     from .addrfeat import Addrfeat
+    from .sources.tiger_files import http_opener
     return Addresses(NadIndex(Path(nad_dir) / "nad_ca.sqlite", Path(nad_dir) / f"nad_ca_{RELEASE}.csv"),
-                     Addrfeat(addrfeat_dir))
+                     Addrfeat(addrfeat_dir, opener=http_opener))

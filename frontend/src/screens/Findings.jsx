@@ -4,6 +4,7 @@ import N10Diagram from '../components/N10Diagram'
 import StripDiagram from '../components/StripDiagram'
 import Replay from '../components/Replay'
 import { api, errorText } from '../lib/api'
+import { roadsText } from '../lib/roads'
 import { fmtNum } from '../lib/tables'
 import { useStudy } from '../study'
 import '../styles/findings.css'
@@ -121,7 +122,7 @@ function Detail({ f, i, lib, records, diagram, study, onDecide }) {
                       <td>{(c.collision_type || '—').toLowerCase()}</td>
                       <td>{SEV_LABEL[c.severity] || c.severity}</td>
                       <td>{(c.lighting || '—').toLowerCase()}</td>
-                      <td className="mono muted small">{[c.primary_road, c.secondary_road].filter(Boolean).join(' / ')}</td>
+                      <td className="mono muted small">{c.location_label ? roadsText(c) : [c.primary_road, c.secondary_road].filter(Boolean).join(' / ')}</td>
                     </tr>
                   ))}
                 </tbody>

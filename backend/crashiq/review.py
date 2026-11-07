@@ -99,7 +99,7 @@ def lookup_links(c: dict) -> list[dict]:
 def _item(c: dict, a: dict | None, d: dict | None) -> dict:
     fatal = c.get("severity") == "K" or (c.get("killed") or 0) > 0
     return {"crash_id": c["crash_id"], "primary_road": c.get("primary_road"), "secondary_road": c.get("secondary_road"),
-            "fatal": fatal, "killed": c.get("killed") or 0, "city": c.get("city"), "fars_hint": c.get("fars_hint"),
+            "location_label": c.get("location_label"), "fatal": fatal, "killed": c.get("killed") or 0, "city": c.get("city"), "fars_hint": c.get("fars_hint"),
             "lookup": lookup_links(c) if fatal else [],
             "offset_ft": c.get("offset_ft"), "offset_dir": c.get("offset_dir"), "date": c.get("date"),
             "hour": c.get("hour"), "severity": c.get("severity"), "collision_type": c.get("collision_type"),

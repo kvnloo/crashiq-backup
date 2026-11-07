@@ -601,11 +601,12 @@ _NOT_A_NUMBER = re.compile(r"^\s*\d+\s*(?:FT|FEET|'|MI|MILES?|YDS?|YARDS?)\b")
 def house_address(roads: list, on_idx: list[int], corridor_keys) -> dict | None:
     """D5 (#283): a road field naming the corridor with a house number ("8451 S CRENSHAW BLVD", "GENEVA AV 1677"),
     the other field blank, a placeholder, 1-2 letters, or the same street. {"number", "street"} or None. Never a
-    route ("RT 101"), a numbered street ("AVENUE 200"), or a distance ("100 FT N OF ..."). A private-property report
-    that gives a house address on the corridor is placed at that address like any other (user 2026-11-04, #393: it
-    happened at that driveway); without one it stays excluded under its own rule (#94). No house number when the number field is a ramp phrase ("380 EB OFF-RAMP TO EL
-    CAMINO REAL" is I-380, not 380 El Camino Real), when the number is a route the report names, or when the report names
-    a route that isn't one of the corridor's own: "18972 BEACH BLVD (SR-39)" on Beach Blvd (SR-39) stays D5 (PR #315)."""
+    route ("RT 101"), a numbered street ("AVENUE 200"), or a distance ("100 FT N OF ..."). PRIVATE PROPERTY with a
+    house address on the corridor is D5 too (#397, user 2026-11-04: it happened on the segment in front of that
+    address); without one it stays excluded under its own rule (#94). No house number when the number field is a ramp
+    phrase ("380 EB OFF-RAMP TO EL CAMINO REAL" is I-380, not 380 El Camino Real), when the number is a route the report
+    names, or when the report names a route that isn't one of the corridor's own: "18972 BEACH BLVD (SR-39)" on Beach
+    Blvd (SR-39) stays D5 (PR #315)."""
     named = set().union(*(route_numbers(str(rd)) for rd in roads if rd))
     if named - {route_number(x) for x in corridor_keys}:
         return None                       # another route (I-380 on El Camino Real): not an address on the corridor
@@ -701,6 +702,7 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None, raw: dict | None = N
             # when there is one (placement.py), else on the review list with the TIGER address-range suggestion
             log["no_coords_house_address"] = log.get("no_coords_house_address", 0) + 1
             c["review_reason"], c["house_address"] = "house_address", ha
+            c["location_label"] = f"in front of {ha['number']} {ha['street']}"      # #397: the segment in front of it
             recs.append((c, "unmatched"))
         elif (mm := _mile_marker_on(roads, on_idx)) is not None:
             # A mile marker on the corridor's state route instead of a cross street (#319): placed at that Caltrans
@@ -1154,8 +1156,8 @@ _ADDRESSES: dict[str, object] = {}
 
 
 def addresses_for(st):
-    """NAD + TIGER ADDRFEAT for house-address crashes (#283): local files only (downloaded once, user-approved
-    2026-10-25). A test or harness sets `app.state.addresses`; with a fake or recorded CKAN and none set, none."""
+    """NAD + TIGER ADDRFEAT for house-address crashes (#283): NAD from its local file (uploaded once, #384 (b)); ADDRFEAT
+    per county, downloaded on demand. A test or harness sets `app.state.addresses`; with a fake or recorded CKAN, none."""
     from .nad import addresses
     if getattr(st, "addresses", None) is not None:
         return st.addresses

@@ -33,6 +33,13 @@ CREDITS = ("Crash data: CCRS, California Highway Patrol (data.ca.gov, public dom
 NO_AI = ("This report has no AI narrative. Findings are written by code from the over-representation screen (table T12, HSM excess-proportion test) and appear only after you accept them.")
 
 
+def _roads(c: dict) -> str:
+    """The report's two road fields, then where a house-address crash happened (#397: "in front of 440 W MANCHESTER
+    BLVD")."""
+    roads = f"{c.get('primary_road') or ''} / {c.get('secondary_road') or ''}"
+    return f"{roads} ({c['location_label']})" if c.get("location_label") else roads
+
+
 def stale_text(n: int) -> str:
     """Singular or plural by count (#266)."""
     return (f"{n} accepted finding{'' if n == 1 else 's'} no longer match{'es' if n == 1 else ''} the data after a "
@@ -51,7 +58,7 @@ def _postmiles(pull: dict, a: dict, pm) -> list[dict]:
         c = by_id[x["crash_id"]]
         p = pm.for_crash(c)
         if p:
-            out.append({"crash_id": c["crash_id"], "roads": f"{c.get('primary_road') or ''} / {c.get('secondary_road') or ''}",
+            out.append({"crash_id": c["crash_id"], "roads": _roads(c),
                         "date": c.get("date"), "postmile": p["label"], "align": p["align"], "direction": p["direction"],
                         "distance_ft": round(p["distance_m"] * 3.28084), "assigned_to": x["location_id"]})
     return out
@@ -84,7 +91,7 @@ def _decisions(db, sid: str, pull: dict, a: dict) -> list[dict]:
         if c is None:
             continue
         k, loc = kind.get(cid, (None, None))
-        out.append({"crash_id": cid, "roads": f"{c.get('primary_road') or ''} / {c.get('secondary_road') or ''}",
+        out.append({"crash_id": cid, "roads": _roads(c),
                     "date": c.get("date"), "action": d["action"], "method": d["method"], "reason": d["reason"],
                     "fatal": c.get("severity") == "K" or (c.get("killed") or 0) > 0, "source": d.get("source"),
                     "assigned_to": loc or k, "applied": c.get("stale_decision") is None,
@@ -95,7 +102,7 @@ def _decisions(db, sid: str, pull: dict, a: dict) -> list[dict]:
 def _fars_placed(pull: dict, a: dict) -> list[dict]:
     """Fatal crashes located by their linked FARS point (#174), with the FARS case, for the export."""
     loc = {x["crash_id"]: x["location_id"] or x["kind"] for x in a["assignments"]}
-    return [{"crash_id": c["crash_id"], "roads": f"{c.get('primary_road') or ''} / {c.get('secondary_road') or ''}",
+    return [{"crash_id": c["crash_id"], "roads": _roads(c),
              "date": c.get("date"), "fars_case": c.get("fars_case"), "lat": c.get("lat"), "lon": c.get("lon"),
              "replaced_gps": c.get("gps_replaced"), "assigned_to": loc.get(c["crash_id"])}
             for c in pull["crashes"] if c.get("location_source") == "fars"]
