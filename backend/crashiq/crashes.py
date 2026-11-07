@@ -601,12 +601,11 @@ _NOT_A_NUMBER = re.compile(r"^\s*\d+\s*(?:FT|FEET|'|MI|MILES?|YDS?|YARDS?)\b")
 def house_address(roads: list, on_idx: list[int], corridor_keys) -> dict | None:
     """D5 (#283): a road field naming the corridor with a house number ("8451 S CRENSHAW BLVD", "GENEVA AV 1677"),
     the other field blank, a placeholder, 1-2 letters, or the same street. {"number", "street"} or None. Never a
-    route ("RT 101"), a numbered street ("AVENUE 200"), or a distance ("100 FT N OF ..."); private property stays
-    excluded under its own rule (#94). No house number when the number field is a ramp phrase ("380 EB OFF-RAMP TO EL
+    route ("RT 101"), a numbered street ("AVENUE 200"), or a distance ("100 FT N OF ..."). A private-property report
+    that gives a house address on the corridor is placed at that address like any other (user 2026-11-04, #393: it
+    happened at that driveway); without one it stays excluded under its own rule (#94). No house number when the number field is a ramp phrase ("380 EB OFF-RAMP TO EL
     CAMINO REAL" is I-380, not 380 El Camino Real), when the number is a route the report names, or when the report names
     a route that isn't one of the corridor's own: "18972 BEACH BLVD (SR-39)" on Beach Blvd (SR-39) stays D5 (PR #315)."""
-    if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd):
-        return None
     named = set().union(*(route_numbers(str(rd)) for rd in roads if rd))
     if named - {route_number(x) for x in corridor_keys}:
         return None                       # another route (I-380 on El Camino Real): not an address on the corridor

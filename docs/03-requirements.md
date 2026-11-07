@@ -656,3 +656,9 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     lot) is moved onto the corridor in front of the address, keeping its position along the street; a point more than
     500 ft off the corridor isn't used and the crash stays on the review list. Before, a point more than the 100 ft
     buffer back was dropped as `outside_buffer`.
+  - **Less accurate layers only suggest (user, 2026-11-04: "1yes"):** a county layer goes `auto` only when it is
+    within 400 ft of police GPS about as often as NAD on the same check (~85%): Los Angeles 85.5%, San Diego 84.1%.
+    Orange (61%) and Fresno (64%) give the review list's suggestion; the engineer places the crash.
+  - **Private property at a house address is placed (user, 2026-11-04: "2yea", option a):** a report marked private
+    property that gives a house address on the corridor ("2138 N TUSTIN ST (PRIVATE PROPERTY)") is a D5 crash, placed
+    at that address like any other; without an address it stays excluded as `private_property` (#94).

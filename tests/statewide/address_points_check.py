@@ -30,8 +30,7 @@ from crashiq.names import street_key
 
 def house_address(p, s):
     """The app's own D5 reading (crashes.house_address), with the address's street standing in for the corridor:
-    a house number on one field, the other blank, a placeholder (NOT STATED) or the same street. Private property
-    stays out (#94), as in the app."""
+    a house number on one field, the other blank, a placeholder (NOT STATED, PRIVATE PROPERTY) or the same street."""
     roads = [p, s]
     for i, rd in enumerate(roads):
         m = crashes._HOUSE.match(crashes.re.sub(r"\(.*?\)", " ", str(rd or "")).strip())
