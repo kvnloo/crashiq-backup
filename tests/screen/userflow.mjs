@@ -98,7 +98,8 @@ try {
   await profileAndExport(id, 'crenshaw');
 
   // 3) Two more corridor types through the same corridor API the map uses
-  for (const [tag, name, line] of [
+  // CORRIDORS='[[tag,name,[[lat,lon],...]],...]' replaces the default extra corridors
+  for (const [tag, name, line] of process.env.CORRIDORS ? JSON.parse(process.env.CORRIDORS) : [
     ['capistrano', 'Hermes check: Camino Capistrano, San Juan Capistrano', [[33.485658, -117.666903], [33.490503, -117.664085], [33.49551, -117.662593], [33.499891, -117.6625]]],
     ['sherman', 'Hermes check: Sherman Way, LA', [[34.20123, -118.50921], [34.201233, -118.491896]]],
   ]) {

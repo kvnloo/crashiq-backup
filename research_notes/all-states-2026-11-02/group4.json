@@ -1,0 +1,156 @@
+[
+  {
+    "state": "Idaho",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "~96.7% measured: 446,167 of 461,521 crashes in layer 123 fall inside an Idaho bbox (2026-11-02); also RouteID+Measure/Mile_Point for state routes",
+    "kabco": "yes (Fatal / A / B / C Injury / Property Dmg Report)",
+    "linkable": "yes - Serial_Number shared by Crash, Crash Unit and Crash Person layers",
+    "years": "2005-2023 (461,521 crashes; 2023 = 18,488, lower than 22-28k in other years -> 2023 may be incomplete, UNVERIFIED); 2024-2025 not in the service",
+    "update": "annual ('present year represents the last full year'); service lags ~2+ years (item last modified 2024-04)",
+    "licence": "ITD: data provided \"as is\" without warranty; \"sole responsibility of the user to determine the usability\". No explicit commercial-use term found (UNVERIFIED).",
+    "aadt_source": "https://gisp.itd.idaho.gov/server/rest/services/GDWarehouse/Traffic/FeatureServer/1 (Cumulative AADT)",
+    "city_open_data": "COMPASS (Ada/Canyon MPO) republishes ITD crash data: https://share-open-data-compassidaho.hub.arcgis.com/maps/32030dbf2f0f493786fb31988643c13c",
+    "bucket": "A",
+    "notes": "Open ArcGIS MapServer (maxRecordCount 70,000) with crash, unit and person layers per year. Crash layer has no street names, only route/milepoint and lat/lon. Main risk is staleness: newest full year is 2023.",
+    "urls": [
+      "https://gis.itd.idaho.gov/arcgisprod/rest/services/ArcGISOnline/CrashLayers/MapServer",
+      "https://gis.itd.idaho.gov/arcgisprod/rest/services/ArcGISOnline/IdahoTransportationLayersForOpenData/MapServer/123",
+      "https://www.arcgis.com/home/item.html?id=f0577496f6fb4e2f89d14b194bf496df",
+      "https://itd.idaho.gov/safety/"
+    ]
+  },
+  {
+    "state": "West Virginia",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "unknown",
+    "gps_share": "UNVERIFIED",
+    "kabco": "UNVERIFIED",
+    "linkable": "UNVERIFIED",
+    "years": "UNVERIFIED",
+    "update": "UNVERIFIED",
+    "licence": "UNVERIFIED (no public dataset or terms found). WV Code 17C-4-14: Division of Highways tabulates crash reports and publishes statistics.",
+    "aadt_source": "https://gis.transportation.wv.gov/arcgis/rest/services/Projects/AADT/MapServer (AADT Station + Segment AADT layers); https://transportation.wv.gov/traffic-monitoring",
+    "city_open_data": "none found",
+    "bucket": "D",
+    "notes": "WVDOT's Traffic Accident Data page only says to email a named contact (Marsha.K.Mays@wv.gov). No crash layer found on the WVDOT open data portal or ArcGIS Online. MPOs (e.g. MMMPO) get data from WVDOT, so consultants can get exports.",
+    "urls": [
+      "https://transportation.wv.gov/traffic-accident-data",
+      "https://data-wvdot.opendata.arcgis.com/",
+      "https://code.wvlegislature.gov/17C-4-14",
+      "https://plantogether.org/_files/ugd/613794_b4d3fa7ccae64188b6fa34929c4ceca8.pdf"
+    ]
+  },
+  {
+    "state": "Hawaii",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "unknown",
+    "gps_share": "UNVERIFIED",
+    "kabco": "UNVERIFIED",
+    "linkable": "UNVERIFIED",
+    "years": "SHACA (internal) shows 2015-2024 county summaries; public HDOT ArcGIS layers only give Oahu 2007-2018 per-location counts (fields: mode, year, count; no severity)",
+    "update": "UNVERIFIED",
+    "licence": "HDOT Safety Analytics: crash data \"provided for highway safety and educational purposes only. Use of this data constitutes agreement with this policy\" (cites 23 USC 407). OIP Opinion 05-06: 23 USC 409 does not make the database confidential, but DOT need not produce it in the electronic form requested.",
+    "aadt_source": "https://services.arcgis.com/HQ0xoN0EzDPBOEci/arcgis/rest/services/AADTMap/FeatureServer (AADT2016); HPMS2021AADT layer in the same HDOT org",
+    "city_open_data": "Honolulu 'Traffic Incidents' (ykb6-n5th) is a 24-hour police dispatch feed (date, type, address; 164 rows), not crash reports: https://data.honolulu.gov/Public-Safety/Traffic-Incidents/ykb6-n5th",
+    "bucket": "D",
+    "notes": "The statewide crash system (SHACA, built from county police MVARs) is internal. The public CARTO 'Safety Analytics' platform shows crash maps, but no record-level download was confirmed (UNVERIFIED). Use FARS as the public fallback for fatal crashes.",
+    "urls": [
+      "https://safety-tool-hidot.hawaii.gov/",
+      "https://hidot.hawaii.gov/highways/files/2025/10/Shaca-Presentation.pdf",
+      "https://ags.hawaii.gov/oip/05-06/",
+      "https://services.arcgis.com/HQ0xoN0EzDPBOEci/arcgis/rest/services/Oahu_Crashes_2017to2018/FeatureServer"
+    ]
+  },
+  {
+    "state": "New Hampshire",
+    "record_level_public": "no",
+    "access": "records_request",
+    "location": "unknown (police report allows street address or route + distance from a landmark, per NHDOT block-grant map instructions)",
+    "gps_share": "UNVERIFIED",
+    "kabco": "UNVERIFIED",
+    "linkable": "UNVERIFIED",
+    "years": "UNVERIFIED",
+    "update": "UNVERIFIED",
+    "licence": "UNVERIFIED. Crash reports fall under the DMV records statute (RSA 260:14); whether that bars bulk release is UNVERIFIED.",
+    "aadt_source": "UNVERIFIED (NHDOT counts are run with RPCs, e.g. https://therpc.org/maps-and-data/data/traffic-counts-and-volume-reports; no statewide AADT service URL confirmed)",
+    "city_open_data": "none found",
+    "bucket": "D",
+    "notes": "NHDOT Highway Safety Office takes outside requests through a 'Safety Evaluation for External Request: Crash Data and Safety Concerns Report' form. The DMV sells single reports ($1/page, $5 minimum). RPCs (e.g. SWRPC) use NHDOT GIS crash data, so an agency/consultant export exists.",
+    "urls": [
+      "https://www.dot.nh.gov/about-nh-dot/divisions-bureaus-districts/highway-safety-office",
+      "https://www.dmv.nh.gov/tickets-accidents-or-restorations/accidents-reports",
+      "https://law.justia.com/codes/new-hampshire/title-xxi/chapter-260/section-260-14",
+      "https://swrpc.org/wp-content/uploads/2021/10/Appendix-4-1.pdf"
+    ]
+  },
+  {
+    "state": "Maine",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "~100% measured: only 4 of 359,187 records have null/0 LATITUDE (2026-11-02). Points come from MaineDOT Route Log Mile (RLM); also PRIMARY_ROUTE_NAME/MP, NODE_ID, ELEMENT_ID",
+    "kabco": "yes (INJURY_LEVEL K/A/B/C/PD; plus NO_OF_K/A/B/C_INJ counts)",
+    "linkable": "no in public data: unit/person tables are not published. CRASH_ID and REPORT_NUMBER exist, and driver actions for units 1-2 are flattened onto the crash row",
+    "years": "2016-2026 YTD (359,187 crashes; ~33-35k per full year; 2026 = 23,543 through 2026-10-22)",
+    "update": "rolling, current year included (max ACCIDENT_DATE 2026-10-22, item modified 2026-10)",
+    "licence": "MEGIS disclaimer: \"Users must assume responsibility in determining the usability of this data for their purposes.\" Item access = public. No explicit commercial-use term found (UNVERIFIED).",
+    "aadt_source": "https://www.maine.gov/dot/publications/traffic-engineering/yearly-traffic-counts ; the crash layer also carries FACTORED_AADT",
+    "city_open_data": "Portland area via GPCOG (derived from the state tool): https://services6.arcgis.com/HvbabY0grzgZwGW1/arcgis/rest/services/Maine_Public_Crash_Query_Tool_High_Crash_Locations_2026_06_03/FeatureServer",
+    "bucket": "A",
+    "notes": "Hosted feature layer 'MaineDOT Crash Locations - 10 Years Complete' (layer 44, 112 fields incl. traffic control, speed limit, contributing factors, AADT). 1/3/5-year and current-year views also exist. The old gis.maine.gov MaineDOT_OpenData_Crashes MapServer now returns no layers.",
+    "urls": [
+      "https://services1.arcgis.com/RbMX0mRVOFNTdLzd/arcgis/rest/services/Crashes_Attributes_10_Year_and_Current_Year_Test_View/FeatureServer/44",
+      "https://www.arcgis.com/home/item.html?id=b8dd5e49520d4b7495ad8aa3e547b255",
+      "https://mdotapps.maine.gov/MaineCrashPublic/",
+      "https://maine.gov/dot/publications/crash-and-safety-data"
+    ]
+  },
+  {
+    "state": "Rhode Island",
+    "record_level_public": "no (law changed 2026; no public dataset seen yet)",
+    "access": "records_request",
+    "location": "unknown",
+    "gps_share": "UNVERIFIED",
+    "kabco": "UNVERIFIED (Crash Facts PDFs report fatal and serious-injury counts)",
+    "linkable": "UNVERIFIED",
+    "years": "Crash Facts summaries for 2023, 2025 and 2026 Jan-Sep (29,776 crashes) are published as PDFs; record-level years UNVERIFIED",
+    "update": "Crash Facts PDFs updated in-year (latest covers through 2026-09-30)",
+    "licence": "2026-H 7576 / 2026-S 2480 (signed June 2026) declares RIDOT crash data a public record, \"stipulating they may not be used in violation of the federal statute\" (23 USC 409). Commercial terms UNVERIFIED.",
+    "aadt_source": "https://risegis.ri.gov/hosting/rest/services/RIDOT/AADT_Bridge_Counts/MapServer ; https://www.dot.ri.gov/documents/maps/Traffic_Flow_Map_st.pdf",
+    "city_open_data": "Providence: PVD Crash Map by Providence Streets Coalition, built from Providence PD records (community, not official): https://pvdstreets.org/crash-map/",
+    "bucket": "D",
+    "notes": "RIDOT refused to release crash data until the June 2026 law made it a public record. Now it can be requested under APRA. Re-check for a RIDOT portal: one could move RI to A or B.",
+    "urls": [
+      "https://rilegislature.gov/pressrelease/_layouts/15/ril.pressrelease.inputform/DisplayForm.aspx?ID=376762&List=c8baae31-3c10-431c-8dcd-9dbbe21ce3e9",
+      "https://www.dot.ri.gov/Safety/docs/CRASHDATA/Rhode%20Island%20Crash%20Facts%202026%20-%20January%201%20through%20September%2030.pdf",
+      "https://rhodeislandcurrent.com/2026/06/11/ri-general-assembly-agrees-to-make-state-crash-data-public-more-apra-reforms-on-hold/",
+      "https://pvdstreets.org/crash-map/"
+    ]
+  },
+  {
+    "state": "Montana",
+    "record_level_public": "yes",
+    "access": "open_api",
+    "location": "gps",
+    "gps_share": "~100% measured: 2 of 219,418 records have null/0 X_COORD (2026-11-02); also ROUTE_ID + RP (reference point) for state routes",
+    "kabco": "yes (Fatal / Suspected Serious / Suspected Minor / Possible / No apparent injury; 8,009 'Unknown')",
+    "linkable": "no - single crash layer with 11 attributes, no crash ID and no person/vehicle tables",
+    "years": "2016-01-01 to 2025-12-31 (219,418 crashes; 2025 = 21,047)",
+    "update": "annual (item modified 2026-09); the layer's own description still says 2020-2024",
+    "licence": "MDT: provided \"as-is\" without warranty; \"This data should be used for planning purposes only.\" No explicit commercial-use term (UNVERIFIED).",
+    "aadt_source": "https://gis.mtmdt.us/server/rest/services/MDTGIS/Traffic/MapServer/2 (Traffic Count Sites); https://www.mdt.mt.gov/publications/datastats.aspx",
+    "city_open_data": "none found",
+    "bucket": "A",
+    "notes": "Open MapServer (maxRecordCount 2,000, so it must be paged). Attributes are thin: date, city, county, route/RP, collision type, severity, weather, surface, light. No street names, crash ID or contributing factors. Fuller data needs an MDT public-information request.",
+    "urls": [
+      "https://gis.mtmdt.us/server/rest/services/MDTGIS/Public_Crash_Information/MapServer/0",
+      "https://www.arcgis.com/home/item.html?id=13d4ffddc9cd4eadb7e8d41c342573f8",
+      "https://www.mdt.mt.gov/publications/datastats/crashdata.aspx",
+      "https://github.com/mtfreepress/mt-dot-crash-data"
+    ]
+  }
+]

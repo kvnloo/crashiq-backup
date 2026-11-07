@@ -1,0 +1,178 @@
+[
+ {
+  "state": "California",
+  "bucket": "A",
+  "access": "open_api",
+  "location": "gps (CHP 100%) + street_pair (city police ~53% GPS)",
+  "kabco": "yes",
+  "years": "2016-current",
+  "notes": "Active pack (CCRS).",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "New York",
+  "bucket": "C",
+  "access": "open_api",
+  "location": "milepost_or_marker (36% of crashes, state highways; 99/100 join to GPS)",
+  "kabco": "no (Fatal/Injury/PD; tables not linkable)",
+  "years": "2021-2024 (4-year window)",
+  "notes": "Statewide public = C; CLEAR (agency/consultant login) = D importer. User chose A+B.",
+  "city_open_data": "New York City (h9gi-nx95, 99% GPS, live)",
+  "source": "re-checked live 2026-11-02"
+ },
+ {
+  "state": "Texas",
+  "bucket": "B",
+  "access": "free_registration",
+  "location": "gps + street_pair + control-section milepoint",
+  "kabco": "yes (crash ID links all files)",
+  "years": "2014-current",
+  "notes": "CRIS Public Extract; statewide GPS share and licence not yet measured.",
+  "city_open_data": "Austin (y2wy-tgr5)",
+  "source": "re-checked live 2026-11-02"
+ },
+ {
+  "state": "Massachusetts",
+  "bucket": "A",
+  "access": "open_api",
+  "location": "gps (93-97%)",
+  "kabco": "yes",
+  "years": "multi-year, near-real-time",
+  "notes": "MassDOT IMPACT ArcGIS; AADT joined; licence: ask MassDOT.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Pennsylvania",
+  "bucket": "A",
+  "access": "open_download",
+  "location": "gps (DEC_LATITUDE/LONGITUDE)",
+  "kabco": "yes",
+  "years": "2006-2025",
+  "notes": "Public annual downloads, no login; licence UNVERIFIED.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Virginia",
+  "bucket": "A",
+  "access": "open_api",
+  "location": "UNVERIFIED (ArcGIS query failed)",
+  "kabco": "UNVERIFIED",
+  "years": "UNVERIFIED (1.08M rows)",
+  "notes": "data.virginia.gov; 407 + DPPA terms, legal review needed.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Colorado",
+  "bucket": "A",
+  "access": "open_download",
+  "location": "gps (DRCOG 2022: 16% missing)",
+  "kabco": "UNVERIFIED",
+  "years": "2007-2026",
+  "notes": "Statewide listings, 407 notice.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Florida",
+  "bucket": "A",
+  "access": "open_download",
+  "location": "gps (FLHSMV lat/long)",
+  "kabco": "yes",
+  "years": "preceding 3 years + current",
+  "notes": "FLHSMV quarterly download (3 years only); FDOT GIS 2007-2024 (currency UNVERIFIED); Signal Four = agency login (D) and a free competitor.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Washington",
+  "bucket": "D",
+  "access": "records_request",
+  "location": "milepost (state routes) / county road MP / street_pair (city)",
+  "kabco": "UNVERIFIED",
+  "years": "15 years retained",
+  "notes": "WSDOT record-level by request (~10 days).",
+  "city_open_data": "Seattle (SDOT Collisions, 2004-present, weekly; severity 3/2b/2/1/0)",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "New Jersey",
+  "bucket": "D",
+  "access": "aggregate_only (2019+ dashboard)",
+  "location": "UNVERIFIED",
+  "kabco": "UNVERIFIED",
+  "years": "raw tables 2001-2018 only",
+  "notes": "2019+ only via Numetric dashboard; Safety Voyager gated.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Michigan",
+  "bucket": "D",
+  "access": "aggregate_only (query tool; bulk export UNVERIFIED)",
+  "location": "map in tool",
+  "kabco": "UNVERIFIED",
+  "years": "2004-2025",
+  "notes": "MTCF query tool; confirm export.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Georgia",
+  "bucket": "D",
+  "access": "records_request (5-yr dashboard + email)",
+  "location": "map in dashboard",
+  "kabco": "UNVERIFIED",
+  "years": "past 5 years",
+  "notes": "GDOT Numetric dashboard; custom data by email.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Ohio",
+  "bucket": "D",
+  "access": "agency_or_consultant_login",
+  "location": "gps in GCAT",
+  "kabco": "UNVERIFIED",
+  "years": "UNVERIFIED",
+  "notes": "GCAT for agencies and pre-qualified consultants.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "North Carolina",
+  "bucket": "D",
+  "access": "agency_or_consultant_login",
+  "location": "UNVERIFIED",
+  "kabco": "UNVERIFIED",
+  "years": "1990-2026",
+  "notes": "TEAAS for government/research.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Illinois",
+  "bucket": "D",
+  "access": "agency_or_consultant_login",
+  "location": "map in portal",
+  "kabco": "UNVERIFIED",
+  "years": "10 years",
+  "notes": "IDOT Safety Portal needs County Engineer vetting.",
+  "city_open_data": "Chicago (data.cityofchicago.org traffic crashes)",
+  "source": "earlier research 2026-10-18"
+ },
+ {
+  "state": "Arizona",
+  "bucket": "D",
+  "access": "records_request",
+  "location": "UNVERIFIED",
+  "kabco": "UNVERIFIED",
+  "years": "2006-2024 PDFs",
+  "notes": "Public Record Center only.",
+  "city_open_data": "",
+  "source": "earlier research 2026-10-18"
+ }
+]
