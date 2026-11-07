@@ -532,6 +532,15 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   - a KA crash at an intersection whose **control isn't known** (no OSM signal or stop tag) gets the signalized price
     ($2,379,000, the lower one), and the row is marked "control unknown".
   The prices sit in a cited reference table; every cost shown is computed by code from it.
+- **Private property with a house address DECIDED (user, 2026-11-04, PM chat; #397):** "explain what happened when a
+  crash happened at an address. It has happened in the roadway segment in front of the house. So we just document it,
+  point to saying it, identify the crash saying it happened in front of the house. That's it." A report that says
+  PRIVATE PROPERTY but gives a house address on the corridor street is a house-address crash (D5, #283). It is placed,
+  approximate, on the segment in front of that address and labelled "in front of <number> <street>". PRIVATE PROPERTY
+  with no house address stays excluded (#94).
+- **County address-point licences: no emails DECIDED (user, 2026-11-04, PM chat; #393):** "no emails to anyone".
+  County layers without a cleared licence for paid use (Riverside, San Joaquin) are used for measurement only, never in
+  the hosted app. Nobody writes to the counties.
 - **Traffic counts before 2021 and the Crash Data book DECIDED (user, 2026-11-01, PM session; #345, #287):** "a, ok".
   (a) Load Caltrans Traffic Census volume and truck workbooks for count years **2016–2020** too, so a study window
   that starts before 2021 (today's default, the last 5 final years, is 2020–2024) still gets state-highway rates.
