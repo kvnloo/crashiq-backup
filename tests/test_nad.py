@@ -298,10 +298,10 @@ def test_a_county_address_file_beside_nad_is_read_and_adding_one_rebuilds_the_in
     assert index.lookup(19, "Inglewood", la[1], la[0]) is None            # no LA County in NAD
     _county_file(tmp_path / "addr_ca_los_angeles.csv",
                  [["Los Angeles", 440, "West Manchester Boulevard", "Inglewood", "Inglewood", 33.9620, -118.3600,
-                   "Los Angeles County address points"]])
+                   "Los Angeles County GIS (CAMS) address points"]])
     fresh = nad.NadIndex(index.db_path, index.csv_path)                   # what the next server start sees
     pt = fresh.lookup(19, "Inglewood", la[1], la[0])
-    assert pt and abs(pt["lat"] - 33.9620) < 1e-6 and pt["source"] == "Los Angeles County address points"
+    assert pt and abs(pt["lat"] - 33.9620) < 1e-6 and pt["source"] == "Los Angeles County GIS (CAMS) address points"
     assert fresh.lookup(48, "Fairfield", 5101, street_key("BUSINESS CENTER DR"))["source"] == nad.SOURCE  # NAD too
 
 
@@ -432,3 +432,127 @@ def test_a_house_address_on_the_stretch_is_unchanged(index):
     c, a = _run_410(idx)                                                               # a suggestion on the stretch
     assert c["review_reason"] == "house_address" and c["suggestion"]["tier"] == "address_tiger"
     assert not c.get("exclude_rule") and a["kind"] == "unmatched"
+
+
+# -- #408: a placement is credited to the address list it came from -------------------------------------------------
+SANGIS = "Derived from SanGIS address point data - www.sangis.org"
+
+
+def _profile_with_sources(*sources):
+    from crashiq import profile
+    from test_profile import golden
+    study, n, pull, asg = golden()
+    seg = dict(zip([a["crash_id"] for a in asg["assignments"] if a["kind"] == "segment"], sources))
+    asg = {**asg, "assignments": [{**a, "location_provenance": "address_nad"} if a["crash_id"] in seg else a
+                                  for a in asg["assignments"]]}
+    pull = {**pull, "crashes": [{**c, "location_source": "address_nad",
+                                 "approximate": {"method": "address_nad", "plus_minus_ft": 400, "points": 1,
+                                                 "source": seg[c["crash_id"]]}} if c["crash_id"] in seg else c
+                                for c in pull["crashes"]]}
+    return study, n, pull, profile.build(study, n, pull, asg)
+
+
+def test_a_sangis_placement_is_credited_to_sangis_in_its_words():
+    """#408: a San Diego crash placed at a SanGIS point was explained as a USDOT NAD placement; the SanGIS line from
+    the source registry (docs/03 #393) was never shown."""
+    from crashiq import export
+    _, _, _, p = _profile_with_sources(SANGIS, SANGIS)
+    cav = {c["key"]: c for c in p["caveats"]}["address_nad"]
+    assert SANGIS in cav["text"] and "National Address Database" not in cav["text"]
+    t1 = {r["key"]: r for r in {x["id"]: x for x in p["tables"]}["T1"]["rows"]}["located_address_nad"]
+    assert SANGIS in t1["label"] and "National Address Database" not in t1["label"]
+    d = {"study": {"from_year": 2021, "to_year": 2025, "radius_ft": 250, "buffer_ft": 100},
+         "assignment": {"counts": {"unmatched": 0}}, "profile": p}
+    assert f"Address points used in this study: {SANGIS} (2 crashes)." in export.methodology(d)
+
+
+def test_each_list_used_is_credited_with_its_count_nad_first():
+    _, _, _, p = _profile_with_sources(SANGIS, nad.SOURCE, nad.SOURCE)
+    cav = {c["key"]: c for c in p["caveats"]}["address_nad"]
+    assert cav["sources"] == {nad.SOURCE: 2, SANGIS: 1}
+    assert f"Address points: {nad.SOURCE} (2), {SANGIS} (1)." in cav["text"]
+
+
+def test_an_older_placement_without_a_source_is_nad():
+    """Placements stored before #393 carry no source: they came from NAD, the only list then."""
+    _, _, _, p = _profile_with_sources(None)
+    assert {c["key"]: c for c in p["caveats"]}["address_nad"]["sources"] == {nad.SOURCE: 1}
+
+
+# -- #407: which source, which files, when to rebuild ---------------------------------------------------------------
+LA_LABEL, OC_LABEL = "Los Angeles County GIS (CAMS) address points", "OC Public Works address points"
+
+
+def test_the_source_of_an_address_point_does_not_depend_on_the_hash_seed(tmp_path):
+    """#407: two sources with one point each at the same address were a tie for max(set()), so the winner changed
+    with PYTHONHASHSEED and the same crash could be placed on one run and only suggested on the next."""
+    import os
+    import subprocess
+    _county_file(tmp_path / "addr_ca_a.csv", [["Los Angeles", 440, "Main Street", "Alhambra", "Alhambra", 34.09,
+                                               -118.13, LA_LABEL]])
+    _county_file(tmp_path / "addr_ca_b.csv", [["Los Angeles", 440, "Main Street", "Alhambra", "Alhambra", 34.0901,
+                                               -118.1301, OC_LABEL]])
+    nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "nad_ca_r24.csv").ready()
+    code = ("import sys; sys.path.insert(0, 'backend'); from crashiq import nad; from crashiq.names import street_key;"
+            f"i = nad.NadIndex(r'{tmp_path / 'nad_ca.sqlite'}', r'{tmp_path / 'nad_ca_r24.csv'}');"
+            "print(i.lookup(19, 'Alhambra', 440, street_key('MAIN ST'))['source'])")
+    root = Path(__file__).resolve().parents[1]
+    got = {subprocess.run([sys.executable, "-c", code], cwd=root, capture_output=True, text=True, check=True,
+                          env={**os.environ, "PYTHONHASHSEED": str(seed)}).stdout.strip() for seed in range(12)}
+    assert got == {LA_LABEL}
+
+
+def test_the_most_accurate_list_with_the_house_wins(index, tmp_path):
+    """#407 (user 2026-11-07, "Most accurate list"): NAD first, then Los Angeles and San Diego, then Orange and Fresno.
+    Only the winning list's points place the crash; a less accurate list never pulls the spot off it."""
+    _county_file(tmp_path / "addr_ca_orange.csv",
+                 [["Solano", 5101, "Business Center Drive", "Fairfield", "Fairfield", 38.2410, -122.0610, OC_LABEL],
+                  ["Solano", 777, "Elm Street", "Fairfield", "Fairfield", 38.2410, -122.0610, OC_LABEL]])
+    _county_file(tmp_path / "addr_ca_los_angeles.csv",
+                 [["Solano", 777, "Elm Street", "Fairfield", "Fairfield", 38.2420, -122.0620, LA_LABEL],
+                  ["Solano", 777, "Elm Street", "Fairfield", "Fairfield", 38.2421, -122.0621, LA_LABEL]])
+    fresh = nad.NadIndex(index.db_path, index.csv_path)
+    pt = fresh.lookup(48, "Fairfield", 5101, street_key("BUSINESS CENTER DR"))
+    assert pt["source"] == nad.SOURCE and pt["points"] == 2 and pt["lat"] == pytest.approx(38.24005)
+    pt = fresh.lookup(48, "Fairfield", 777, street_key("ELM ST"))
+    assert pt["source"] == LA_LABEL and pt["points"] == 2 and pt["lat"] == pytest.approx(38.24205)
+    assert [nad.rank(s) for s in (nad.SOURCE, LA_LABEL, "Derived from SanGIS address point data - www.sangis.org",
+                                  OC_LABEL, "Fresno County address points")] == [0, 1, 1, 2, 2]
+
+
+def test_a_measure_only_county_file_beside_nad_is_not_used(tmp_path):
+    """#407, docs/03 (#393): Riverside and San Joaquin stay measure-only, "not used in the hosted app", even if their
+    file sits in the NAD folder; so is any file whose source isn't in the registry with a cleared licence."""
+    _county_file(tmp_path / "addr_ca_riverside.csv",
+                 [["Riverside", 3900, "Main Street", "Riverside", "Riverside", 33.98, -117.37,
+                   "Riverside County address points"]])
+    _county_file(tmp_path / "addr_ca_x.csv", [["Riverside", 3900, "Main Street", "Riverside", "Riverside", 33.98,
+                                               -117.37, "somebody's file"]])
+    idx = nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "nad_ca_r24.csv")
+    assert idx.lookup(33, "Riverside", 3900, street_key("MAIN ST")) is None
+
+
+def test_fetching_for_measuring_only_writes_outside_the_index_folder(tmp_path, monkeypatch):
+    import fetch_address_points as fap
+    got = []
+    monkeypatch.setattr(fap, "fetch", lambda s, out, *a, **k: got.append((s["name"], out)) or 0)
+    monkeypatch.setenv("CRASHIQ_NAD_DIR", str(tmp_path))
+    fap.main(["ca_riverside", "ca_orange", "--measure"])
+    assert got == [("ca_riverside", tmp_path / "measure"), ("ca_orange", tmp_path)]
+
+
+def test_a_re_downloaded_file_of_the_same_size_rebuilds_the_index(tmp_path):
+    """#407: the signature was name and size only, so a re-download with moved points and the same byte count kept
+    the old index."""
+    import os
+    f = tmp_path / "addr_ca_los_angeles.csv"
+    _county_file(f, [["Los Angeles", 440, "Main Street", "Alhambra", "Alhambra", 34.0912, -118.1312, LA_LABEL]])
+    k = street_key("MAIN ST")
+    assert nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "nad_ca_r24.csv").lookup(19, "Alhambra", 440, k)
+    size = f.stat().st_size
+    _county_file(f, [["Los Angeles", 440, "Main Street", "Alhambra", "Alhambra", 34.0934, -118.1334, LA_LABEL]])
+    st = f.stat()
+    os.utime(f, ns=(st.st_atime_ns, st.st_mtime_ns + 5_000_000_000))
+    assert f.stat().st_size == size
+    pt = nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "nad_ca_r24.csv").lookup(19, "Alhambra", 440, k)
+    assert pt["lat"] == pytest.approx(34.0934)

@@ -301,9 +301,19 @@ RULE_TEXT = {"outside_buffer": "outside the corridor buffer", "outside_study_lim
                          "crossing)",
              "mile_marker": "a mile marker instead of a cross street (on the review list with its Caltrans postmile point "
                             "as the suggestion, until that placement is approved)",
-             "house_address": "a house address instead of a cross street, with no address point in the USDOT National "
-                              "Address Database (on the review list with the Census TIGER address-range point)",
+             "house_address": "a house address instead of a cross street, with no address point that places it (on "
+                              "the review list with a county address point or the Census TIGER address-range point "
+                              "as the suggestion)",
              "user_excluded": "excluded by the engineer on the review list (reason in the Review decisions sheet)"}
+
+
+def _address_credits(d: dict) -> str:
+    """The address lists this study's house-address placements came from, in their own words (#408)."""
+    cav = next((c for c in (d.get("profile") or {}).get("caveats", []) if c["key"] == "address_nad"), None)
+    if not cav or not cav.get("sources"):
+        return ""
+    return "Address points used in this study: " + ", ".join(
+        f"{s} ({n} crash{'' if n == 1 else 'es'})" for s, n in cav["sources"].items()) + ". "
 
 
 def methodology(d: dict) -> str:
@@ -347,10 +357,12 @@ def methodology(d: dict) -> str:
             "distance. Such crashes count on the corridor segments, never at an intersection, and intersection tables "
             "and collision diagrams leave them out. "
             + "A report that gives a house address instead of a cross street is placed approximately (usually within "
-            "400 ft: 86% of tested crashes) at that address point in the USDOT National Address Database (NAD, "
-            "release r24) when NAD has it, in the crash's city; such crashes also count on segments only. Where NAD "
-            "has no point, the crash goes to the review list with the Census TIGER address-range point as a "
-            "suggestion. "
+            "400 ft) at that address point in the crash's city, on the corridor in front of the address: from the USDOT "
+            "National Address Database (NAD, release r24; 86% of tested crashes within 400 ft), or where NAD has none, "
+            "from a county address list measured about as accurate (most accurate list first); such crashes also count "
+            "on segments only. A less accurate county list only gives the review list a suggestion, and with no "
+            "address point the crash goes to the review list with the Census TIGER address-range point as a "
+            "suggestion. " + _address_credits(d)
             + ("A report that gives a mile marker on the state route instead of a cross street is placed at that "
                "Caltrans postmile (SHN Postmiles Tenth layer), plus any stated distance along the route. "
                if "postmile" in locate.configured_tiers() else "")
