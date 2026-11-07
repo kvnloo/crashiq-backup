@@ -10,7 +10,8 @@ from collections import Counter
 
 import pytest
 
-from crashiq import crashes, network
+from crashiq import crashes, nad, network, placement
+from crashiq.names import street_key
 from crashiq.sources.ckan import Ckan
 from crashiq.sources.fake_ckan import FakeCkan
 
@@ -20,12 +21,28 @@ LIVE = FIXTURES / "live"
 STUDY = {"from_year": 2021, "to_year": 2025, "radius_ft": 250, "buffer_ft": 100}
 
 
+class FixtureAddrfeat:
+    """The ADDRFEAT points of the three off-stretch Crenshaw house addresses (#410), recorded in a fixture."""
+    def __init__(self):
+        self.pts = {(p["number"], p["street"]): p for p in
+                    json.loads((LIVE / "address_points_crenshaw.json").read_text())["points"]}
+
+    def lookup(self, county, number, k):
+        p = next((p for (n, s), p in self.pts.items() if n == number and street_key(s) == k), None)
+        return p and {"lat": p["lat"], "lon": p["lon"]}
+
+
 @pytest.fixture(scope="module")
 def crenshaw():
     line = [tuple(p) for p in json.loads((LIVE / "line_crenshaw.json").read_text())]
     found = network.detect(json.loads((LIVE / "overpass_crenshaw.json").read_text()), line)
     net = {"line": line, **found, "intersections": [{**i, "is_study": True} for i in found["intersections"]]}
-    return crashes.pull(STUDY, net, Ckan(FakeCkan(LIVE / "ckan_crenshaw.json"), retries=0))
+    result = crashes.pull(STUDY, net, Ckan(FakeCkan(LIVE / "ckan_crenshaw.json"), retries=0))
+    # the house-address step of placement, as the app's pull runs it (#410); NAD has no LA County, so ADDRFEAT only
+    house = [c for c in result["crashes"] if c.get("review_reason") == "house_address" and not c.get("exclude_rule")]
+    for c in house:
+        placement.place_address(c, nad.Addresses(None, FixtureAddrfeat()), line)
+    return result
 
 
 def test_live_injury_codes_give_real_severity_levels(crenshaw):
@@ -42,8 +59,19 @@ def test_live_severity_on_the_study_stretch(crenshaw):
     # 4 GPS rows > 650 ft from the line dropped (#54); 16 no-cross-street reports now on the review list (#94);
     # 4 house addresses on Crenshaw written in both fields ("CRENSHAW BL" | "CRENSHAW BL 24413") were excluded as an
     # off-corridor cross street: now D5, placed at a NAD point or reviewed (#283); 3 PRIVATE PROPERTY reports with a
-    # house address on Crenshaw (11312, 11306, 1210; one B, C, O each) were excluded: now D5 too (#397)
-    assert dict(sev) == {"K": 1, "A": 6, "B": 49, "C": 83, "O": 197}
+    # house address on Crenshaw (11312, 11306, 1210; one B, C, O each) are D5 too (#397), and their addresses are off
+    # the stretch: outside the study limits (#410)
+    assert dict(sev) == {"K": 1, "A": 6, "B": 48, "C": 82, "O": 196}
+
+
+def test_house_addresses_off_the_study_stretch_are_outside_the_limits(crenshaw):
+    """#410 (user 2026-11-07, "Exclude: outside limits"): 11312 and 11306 Crenshaw are ~1.35 mi north of the
+    stretch, 1210 Crenshaw (Torrance) ~4 mi south (Tester on #402). Excluded with the reason, not sent to review."""
+    by_id = {c["crash_id"]: c for c in crenshaw["crashes"]}
+    for cid in ("2000932", "2138243", "2301460"):
+        c = by_id[cid]
+        assert c["exclude_rule"] == "outside_study_limits" and not c.get("review_reason"), c
+        assert c["address_point"]["tier"] == "address_tiger"
 
 
 def test_live_replay_returns_every_recorded_crash(crenshaw):

@@ -357,7 +357,8 @@ def test_an_address_point_set_back_from_the_corridor_counts_on_it_in_front_of_th
 
     far = {**net, "line": [[38.2300, -122.0700], [38.2300, -122.0500]]}   # ~3,500 ft away: not this frontage
     result = {"crashes": [d5("b", 5101)], "cleaning": {}}
-    placement.place_unmatched(None, far, result, addresses=nad.Addresses(index, FakeAddrfeat()))
+    # (the TIGER suggestion on the stretch: one past its ends would exclude the crash, #410)
+    placement.place_unmatched(None, far, result, addresses=nad.Addresses(index, PointAddrfeat(38.2300, -122.0600)))
     assert result["crashes"][0]["review_reason"] == "house_address" and result["crashes"][0]["lat"] is None
 
 
@@ -379,3 +380,55 @@ def test_a_county_layer_less_accurate_than_nad_is_only_a_suggestion(tmp_path):
     assert oc["suggestion"]["source"] == "OC Public Works address points"
     assert la["location_source"] == "address_nad" and la["approximate"]["source"].startswith("Los Angeles County")
     assert x["review_reason"] == "house_address"
+
+
+# -- #410: a house address off the study stretch is outside the limits --------------------------------------------
+class PointAddrfeat:
+    def __init__(self, lat, lon):
+        self.pt = {"lat": lat, "lon": lon}
+
+    def lookup(self, county, number, k):
+        return self.pt
+
+
+LINE_410 = [[38.2395, -122.0700], [38.2395, -122.0500]]          # ~5,700 ft east-west, just south of 5101
+
+
+def _run_410(addresses, line=LINE_410):
+    from crashiq import assign
+    net = {"line": line, "is_freeway": False, "intersections": [],
+           "segments": [{"id": "S1", "from_station_ft": 0, "to_station_ft": 5740}]}
+    result = {"crashes": [d5("a", 5101)], "cleaning": {}}
+    placement.place_unmatched(None, net, result, addresses=addresses)
+    c = result["crashes"][0]
+    return c, assign.assign([c], net, 250, 100)["assignments"][0]
+
+
+@pytest.mark.parametrize("line", [[[38.2395, -122.0500], [38.2395, -122.0300]],    # the address ~0.5 mi west of A
+                                  [[38.2395, -122.1000], [38.2395, -122.0800]]])   # ~1.1 mi east of B
+def test_a_house_address_point_past_the_study_ends_is_outside_the_limits(index, line):
+    """#410 (user 2026-11-07, "Exclude: outside limits"): the NAD point is on the corridor street but 0.5-1 mi past an
+    end, so far more than 500 ft from the line: it went to review; it's outside the study limits."""
+    c, a = _run_410(nad.Addresses(index, FakeAddrfeat()), line)
+    assert c["exclude_rule"] == "outside_study_limits" and not c.get("review_reason")
+    assert c["address_point"]["source"] == nad.SOURCE
+    assert a["kind"] == "excluded" and a["rule"] == "outside_study_limits"
+
+
+def test_a_suggestion_point_past_the_study_ends_is_outside_the_limits_too(tmp_path):
+    """#410: the less accurate lists and TIGER ADDRFEAT only suggest a spot on the stretch, but they still say the
+    address isn't on it (1210 Crenshaw, Torrance: ADDRFEAT, ~4 mi off)."""
+    idx = nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "missing.csv")          # no address points
+    c, a = _run_410(nad.Addresses(idx, PointAddrfeat(38.2400, -122.0300)))            # ~1.1 mi east of B
+    assert c["exclude_rule"] == "outside_study_limits" and c["address_point"]["tier"] == "address_tiger"
+    assert a["rule"] == "outside_study_limits"
+
+
+def test_a_house_address_on_the_stretch_is_unchanged(index):
+    c, a = _run_410(nad.Addresses(index, FakeAddrfeat()))
+    assert c["location_source"] == "address_nad" and not c.get("exclude_rule") and a["kind"] == "segment"
+    idx = nad.Addresses(nad.NadIndex(index.db_path.with_name("x.sqlite"), index.csv_path.with_name("no.csv")),
+                        PointAddrfeat(38.2400, -122.0600))
+    c, a = _run_410(idx)                                                               # a suggestion on the stretch
+    assert c["review_reason"] == "house_address" and c["suggestion"]["tier"] == "address_tiger"
+    assert not c.get("exclude_rule") and a["kind"] == "unmatched"
