@@ -556,3 +556,36 @@ def test_a_re_downloaded_file_of_the_same_size_rebuilds_the_index(tmp_path):
     assert f.stat().st_size == size
     pt = nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "nad_ca_r24.csv").lookup(19, "Alhambra", 440, k)
     assert pt["lat"] == pytest.approx(34.0934)
+
+
+# -- #416: a point more than 500 ft off the corridor isn't used, for the study limits either -------------------------
+@pytest.mark.parametrize("lat, lon", [(38.24252, -122.0300),     # 1.1 mi past B, ~1,100 ft off the line (Maywood)
+                                      (38.30300, -122.1000)])    # ~4 mi off: another street with the same name
+def test_a_point_far_off_the_corridor_does_not_exclude_the_crash(tmp_path, lat, lon):
+    """#416, docs/03 (#393, user "yea 500 cut off"): a point more than 500 ft off the corridor "isn't used and the crash
+    stays on the review list". Such a point (here the only TIGER range with the number) is another place, not evidence
+    that the address is off the study stretch."""
+    idx = nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "missing.csv")          # no address points
+    c, a = _run_410(nad.Addresses(idx, PointAddrfeat(lat, lon)))
+    assert c.get("exclude_rule") != "outside_study_limits" and "address_point" not in c
+    assert c["review_reason"] == "house_address" and a["kind"] == "unmatched"
+    assert "suggestion" not in c                      # not used as the suggestion either
+
+
+def test_a_city_list_point_past_an_end_excludes_at_any_distance(index):
+    """#416 (user 2026-11-07, "Trust city lists"): NAD matches only in the crash's city, on its street, so its point
+    (5101 Business Center Dr) past A and ~2,500 ft off the corridor line still shows the address is off the stretch."""
+    c, a = _run_410(nad.Addresses(index, None), [[38.2330, -122.0500], [38.2330, -122.0300]])
+    assert c["exclude_rule"] == "outside_study_limits" and c["address_point"]["source"] == nad.SOURCE
+
+
+def test_a_city_list_point_far_off_on_the_stretch_is_still_not_placed(index):
+    """#393 unchanged: on the stretch, a point more than 500 ft off the corridor isn't placed."""
+    c, a = _run_410(nad.Addresses(index, None), [[38.2300, -122.0700], [38.2300, -122.0500]])
+    assert not c.get("exclude_rule") and c["review_reason"] == "house_address" and a["kind"] == "unmatched"
+
+
+def test_a_point_just_past_the_end_on_the_corridor_line_is_still_outside_the_limits(tmp_path):
+    idx = nad.NadIndex(tmp_path / "nad_ca.sqlite", tmp_path / "missing.csv")
+    c, a = _run_410(nad.Addresses(idx, PointAddrfeat(38.2400, -122.0300)))            # ~180 ft off, 1.1 mi past B
+    assert c["exclude_rule"] == "outside_study_limits"

@@ -33,15 +33,24 @@ class FixtureAddrfeat:
 
 
 @pytest.fixture(scope="module")
-def crenshaw():
+def crenshaw(tmp_path_factory):
     line = [tuple(p) for p in json.loads((LIVE / "line_crenshaw.json").read_text())]
     found = network.detect(json.loads((LIVE / "overpass_crenshaw.json").read_text()), line)
     net = {"line": line, **found, "intersections": [{**i, "is_study": True} for i in found["intersections"]]}
     result = crashes.pull(STUDY, net, Ckan(FakeCkan(LIVE / "ckan_crenshaw.json"), retries=0))
     # the house-address step of placement, as the app's pull runs it (#410); NAD has no LA County, so ADDRFEAT only
     house = [c for c in result["crashes"] if c.get("review_reason") == "house_address" and not c.get("exclude_rule")]
+    # 1210 Crenshaw (Torrance) from the LA County list, which matches in the crash's city (#416)
+    import csv
+    tmp = tmp_path_factory.mktemp("addr")
+    cams = json.loads((LIVE / "address_points_crenshaw.json").read_text())["la_county_cams"]["rows"]
+    with (tmp / "addr_ca_los_angeles.csv").open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["County", "Add_Number", "StNam_Full", "Inc_Muni", "Post_City", "Latitude", "Longitude", "Source"])
+        w.writerows(r + ["Los Angeles County GIS (CAMS) address points"] for r in cams)
+    addresses = nad.Addresses(nad.NadIndex(tmp / "nad_ca.sqlite", tmp / "nad_ca_r24.csv"), FixtureAddrfeat())
     for c in house:
-        placement.place_address(c, nad.Addresses(None, FixtureAddrfeat()), line)
+        placement.place_address(c, addresses, line)
     return result
 
 
@@ -71,7 +80,10 @@ def test_house_addresses_off_the_study_stretch_are_outside_the_limits(crenshaw):
     for cid in ("2000932", "2138243", "2301460"):
         c = by_id[cid]
         assert c["exclude_rule"] == "outside_study_limits" and not c.get("review_reason"), c
-        assert c["address_point"]["tier"] == "address_tiger"
+    assert by_id["2000932"]["address_point"]["tier"] == "address_tiger"            # 11312: ADDRFEAT, 61 ft off the line
+    p = by_id["2301460"]["address_point"]                                           # 1210, Torrance: ~617 ft off
+    assert p["tier"] == "address_point" and p["source"] == "Los Angeles County GIS (CAMS) address points"
+    assert p["lat"] < 33.9                                       # the Torrance point, not the Los Angeles (90019) one
 
 
 def test_live_replay_returns_every_recorded_crash(crenshaw):

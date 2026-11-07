@@ -10,6 +10,7 @@ any change to the gate is the user's decision (docs/03, PR #16 decision 2).
 from __future__ import annotations
 
 import json
+import math
 from pathlib import Path
 
 from . import fars, freeway, gps_rules, grade, locate, osm
@@ -65,28 +66,44 @@ def place_address(c: dict, addresses, line: list | None = None) -> bool:
     ha, k = c["house_address"], street_key(c["house_address"]["street"])
     pl = Polyline([tuple(x) for x in line]) if line else None
     p = addresses.nad.lookup(c.get("county_code"), c.get("city"), ha["number"], k) if addresses.nad else None
+    # NAD and the county lists match only in the crash's city, on its street: their point shows the address is off
+    # the stretch however far past an end it lies (user 2026-11-07, "Trust city lists"; #416)
     if p and _off_the_stretch(c, pl, {"tier": "address_point", "lat": p["lat"], "lon": p["lon"],
                                       "source": p.get("source") or nad.SOURCE}):
         return False
+    if p and _far_off(pl, p):
+        p = None                # on the stretch but not this street's frontage: not placed or suggested (#393)
     if p and p.get("source", nad.SOURCE) not in nad.auto_sources():
         c["suggestion"] = {"tier": "address_point", "lat": p["lat"], "lon": p["lon"], "source": p["source"]}
         return False
     lat, lon, setback = (p["lat"], p["lon"], None) if p else (None, None, None)
-    if p and pl:
+    if p and pl:                # on the stretch and within nad.MAX_SETBACK_FT (#416): in front of the address
         pr = pl.project(lat, lon)
-        if pr.offset_ft > nad.MAX_SETBACK_FT:
-            p = None
-        else:
-            (lat, lon), setback = pl.point_at(pr.station_ft), round(pr.offset_ft)
+        (lat, lon), setback = pl.point_at(pr.station_ft), round(pr.offset_ft)
     if p:
         c.update(lat=lat, lon=lon, location_source="address_nad", review_reason=None,
                  approximate={"method": "address_nad", "plus_minus_ft": nad.PLUS_MINUS_FT, "points": p["points"],
                               "source": p.get("source") or nad.SOURCE, "setback_ft": setback})
         return True
     t = addresses.addrfeat.lookup(c.get("county_code"), ha["number"], k) if addresses.addrfeat else None
-    if t and not _off_the_stretch(c, pl, {"tier": "address_tiger", "lat": t["lat"], "lon": t["lon"]}):
+    if t and not _far_off(pl, t) and not _off_the_stretch(c, pl, {"tier": "address_tiger", "lat": t["lat"],
+                                                                   "lon": t["lon"]}):
         c["suggestion"] = {"tier": "address_tiger", "lat": t["lat"], "lon": t["lon"]}
     return False
+
+
+def _far_off(pl: Polyline | None, point: dict) -> bool:
+    """docs/03 (#393, user 2026-11-04 "yea 500 cut off"): a point more than nad.MAX_SETBACK_FT off the corridor isn't
+    this street's frontage: not placed and not the suggestion. A TIGER ADDRFEAT point that far off isn't used at all,
+    nor as evidence that the address is off the stretch: ADDRFEAT has no city filter, so it's usually the same number
+    in another city (3 Maywood crashes; user 2026-11-07, "Trust city lists"; #416). Past A or B the distance is to
+    the corridor line extended along its end segment, so a point just past an end on the corridor street counts."""
+    from . import nad
+    if pl is None:
+        return False
+    pr = pl.project(point["lat"], point["lon"])
+    past = max(0.0, -pr.station_ext, pr.station_ext - pl.length_ft)        # along the extension past the end
+    return math.sqrt(max(0.0, pr.offset_ft ** 2 - past ** 2)) > nad.MAX_SETBACK_FT
 
 
 def _off_the_stretch(c: dict, pl: Polyline | None, point: dict) -> bool:

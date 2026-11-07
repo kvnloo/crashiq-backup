@@ -1,6 +1,40 @@
-{"_source": "Census TIGER/Line ADDRFEAT 2026, Los Angeles County (tl_2026_06037_addrfeat), interpolated along the one range holding the number, as addrfeat.lookup does; 1210 Crenshaw Blvd taken from its Torrance range (ZIP 90501, the crash's City Name), since LA County has a second 1210 in ZIP 90019. Computed 2026-11-07 for #410.",
+{
+ "_source": "Census TIGER/Line ADDRFEAT 2026, Los Angeles County (tl_2026_06037_addrfeat), interpolated along the one range holding the number, as addrfeat.lookup does (#410). 1210 Crenshaw Blvd isn't here: ADDRFEAT has it twice in the county (Torrance 90501, Los Angeles 90019), so lookup gives no point; it comes from the LA County list below.",
  "points": [
-  {"number": 11312, "street": "CRENSHAW BLVD", "lat": 33.932252896551724, "lon": -118.32641862068965},
-  {"number": 11306, "street": "CRENSHAW BLVD", "lat": 33.93230337931035, "lon": -118.32641872413794},
-  {"number": 1210, "street": "CRENSHAW BLVD", "lat": 33.8360265, "lon": -118.32865475}
- ]}
+  {
+   "number": 11312,
+   "street": "CRENSHAW BLVD",
+   "lat": 33.932252896551724,
+   "lon": -118.32641862068965
+  },
+  {
+   "number": 11306,
+   "street": "CRENSHAW BLVD",
+   "lat": 33.93230337931035,
+   "lon": -118.32641872413794
+  }
+ ],
+ "la_county_cams": {
+  "_source": "Los Angeles County GIS (CAMS) address points, arcgis.gis.lacounty.gov LACounty_Dynamic/CAMS/MapServer/1, queried 2026-11-07 (Number=1210, StreetName Crenshaw) for #416; both rows, so the city match is tested.",
+  "rows": [
+   [
+    "Los Angeles",
+    1210,
+    "Crenshaw Boulevard",
+    "Torrance",
+    "Torrance",
+    33.835914054429075,
+    -118.32824930810142
+   ],
+   [
+    "Los Angeles",
+    1210,
+    "Crenshaw Boulevard",
+    "Los Angeles",
+    "Los Angeles",
+    34.049386725752356,
+    -118.32563561842693
+   ]
+  ]
+ }
+}
