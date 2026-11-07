@@ -42,3 +42,10 @@ independently and files `bug` issues with a failing test, which go round the sam
   Population", pp. 4-27 to 4-32), which applies the HSM 1st ed. Ch. 4 critical-rate equation, in place of the HSM
   pages. Asked "Use Oregon DOT's Example 4-3 as the published check instead of the HSM pages?", the user said:
   "Yes, use it". Stage 7 (Ship) starts once that golden test passes.
+- **2026-11-06 (user, PM session): Kevin Lu (GitHub kvnloo) is the user's partner.** "Yes, Kevin Lu is my partner. So
+  him and I are going to be working together." His PRs go through the same review and merge rules as any other.
+- **2026-11-06 (user, PM session): county address points place automatically (#393, PR #399).** "You can try placing
+  automatically if we have the address points." Every county source whose licence is cleared for the hosted app (Los
+  Angeles, San Diego, Orange, Fresno) places house-address crashes automatically (approximate, in front of the
+  address). Orange and Fresno measured 61–64% within 400 ft, against NAD's 85%. Riverside and San Joaquin stay
+  measure-only (licence; no emails).
