@@ -76,7 +76,7 @@ def main() -> None:
               and r["consistent"] == "1"]
     bad = [r for r in tested if form.search(f"{r['primary']} {r['secondary']}".upper())]
     pm_bad = (len(bad), len(tested), sum(int(r["dist_ft"]) > 2640 for r in bad))
-    L = [f"# Run 11: statewide placement on today's main + the switched-off tiers (2026-11-03)", "",
+    L = ["# Run 11: statewide placement on today's main + the switched-off tiers (2026-11-03)", "",
          f"Tester session for #387, measure only. App code: main {commit}. Placement changes since run 10 (2d110db): "
          "#259/#261/#278 freeway fixes, #280 FARS before an approximate spot, #283 NAD house addresses, #325/#328/#329 "
          "freeway corridors, #331/#334/#341 freeway report wording ('405 SB', 'X TO 101 N', 'FROM'), #318/#319 "
@@ -118,7 +118,7 @@ def main() -> None:
         L.append(f"- Not counted (GPS off its roads; the app keeps the officer's GPS): {sum(nia.values()):,} spots found "
                  f"({nia}).")
     g = rec["verified_typo_gain"]
-    tot = g.get("all", {})
+    g.get("all", {})
     L += ["", "## Switched-off tiers", "",
           f"Accuracy bar: the exact tier on the same truth. Hidden police GPS = `accuracy_by_agency.py --tiger` on "
           f"{agencies} agencies (400 crashes each, seed 88): exact right intersection {kn(ex['ok_consistent'], ex['n_consistent'])}"
