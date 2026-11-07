@@ -84,3 +84,30 @@ def test_when_the_driveway_query_fails_the_profile_says_so(client):
     assert cav["key"] == "driveways_not_checked" and "Signalized driveways weren't checked" in cav["text"]
     assert profile.driveway_caveat({**net, "driveways_checked": True}) is None
     assert profile.driveway_caveat({"intersections": []}) is None            # a test or older net without the field
+
+
+def test_a_driveway_intersection_is_marked_and_the_mark_is_stored(client):
+    found = network.detect(MAIN, LINE, driveways=drive("Corte Madera Town Center"))
+    assert [i["driveway"] for i in found["intersections"]] == [False, True, False]
+
+    def transport(url, data, timeout):
+        q = data.decode() if isinstance(data, bytes) else str(data)
+        return json.dumps(drive("Corte Madera Town Center") if "service" in q else MAIN).encode()
+    _, net = _study(client, transport)
+    assert [(i["name"], i["driveway"]) for i in net["intersections"]] == [
+        ("1st Street", False), ("Corte Madera Town Center", True), ("9th Street", False)]
+
+
+def test_a_crash_at_a_named_driveway_is_placed_with_its_offset_and_the_caller_network_is_untouched():
+    from crashiq import placement
+    found = network.detect(MAIN, LINE, driveways=drive("Corte Madera Town Center"))
+    net = {"line": LINE, **found}
+    raw = json.loads(json.dumps(MAIN))
+    crash = {"crash_id": "1", "primary_road": "CORTE MADERA TOWN CENTER", "secondary_road": "MAIN ST",
+             "offset_ft": 0, "offset_dir": None, "location_source": "unmatched", "lat": None, "lon": None}
+    off = {**crash, "crash_id": "2", "primary_road": "MAIN ST", "secondary_road": "CORTE MADERA TOWN CENTER",
+           "offset_ft": 200, "offset_dir": "N"}
+    placement.place_unmatched(None, net, {"crashes": [crash, off], "cleaning": {}}, raw=raw)
+    assert crash["location_source"] == "exact" and abs(crash["lat"] - 34.010) < 1e-6   # the corridor named second
+    assert off["location_source"] == "exact" and off["lat"] > 34.0105                  # 200 ft north along Main St
+    assert raw == MAIN

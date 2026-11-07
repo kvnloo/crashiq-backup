@@ -397,7 +397,10 @@ def detect(osm: dict, line_ll: list[tuple[float, float]], driveways: dict | None
     for nid in cands:
         if clusters:
             last = clusters[-1]
-            near = proj[nid].station_ft - proj[last[-1]].station_ft <= CLUSTER_FT
+            # a driveway node joins a cluster but never reaches past it: unnamed, it would chain the streets on both
+            # sides into one intersection (#422: Hayward's signal into Jefferson St, Buena Park's 7th St lost)
+            reach = next((m for m in reversed(last) if m not in driveway_nodes), last[-1])
+            near = proj[nid].station_ft - proj[reach].station_ft <= CLUSTER_FT
             a = {_core(x) for x in cross_names[nid]}
             b = {_core(x) for m in last for x in cross_names[m]}
             same_street = not a or not b or bool(a & b)
@@ -430,6 +433,8 @@ def detect(osm: dict, line_ll: list[tuple[float, float]], driveways: dict | None
             names.update(cross_names[n])
         name = (" / ".join(n for n, _ in names.most_common())
                 or ("Driveway (signal)" if set(c) & driveway_nodes else "Unnamed road"))
+        # named by its driveways alone: the locator's street network has no driveways, so placement adds this one (#421)
+        driveway = bool(set(c) & driveway_nodes) and all(n in driveway_nodes for n in c if cross_names[n])
 
         sides = set().union(*(cross_sides[n] for n in c))
         legs = 2 + len(sides) if sides else None     # 3 = T (cross street on one side), 4 = through cross street
@@ -439,7 +444,7 @@ def detect(osm: dict, line_ll: list[tuple[float, float]], driveways: dict | None
         out.append({
             "id": f"osm-{min(c)}", "name": name, "station_ft": round(max(0.0, min(line.length_ft, st)), 1),
             "lat": round(lat, 7), "lon": round(lon, 7), "osm_node_ids": sorted(c), "control": control,
-            "is_study": True, "provenance": "auto", "name_source": "osm", "legs": legs,
+            "is_study": True, "provenance": "auto", "name_source": "osm", "legs": legs, "driveway": driveway,
         })
     return {"corridor_name": corridor_name, "length_ft": round(line.length_ft, 1), "intersections": out,
             "corridor_highway": corridor_highway, "corridor_names": [n for n, _ in along_len.most_common()],
@@ -580,7 +585,8 @@ def _load(db: Database, sid: str) -> dict | None:
     if not c:
         return None
     rows = db.query("SELECT * FROM intersection WHERE study_id = ? ORDER BY station_ft", (sid,))
-    ints = [{**r, "is_study": bool(r["is_study"]), "osm_node_ids": json.loads(r["osm_node_ids"])} for r in rows]
+    ints = [{**r, "is_study": bool(r["is_study"]), "osm_node_ids": json.loads(r["osm_node_ids"]),
+             "driveway": bool(r.get("driveway"))} for r in rows]
     for i in ints:
         i.pop("study_id", None)
     aadt = {r["segment_id"]: r["aadt"] for r in db.query("SELECT * FROM segment_aadt WHERE study_id = ?", (sid,))}
@@ -639,9 +645,9 @@ def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: 
                       int(driveways is not None)))
         for i in found["intersections"]:
             conn.execute("INSERT INTO intersection (study_id, id, name, station_ft, lat, lon, osm_node_ids, control, "
-                         "is_study, provenance, name_source, legs) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                         "is_study, provenance, name_source, legs, driveway) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                          (sid, i["id"], i["name"], i["station_ft"], i["lat"], i["lon"], json.dumps(i["osm_node_ids"]),
-                          i["control"], 1, "auto", "osm", i.get("legs")))
+                          i["control"], 1, "auto", "osm", i.get("legs"), int(i["driveway"])))
     return network(db, sid)
 
 

@@ -208,6 +208,10 @@ MIGRATIONS: list[str] = [
     """
     ALTER TABLE corridor ADD COLUMN driveways_checked INTEGER;
     """,
+    # 17 — #421 the intersection is a signalized driveway, named by the driveway alone (NULL: not, or drawn before)
+    """
+    ALTER TABLE intersection ADD COLUMN driveway INTEGER;
+    """,
 ]
 
 
