@@ -364,13 +364,28 @@ def approximate_text(n: int) -> str:
             f"tables and collision diagrams leave {'it' if one else 'them'} out.")
 
 
-def address_nad_text(n: int) -> str:
-    """The NAD address-point caveat (#283), singular or plural by count."""
+def address_sources(placed: list[dict]) -> dict[str, int]:
+    """The address list each house-address placement came from (#408), as {source line: crashes}, NAD first. The
+    source line is the registry's own wording (SanGIS's prescribed one for San Diego, docs/03 #393); a placement stored
+    before #393 has none and came from NAD, the only list then."""
+    from . import nad
+    n = Counter((c.get("approximate") or {}).get("source") or nad.SOURCE
+                for c in placed if c.get("location_provenance") == "address_nad")
+    return dict(sorted(n.items(), key=lambda kv: (kv[0] != nad.SOURCE, kv[0])))
+
+
+def address_credit(sources: dict[str, int]) -> str:
+    """"<source line>" for one list, "<line> (n), <line> (n)" for several (#408)."""
+    return ", ".join(s if len(sources) == 1 else f"{s} ({n})" for s, n in sources.items())
+
+
+def address_nad_text(n: int, sources: dict[str, int]) -> str:
+    """The house-address caveat (#283), singular or plural by count, crediting the list each point came from (#408)."""
     one = n == 1
     return (f"{n} crash{' report gives' if one else ' reports give'} a house address instead of a cross street and "
-            f"{'is' if one else 'are'} placed approximately (usually within 400 ft) at the address point in the USDOT "
-            f"National Address Database. {'It counts' if one else 'They count'} on the corridor segments, never at an "
-            f"intersection, so intersection tables and collision diagrams leave {'it' if one else 'them'} out.")
+            f"{'is' if one else 'are'} placed approximately (usually within 400 ft) at the address point. Address "
+            f"points: {address_credit(sources)}. {'It counts' if one else 'They count'} on the corridor segments, never "
+            f"at an intersection, so intersection tables and collision diagrams leave {'it' if one else 'them'} out.")
 
 
 def gps_far_text(n: int, check_ft: float) -> str:
@@ -654,6 +669,7 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
 
     # T1 summary
     tot = _counts(placed)
+    addr_srcs = address_sources(placed)     # #408
     summary_rows = [
         _row("crashes", "Crashes", value=tot["crashes"]),
         _row("crashes_per_year", "Crashes per year", value=r2(tot["crashes"] / years) if years else None),
@@ -706,9 +722,12 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
              "report: where the reference street crosses, the ramp terminal, or along the connector, plus the stated "
              "distance. Counted on segments only",
              value=sum(1 for c in placed if c.get("location_provenance") in ("approximate", "freeway_offset"))),
-        # house-address crashes at their NAD address point (#283, D5): approximate, segments only
+        # house-address crashes at their address point (#283, D5): approximate, segments only; credited to the list
+        # each point came from (#408)
         _row("located_address_nad", "House-address crashes placed approximately (usually within 400 ft) at the "
-             "address point in the USDOT National Address Database. Counted on segments only",
+             "address point (" + (f"address points: {address_credit(addr_srcs)}" if addr_srcs
+                                  else "USDOT National Address Database or a county address list")
+             + "). Counted on segments only",
              value=sum(1 for c in placed if c.get("location_provenance") == "address_nad")),
         _row("located_other", "Placed by other matching tiers (relaxed, near, fuzzy, Jev)",
              value=sum(1 for c in placed if c.get("location_provenance") not in ("gps", "gps_dms_corrected", "gps_sign_corrected", "gps_offset_applied", "fars", "exact",
@@ -855,8 +874,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         caveats.append({"key": "approximate_freeway", "count": approx,
                         "text": approximate_text(approx)})
     by_nad = sum(1 for c in placed if c.get("location_provenance") == "address_nad")
-    if by_nad:                             # #283: the same for NAD address points
-        caveats.append({"key": "address_nad", "count": by_nad, "text": address_nad_text(by_nad)})
+    if by_nad:                             # #283: the same for address points, credited to their lists (#408)
+        srcs = address_sources(placed)
+        caveats.append({"key": "address_nad", "count": by_nad, "sources": srcs, "text": address_nad_text(by_nad, srcs)})
     oc = sum(isinstance(c.get("outside_corner"), dict) for c in placed)
     if oc:                                    # #70: brought back onto the stretch by their reported distance
         one = oc == 1
