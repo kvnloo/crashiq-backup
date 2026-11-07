@@ -673,3 +673,13 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     within 400 ft of police GPS about as often as NAD on the same check (~85%): Los Angeles 85.5%, San Diego 84.1%.
     Orange (61%) and Fresno (64%) give the review list's suggestion; the engineer places the crash.
   - **Private property at a house address (user, 2026-11-04: "2yea"):** see the #397 entry above; built in PR #402.
+  - **Orange and Fresno only suggest, confirmed (user, 2026-11-07, PM session):** asked whether "try placing
+    automatically" (2026-11-06) overrides "1yes" for Orange and Fresno, the user chose "Suggest only". Los Angeles and
+    San Diego place automatically; Orange and Fresno give the review list's suggestion.
+  - **Which address list wins (user, 2026-11-07, PM session, "Most accurate list"; #407):** when more than one source has
+    the same house address, the most accurate one is used, always the same for the same crash: USDOT NAD first, then Los
+    Angeles and San Diego, then Orange and Fresno.
+  - **House address off the study stretch (user, 2026-11-07, PM session, "Exclude: outside limits"):** a house-address
+    crash (including PRIVATE PROPERTY with a house address, #397) whose address isn't on the study stretch is outside the
+    study limits: excluded, with that reason shown, not sent to review. Found by Tester on PR #402: 1210 Crenshaw is in
+    Torrance, about 4 mi from the Crenshaw stretch.
