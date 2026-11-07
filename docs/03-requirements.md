@@ -658,6 +658,11 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   (1) Colima via Homebrew on this Mac for the image build and the Tester's click-through against the container.
   (2) Address data on a fresh hosted disk: an on-demand per-county TIGER ADDRFEAT fetcher, plus a one-time upload of
   the NAD California extract (426 MB) to the Render disk. Not baked into the image.
+- **Signalized driveways are study intersections DECIDED (user, 2026-11-07, PM session, "Signalized ones only"; #413):**
+  a driveway or access road (OSM `service`) meeting the corridor at a traffic signal is a study intersection, named
+  after the driveway when it has a name, otherwise "Driveway (signal)". A driveway without a signal stays part of the
+  segment, and its crashes count there. Found in the #391 after-merge check: 19 removed stops had a signal; at 14 of
+  them only a driveway or access road meets the corridor, mostly shopping-centre and campus entrances (Corte Madera Town Center, Doheny Park Plaza, Village at San Jacinto and others).
 - **County address points fill NAD's gaps DECIDED (user, 2026-11-04, CrashIQ chat; #393):** "I think 2 is easy. And
   it can be carried over to other states as well, so let's get that going." House-address crashes (D5) in counties
   USDOT NAD doesn't cover are placed at the county's own address points (`data/reference/address_points.json`), with
@@ -682,5 +687,13 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   - **House address off the study stretch (user, 2026-11-07, PM session, "Exclude: outside limits"; #410):** a house-address
     crash (including PRIVATE PROPERTY with a house address, #397) whose address isn't on the study stretch is outside the
     study limits: excluded, with that reason shown, not sent to review. Found by Tester on PR #402: 1210 Crenshaw is in
-    Torrance, about 4 mi from the Crenshaw stretch. How to tell "on the stretch" for an address with no address
-    point is not decided yet; #410 proposes it, and it goes to the user if no existing rule covers it.
+    Torrance, about 4 mi from the Crenshaw stretch. Which points can show it is set by the #416 entry below.
+  - **Which address points can show "off the stretch" (user, 2026-11-07, PM session, "Trust city lists"; #416):** a
+    point from USDOT NAD or a county address list (matched only in the crash's own city, on the same street) excludes the
+    crash as outside the study limits however far past an end it lies (1210 Crenshaw: the LA County point is in
+    Torrance, so it stays excluded where that list is loaded; from ADDRFEAT alone it is about 614 ft off the extended
+    line and goes to review). A Census TIGER
+    ADDRFEAT point (no city filter; it can be a same-number address in another city, as for 3 Maywood crashes) counts
+    only if it lies within 500 ft of the corridor line extended past A or B; otherwise it isn't used. Placement and
+    review suggestions keep the 500 ft cutoff (#393). Not decided yet: a crash in an unincorporated area, where the
+    lists have no city to match.
