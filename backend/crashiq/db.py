@@ -204,6 +204,10 @@ MIGRATIONS: list[str] = [
         PRIMARY KEY (study_id, kind, ref_id)
     );
     """,
+    # 16 — #413 whether the signalized-driveway query was answered when the corridor was detected (NULL: drawn before)
+    """
+    ALTER TABLE corridor ADD COLUMN driveways_checked INTEGER;
+    """,
 ]
 
 

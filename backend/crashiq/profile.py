@@ -364,6 +364,18 @@ def approximate_text(n: int) -> str:
             f"tables and collision diagrams leave {'it' if one else 'them'} out.")
 
 
+def driveway_caveat(net: dict) -> dict | None:
+    """#413: when the signalized-driveway query wasn't answered (or the corridor was drawn before the check), say so:
+    the same corridor would otherwise show fewer intersections with nothing to tell the engineer why."""
+    if "driveways_checked" not in net or net["driveways_checked"]:
+        return None
+    why = ("map query unavailable" if net["driveways_checked"] is False
+           else "the corridor was drawn before this check; draw it again to check")
+    return {"key": "driveways_not_checked",
+            "text": f"Signalized driveways weren't checked ({why}): a driveway or access road meeting the corridor at a "
+                    "traffic signal would be a study intersection, and any here count on the segment instead."}
+
+
 def address_sources(placed: list[dict]) -> dict[str, int]:
     """The address list each house-address placement came from (#408), as {source line: crashes}, NAD first. The
     source line is the registry's own wording (SanGIS's prescribed one for San Diego, docs/03 #393); a placement stored
@@ -877,6 +889,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if by_nad:                             # #283: the same for address points, credited to their lists (#408)
         srcs = address_sources(placed)
         caveats.append({"key": "address_nad", "count": by_nad, "sources": srcs, "text": address_nad_text(by_nad, srcs)})
+    if (dc := driveway_caveat(net)):        # #413
+        caveats.append(dc)
     oc = sum(isinstance(c.get("outside_corner"), dict) for c in placed)
     if oc:                                    # #70: brought back onto the stretch by their reported distance
         one = oc == 1
