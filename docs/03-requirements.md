@@ -679,7 +679,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   - **Which address list wins (user, 2026-11-07, PM session, "Most accurate list"; #407):** when more than one source has
     the same house address, the most accurate one is used, always the same for the same crash: USDOT NAD first, then Los
     Angeles and San Diego, then Orange and Fresno.
-  - **House address off the study stretch (user, 2026-11-07, PM session, "Exclude: outside limits"):** a house-address
+  - **House address off the study stretch (user, 2026-11-07, PM session, "Exclude: outside limits"; #410):** a house-address
     crash (including PRIVATE PROPERTY with a house address, #397) whose address isn't on the study stretch is outside the
     study limits: excluded, with that reason shown, not sent to review. Found by Tester on PR #402: 1210 Crenshaw is in
-    Torrance, about 4 mi from the Crenshaw stretch.
+    Torrance, about 4 mi from the Crenshaw stretch. How to tell "on the stretch" for an address with no address
+    point is not decided yet; #410 proposes it, and it goes to the user if no existing rule covers it.
