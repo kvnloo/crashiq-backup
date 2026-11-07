@@ -95,6 +95,36 @@ def test_tiger_address_ranges_interpolate_a_suggestion(tmp_path):
     assert addrfeat.Addrfeat(tmp_path / "none").lookup(19, 1650, street_key("GENEVA AV")) is None
 
 
+def test_addrfeat_downloads_a_missing_county_on_demand(tmp_path):
+    """#384 (b): a hosted disk starts empty; the first lookup in a county fetches its zip, the next one uses it.
+    A failed or bad download leaves no file and is retried only after RETRY_MINUTES."""
+    src = tmp_path / "src.zip"
+    write_addrfeat(src, [("Geneva Ave", "1601", "1699", "1600", "1698", [(34.00, -118.300), (34.00, -118.290)])])
+    urls, clock, body = [], [0.0], [src.read_bytes()]
+
+    def opener(url):
+        urls.append(url)
+        if body[0] is None:
+            raise OSError("census.gov down")
+        return io.BytesIO(body[0])
+
+    k = street_key("GENEVA AV")
+    a = addrfeat.Addrfeat(tmp_path / "disk", opener=opener, vintage=2026, now=lambda: clock[0], background=False)
+    assert a.lookup(19, 1650, k) is None                       # this crash goes to review; the download ran
+    assert urls == ["https://www2.census.gov/geo/tiger/TIGER2026/ADDRFEAT/tl_2026_06037_addrfeat.zip"]
+    assert (tmp_path / "disk" / "2026" / "tl_2026_06037_addrfeat.zip").exists()
+    assert a.lookup(19, 1650, k)["lat"] == pytest.approx(34.0)  # the next crash gets the suggestion
+    assert len(urls) == 1
+
+    body[0] = None                                              # Alameda (1): the download fails
+    assert a.lookup(1, 1650, k) is None and a.lookup(1, 1650, k) is None
+    assert len(urls) == 2                                       # not retried at once
+    body[0] = b"not a zip"
+    clock[0] += addrfeat.RETRY_MINUTES * 60
+    assert a.lookup(1, 1650, k) is None and len(urls) == 3      # retried after the wait; a bad file isn't kept
+    assert list((tmp_path / "disk" / "2026").glob("*06001*")) == []
+
+
 # -- routing and placement ---------------------------------------------------------------------------------------
 from crashiq import crashes, placement  # noqa: E402
 
