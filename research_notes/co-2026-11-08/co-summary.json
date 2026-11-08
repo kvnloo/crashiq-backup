@@ -1,0 +1,106 @@
+{
+ "state": "CO",
+ "bucket": "A",
+ "bucket_note": "open yearly Excel listings (2007-2026), record-level, GPS 76% (2021) to 99.8% (2025), street pair on ~83%, KABCO people counts; catches: OnBase download refused scripted clients on 2026-11-08, no reuse licence, 2007-2020 in another layout (not read)",
+ "status": "active",
+ "sources": [
+  {
+   "name": "CDOT Statewide Crash Data Listing (OnBase DocPop, one Excel file per year)",
+   "url": "https://www.codot.gov/safety/traffic-safety/data-analysis/crash-data",
+   "access": "open (anonymous download from the page; no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "All crash data listings, reports and dashboards are protected under 23 U.S.C. Section 407.",
+   "years": "2007-2026 listed; 2021-2025 read (2026 preliminary)",
+   "rows_per_year": {
+    "2021": 97788,
+    "2022": 95380,
+    "2023": 102768,
+    "2024": 100680,
+    "2025": 95696
+   },
+   "gps_share": 0.978,
+   "gps_share_by_year": {
+    "2021": 0.7583,
+    "2022": 0.8411,
+    "2023": 0.9248,
+    "2024": 0.978,
+    "2025": 0.9975
+   },
+   "street_names_share": 0.8203,
+   "kabco": true,
+   "keys_linkable": "CUID per crash; no person or vehicle tables (first two traffic units are columns)"
+  },
+  {
+   "name": "CDOT Crash Data Dashboards",
+   "url": "https://www.codot.gov/safety/traffic-safety/data-analysis/crash-data",
+   "access": "public dashboard",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null,
+   "note": "not used"
+  }
+ ],
+ "placement_sample": {
+  "area": "Denver County (08031), 2024, random 2,000 (seed 2026)",
+  "n": 2000,
+  "gps_share": 0.985,
+  "name_placed_share": 0.8295,
+  "auto_share": 0.795,
+  "within_250ft": 0.8931,
+  "within_250ft_low": 0.8769,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "street_pair_share": 0.993,
+  "denver_no_gps_2024": 364,
+  "denver_no_gps_with_street_pair": 361
+ },
+ "end_to_end": {
+  "corridor": "E Colfax Ave, Colorado Blvd to Holly St, Denver (0.98 mi)",
+  "window": [
+   2021,
+   2025
+  ],
+  "pulled": 686,
+  "counted": 290,
+  "severity": {
+   "K": 4,
+   "A": 11,
+   "B": 38,
+   "C": 32,
+   "U": 0,
+   "O": 205
+  },
+  "crash_cost_total": null,
+  "crash_cost_note": "CDOT costs cited but unverified (no saved copy)",
+  "findings_shown": 12,
+  "pdf_bytes": 75373,
+  "xlsx_bytes": 40504,
+  "seconds": 48,
+  "note": "run on listings cached under CRASHIQ_STATES_DIR (2021-2024 via the reader's own download earlier the same day, 2025 via headless Chrome)"
+ },
+ "importer_built": true,
+ "blockers": [
+  "the reader's scripted OnBase download got a Sign In page after 4 downloads on 2026-11-08 (a browser still downloads anonymously); a year that won't download is reported missing",
+  "no published licence for a paid product (23 USC 407 notice only)",
+  "crash costs cited from CDOT's HSIP 2025 report but not verified: FHWA's site blocks scripted PDF downloads",
+  "2007-2020 listings use another layout (no CUID): not read"
+ ],
+ "user_actions": [
+  "Ask CDOT Traffic Safety & Engineering (David Swenka, david.swenka@state.co.us; Aaron Moss, aaron.moss@state.co.us) for written permission to use the Statewide Crash Data Listing in a paid product, and for a stable direct-download link (or an open-data copy) of the yearly listings",
+  "Save a copy of the Colorado HSIP 2025 report (highways.dot.gov) in a browser into ~/.hermes/state-manuals/co/ so its crash costs can be hashed and turned on"
+ ],
+ "cities": [
+  {
+   "city": "Denver",
+   "source": "covered by the statewide listing (DPD reports included)",
+   "url": null,
+   "gps_share": 0.985,
+   "years": "2021-2025",
+   "licence": "as CDOT"
+  }
+ ]
+}

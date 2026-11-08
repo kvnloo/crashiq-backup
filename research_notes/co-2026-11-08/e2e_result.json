@@ -1,0 +1,72 @@
+{
+ "state": "CO",
+ "study": "c1879adfe006",
+ "corridor": "East Colfax Avenue",
+ "length_mi": 0.98,
+ "window": [
+  2021,
+  2025
+ ],
+ "pulled": 686,
+ "counted": 290,
+ "ksi": 15,
+ "fatal": 4,
+ "injury": 85,
+ "pdo": 205,
+ "unplaced": 0,
+ "excluded": 396,
+ "severity_T3": {
+  "K": 4,
+  "A": 11,
+  "B": 38,
+  "C": 32,
+  "U": 0,
+  "O": 205
+ },
+ "crash_cost_total": null,
+ "cost_column": false,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_crash_costs",
+  "no_statewide_rates",
+  "rates_not_computed",
+  "gps_far_from_stated"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": false,
+   "text": "not available for Colorado: found in research, not yet checked against co_hsip_2025"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for Colorado: CDOT screens with its own safety performance functions (Level of Service of Safety) by facility type and ADT, not average rates; CrashIQ has neither CDOT's SPFs nor Colorado traffic counts"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Highway Safety Manual (AASHTO, 1st, 2010), Ch. 4, Sec. 4.2.3. Colorado's own method, CDOT identifies sites by Level of Service of Safety (SPFs with EB adjustment) and crash-pattern diagnostics, then ranks by benefit/cost (Colorado HSIP 2025 report, pp. 9-10 of 42), isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": false,
+   "text": "not available for Colorado: CDOT's documents read here set no minimum; its crash-data page asks requesters for up to five years"
+  }
+ ],
+ "findings_shown": 12,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 40504,
+ "pdf_bytes": 75373,
+ "seconds": 48
+}
