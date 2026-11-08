@@ -1,0 +1,130 @@
+{
+ "state": "NJ",
+ "bucket": "A*",
+ "bucket_note": "Open record-level tables with person KABCO and street names, no login. Catches: the page hides 2019-2023 (files still posted), newest year 2023, GPS on only 26-38% before 2023, no reuse licence. The 2026-11-02 screen's 'D, gated' was wrong.",
+ "sources": [
+  {
+   "name": "NJDOT Bureau of Transportation Data and Safety, Crash Tables (Crash/Driver/Vehicle/Occupant/Pedestrian, per county per year)",
+   "url": "https://dot.nj.gov/transportation/refdata/accident/rawdata01-current.shtm; files https://dot.nj.gov/transportation/refdata/accident/<year>/<County><year><Table>.zip (2019 only on www.nj.gov)",
+   "access": "open (zips, no login); 2024+ only in the interactive Crash Data Portal (njdot.aashtowaresafety.net)",
+   "licence_paid_use": "unclear",
+   "licence_text": "No licence on the raw-data page. NJDOT crash-records pages: 'By using this site, you agree to abide by the NJDOT Legal Notice, the NJDOT Privacy Notice, 23 USC \u00a7407 and all other applicable statutes, rules, and regulations.' (crash_summary_reports.shtm, read 2026-11-08 via search extract)",
+   "licence_urls": [
+    "https://www.nj.gov/transportation/refdata/accident/crash_summary_reports.shtm",
+    "https://dot.nj.gov/transportation/refdata/accident/rawdata01-current.shtm"
+   ],
+   "years": "2017-2023 in the reader's layout (2001-2016 posted in an older layout)",
+   "rows_per_year": {
+    "2017": 277557,
+    "2018": 284201,
+    "2019": 283198,
+    "2020": 195474,
+    "2021": 226958,
+    "2022": 242550,
+    "2023": 247701
+   },
+   "gps_share_by_year": {
+    "2017": 0.2627,
+    "2018": 0.2784,
+    "2019": 0.2806,
+    "2020": 0.3145,
+    "2021": 0.3255,
+    "2022": 0.3835,
+    "2023": 0.5974
+   },
+   "street_pair_share_by_year": {
+    "2017": 0.7586,
+    "2018": 0.7672,
+    "2019": 0.775,
+    "2020": 0.7859,
+    "2021": 0.7878,
+    "2022": 0.7982,
+    "2023": 0.8167
+   },
+   "gps_share": 0.5974,
+   "street_names_share": 0.8167,
+   "kabco": "yes: Occupant and Pedestrian 'Physical Condition' (NJTR-1 Box 86) 01-05 = K A B C O; crash Severity F/I/P",
+   "keys_linkable": true,
+   "duplicate_keys_2023": 2868
+  }
+ ],
+ "placement_sample": {
+  "area": "Essex County (Newark), 2023",
+  "n": 2000,
+  "county_crashes": 23810,
+  "gps_share": 0.3975,
+  "street_pair_share": 0.82,
+  "name_placed_share": 0.622,
+  "auto_share": 0.0,
+  "auto_share_tiger_only_auto": 0.592,
+  "within_250ft": 0.8193,
+  "within_250ft_low": 0.7963,
+  "within_250ft_all_placed": 0.8063,
+  "no_gps": 14346,
+  "no_gps_with_pair": 13406,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "auto_share is 0 under the default Gate() because the network is TIGER-only; within_250ft is scored under Gate(tiger_only_auto=True), against the hidden GPS. House addresses not measured."
+ },
+ "placement_sample_2": {
+  "area": "Middlesex County (New Brunswick), 2023",
+  "n": 2000,
+  "county_crashes": 27592,
+  "gps_share": 0.4248,
+  "street_pair_share": 0.79,
+  "name_placed_share": 0.7395,
+  "auto_share": 0.0,
+  "auto_share_tiger_only_auto": 0.692,
+  "within_250ft": 0.8866,
+  "within_250ft_low": 0.8688,
+  "within_250ft_all_placed": 0.8851,
+  "no_gps": 15871,
+  "no_gps_with_pair": 14622,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "auto_share is 0 under the default Gate() because the network is TIGER-only; within_250ft is scored under Gate(tiger_only_auto=True), against the hidden GPS. House addresses not measured."
+ },
+ "end_to_end": {
+  "corridor": "Broad St, Market St to Bridge St, Newark",
+  "length_mi": 1.01,
+  "window": [
+   2020,
+   2024
+  ],
+  "port": 8105,
+  "pulled": 3554,
+  "counted": 405,
+  "unplaced": 198,
+  "excluded": 2951,
+  "severity": {
+   "K": 2,
+   "A": 7,
+   "B": 24,
+   "C": 58,
+   "U": 0,
+   "O": 314
+  },
+  "crash_cost": null,
+  "findings_shown": 10,
+  "contract_errors": 0,
+  "pdf_bytes": 83239,
+  "xlsx_bytes": 43905,
+  "seconds": 200
+ },
+ "status": "active",
+ "importer_built": true,
+ "blockers": [
+  "no reuse licence for a paid product (NJDOT pages cite 23 USC 407)",
+  "newest posted year is 2023; 2024+ only in the interactive portal",
+  "GPS on 26-38% of 2017-2022 crashes: placement leans on street names, 82-89% within 250 ft on TIGER (below the 98% auto gate)",
+  "county routes 600+ written only by number don't place (TIGER lacks those numbers)",
+  "NJ HSIP crash costs are HSM 2001 dollars with no index named: not printed"
+ ],
+ "user_actions": [
+  "Ask NJDOT BTDS in writing whether a paid tool may load the crash tables, and what notice to show",
+  "Pick the index for NJ HSIP's 2001 crash costs (the manual says 'adjust to current year', no index), or leave costs off",
+  "Ask NJDOT BTDS when 2024 tables will be posted",
+  "Decide: build a route + milepost placer on NJDOT's Straight Line Diagram network (SRI + milepost on ~90% of crashes)"
+ ],
+ "cities": []
+}
