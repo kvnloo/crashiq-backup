@@ -69,7 +69,11 @@ def test_render_blueprint_keeps_the_password_out_of_the_repo_and_ai_off():
 
 
 def test_osm_attribution_is_in_both_exports():
-    from crashiq.export import CREDITS
+    import dataclasses
+    from crashiq import packs
+    from crashiq.export import CREDITS, credits
     assert "© OpenStreetMap contributors (ODbL)" in CREDITS
+    other = dataclasses.replace(packs.get("CA"), code="ZZ", caltrans=False, source="Crash data: test.")
+    assert credits(packs.get("CA")) == CREDITS and "© OpenStreetMap contributors (ODbL)" in credits(other)   # #19
     src = (ROOT / "backend/crashiq/export.py").read_text()
-    assert '("Sources", CREDITS)' in src and "Paragraph(CREDITS" in src  # XLSX notes and PDF last page
+    assert '("Sources", credits(pack))' in src and "Paragraph(escape(credits(pack))" in src  # XLSX notes, PDF last page

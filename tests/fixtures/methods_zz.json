@@ -1,0 +1,8 @@
+{"state": "ZZ",
+ "manuals": {"hsm": {"title": "Highway Safety Manual", "publisher": "AASHTO", "jurisdiction": "US", "edition": "1st, 2010",
+                     "url": "https://www.highwaysafetymanual.org", "decided": "test fixture"}},
+ "values": {"crash_costs": {"missing": "Zedland manual not checked"},
+            "statewide_rates": {"missing": "Zedland publishes none"},
+            "screening": {"engine": "critical_rate_own_sites", "k": 1.645, "min_sites": 3, "manual": "hsm",
+                          "page": "Ch. 4, Sec. 4.2.3"},
+            "min_years": {"missing": "not looked up"}}}

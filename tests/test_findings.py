@@ -427,3 +427,15 @@ def test_a_spelled_number_with_a_space_or_dash_is_read_whole(extra):
 def test_a_comma_keeps_a_tens_word_and_one_apart():
     assert F.extract_numbers("Twenty, one of which was at night.", set()) == ["20"]
     assert F.extract_numbers("Twenty were at night.", set()) == ["20"]
+
+
+def test_no_injury_levels_rejects_any_serious_injury_claim():
+    # #19: a source with injured/killed only (NYC, NY DMV) may never be described as having serious injuries
+    f = F.Finding(text=GOOD["text"], numbers=[F.Number(**n) for n in GOOD["numbers"]],
+                  evidence_refs=F.Evidence(tables=[], records=F.RecordFilter(**GOOD["records"])))
+    assert F.validate(f, TABLES, PLACED, WINDOW) == []
+    assert any("claims an injury level" in r for r in F.validate(f, TABLES, PLACED, WINDOW, no_levels=True))
+    plain = f.model_copy(update={"text": "Broadside crashes dominate at Main St: 20 of 30 crashes.", "numbers": f.numbers[:2]})
+    assert F.validate(plain, TABLES, PLACED, WINDOW, no_levels=True) == []
+    by_a = plain.model_copy(update={"evidence_refs": F.Evidence(records=F.RecordFilter(location_id="I1", severity=["A"]))})
+    assert any("A, B or C" in r for r in F.validate(by_a, TABLES, PLACED, WINDOW, no_levels=True))

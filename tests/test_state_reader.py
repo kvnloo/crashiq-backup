@@ -7,8 +7,12 @@ address, a placeholder, an out-of-window year, a duplicate version and a contrac
 
 import dataclasses
 import io
+import json
+import re
 
 import pytest
+from openpyxl import load_workbook
+from pypdf import PdfReader
 
 from crashiq import packs
 from crashiq.sources.fake_ckan import FakeCkan
@@ -53,7 +57,7 @@ def zz(monkeypatch):
         seen.update(box=box, counties=county_fips, years=years)
         return {"crashes": [dict(c) for c in CRASHES], "cleaning": {"fake": True}, "years_missing": []}
     pack = dataclasses.replace(packs.get("CA"), code="ZZ", name="Zedland", status="active", source="Crash data: Zedland test",
-                               source_short="ZED", fetch=fetch, caltrans=False, methods=packs.REF / "methods_va.json")
+                               source_short="ZED", fetch=fetch, caltrans=False, methods=FIXTURES / "methods_zz.json")
     monkeypatch.setitem(packs.PACKS, "ZZ", pack)
     return seen
 
@@ -76,8 +80,40 @@ def test_a_reader_pack_runs_end_to_end(client, zz):
     assert ids["z6"]["review_reason"] == "house_address" and ids["z7"]["review_reason"] == "no_cross_street"
     assert s["source"] == "Crash data: Zedland test"
     p = client.get(f"/api/studies/{sid}/profile").json()
+    assert "tables" in p, p
     t1 = {r["key"]: r["values"]["value"] for r in p["tables"][0]["rows"]}
     assert t1["fatal_crashes"] == 1 and t1["crashes"] >= 4
-    assert client.get(f"/api/studies/{sid}/export.xlsx").status_code == 200
+    assert not any("crash_cost" in r["values"] for r in p["tables"][1]["rows"])     # no Zedland costs: no column
+    keys = {c["key"] for c in p["caveats"]}
+    assert {"no_crash_costs", "no_statewide_rates"} <= keys
+    x = client.get(f"/api/studies/{sid}/export.xlsx")
     pdf = client.get(f"/api/studies/{sid}/export.pdf")
-    assert pdf.status_code == 200 and pdf.content[:4] == b"%PDF"
+    assert x.status_code == 200 and pdf.status_code == 200 and pdf.content[:4] == b"%PDF"
+    wb = load_workbook(io.BytesIO(x.content))
+    text = " ".join([json.dumps(p)] + [str(c.value) for ws in wb for row in ws.iter_rows() for c in row if c.value]
+                    + [pg.extract_text() for pg in PdfReader(io.BytesIO(pdf.content)).pages])
+    for word in ("Caltrans", "LRSM", "TASAS", "CCRS", "CHP", "California"):      # never silently California's
+        assert word not in text, [text[max(0, m.start() - 80):m.end() + 40] for m in re.finditer(word, text)][:8]
+
+
+def test_a_source_without_injury_levels_says_so_everywhere(client, zz, monkeypatch):
+    note = "Zedland reports injured or killed only: KSI = fatal only, and there is no A/B/C split."
+    monkeypatch.setitem(packs.PACKS, "ZZ", dataclasses.replace(packs.PACKS["ZZ"], severity_note=note))
+    CRASHES_KUO = [c for c in CRASHES if c["severity"] in "KUO"] + [crash(12, lat=33.905, lon=-118.32665,
+                                                                          severity="U", injured=2)]
+    monkeypatch.setattr(__import__(__name__), "CRASHES", CRASHES_KUO)
+    client.app.state.overpass = lambda url, data, timeout: (FIXTURES / "overpass_crenshaw.json").read_bytes()
+    client.app.state.ckan = FakeCkan(FIXTURES / "ckan_crenshaw.json")
+    sid = client.post("/api/studies", json={"name": "Z", "mode": "profile", "state": "ZZ"}).json()["id"]
+    assert client.get("/api/studies/meta?state=ZZ").json()["severity_note"] == note
+    client.put(f"/api/studies/{sid}/corridor", json={"line": LINE})
+    client.post(f"/api/studies/{sid}/crashes/pull")
+    p = client.get(f"/api/studies/{sid}/profile").json()
+    assert p["severity_note"] == note and any(c["text"] == note for c in p["caveats"])
+    t1 = {r["key"]: r["label"] for r in p["tables"][0]["rows"]}
+    assert t1["ksi_crashes"].startswith("KSI crashes (fatal only")
+    t2 = {c["key"] for c in p["tables"][1]["columns"]}
+    assert not {"sev_a", "sev_b", "sev_c"} & t2 and "sev_u" in t2
+    assert all(note in (t.get("note") or "") for t in p["tables"])
+    pdf = client.get(f"/api/studies/{sid}/export.pdf").content
+    assert "no A/B/C split" in " ".join(pg.extract_text() for pg in PdfReader(io.BytesIO(pdf)).pages)
