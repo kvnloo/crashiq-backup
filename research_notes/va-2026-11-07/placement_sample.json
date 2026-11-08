@@ -1,0 +1,218 @@
+{
+ "Richmond City": {
+  "area": "Richmond City (51760), 2024",
+  "n": 2000,
+  "gps_share": 1.0,
+  "street_pair_share": 0.627,
+  "tiers": {
+   "unique_pair": 687,
+   "exact": 458,
+   "review": 71,
+   "verified_typo": 23,
+   "near": 8,
+   "relaxed": 5,
+   "fuzzy": 2
+  },
+  "name_placed_share": 0.5915,
+  "name_placed_share_of_pairs": 0.9434,
+  "auto_share": 0.5725,
+  "auto_share_of_pairs": 0.9131,
+  "route_retry_used": 122,
+  "within_250ft_auto": 0.9747,
+  "within_250ft_auto_low": 0.9639,
+  "within_250ft_all_placed": 0.9696,
+  "within_250ft_all_placed_low": 0.9582,
+  "not_placed": {
+   "no cross street in source": 746,
+   "no intersection of the two named streets": 67,
+   "exact: streets meet in more than one place": 4
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "RICHMOND RD E (NP - CITY OF RICHMOND) | EAST RICHMOND RD & BRIEL ST",
+    "US-60W | MIDLOTHIAN TPKE & ACCESS",
+    "SC-686E (CHESTERFIELD COUNTY) | JAHNKE RD & CHIPPENHAM PKWY RAMP",
+    "GRANBY ST (PR - CITY OF RICHMOND) | GRANBY ST & ALLEY",
+    "VA-161S | BELLS RD & RICHMOND HWAY",
+    "VA-161N | BELLS RD & RICHMOND HWAY"
+   ],
+   "placed, not auto: verified_typo": [
+    "MECHANICSVILLE TPIKE & WHITCOMB ST",
+    "MIDLOTHIAN TPIKE & CARNATION ST",
+    "MECHANICSVILLE TPIKE & REDD ST",
+    "GERMAN SCHOOL RD & MIDLOTHIAN TPIKE"
+   ],
+   "placed, not auto: near": [
+    "BROOK RD & CHARITY ST",
+    "I-95 RAMP & COMMERCE RD",
+    "WESTWOOD AVE & HAMILTON ST",
+    "MAIN ST & DOCK ST"
+   ],
+   "placed >250 ft off": [
+    "I-95 RAMP & COMMERCE RD [near] 8734 ft",
+    "I-64 RAMP & MECHANICSVILLE TPKE [exact] 713 ft",
+    "I-64 RAMP & LABURNUM AVE [unique_pair] 1314 ft",
+    "ARTHUR ASHE BLVD & I-95 RAMP [unique_pair] 254 ft",
+    "ARTHUR ASHE BLVD & I-95 RAMP [unique_pair] 252 ft",
+    "ARTHUR ASHE BLVD & I-95 RAMP [unique_pair] 260 ft",
+    "LABURNUM AVE & CHATHAM DR [relaxed] 6431 ft",
+    "WESTWOOD AVE & LANVALE AVE [exact] 496 ft"
+   ],
+   "placed, not auto: relaxed": [
+    "HARWOOD ST & WILLIS ST",
+    "LABURNUM AVE & CHATHAM DR",
+    "AZALEA AVE & CHAMBERLAYNE RD",
+    "OLD BROOK RD & FOREST LAWN RD"
+   ],
+   "exact: streets meet in more than one place": [
+    "VA-161S | BELT BLVD & TERMINAL AVE",
+    "VA-161S | BELT BLVD & TERMINAL AVE",
+    "HOPKINS LN (PR - CITY OF RICHMOND) | HOPKINS RD & BELT BLVD",
+    "UR-7562E (CITY OF RICHMOND) | IDLEWOOD AVE & GRAYLAND AVE"
+   ],
+   "placed, not auto: fuzzy": [
+    "13TH ST & 10TH ST",
+    "FOREST HL & CHIPPENHAM"
+   ]
+  }
+ },
+ "Fairfax County": {
+  "area": "Fairfax County (51059), 2024",
+  "n": 2000,
+  "gps_share": 1.0,
+  "street_pair_share": 0.447,
+  "tiers": {
+   "exact": 675,
+   "review": 179,
+   "verified_typo": 17,
+   "fuzzy": 4,
+   "near": 14,
+   "unique_pair": 4,
+   "relaxed": 1
+  },
+  "name_placed_share": 0.3575,
+  "name_placed_share_of_pairs": 0.7998,
+  "auto_share": 0.3395,
+  "auto_share_of_pairs": 0.7595,
+  "route_retry_used": 52,
+  "within_250ft_auto": 0.9588,
+  "within_250ft_auto_low": 0.941,
+  "within_250ft_all_placed": 0.9538,
+  "within_250ft_all_placed_low": 0.9359,
+  "not_placed": {
+   "no cross street in source": 1106,
+   "no intersection of the two named streets": 149,
+   "exact: streets meet in more than one place": 28,
+   "fuzzy: streets meet in more than one place": 2
+  },
+  "examples": {
+   "placed >250 ft off": [
+    "CHAIN BRIDGE RD & I-66 RAMP [exact] 658 ft",
+    "FAIRFAX COUNTY PKWAY & WIEHLE AVE [exact] 267 ft",
+    "MCWHORTER PL & ALLMAN DR [exact] 539 ft",
+    "FAIRFAX COUNTY PKWAY & US-50 RAMP [exact] 619 ft",
+    "I-495 RAMP & GALLOWS RD [exact] 370 ft",
+    "GOSNELL RD & OLD COURTHOUSE RD [exact] 454 ft",
+    "ARLINGTON BLVD & SOUTH ST [exact] 472 ft",
+    "EDSALL RD & I-395 RAMP [exact] 428 ft"
+   ],
+   "no intersection of the two named streets": [
+    "UR-6662S (TOWN OF HERNDON) | ELDEN ST & HERNDON PKWAY",
+    "FR-253E | RANDOM HILLS RD & GOVERNMENT CENTER PKWAY",
+    "US-1N | RICHMOND HWAY & NORTH KINGS HWAY",
+    "VA-236E | LITTLE RIVER TPIKE & LITTLE RIVER TPKE SERVICE RD",
+    "VA-228N | HERNDON PKWAY & DULLES PL",
+    "SC-7700W (FAIRFAX COUNTY) | FAIR LAKES PKWAY & PENDER CREEK CIR"
+   ],
+   "placed, not auto: verified_typo": [
+    "LITTLE RIVER TPIKE & BEAUREGARD ST",
+    "BRADDOCK RD & LITTLE RIVER TPIKE",
+    "FRANCONIA RD LOWER RD & FRONTIER DR",
+    "LITTLE RIVER TPIKE & BEAUREGARD ST"
+   ],
+   "exact: streets meet in more than one place": [
+    "SC-658W (FAIRFAX COUNTY) | COMPTON RD & UNION MILL RD",
+    "SC-611S (FAIRFAX COUNTY) | TELEGRAPH RD & MOUNT AIR DR",
+    "FREETOWN CT (NP - FAIRFAX COUNTY) | FREETOWN CT & GLADE DR",
+    "SC-8461S (FAIRFAX COUNTY) | STONECROFT BLVD & CONFERENCE CENTER DR",
+    "SC-617S (FAIRFAX COUNTY) | BACKLICK RD & AMHERST AVE",
+    "SC-662W (FAIRFAX COUNTY) | WESTFIELDS BLVD & NEWBROOK DR"
+   ],
+   "fuzzy: streets meet in more than one place": [
+    "SC-623N (FAIRFAX COUNTY) | OLD MOUNT VERNON RD & MOUNT VERNON MEMORIAL HWAY",
+    "VA-7W | LEESBURG PIKE & LEESBURG PIKE SERVICE RD"
+   ],
+   "placed, not auto: fuzzy": [
+    "OLD GALLOWS RD & LEESBURG PIKE SERVICE RD",
+    "LEESBURG PIKE & CROSSROADS CTR",
+    "GEORGE WASHINGTON MEMORIAL PKWAY & BELLE HAVEN RD",
+    "MOUNT VERNON MEMORIAL HWAY & CHERRYTREE DR"
+   ],
+   "placed, not auto: near": [
+    "RICHMOND HWY & SOUTH KINGS HWY",
+    "LEE HWY & ESKRIDGE RD",
+    "GALLOWS RD & PRESCOTT DR",
+    "BACKLICK RD & RHODEN CT"
+   ],
+   "placed, not auto: relaxed": [
+    "VADEN DR & SPRAGUE AVE"
+   ]
+  }
+ },
+ "vdot_officer_text": {
+  "127": {
+   "area": "VDOT Full Crash, JURIS 127 (51760), 2024",
+   "n": 2000,
+   "gps_share": 1.0,
+   "officer_pair_share": 0.01,
+   "pair_tiers": {
+    "exact": 12,
+    "review": 5,
+    "unique_pair": 3
+   },
+   "pair_placed_share_of_pairs": 0.75,
+   "pair_auto_share_of_pairs": 0.75,
+   "pair_within_250ft_auto": 1.0,
+   "pair_within_250ft_auto_low": 0.7961,
+   "house_address_share": 0.1925,
+   "address_tiers": {
+    "address": 312,
+    "review": 73
+   },
+   "address_placed_share_of_house": 0.8104,
+   "address_within_250ft": 0.641,
+   "address_within_250ft_low": 0.5864,
+   "address_within_400ft": 0.7885,
+   "address_points_source": "VGIN Virginia Address Points (CC0), FIPS 51760"
+  },
+  "29": {
+   "area": "VDOT Full Crash, JURIS 29 (51059), 2024",
+   "n": 2000,
+   "gps_share": 1.0,
+   "officer_pair_share": 0.1975,
+   "pair_tiers": {
+    "exact": 175,
+    "review": 196,
+    "near": 5,
+    "fuzzy": 3,
+    "relaxed": 4,
+    "verified_typo": 11,
+    "unique_pair": 1
+   },
+   "pair_placed_share_of_pairs": 0.5038,
+   "pair_auto_share_of_pairs": 0.4456,
+   "pair_within_250ft_auto": 0.8352,
+   "pair_within_250ft_auto_low": 0.7734,
+   "house_address_share": 0.041,
+   "address_tiers": {
+    "address": 67,
+    "review": 15
+   },
+   "address_placed_share_of_house": 0.8171,
+   "address_within_250ft": 0.6418,
+   "address_within_250ft_low": 0.5222,
+   "address_within_400ft": 0.7313,
+   "address_points_source": "VGIN Virginia Address Points (CC0), FIPS 51059"
+  }
+ }
+}

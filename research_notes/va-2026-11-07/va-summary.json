@@ -1,0 +1,239 @@
+{
+ "state": "VA",
+ "bucket": "A*",
+ "sources": [
+  {
+   "name": "VDOT Full Crash (Virginia Roads; DMV TREDS)",
+   "url": "https://services.arcgis.com/p5v98VHDX9Atv3l7/arcgis/rest/services/Full_Crash/FeatureServer/0",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "years": "2017-2026 (2026 to 2026-08-31, preliminary)",
+   "rows_per_year": {
+    "2017": 127375,
+    "2018": 131848,
+    "2019": 128172,
+    "2020": 105600,
+    "2021": 118498,
+    "2022": 122434,
+    "2023": 127597,
+    "2024": 129244,
+    "2025": 115858,
+    "2026": 68957
+   },
+   "gps_share": 0.99995,
+   "street_names_share": 1.0,
+   "street_names_note": "one free-text field only; no cross street. House number 19.3% Richmond / 4.1% Fairfax; pair in the one field 1.0% / 19.8% (2024 samples)",
+   "kabco": true,
+   "keys_linkable": "DOCUMENT_NBR links Basic and Details (Details = one row per crash, first person of each kind)"
+  },
+  {
+   "name": "DMV Crash Data and Details (2025 Datathon)",
+   "url": "https://data.virginia.gov/dataset/crash-data-virginia-department-of-motor-vehicles",
+   "access": "open download (CSV)",
+   "licence_paid_use": "unclear",
+   "years": "2022-2024 (static, 2025-03-10)",
+   "rows_per_year": {
+    "2022": 122434,
+    "2023": 127596,
+    "2024": 129204
+   },
+   "gps_share": 0.99999,
+   "street_names_share": 0.465,
+   "street_names_note": "RouteName + SecondaryLocation pair share; cross street mostly on at-intersection crashes",
+   "kabco": false,
+   "keys_linkable": "Crash_UID -> Vehicle_UID -> Driver_UID (anonymized; no DOCUMENT_NBR)"
+  },
+  {
+   "name": "VGIN Virginia Address Points",
+   "url": "https://vginmaps.vdem.virginia.gov/arcgis/rest/services/VA_Base_Layers/VA_Address_Points/FeatureServer/0",
+   "access": "open (ArcGIS REST)",
+   "licence_paid_use": "ok",
+   "years": "current (2026 Q3 release)",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null,
+   "note": "3,881,020 points, CC0"
+  }
+ ],
+ "placement_sample": {
+  "area": "Richmond City (51760) and Fairfax County (51059), 2024, 2,000 crashes each",
+  "n": 4000,
+  "gps_share": 1.0,
+  "name_placed_share": {
+   "richmond": 0.5915,
+   "fairfax": 0.3575
+  },
+  "auto_share": {
+   "richmond": 0.5725,
+   "fairfax": 0.3395
+  },
+  "within_250ft": {
+   "richmond": 0.9747,
+   "fairfax": 0.9588
+  },
+  "within_250ft_low": {
+   "richmond": 0.9639,
+   "fairfax": 0.941
+  },
+  "street_pair_source": "DMV datathon RouteName + SecondaryLocation (likely VDOT-derived)",
+  "officer_text_pairs": {
+   "richmond": {
+    "share": 0.01,
+    "auto_of_pairs": 0.75,
+    "within_250ft": 1.0
+   },
+   "fairfax": {
+    "share": 0.1975,
+    "auto_of_pairs": 0.4456,
+    "within_250ft": 0.8352,
+    "within_250ft_low": 0.7734
+   }
+  },
+  "house_address_share": {
+   "richmond": 0.1925,
+   "fairfax": 0.041
+  },
+  "house_address_found": {
+   "richmond": 0.8104,
+   "fairfax": 0.8171
+  },
+  "house_address_within_250ft": {
+   "richmond": 0.641,
+   "fairfax": 0.6418
+  },
+  "address_points_source": "VGIN Virginia Address Points (CC0)",
+  "no_gps_added": "at most 6 of 61 no-GPS crashes statewide (2 street pairs, 4 house numbers) of 1,175,583 = 0.0005%; not run on them"
+ },
+ "importer_built": true,
+ "blockers": [
+  "Licence for paid use unclear: no open licence; 'for use in performing the official business of the Commonwealth'; DPPA and DMV dissemination rules apply",
+  "No cross-street field in the live source",
+  "Person detail only for the first driver/passenger/pedestrian per crash",
+  "2025 rows (115,858) look short of 2024 (129,244); not explained"
+ ],
+ "user_actions": [
+  "Ask VDOT Traffic Operations Division (Highway Safety) / DMV Highway Safety Office whether a paid engineering tool may use the Full Crash data, and whether full person/vehicle tables are available",
+  "Decide whether Virginia's 2026 comprehensive crash costs replace LRSM costs in Virginia studies"
+ ],
+ "cities": [
+  {
+   "city": "Virginia Beach",
+   "source": "VBPD Police Traffic Crash Reports",
+   "url": "https://services2.arcgis.com/CyVvlIiUfRBmMQuu/arcgis/rest/services/Police_Traffic_Crash_Reports_view/FeatureServer/0",
+   "gps_share": 0.0,
+   "years": "2023-2026",
+   "licence": "not specified"
+  },
+  {
+   "city": "Norfolk",
+   "source": "Traffic Crashes (Socrata w6gf-9gws), VDOT copy",
+   "url": "https://data.norfolk.gov/resource/w6gf-9gws.json",
+   "gps_share": 1.0,
+   "years": "2016-2026",
+   "licence": "not specified"
+  },
+  {
+   "city": "Arlington",
+   "source": "VDOT_Arlington_Crash_Data_Public, VDOT copy",
+   "url": "https://arlgis.arlingtonva.us/arcgis/rest/services/Project_Services/VDOT_Arlington_Crash_Data_Public/FeatureServer/0",
+   "gps_share": 0.998,
+   "years": "2013-2026",
+   "licence": "not checked"
+  },
+  {
+   "city": "Richmond",
+   "source": "none found (use VDOT)",
+   "url": null,
+   "gps_share": null,
+   "years": null,
+   "licence": null
+  },
+  {
+   "city": "Fairfax County",
+   "source": "none found (use VDOT)",
+   "url": null,
+   "gps_share": null,
+   "years": null,
+   "licence": null
+  },
+  {
+   "city": "Alexandria",
+   "source": "Vision Zero dashboard only",
+   "url": "https://www.alexandriava.gov/VisionZero",
+   "gps_share": null,
+   "years": null,
+   "licence": null
+  }
+ ],
+ "methods": {
+  "manuals": [
+   {
+    "title": "VDOT Traffic Crash Costs 2026 (memo)",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/about/strategic-highway-safety-plan/VDOT-Crash-Costs-Memo-2026_acc10062026_RM.pdf",
+    "date": "2026-09-01"
+   },
+   {
+    "title": "VHSIP HSIP Implementation Guidelines (Reference Guide)",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/about/strategic-highway-safety-plan/VHSIP-Reference-Guide_2025_acc08182025_RM.pdf",
+    "date": "2025"
+   },
+   {
+    "title": "Traffic Operations and Safety Analysis Manual (TOSAM) v2.0",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/technical-guidance-documents/traffic-operations/traffic-operations-and-safety-analysis-manual-tosam.pdf",
+    "date": "2020-02"
+   },
+   {
+    "title": "Virginia State Preferred CMF List",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/traffic-operations/vhsip/VDOT-State-Preferred-CMF-List-2026_acc10152026_RM.pdf",
+    "date": "2026"
+   },
+   {
+    "title": "VTRC 26-R34 Intersection SPF Calibration",
+    "url": "https://vtrc.virginia.gov/media/vtrc/vtrc-pdf/vtrc-pdf/26-R34.pdf",
+    "date": "2026-03"
+   },
+   {
+    "title": "VHSIP Spot Safety Application (Excel, example)",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/traffic-operations/vhsip/VHSIP-Spot-Safety-Application---Example_acc10012025_RM.xlsx",
+    "date": "FY2025"
+   },
+   {
+    "title": "VHSIP Systemic Safety Application (Excel)",
+    "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/doing-business/technical-guidance-and-support/traffic-operations/vhsip/VHSIP-Systemic-Safety-Application_acc10012025_RM.xlsx",
+    "date": "FY2025"
+   },
+   {
+    "title": "VTRC 06-R30 Highway Safety Corridor Program (critical rate)",
+    "url": "https://vtrc.virginia.gov/media/vtrc/vtrc-pdf/vtrc-pdf/06-r30.pdf",
+    "date": "2006-04"
+   },
+   {
+    "title": "IIM-TOD-397 Virginia iCAP policy",
+    "url": "https://vdot.virginia.gov/media/vdotvirginiagov/about/vdots-transportation-system/highways/innovative-intersections/iim-tod-397-icap-policy-and-guidance.pdf",
+    "date": "2023-06-16"
+   }
+  ],
+  "rates_available": "not found as a published table; statewide averages are in VDOT's Power BI Crash Summary Book (not opened)",
+  "rates_unit": "crashes per 100 million VMT (segments); intersection unit not found",
+  "crash_costs": {
+   "K": 17009543,
+   "A": 998777,
+   "B": 329990,
+   "C": 190773,
+   "O": 17344,
+   "year": 2026
+  },
+  "screening_method": "Potential for Safety Improvement (PSI) from Virginia SPFs with EB, top-100 lists; critical rate (VTRC 06-R30, k=2.576) historically and for HRRR (one SD above state average)",
+  "differences_from_ca": [
+   "One comprehensive cost per KABCO level (K $17.0M) vs Caltrans LRSM KA combined by location type ($2.38M-$3.78M)",
+   "No published base-rate table like TASAS; averages only in VDOT's Power BI tool, per 100M VMT by functional class/system",
+   "Screening by PSI (SPF + EB) rather than rate-group comparison",
+   "B/C form: 3% discount rate, 5 years of crash history; spot B/C >= 1 scores 40 points",
+   "Virginia intersection SPF calibration factors published (VTRC 26-R34)",
+   "3-5 years of crash data (VHSIP); TOSAM: at least 2, 5 preferred",
+   "23 USC 407 and DPPA terms on data; detailed crash studies must be PE-sealed (TE-362.1)"
+  ]
+ }
+}

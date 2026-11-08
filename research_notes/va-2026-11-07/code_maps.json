@@ -1,0 +1,472 @@
+{
+ "datathon_rows": 18099,
+ "joined": 16693,
+ "maps": {
+  "COLLISION_TYPE": {
+   "1": [
+    "Rear End",
+    1.0,
+    5832
+   ],
+   "2": [
+    "Angle",
+    1.0,
+    4943
+   ],
+   "3": [
+    "Head On",
+    1.0,
+    453
+   ],
+   "4": [
+    "Sideswipe - Same Direction",
+    1.0,
+    2185
+   ],
+   "5": [
+    "Sideswipe - Opposite Direction",
+    1.0,
+    209
+   ],
+   "6": [
+    "Fixed Object in Road",
+    1.0,
+    175
+   ],
+   "7": [
+    "Train",
+    1.0,
+    1
+   ],
+   "8": [
+    "Non-Collision",
+    1.0,
+    96
+   ],
+   "9": [
+    "Fixed Object - Off Road",
+    1.0,
+    1778
+   ],
+   "10": [
+    "Deer",
+    1.0,
+    104
+   ],
+   "11": [
+    "Other Animal",
+    1.0,
+    9
+   ],
+   "12": [
+    "Pedestrian",
+    1.0,
+    321
+   ],
+   "13": [
+    "Bicyclist",
+    1.0,
+    1
+   ],
+   "14": [
+    "Motorcyclist",
+    1.0,
+    1
+   ],
+   "15": [
+    "Backed Into",
+    1.0,
+    50
+   ],
+   "16": [
+    "Other",
+    1.0,
+    535
+   ]
+  },
+  "WEATHER_CONDITION": {
+   "1": [
+    "No Adverse Condition (Clear/Cloud)",
+    1.0,
+    14140
+   ],
+   "3": [
+    "Fog",
+    1.0,
+    23
+   ],
+   "4": [
+    "Mist",
+    1.0,
+    174
+   ],
+   "5": [
+    "Rain",
+    1.0,
+    2196
+   ],
+   "6": [
+    "Snow",
+    1.0,
+    114
+   ],
+   "7": [
+    "Sleet/Hail",
+    1.0,
+    28
+   ],
+   "8": [
+    "Smoke/Dust",
+    1.0,
+    1
+   ],
+   "9": [
+    "Other",
+    1.0,
+    13
+   ],
+   "10": [
+    "Blowing Sand, Soil, Dirt, or Snow",
+    1.0,
+    1
+   ],
+   "11": [
+    "Severe Crosswinds",
+    1.0,
+    3
+   ]
+  },
+  "LIGHT_CONDITION": {
+   "1": [
+    "Dawn",
+    1.0,
+    396
+   ],
+   "2": [
+    "Daylight",
+    1.0,
+    11001
+   ],
+   "3": [
+    "Dusk",
+    1.0,
+    474
+   ],
+   "4": [
+    "Darkness - Road Lighted",
+    1.0,
+    3887
+   ],
+   "5": [
+    "Darkness - Road Not Lighted",
+    1.0,
+    869
+   ],
+   "6": [
+    "Darkness - Unknown Road Lighting",
+    1.0,
+    42
+   ],
+   "7": [
+    "Unknown",
+    1.0,
+    24
+   ]
+  },
+  "ROADWAY_SURFACE_COND": {
+   "1": [
+    "Dry",
+    1.0,
+    13966
+   ],
+   "2": [
+    "Wet",
+    1.0,
+    2536
+   ],
+   "3": [
+    "Snowy",
+    1.0,
+    69
+   ],
+   "4": [
+    "Icy",
+    1.0,
+    68
+   ],
+   "5": [
+    "Muddy",
+    1.0,
+    3
+   ],
+   "6": [
+    "Oil/Other Fluids",
+    1.0,
+    4
+   ],
+   "7": [
+    "Other",
+    1.0,
+    23
+   ],
+   "8": [
+    "Natural Debris",
+    1.0,
+    4
+   ],
+   "9": [
+    "Water (Standing, Moving)",
+    1.0,
+    12
+   ],
+   "10": [
+    "Slush",
+    1.0,
+    7
+   ],
+   "11": [
+    "Sand, Dirt, Gravel",
+    1.0,
+    1
+   ]
+  },
+  "INTERSECTION_TYPE": {
+   "1": [
+    "Not at Intersection",
+    1.0,
+    9519
+   ],
+   "2": [
+    "Two Approaches",
+    1.0,
+    963
+   ],
+   "3": [
+    "Three Approaches",
+    1.0,
+    2133
+   ],
+   "4": [
+    "Four Approaches",
+    1.0,
+    4004
+   ],
+   "5": [
+    "Five-Point, or More",
+    1.0,
+    37
+   ],
+   "6": [
+    "Roundabout",
+    1.0,
+    37
+   ]
+  },
+  "RELATION_TO_ROADWAY": {
+   "1": [
+    "Main-Line Roadway",
+    1.0,
+    4944
+   ],
+   "2": [
+    "Acceleration/Deceleration Lanes",
+    1.0,
+    54
+   ],
+   "3": [
+    "Gore Area (Between Ramp and Highway Edgelines)",
+    1.0,
+    37
+   ],
+   "4": [
+    "Collector/Distributor Road",
+    1.0,
+    33
+   ],
+   "5": [
+    "On Entrance/Exit Ramp",
+    1.0,
+    584
+   ],
+   "6": [
+    "Intersection at end of Ramp",
+    1.0,
+    27
+   ],
+   "7": [
+    "Other interchange area (median, shoulder & roadside)",
+    1.0,
+    98
+   ],
+   "8": [
+    "Non-Intersection",
+    1.0,
+    5608
+   ],
+   "9": [
+    "Within Intersection",
+    1.0,
+    4095
+   ],
+   "10": [
+    "Intersection Related - Within 150 Feet",
+    1.0,
+    1022
+   ],
+   "11": [
+    "Intersection Related - Outside 150 Feet",
+    1.0,
+    109
+   ],
+   "12": [
+    "Crossover Related",
+    1.0,
+    9
+   ],
+   "13": [
+    "Driveway, Alley-Access - Related",
+    1.0,
+    63
+   ],
+   "14": [
+    "Railway Grade Crossing",
+    1.0,
+    2
+   ],
+   "15": [
+    "Other Crossing (Crossings for Bikes, School, etc.",
+    1.0,
+    8
+   ]
+  },
+  "TRAFFIC_CONTROL_TYPE": {
+   "1": [
+    "No Traffic Control",
+    1.0,
+    2825
+   ],
+   "2": [
+    "Officer or Flagger",
+    1.0,
+    19
+   ],
+   "3": [
+    "Traffic Signal",
+    1.0,
+    4330
+   ],
+   "4": [
+    "Stop Sign",
+    1.0,
+    1340
+   ],
+   "5": [
+    "Slow or Warning Sign",
+    1.0,
+    33
+   ],
+   "6": [
+    "Traffic Lanes Marked",
+    1.0,
+    7202
+   ],
+   "7": [
+    "No Passing Lines",
+    1.0,
+    35
+   ],
+   "8": [
+    "Yield Sign",
+    1.0,
+    86
+   ],
+   "9": [
+    "One Way Road or Street",
+    1.0,
+    29
+   ],
+   "10": [
+    "Railroad Crossing With Markings and Signs",
+    1.0,
+    2
+   ],
+   "11": [
+    "Railroad Crossing With Signals",
+    1.0,
+    1
+   ],
+   "12": [
+    "Railroad Crossing With Gate and Signals",
+    1.0,
+    2
+   ],
+   "13": [
+    "Other",
+    1.0,
+    106
+   ],
+   "14": [
+    "Pedestrian Crosswalk",
+    1.0,
+    76
+   ],
+   "15": [
+    "Reduced Speed - School Zone",
+    1.0,
+    3
+   ],
+   "16": [
+    "Reduced Speed - Work Zone",
+    1.0,
+    10
+   ],
+   "17": [
+    "Highway Safety Corridor",
+    1.0,
+    594
+   ]
+  },
+  "FUN": {
+   "INT": [
+    "Interstate",
+    0.999,
+    5074
+   ],
+   "LOC": [
+    "Local",
+    0.957,
+    1462
+   ],
+   "MAC": [
+    "Major Collector",
+    0.909,
+    1285
+   ],
+   "MIA": [
+    "Minor Arterial",
+    0.982,
+    3953
+   ],
+   "MIC": [
+    "Minor Collector",
+    0.883,
+    231
+   ],
+   "OFE": [
+    "Other Freeways and Expressways",
+    0.981,
+    588
+   ],
+   "OPA": [
+    "Other Principal Arterial",
+    0.965,
+    3962
+   ],
+   "None": [
+    "",
+    0.877,
+    138
+   ]
+  }
+ }
+}
