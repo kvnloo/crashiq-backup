@@ -1,0 +1,58 @@
+{
+ "state": "AR",
+ "manuals": {
+  "ardot_hsip": {
+   "title": "Highway Safety Improvement Program Process",
+   "publisher": "Arkansas Department of Transportation (ARDOT)",
+   "jurisdiction": "AR",
+   "edition": "Version 2.0, 12/2022",
+   "url": "https://fhwaapps.fhwa.dot.gov/hsipp/Questions/OpenFile/1414",
+   "sha256": "bb2e15efb39a72140f8a963314b27b933351d3652eca5acda1664f7b8be6194a",
+   "downloaded": "2026-11-08",
+   "note": "attached to ARDOT's HSIP report on FHWA's HSIP online reporting site; research_notes/ar-2026-11-08/ar-methods.md"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 6343000,
+   "A": 335000,
+   "B": 123000,
+   "C": 69000,
+   "O": 11000,
+   "dollar_year": 2020,
+   "manual": "ardot_hsip",
+   "page": "App. E, p. E-2 (PDF p. 59), 'Adjusted Crash Cost Estimates by Crash Severity'; dollar year from p. E-3 '(Adjusted for 2020 dollars)'",
+   "verified": true,
+   "rules": [
+    "one comprehensive cost per KABCO level (HSM Table 4A-1 adjusted for Arkansas), every location type",
+    "ARDOT's benefit-cost work uses the KA/BC/O weighted averages on p. E-3 ($1,406,292 / $88,101 / $11,000); CrashIQ prices each crash at its own level",
+    "U (injury, level not reported) unpriced"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "ARDOT computes statewide average crash rates by roadway type (Traffic Safety section duties) but the HSIP Process document doesn't print them, and CrashIQ has no Arkansas traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "Critical KA Crash Rate, ranked by Critical Index (KA rate / critical KA rate); intersections ~160 ft influence on each leg (ARDOT HSIP Process 2022, §2.2.1, pp. 10-11)"
+  },
+  "min_years": {
+   "missing": "ARDOT ranks on five-year crash totals (App. E, p. E-2; App. F, p. F-2) but sets no minimum study period for a corridor study"
+  },
+  "spf_calibration": {
+   "missing": "ARDOT calibrated six HSM SPFs and found the factors 'not useful' (HSIP Process 2022, §2.2.1, p. 11); none published"
+  }
+ }
+}
