@@ -143,3 +143,12 @@ def test_bare_numbered_streets_and_initials_read_as_the_map_writes_them(raw, key
     # #19: NYC writes "E 26 ST", Seattle "M L KING"; TIGER and OSM write "E 26th St", "Martin Luther King Jr Way"
     assert tuple(street_key(raw)) == key
     assert street_key("East 26th Street") == street_key("E 26 ST")
+
+
+@pytest.mark.parametrize("a,b", [("SE POWELL BLVD", "Southeast Powell Boulevard"),
+                                 ("GEORGIA AVE NW", "Georgia Avenue Northwest"),
+                                 ("4000 GEORGIA AVENUE NW", "Georgia Avenue Northwest"),
+                                 ("NE 45TH ST", "Northeast 45th Street")])
+def test_quadrant_prefixes_and_suffixes(a, b):
+    # #19: Portland and DC write quadrants as SE / NW; OSM spells them out
+    assert street_key(a) == street_key(b)

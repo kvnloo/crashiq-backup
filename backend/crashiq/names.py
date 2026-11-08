@@ -36,6 +36,9 @@ WORDS = {"JR": "JUNIOR", "CYN": "CANYON", "MTN": "MOUNTAIN", "HTS": "HEIGHTS"}
 # (route_numbers), the name is what's left
 ROUTE_TAIL = re.compile(r"\s+-\s*(?:SR|RT|RTE|HWY|US|I|CA)[\s-]*\d+\s*$")
 DIRECTIONAL = {"N": "N", "NORTH": "N", "S": "S", "SOUTH": "S", "E": "E", "EAST": "E", "W": "W", "WEST": "W"}
+# quadrant prefixes and suffixes (Portland's SE POWELL BLVD, DC's GEORGIA AVE NW): spelled out leading, dropped trailing (#19)
+QUADRANT = {"NE": "NORTHEAST", "NW": "NORTHWEST", "SE": "SOUTHEAST", "SW": "SOUTHWEST",
+            **{w: w for w in ("NORTHEAST", "NORTHWEST", "SOUTHEAST", "SOUTHWEST")}}
 ORDINAL_WORDS = {
     "FIRST": 1, "SECOND": 2, "THIRD": 3, "FOURTH": 4, "FIFTH": 5, "SIXTH": 6, "SEVENTH": 7,
     "EIGHTH": 8, "NINTH": 9, "TENTH": 10, "ELEVENTH": 11, "TWELFTH": 12,
@@ -169,6 +172,8 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
         return None
     if len(toks) > 1 and toks[0] in DIRECTIONAL:  # keep it ("SOUTH VAN NESS" is its own street), spelled out
         toks[0] = {"N": "NORTH", "S": "SOUTH", "E": "EAST", "W": "WEST"}[DIRECTIONAL[toks[0]]]
+    elif len(toks) > 1 and toks[0] in QUADRANT:
+        toks[0] = QUADRANT[toks[0]]
     # a street type or title written first is the start of the name, not a suffix: AVE M = Avenue M, ST TROPEZ CT =
     # Saint Tropez Court, MT VERNON AVE = Mount Vernon Avenue (#212). Only when a name follows it: "W ST" is West
     # Street, and ST HWY is a highway
@@ -185,7 +190,7 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     suffix = None
     if len(toks) > 1 and toks[-1] in SUFFIX:
         suffix = SUFFIX[toks.pop()]
-    elif len(toks) > 1 and toks[-1] in DIRECTIONAL:  # trailing directional
+    elif len(toks) > 1 and (toks[-1] in DIRECTIONAL or toks[-1] in QUADRANT):  # trailing directional
         toks.pop()
         if len(toks) > 1 and toks[-1] in SUFFIX:
             suffix = SUFFIX[toks.pop()]
