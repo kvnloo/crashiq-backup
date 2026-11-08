@@ -1,0 +1,70 @@
+{
+ "state": "MS",
+ "study": "79a6609ea677",
+ "corridor": "Lakeland Drive",
+ "length_mi": 0.97,
+ "window": [
+  2020,
+  2024
+ ],
+ "pulled": 581,
+ "counted": 304,
+ "ksi": 3,
+ "fatal": 1,
+ "injury": 61,
+ "pdo": 243,
+ "unplaced": 0,
+ "excluded": 277,
+ "severity_T3": {
+  "K": 1,
+  "A": 2,
+  "B": 16,
+  "C": 42,
+  "U": 0,
+  "O": 243
+ },
+ "crash_cost_total": null,
+ "cost_column": false,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_crash_costs",
+  "no_statewide_rates",
+  "rates_not_computed",
+  "gps_far_from_stated"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": false,
+   "text": "not available for Mississippi: MDOT publishes no crash-cost table: its HSIP report says projects are ranked by benefit/cost from Safety Countermeasure Alternative Reports, but the unit costs aren't published (HSIP 2025, 'Program Methodology')"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for Mississippi: MDOT publishes no statewide average crash-rate table, and CrashIQ has no Mississippi traffic counts"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Highway Safety Manual (AASHTO, 1st, 2010), Ch. 4, Sec. 4.2.3. Mississippi's own method, MDOT HSIP project identification: crash frequency, crash rate, excess proportions of specific crash types, relative severity index (HSIP 2025 report, 'Program Methodology'; text extract, page not recorded), isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": false,
+   "text": "not available for Mississippi: MDOT states no minimum years for a corridor study; its HSIP evaluates projects on a five-year before-and-after crash analysis (HSIP 2025 report, 'Program Evaluation'), which is an evaluation window, not a study minimum"
+  }
+ ],
+ "findings_shown": 6,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 34202,
+ "pdf_bytes": 45505,
+ "seconds": 133
+}
