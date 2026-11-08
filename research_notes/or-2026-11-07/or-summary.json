@@ -1,0 +1,200 @@
+{
+ "state": "or",
+ "bucket": "A*",
+ "sources": [
+  {
+   "name": "ODOT Crash Data System - Decode Database (crash, vehicle, participant tables)",
+   "url": "https://www.oregon.gov/odot/Data/Pages/CrashDataProducts.aspx",
+   "access": "open download, no login",
+   "licence_paid_use": "unclear",
+   "years": "2015-2024 (+2025 preliminary K/A only)",
+   "rows_per_year": {
+    "2024": 48414
+   },
+   "gps_share": 0.988,
+   "street_names_share": {
+    "primary_2024": 0.7828,
+    "intersecting_2024": 0.6793
+   },
+   "kabco": true,
+   "keys_linkable": true
+  },
+  {
+   "name": "ODOT OTSDE crash layer (ArcGIS MapServer)",
+   "url": "https://gis.odot.state.or.us/arcgis1006/rest/services/agol/OTSDE_Crash/MapServer/0",
+   "access": "open REST, no login",
+   "licence_paid_use": "unclear",
+   "years": "2019-2024",
+   "rows_per_year": {
+    "2019": 50128,
+    "2020": 38141,
+    "2021": 45295,
+    "2022": 45070,
+    "2023": 46762,
+    "2024": 48414
+   },
+   "gps_share": {
+    "2019": 0.9817,
+    "2020": 0.9852,
+    "2021": 0.9833,
+    "2022": 0.9846,
+    "2023": 0.9853,
+    "2024": 0.988
+   },
+   "street_names_share": {
+    "primary_2024": 0.7828,
+    "intersecting_2024": 0.6793
+   },
+   "kabco": true,
+   "keys_linkable": false
+  },
+  {
+   "name": "Oregon Address Points (statewide, PSAP)",
+   "url": "https://services8.arcgis.com/8PAo5HGmvRMlF2eU/arcgis/rest/services/Oregon_Address_Points/FeatureServer/0",
+   "access": "open REST",
+   "licence_paid_use": "ok",
+   "years": "current (modified 2026-01-16)",
+   "rows_per_year": {
+    "total": 1942377
+   },
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": false,
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": "Multnomah County (Portland) 2024, ODOT decode DB, TIGER 2024 41051",
+  "n": 2000,
+  "gps_share": 0.9865,
+  "name_placed_share": 0.6224,
+  "auto_share": 0.6043,
+  "within_250ft": 0.9659,
+  "within_250ft_low": 0.9539,
+  "non_freeway": {
+   "n": 1492,
+   "placed": 1205,
+   "auto": 1170
+  },
+  "freeway": {
+   "n": 449,
+   "placed": 3
+  },
+  "no_gps_added": {
+   "n": 156,
+   "placed": 0
+  },
+  "house_address_share": 0.0,
+  "address_points_source": "Oregon Address Points (not needed: no house numbers in ODOT records)"
+ },
+ "importer_built": true,
+ "blockers": [
+  "No licence grant for paid use of ODOT CDS data (disclaimer only)",
+  "Decode DB is an Access .mdb: the server needs mdbtools or a pure-Python reader",
+  "Freeway crashes need a milepoint tier on ODOT's LRS (not built)",
+  "Exact tier 96.6% within 250 ft (low 95.4%) on TIGER-only, below the 98% bar"
+ ],
+ "user_actions": [
+  "Ask ODOT CAR (ODOTTDSCrashRequestGroup@odot.oregon.gov) for written permission to use CDS data in a paid product",
+  "Decide: read the yearly decode DB (persons, 2015-2024) or the ArcGIS layer (crash level, 2019-2024), or both"
+ ],
+ "cities": [
+  {
+   "city": "Portland",
+   "source": "ODOT CDS (no city feed; PBOT defers to ODOT)",
+   "url": "https://gis.odot.state.or.us/arcgis1006/rest/services/agol/OTSDE_Crash/MapServer/0",
+   "gps_share": 0.9812,
+   "years": "2019-2024 (layer), 2015-2024 (decode)",
+   "licence": "unclear"
+  },
+  {
+   "city": "Salem",
+   "source": "ODOT CDS (SKATS COG copy exists)",
+   "url": "https://gis.odot.state.or.us/arcgis1006/rest/services/agol/OTSDE_Crash/MapServer/0",
+   "gps_share": 0.9899,
+   "years": "2019-2024",
+   "licence": "unclear"
+  },
+  {
+   "city": "Eugene",
+   "source": "ODOT CDS",
+   "url": "https://gis.odot.state.or.us/arcgis1006/rest/services/agol/OTSDE_Crash/MapServer/0",
+   "gps_share": 0.9879,
+   "years": "2019-2024",
+   "licence": "unclear"
+  },
+  {
+   "city": "Bend",
+   "source": "ODOT CDS",
+   "url": "https://gis.odot.state.or.us/arcgis1006/rest/services/agol/OTSDE_Crash/MapServer/0",
+   "gps_share": 0.9981,
+   "years": "2019-2024",
+   "licence": "unclear"
+  }
+ ],
+ "methods": {
+  "manuals": [
+   {
+    "title": "ODOT Analysis Procedures Manual v2, Chapter 4 Safety",
+    "url": "https://www.oregon.gov/odot/Planning/Documents/APMv2_Ch4.pdf",
+    "date": "2025-12"
+   },
+   {
+    "title": "APM Appendix 4A Crash Attribution and Automation",
+    "url": "https://www.oregon.gov/odot/Planning/Documents/APMv2_App4A.pdf",
+    "date": "2022-06-08"
+   },
+   {
+    "title": "APM Chapter 19 Traffic Analysis Reports",
+    "url": "https://www.oregon.gov/odot/Planning/Documents/APMv2_Ch19.pdf",
+    "date": "2023-08"
+   },
+   {
+    "title": "ODOT HSIP Guide (A Guide to Developing Highway Safety Projects)",
+    "url": "https://www.oregon.gov/odot/engineering/docs_trafficeng/safety_hsip-guide.pdf",
+    "date": "2021-02"
+   },
+   {
+    "title": "ODOT Safety Investigation Manual",
+    "url": "https://www.oregon.gov/odot/Engineering/Docs_TrafficEng/Safety-Investigation-Manual.pdf",
+    "date": "2022-01"
+   },
+   {
+    "title": "ODOT Crash Reduction Factor Manual",
+    "url": "https://www.oregon.gov/odot/Engineering/ARTS/CRF-Manual.pdf",
+    "date": "2026-10"
+   },
+   {
+    "title": "Oregon State Highway Crash Rate Tables 2024 (Table II)",
+    "url": "https://www.oregon.gov/odot/Data/Documents/Crash_Rate_Tables_2024.pdf",
+    "date": "2026-10"
+   },
+   {
+    "title": "Oregon Transportation Safety Action Plan 2021 (crash costs, Table 2)",
+    "url": "https://www.oregon.gov/odot/Safety/Documents/2021_Oregon_TSAP.pdf",
+    "date": "2021"
+   }
+  ],
+  "rates_available": true,
+  "rates_unit": "intersections crashes per MEV (APM Exhibit 4-1, 2003-2007 data, mean + 90th percentile); state-highway segments crashes per MVMT (Crash Rate Table II, 2020-2024)",
+  "crash_costs": {
+   "K": "KA combined: urban $1,530,000 interstate / $1,490,000 other state hwy / $1,110,000 off system; rural $2,260,000 / $2,140,000 / $1,940,000",
+   "A": "see K (combined)",
+   "B": "BC combined: urban $77,800 / $80,800 / $81,300; rural $89,200 / $91,900 / $93,200",
+   "C": "see B (combined)",
+   "O": 21800,
+   "year": 2019,
+   "source": "TSAP 2021 Table 2, doc p. 48"
+  },
+  "screening_method": "SPIS (0.1-mile, 3 years, frequency + rate + severity, top 5%/10%); HSM critical crash rate (P=1.645) on total and F+A crashes; excess proportion of crash types; compare to Exhibit 4-1 90th percentile and Table II",
+  "differences_from_ca": [
+   "Rates: Table II (state highways, per MVMT, urban/rural x functional class) and a per-MEV intersection table with 90th percentiles, instead of TASAS base rates with an ADT factor",
+   "Intersections are flagged above the statewide 90th-percentile rate as well as the critical rate",
+   "Crash costs combine K+A and B+C by highway type x urban/rural (2019 values); Caltrans LRSM prices KA by location type and B, C, O separately (2026 dollars)",
+   "Data window: APM 5 years recommended, SIM 3 years, SPIS 3 years, ARTS 5 years",
+   "Screening is SPIS, ODOT's own 0.1-mile method",
+   "Oregon publishes HSM calibration factors (APM Exhibit 4-11); freeway/ISATe uncalibrated",
+   "Self-reporting state, PDO threshold $2,500: PDO-based rates are not comparable to California"
+  ]
+ }
+}
