@@ -1,0 +1,89 @@
+{
+ "state": "ME",
+ "bucket": "A*",
+ "sources": [
+  {
+   "name": "MaineDOT Crash Locations - 10 Years Complete (ArcGIS Online item b8dd5e49520d4b7495ad8aa3e547b255, owner MaineDOT.IT; the Maine Public Crash Query Tool's data)",
+   "url": "https://services1.arcgis.com/RbMX0mRVOFNTdLzd/arcgis/rest/services/Crashes_Attributes_10_Year_and_Current_Year_Test_View/FeatureServer/44",
+   "access": "open (ArcGIS REST, no login; refreshed weekly)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "Users must assume responsibility in determining the usability of this data for their purposes. (item licenseInfo, MEGIS disclaimer)",
+   "years": "2016-2026 (2026 through 2026-10-22)",
+   "rows_per_year": {
+    "2016": 33302,
+    "2017": 34972,
+    "2018": 35186,
+    "2019": 35249,
+    "2020": 28752,
+    "2021": 32649,
+    "2022": 34018,
+    "2023": 33705,
+    "2024": 32728,
+    "2025": 35083,
+    "2026": 23543
+   },
+   "gps_share": 0.99999,
+   "street_names_share": 0.0,
+   "street_names_note": "no street names: PRIMARY_ROUTE_NAME is a route code (US 302, ST RTE 26, INT 295 SB) or a road-inventory id (RD INV 05 60621; 38.4% of Cumberland 2024); no cross street; NODE_ID / ELEMENT_ID / route milepoint given",
+   "kabco": true,
+   "keys_linkable": "no: unit and person tables aren't published; CRASH_ID and REPORT_NUMBER on the crash row; driver actions of units 1-2 flattened onto it"
+  }
+ ],
+ "placement_sample": {
+  "area": "Cumberland County, 2024",
+  "n": 7818,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "every crash has a MaineDOT Route Log Mile point inside Maine; the layer has no street names, so the hidden-GPS locator test can't run (nothing to locate from), and there are no no-GPS crashes to rescue (4 of 359,187 statewide)"
+ },
+ "importer_built": true,
+ "status": "active",
+ "e2e": {
+  "corridor": "Forest Avenue",
+  "length_mi": 0.92,
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 775,
+  "counted": 525,
+  "severity_T3": {
+   "K": 0,
+   "A": 5,
+   "B": 37,
+   "C": 76,
+   "U": 0,
+   "O": 407
+  },
+  "crash_cost_total": null,
+  "findings_shown": 8,
+  "pdf_bytes": 85511,
+  "xlsx_bytes": 40374,
+  "seconds": 104
+ },
+ "blockers": [
+  "licence for paid use not granted (MEGIS disclaimer only)",
+  "no crash unit costs or statewide rates in MaineDOT's published manuals",
+  "no street names, units or persons in the public layer"
+ ],
+ "user_actions": [
+  "Ask MaineDOT (Office of Safety / MEGIS) for written OK to show this layer in a paid product",
+  "Decide whether Maine studies may use USDOT BCA Guidance crash costs (MaineDOT's own grant BCAs use them)",
+  "Optional: MaineDOT ADVANCED USER access to the Public Crash Query Tool (needs sign-up and approval) for unit/person detail"
+ ],
+ "cities": [
+  {
+   "city": "Portland (GPCOG high crash locations)",
+   "source": "derived from the state tool",
+   "url": "https://services6.arcgis.com/HvbabY0grzgZwGW1/arcgis/rest/services/Maine_Public_Crash_Query_Tool_High_Crash_Locations_2026_06_03/FeatureServer",
+   "gps_share": null,
+   "years": "not measured",
+   "licence": "not checked; derived from MaineDOT data, so the state layer is used"
+  }
+ ]
+}

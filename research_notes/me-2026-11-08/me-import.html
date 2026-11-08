@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maine crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1313;border-left:4px solid #e33;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em;margin-left:.4em}code{background:#2a2a2a;padding:1px 4px;border-radius:3px;color:#ffb3b3}
+table{border-collapse:collapse;width:100%;font-size:.92em}td,th{border-bottom:1px solid #333;padding:5px 4px;text-align:left}th{color:#ff8080}
+a{color:#ff8a8a}li{margin:.35em 0}.ok{color:#7fd67f}.warn{color:#ffb84d}.no{color:#ff5c5c}
+</style></head><body>
+<h1>Maine: crash data for CrashIQ</h1>
+<p class="ex">Hermes, 8 Nov 2026. Measured live today. Full notes: <code>me-import.md</code>, methods: <code>me-methods.md</code>.</p>
+<p class="big"><b>Short answer:</b> Maine works. MaineDOT puts every crash since 2016 online, free, no login, with a map point and KABCO severity. It's <b>live in CrashIQ</b> as a ready state. The catches are the <b>licence</b> for a paid tool and <b>no street names</b>.</p>
+<h2>1. What Maine has</h2>
+<ul>
+<li><b>MaineDOT crash layer</b>: 359,187 crashes, Jan 2016 to 22 Oct 2026, about 33,000 to 35,000 a year. <span class="ex">Example: 2024 has 32,728.</span></li>
+<li><b>Map point on all but 4.</b> MaineDOT places each crash on its own road network. <span class="ex">Example: Cumberland County 2024, 7,818 of 7,818 have a point.</span></li>
+<li><b>KABCO severity</b>, plus a count of people at each level. <span class="ex">Example: a Forest Ave crash with one B injury is "B".</span></li>
+<li class="warn"><b>No street names.</b> Each crash gives a route code instead. <span class="ex">Example: "US 302" (Forest Ave), or "RD INV 05 60621" for a local street.</span> So CrashIQ places crashes by MaineDOT's point only. Every crash has one, so nothing is lost.</li>
+<li class="warn"><b>No driver or vehicle tables</b>, so collision diagrams are empty.</li>
+<li>Parking lots, driveways and private roads aren't in it (MaineDOT's own note).</li>
+</ul>
+<h2>2. Test run (real data)</h2>
+<table><tr><th>Corridor</th><td>Forest Ave (US 302), Portland, 0.92 mi, 2020-2024</td></tr>
+<tr><th>Crashes counted</th><td>525</td></tr>
+<tr><th>K / A / B / C / O</th><td>0 / 5 / 37 / 76 / 407</td></tr>
+<tr><th>Crash cost</th><td>not shown: Maine publishes no cost table</td></tr>
+<tr><th>PDF / Excel</th><td>85 KB / 40 KB</td></tr></table>
+<h2>3. Maine's own methods</h2>
+<ul><li>High Crash Location = 8 or more crashes in 3 years and Critical Rate Factor over 1.0 (MaineDOT rule Ch. 305, page 18). CrashIQ shows this rule but still screens with the national HSM critical rate.</li>
+<li>At least 3 years of crashes (same page). CrashIQ uses this.</li>
+<li class="no">No MaineDOT crash cost table. MaineDOT's grant paperwork uses USDOT's costs (K $13.7M, 2024 $).</li></ul>
+<h2>What you need to do</h2>
+<ol><li>Ask MaineDOT for a written OK to show its crash data in a paid tool. The only text is "Users must assume responsibility in determining the usability of this data."</li>
+<li>Say yes or no to using USDOT crash costs for Maine.</li></ol>
+<h2>What we didn't check</h2>
+<ul><li>How ramps are coded (this matters near Interstate exits).</li><li>Accuracy of MaineDOT's points. There is nothing independent to compare them with.</li></ul>
+</body></html>
