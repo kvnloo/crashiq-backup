@@ -157,3 +157,26 @@ def test_a_t_with_a_signalized_driveway_opposite_stays_a_t_for_entering_volume()
     assert plain["legs"] == got["legs"] == 3
     assert profile.entering_volume(20000, 6000, got["legs"]) == profile.entering_volume(20000, 6000, plain["legs"]) == 23000
     assert profile.intersection_rate(5, 3, 20000, 6000, got["legs"]) == profile.intersection_rate(5, 3, 20000, 6000, 3)
+
+
+def test_a_driveway_only_stop_has_no_rate_until_the_engineer_enters_its_volume(client):
+    # user 2026-11-07 on #420, "Engineer enters it": the driveway's volume is left blank, like a side street with no
+    # count; no crash rate until it's entered, then the usual T rule (the driveway leaves on one side: half of it)
+    import pytest
+    from test_profile import golden
+
+    def transport(url, data, timeout):
+        q = data.decode() if isinstance(data, bytes) else str(data)
+        return json.dumps(drive() if "service" in q else MAIN).encode()
+    sid, net = _study(client, transport)
+    it = next(i for i in net["intersections"] if i["driveway"])
+    assert (it["name"], it["legs"], it["minor_aadt"]) == ("Driveway (signal)", 3, None)
+    net = client.patch(f"/api/studies/{sid}/intersections/{it['id']}", json={"major_aadt": 30000}).json()
+    it = next(i for i in net["intersections"] if i["driveway"])
+
+    study, pnet, pull, a = golden()                     # its 30 intersection crashes, 2021-2025, put at the driveway
+    pnet["intersections"] = [{**it, "id": "I1"}]
+    rate = lambda p: next(r for t in p["tables"] if t["id"] == "T2" for r in t["rows"] if r["key"] == "I1")["values"]["rate"]  # noqa: E731
+    assert rate(profile.build(study, pnet, pull, a)) is None
+    pnet["intersections"][0]["minor_aadt"] = 2000                                                   # entered
+    assert rate(profile.build(study, pnet, pull, a)) == pytest.approx(round(30 * 1e6 / (365 * 5 * 31000), 2))
