@@ -52,7 +52,8 @@ def last_final_year(on: date | None = None, lag: int = FINAL_LAG_MONTHS) -> int:
 
 def default_window(on: date | None = None, pack: packs.StatePack | None = None) -> tuple[int, int]:
     to = last_final_year(on, pack.final_lag_months if pack else FINAL_LAG_MONTHS)
-    return to - DEFAULT_YEARS + 1, to
+    # never before the source's first year (CDOT's listing starts in 2021): a shorter window beats a refused study
+    return max(to - DEFAULT_YEARS + 1, pack.first_year if pack else CCRS_FIRST_YEAR), to
 
 
 def validate_window(from_year: int, to_year: int, on: date | None = None, pack: packs.StatePack | None = None) -> None:

@@ -53,8 +53,19 @@ NOISE = re.compile(
     r"PEDESTRIAN|ENTRANCE|EXIT|BIKE LANE|OF THE|THE|OF|AT|NEAR|AND)\b"
 )
 # TIGER/Line writes State Hwy 39, State Rte 1, US Hwy 101, I- 5 (#229)
-ROUTE = re.compile(r"^(STATE HWY|STATE HIGHWAY|STATE RTE|STATE ROUTE|US HWY|US HIGHWAY|US ROUTE|I|US|SR|CA|INTERSTATE|HWY|"
-                   r"HIGHWAY|ROUTE|RT|RTE)[\s-]*(\d+)")
+# Another state's own route prefix is a state route too (#19 state packs): CT 187, AR 10, MS 25, KY1747, PA 611, MN 55,
+# and Minnesota's trunk-highway codes (ISTH 94 = I 94, USTH 169 = US 169, MNTH 13 = SR 13). Left out: CO ("CO 81" is as
+# often a county road as Colorado 81) and the codes that are English words a report writes before a number (IN, OR,
+# ME, OK, HI, DE, LA, ID, AL, MA: "IN 200 BLOCK"), NE (the quadrant: "NE 45TH ST") and MI (miles); those states'
+# readers write their routes as SR n.
+STATE_ROUTE_PREFIXES = ("AK", "AZ", "AR", "CT", "FL", "GA", "IL", "IA", "KS", "KY", "MD", "MN", "MS", "MO", "MT",
+                        "NV", "NH", "NJ", "NM", "NY", "NC", "ND", "OH", "PA", "RI", "SC", "SD", "TN", "TX", "UT",
+                        "VT", "VA", "WA", "WV", "WI", "WY", "MNTH")
+_STATES_RX = "|".join(STATE_ROUTE_PREFIXES)
+ROUTE = re.compile(r"^(STATE HWY|STATE HIGHWAY|STATE RTE|STATE ROUTE|US HWY|US HIGHWAY|US ROUTE|ISTH|USTH|I|US|SR|CA|"
+                   r"INTERSTATE|HWY|HIGHWAY|ROUTE|RT|RTE|" + _STATES_RX + r")[\s-]*(\d+)")
+# a travel direction written before the route ("SB I-35E", "NB US 52") hides it from ROUTE
+_LEAD_TRAVEL = re.compile(r"^(?:[NSEW]/?B|NORTHBOUND|SOUTHBOUND|EASTBOUND|WESTBOUND)\s+(?=\S)")
 
 
 class StreetKey(NamedTuple):
@@ -99,10 +110,11 @@ def use(name: str) -> None:
 
 # A route number anywhere in a road field: SR-1, RT 46, HWY 111, STATE ROUTE 1, "PCH - SR1", I-880 (#83). Three digits
 # at most, so a ZIP code ("CA 90249") is never a route.
-ROUTE_ANY = re.compile(r"\b(?:STATE ROUTE|INTERSTATE|HIGHWAY|ROUTE|HWY|RTE|RT|SR|CA|US|I)[\s-]*(\d{1,3})\b")
+ROUTE_ANY = re.compile(r"\b(?:STATE ROUTE|INTERSTATE|HIGHWAY|ROUTE|HWY|RTE|RT|SR|CA|US|I|ISTH|USTH|" + _STATES_RX
+                       + r")[\s-]*(\d{1,3})\b")
 _ROUTE_KEY = re.compile(r"^(I|US|SR) (\d+)$")
-ROUTE_SPELLINGS = {"SR": ("SR", "RT", "RTE", "HWY", "HIGHWAY", "ROUTE", "STATEROUTE", "CA"),
-                   "I": ("I", "INTERSTATE"), "US": ("US", "HWY", "HIGHWAY")}
+ROUTE_SPELLINGS = {"SR": ("SR", "RT", "RTE", "HWY", "HIGHWAY", "ROUTE", "STATEROUTE", "CA", *STATE_ROUTE_PREFIXES),
+                   "I": ("I", "INTERSTATE", "ISTH"), "US": ("US", "HWY", "HIGHWAY", "USTH")}
 
 
 # A route written bare in a freeway report (#334): "405 SB", "405 SOUTHBOUND", "99 HWY", "101 FWY", and "1-15 S/B"
@@ -151,9 +163,9 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
         s = rx.sub(full, s)
     if aliases and s in aliases:
         s = aliases[s]
-    route = ROUTE.match(s)
+    route = ROUTE.match(_LEAD_TRAVEL.sub("", s))
     if route:
-        kind = {"INTERSTATE": "I", "STATE ROUTE": "SR", "CA": "SR", "HWY": "SR", "HIGHWAY": "SR", "ROUTE": "SR", "RT": "SR",
+        kind = {"ISTH": "I", "USTH": "US", **dict.fromkeys(STATE_ROUTE_PREFIXES, "SR"), "INTERSTATE": "I", "STATE ROUTE": "SR", "CA": "SR", "HWY": "SR", "HIGHWAY": "SR", "ROUTE": "SR", "RT": "SR",
                 "RTE": "SR", "STATE HWY": "SR", "STATE HIGHWAY": "SR", "STATE RTE": "SR", "US HWY": "US",
                 "US HIGHWAY": "US", "US ROUTE": "US"}.get(route.group(1), route.group(1))
         return StreetKey(f"{kind} {int(route.group(2))}", None)
