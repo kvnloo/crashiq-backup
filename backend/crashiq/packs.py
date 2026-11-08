@@ -161,8 +161,33 @@ PACKS["DC"] = StatePack(
                 "blank, and road-user movements and collision diagrams are empty.",
                 "Primary collision factor, DUI and speed rows are blank: DDOT's layer has no violation codes."))
 
+def _ny_fetch(box, county_fips, years, cache_dir):
+    from .sources import ny_dmv
+    boxes = json.loads((REF / "county_boxes_ny.json").read_text())["counties"]
+    return ny_dmv.fetch_contract(box, county_fips, years, cache_dir, boxes)
+
+
+PACKS["NY"] = StatePack(
+    code="NY", name="New York", fips="36", status="active",
+    source="Crash data: NYS DMV crash cases (data.ny.gov, OPEN-NY Terms of Use) placed by NYSDOT reference marker; "
+           "in the five boroughs, NYPD Motor Vehicle Collisions and Persons (NYC Open Data, no restrictions).",
+    source_short="NYS DMV and NYC Open Data", bounds=(40.49, -79.77, 45.02, -71.85), first_year=2016,
+    methods=REF / "methods_ny.json", fetch=_ny_fetch, county_boxes=REF / "county_boxes_ny.json",
+    legal="NYS DMV crash data via data.ny.gov (OPEN-NY Terms of Use); NYPD collision data via NYC Open Data.",
+    severity_note=("New York's sources don't report injury levels: a crash is fatal, injury or property damage only. "
+                   "KSI here is fatal crashes only, and there is no A/B/C split; injury crashes are counted as "
+                   "'injury, level not reported' (U)."),
+    data_notes=("Outside New York City, the state's public table gives a location only through a state-highway "
+                "reference marker (about 36% of crashes, 2021-2024 only); the rest give only a town and can't be "
+                "placed, so a corridor off the state highway system shows few or no crashes. Those crashes also have "
+                "no street names, and people killed and injured aren't counted.",
+                "Inside the five boroughs, NYPD's open data gives GPS and street names but no crash type, light, "
+                "weather or road surface: those tables are blank.",
+                "Primary collision factor, DUI and speed rows are blank: CrashIQ doesn't map NYPD's contributing "
+                "factors or DMV's codes yet."))
+
 # researched, no pack yet: listed greyed out on Setup (docs/state-pack-design.md § State picker)
-COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois", "NY": "New York"}
+COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois"}
 
 
 def get(code: str) -> StatePack:

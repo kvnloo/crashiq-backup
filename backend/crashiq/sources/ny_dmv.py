@@ -6,7 +6,7 @@
   `accident_descriptor` only: Fatal -> K, injury -> U (level not given), property damage -> O.
 - Placement: the reference marker is joined to NYSDOT's public marker layer (Roadway FeatureServer layer 0). Markers
   are posted every 0.1 mi, so a matched crash sits within about 0.05 mi of the marker, along the route, side unknown.
-Standalone: not wired into the app (state-pack seam, issue #19).
+The NY state pack (packs.py, #19) reads it through `fetch_contract`; inside the five boroughs it uses NYC's\nopen data instead (ny_nyc), where this table has no location.
 """
 
 from __future__ import annotations
@@ -129,3 +129,64 @@ def crash_record(raw: dict, markers: dict[str, tuple[float, float]]) -> dict:
 
 def person_kabco(injury_severity) -> str | None:
     return PERSON_KABCO.get(str(injury_severity or "").strip().upper())
+
+
+# -- state-pack contract (#19): statewide = this table outside NYC + NYC open data inside the five boroughs ----------
+DMV_YEARS = range(2021, 2025)                     # the "Four Year Window" (2026-11-07)
+NYC_FIPS = {"36005", "36047", "36061", "36081", "36085"}
+CCRS_TYPE = {"REAR END": "REAR END", "RIGHT ANGLE": "BROADSIDE", "HEAD ON": "HEAD-ON", "SIDESWIPE": "SIDE SWIPE"}
+CCRS_LIGHT = {"DARK-ROAD LIGHTED": "DARK - STREET LIGHTS", "DARK-ROAD UNLIGHTED": "DARK - NO STREET LIGHTS"}
+
+
+def contract_record(c: dict, raw: dict, county_fips: str) -> dict:
+    """One crash_record() -> the shared crash dict. Severity K, U or O (the table has no injury level); killed and
+    injured aren't published, so they are 0 and the pack says people aren't counted outside NYC."""
+    import datetime as _dt
+    d = _dt.date.fromisoformat(c["date"]) if c["date"] else None
+    up = lambda v: str(v).upper() if v else None
+    t = raw.get("time") or ""
+    ev = (c["event"] or "").upper()
+    return {"crash_id": c["collision_id"], "report_version": 0, "deleted": False, "preliminary": False,
+            "date": c["date"], "year": c["year"], "hour": int(t.split(":")[0]) if t[:1].isdigit() else None,
+            "day_of_week": d.strftime("%A") if d else None, "lat": c["lat"], "lon": c["lon"], "bad_coords": False,
+            "primary_road": None, "secondary_road": None, "offset_ft": None, "offset_dir": None,
+            "city": up(c["city_name"]), "county_code": c["county_code"], "county_fips": county_fips, "state": "NY",
+            "is_freeway": False, "killed": 0, "injured": 0, "severity": c["severity"],
+            "ped": "PEDESTRIAN" in ev, "bike": "BICYCLIST" in ev, "ebike": False, "escooter": False,
+            "motorcycle": False, "heavy_truck": False, "parties": [],
+            "collision_type": CCRS_TYPE.get(up(c["collision_type"]) or "", up(c["collision_type"])),
+            "lighting": CCRS_LIGHT.get(up(c["lighting"]) or "", up(c["lighting"])), "weather": up(c["weather"]),
+            "surface": up(c["surface"]), "route": c["route"], "reference_marker": c["reference_marker"]}
+
+
+def fetch_contract(box, county_fips: list[str], years: list[int], cache_dir: Path, boxes: dict) -> dict:
+    """Crashes for a corridor anywhere in New York: NYC open data in the five boroughs; elsewhere the DMV cases whose
+    reference marker lands in the box (s, w, n, e). A DMV case with no marker gives only a town and can't be placed:
+    it is counted in `cleaning`, not returned."""
+    from . import ny_nyc
+    out, missing, cleaning = [], set(), {}
+    nyc = [f for f in county_fips if f in NYC_FIPS]
+    if nyc:
+        got = ny_nyc.fetch_contract(box, nyc, years, cache_dir)
+        out += got["crashes"]
+        missing |= set(got["years_missing"])
+        cleaning |= got["cleaning"]
+    rest = [f for f in county_fips if f not in NYC_FIPS]
+    if rest:
+        s, w, n, e = box
+        fips = {boxes[f]["name"].removesuffix(" County").upper(): f for f in rest}
+        yrs = [y for y in years if y in DMV_YEARS]
+        missing |= {y for y in years if y not in DMV_YEARS}
+        if yrs:
+            base = (f"year in ({', '.join(repr(str(y)) for y in yrs)}) AND "
+                    f"county_name in ({', '.join(repr(k) for k in fips)})")
+            rows = fetch_cases(base + " AND dot_reference_marker_location IS NOT NULL", cache_dir)
+            marks = marker_points(panel(r.get("dot_reference_marker_location")) for r in rows)
+            placed = [c for c in ((crash_record(r, marks), r) for r in rows)
+                      if c[0]["lat"] is not None and s <= c[0]["lat"] <= n and w <= c[0]["lon"] <= e]
+            out += [contract_record(c, r, fips[(c["county_code"] or "").upper()]) for c, r in placed if c["severity"]]
+            town = _get(CASES, {"$select": "count(*) AS n", "$where": base + " AND dot_reference_marker_location IS NULL"})
+            cleaning |= {"dmv_with_marker_in_counties": len(rows), "dmv_marker_unmatched": sum(
+                1 for r in rows if panel(r.get("dot_reference_marker_location")) not in marks),
+                "dmv_town_only_not_placed": int(town[0]["n"]) if town else None}
+    return {"crashes": out, "years_missing": sorted(missing), "cleaning": cleaning}

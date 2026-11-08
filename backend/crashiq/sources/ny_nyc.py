@@ -4,7 +4,7 @@
 - Persons link to crashes by `collision_id`. Injury is only Injured / Killed / Unspecified (no A/B/C level), so
   person severity is K or U, and the crash severity is K, U (injured, level not reported) or O.
 - Terms: NYC Open Data Terms of Use (data.cityofnewyork.us). Feeds pause at times: check max(crash_date).
-Standalone: not wired into the app (state-pack seam, issue #19).
+Used by the NY state pack inside the five boroughs (ny_dmv.fetch_contract, #19).
 """
 
 from __future__ import annotations
@@ -131,3 +131,60 @@ def fetch(start: str, end: str, cache_dir: Path, persons: bool = True) -> tuple[
     for c in crashes:
         c["severity"] = severity(c, by_crash.get(c["collision_id"], []))
     return crashes, by_crash
+
+
+# -- state-pack contract (#19): inside the five boroughs ------------------------------------------------------------
+def contract_record(c: dict, persons: list[dict]) -> dict:
+    """One crash_record() (severity already from fetch's rule) -> the shared crash dict. K, U or O only."""
+    import datetime as _dt
+    d = _dt.date.fromisoformat(c["date"]) if c["date"] else None
+    types = {(p.get("person_type") or "").upper() for p in persons}
+    vt = " ".join(c["vehicle_types"]).upper()
+    return {"crash_id": f"nyc-{c['collision_id']}", "report_version": 0, "deleted": False, "preliminary": False,
+            "date": c["date"], "year": d.year if d else None,
+            "hour": int(c["time"].split(":")[0]) if c.get("time") else None,
+            "day_of_week": d.strftime("%A") if d else None, "lat": c["lat"], "lon": c["lon"],
+            "bad_coords": c["bad_coords"], "primary_road": c["primary_road"], "secondary_road": c["secondary_road"],
+            "offset_ft": None, "offset_dir": None, "city": "NEW YORK", "county_code": c["county_code"],
+            "county_fips": "36" + c["county_code"] if c["county_code"] else None, "state": "NY",
+            "is_freeway": False, "killed": c["killed"], "injured": c["injured"], "severity": c["severity"],
+            "ped": bool(c["ped_killed"] or c["ped_injured"]) or "PEDESTRIAN" in types,
+            "bike": bool(c["bike_killed"] or c["bike_injured"]) or "BICYCLIST" in types, "ebike": "E-BIKE" in vt,
+            "escooter": "E-SCOOTER" in vt, "motorcycle": "MOTORCYCLE" in vt, "heavy_truck": False, "parties": [],
+            "collision_type": None, "lighting": None, "weather": None, "surface": None,
+            "contributing_factors": c["contributing_factors"]}
+
+
+def fetch_contract(box, county_fips: list[str], years: list[int], cache_dir: Path) -> dict:
+    """NYPD crashes with GPS in the box (s, w, n, e), plus the ones without GPS in the corridor's boroughs (placed
+    by street name), with their persons by collision_id; cached raw per query."""
+    s, w, n, e = box
+    boroughs = ", ".join(repr(b) for b, f in BOROUGH_COUNTY.items() if "36" + f in county_fips) or "''"
+    where = (f"crash_date between '{min(years)}-01-01T00:00:00' and '{max(years)}-12-31T23:59:59' AND "
+             f"((latitude between {s:.6f} and {n:.6f} AND longitude between {w:.6f} and {e:.6f}) OR "
+             f"((latitude IS NULL OR latitude = 0) AND borough in ({boroughs})))")
+    cache = cache_dir / f"ny_nyc_box_{hashlib.sha1(where.encode()).hexdigest()[:10]}.json"
+    if cache.exists():
+        data = json.loads(cache.read_text())
+    else:
+        raw = _pull(CRASHES, where, "*", "collision_id")
+        ids = [str(r["collision_id"]) for r in raw if r.get("collision_id")]
+        per = []
+        for i in range(0, len(ids), 200):
+            per += _pull(PERSONS, f"collision_id in ({', '.join(ids[i:i + 200])})", ",".join(PERSON_FIELDS), "unique_id")
+        data = {"crashes": raw, "persons": per}
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(data))
+    by_crash: dict[str, list[dict]] = {}
+    for r in data["persons"]:
+        p = person_record(r)
+        by_crash.setdefault(p["collision_id"], []).append(p)
+    out = []
+    for r in data["crashes"]:
+        c = crash_record(r)
+        c["severity"] = severity(c, by_crash.get(c["collision_id"], []))
+        if c["county_code"] and (c["lat"] is not None or c["primary_road"]):
+            out.append(contract_record(c, by_crash.get(c["collision_id"], [])))
+    have = {c["year"] for c in out}
+    return {"crashes": out, "years_missing": [y for y in years if y not in have],
+            "cleaning": {"nyc_rows": len(data["crashes"]), "nyc_unusable_no_borough_or_place": len(data["crashes"]) - len(out)}}

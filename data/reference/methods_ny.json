@@ -1,0 +1,68 @@
+{
+ "state": "NY",
+ "manuals": {
+  "ny_red": {
+   "title": "Highway Safety Improvement Program Procedures and Techniques (\"Red Book\")",
+   "publisher": "NYSDOT",
+   "jurisdiction": "NY",
+   "edition": "April 2026",
+   "url": "https://www.dot.ny.gov/divisions/operating/osss/highway-repository/RedBook.pdf",
+   "sha256": "d327c5b03bfecb17de5a4d0fb88cee75f3a1581676885acce00f87beebcb58c1",
+   "downloaded": "2026-11-07"
+  },
+  "ny_yellow": {
+   "title": "Highway Safety Investigation Procedures Manual (\"Yellow Book\")",
+   "publisher": "NYSDOT",
+   "jurisdiction": "NY",
+   "edition": "April 2026",
+   "url": "https://www.dot.ny.gov/divisions/operating/osss/highway-repository/YellowBook.pdf",
+   "sha256": "3a8244f2655af3dd628e31b82c45519f5d7a6bd4830e6c17ff42373f9e15fbeb",
+   "downloaded": "2026-11-07"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 18186968,
+   "A": 991313,
+   "B": 309976,
+   "C": 194893,
+   "O": 18794,
+   "dollar_year": 2024,
+   "manual": "ny_yellow",
+   "page": "Table 2, printed p. 16 (PDF p. 22); '2024 dollars'; same values as Red Book Table 3, p. 48 [54]",
+   "verified": true,
+   "rules": [
+    "one cost per KABCO level",
+    "the NY sources give no injury level, so injury crashes (U) are unpriced: only K and O are priced"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "NYSDOT's current average crash rates are inside CLEAR Safety (login only; Red Book p. 87 [93]); the posted tables are 2017-2019 and their links are broken (research 2026-11-07); CrashIQ has no New York traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "Potential for Safety Improvement (Empirical Bayes excess expected crashes, or excess observed crashes where AADT is missing) focused on fatal and serious injury crashes (Red Book p. 35-40 [41-46])"
+  },
+  "min_years": {
+   "value": 3,
+   "manual": "ny_yellow",
+   "page": "p. 4 [10]: 'typically includes the latest three years of complete crash data'",
+   "verified": true
+  },
+  "spf_calibration": {
+   "missing": "NY SPFs (Red Book App. C p. 92-93 [98-99]) are applied in CLEAR Safety; no SPF engine in CrashIQ"
+  }
+ }
+}

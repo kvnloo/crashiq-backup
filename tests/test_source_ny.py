@@ -155,3 +155,39 @@ def test_clear_rejects_a_file_without_case_numbers(tmp_path):
     p.write_text("a,b\n1,2\n")
     with pytest.raises(ValueError, match="case number"):
         ny_clear.read(p)
+
+
+# ---- state-pack contract (#19) ----------------------------------------------------------------------------------
+
+def test_statewide_contract_nyc_inside_dmv_outside_and_no_made_up_levels(monkeypatch, tmp_path):
+    from crashiq import packs
+    pack = packs.get("NY")
+    nyc = json.loads((NY / "nyc_2025-03-05.json").read_text())
+    dmv = json.loads((NY / "nys_dmv_2024_sample.json").read_text())
+    asked = []
+
+    def nyc_get(url, params):
+        asked.append(params["$where"])
+        return nyc["crashes"] if url == ny_nyc.CRASHES else nyc["persons"]
+
+    def dmv_get(url, params):
+        if url == ny_dmv.MARKERS:
+            return dmv["markers"]
+        asked.append(params["$where"])
+        return [{"n": "10"}] if "count" in params["$select"] else [r for r in dmv["cases"]
+                                                                   if r.get("dot_reference_marker_location")]
+    monkeypatch.setattr(ny_nyc, "_get", nyc_get)
+    monkeypatch.setattr(ny_dmv, "_get", dmv_get)
+    boxes = json.loads((packs.REF / "county_boxes_ny.json").read_text())["counties"]
+    upstate = sorted(f for f, v in boxes.items() if v["name"].removesuffix(" County").upper()
+                     in {r["county_name"] for r in dmv["cases"]})
+    # NYC fixture is 2025 only; DMV has no 2025: each part says what it lacks
+    got = ny_dmv.fetch_contract(pack.bounds, ["36047", "36081"] + upstate, [2024, 2025], tmp_path, boxes)
+    assert "borough in ('BROOKLYN', 'QUEENS')" in asked[0] and "latitude between" in asked[0]
+    assert any("year in ('2024')" in w and "IS NOT NULL" in w for w in asked)
+    assert got["years_missing"] == [2024, 2025] and got["cleaning"]["dmv_town_only_not_placed"] == 10
+    cs = got["crashes"]
+    assert {c["county_fips"] for c in cs} & {"36047", "36081"} and set(upstate) & {c["county_fips"] for c in cs}
+    assert all(packs.check_crash(c, pack) == [] for c in cs)
+    assert {c["severity"] for c in cs} <= set("KUO")
+    assert sum(c["crash_id"].startswith("nydmv-") for c in cs) >= 28
