@@ -1,0 +1,254 @@
+{
+ "raw": {
+  "n": 2000,
+  "tiers": {
+   "review": 712,
+   "exact": 977,
+   "unique_pair": 102,
+   "address": 110,
+   "verified_typo": 45,
+   "near": 10,
+   "fuzzy": 19,
+   "relaxed": 25
+  },
+  "placed_share": 0.644,
+  "auto_share": 0.5945,
+  "auto_within_250ft": 0.6224,
+  "auto_within_250ft_low": 0.5945,
+  "within_250ft_by_tier": {
+   "exact": "599/977",
+   "unique_pair": "67/102",
+   "address": "74/110",
+   "verified_typo": "20/45",
+   "near": "5/10",
+   "fuzzy": "11/19",
+   "relaxed": "18/25"
+  },
+  "auto_misses_sample": [
+   [
+    "N BOYLAN AVE",
+    "W PEACE ST",
+    "exact",
+    332
+   ],
+   [
+    "ALLEGHANY DR",
+    "FORSYTH ST",
+    "exact",
+    326
+   ],
+   [
+    "CAPITAL BLVD",
+    "PERRY CREEK RD",
+    "exact",
+    2181
+   ],
+   [
+    "WESTERN BLVD",
+    "ASHE AVE",
+    "exact",
+    371
+   ],
+   [
+    "2300 REXWOODS DR",
+    "LAKE BOONE TRL",
+    "exact",
+    273
+   ],
+   [
+    "3026 CAPITAL BLVD",
+    "STARMOUNT DR",
+    "exact",
+    1485
+   ],
+   [
+    "LOUISBURG  RD",
+    "NEW HOPE RD",
+    "exact",
+    2053
+   ],
+   [
+    "WAKEFIELD COMMONS DR",
+    "14460 WAKEFIELD COMMON",
+    "exact",
+    748
+   ],
+   [
+    "WAKE FOREST RD",
+    "NAVAHO DR",
+    "exact",
+    1562
+   ],
+   [
+    "OLD WAKE FOREST RD",
+    "RURITANIA ST",
+    "exact",
+    3015
+   ],
+   [
+    "SHAMROCK DR",
+    "PARKWOOD DRIVE",
+    "exact",
+    250
+   ],
+   [
+    "FALLS OF NEUSE RD",
+    "CEDARHURST",
+    "exact",
+    377
+   ],
+   [
+    "LAKE BOONE TR",
+    "STILLWATER DR",
+    "exact",
+    5616
+   ],
+   [
+    "ROCK QUARRY RD",
+    "BRENDA DR",
+    "exact",
+    877
+   ],
+   [
+    "NEW BERN AVE",
+    "CORPORATION PKWY",
+    "exact",
+    1431
+   ]
+  ]
+ },
+ "nc_fixes": {
+  "n": 2000,
+  "tiers": {
+   "exact": 1223,
+   "review": 455,
+   "unique_pair": 104,
+   "address": 109,
+   "verified_typo": 50,
+   "near": 15,
+   "fuzzy": 19,
+   "relaxed": 25
+  },
+  "placed_share": 0.7725,
+  "auto_share": 0.718,
+  "auto_within_250ft": 0.555,
+  "auto_within_250ft_low": 0.5292,
+  "within_250ft_by_tier": {
+   "exact": "656/1223",
+   "unique_pair": "68/104",
+   "address": "73/109",
+   "verified_typo": "20/50",
+   "near": "6/15",
+   "fuzzy": "11/19",
+   "relaxed": "18/25"
+  },
+  "auto_misses_sample": [
+   [
+    "SIX FORKS RD",
+    "540",
+    "exact",
+    485
+   ],
+   [
+    "N BOYLAN AVE",
+    "W PEACE ST",
+    "exact",
+    332
+   ],
+   [
+    "ALLEGHANY DR",
+    "FORSYTH ST",
+    "exact",
+    326
+   ],
+   [
+    "CAPITAL BLVD",
+    "PERRY CREEK RD",
+    "exact",
+    2181
+   ],
+   [
+    "WESTERN BLVD",
+    "ASHE AVE",
+    "exact",
+    371
+   ],
+   [
+    "40",
+    "S SAUNDERS ST",
+    "exact",
+    419
+   ],
+   [
+    "540",
+    "GLOBE RD",
+    "exact",
+    2044
+   ],
+   [
+    "2300 REXWOODS DR",
+    "LAKE BOONE TRL",
+    "exact",
+    273
+   ],
+   [
+    "3026 CAPITAL BLVD",
+    "STARMOUNT DR",
+    "exact",
+    1485
+   ],
+   [
+    "LOUISBURG  RD",
+    "NEW HOPE RD",
+    "exact",
+    2053
+   ],
+   [
+    "WAKEFIELD COMMONS DR",
+    "14460 WAKEFIELD COMMON",
+    "exact",
+    748
+   ],
+   [
+    "WAKE FOREST RD",
+    "NAVAHO DR",
+    "exact",
+    1562
+   ],
+   [
+    "OLD WAKE FOREST RD",
+    "RURITANIA ST",
+    "exact",
+    3015
+   ],
+   [
+    "SHAMROCK DR",
+    "PARKWOOD DRIVE",
+    "exact",
+    250
+   ],
+   [
+    "FALLS OF NEUSE RD",
+    "CEDARHURST",
+    "exact",
+    377
+   ]
+  ]
+ },
+ "context": {
+  "rows_2025": 21591,
+  "gps_plausible": 21567,
+  "gps_share": 0.9989,
+  "both_names_share": 0.9987,
+  "house_address_in_sample": 129,
+  "house_address_share": 0.0645,
+  "mar_points_fetched": 19569,
+  "network_streets": 22097,
+  "auto_tiers": [
+   "exact",
+   "freeway_offset",
+   "unique_pair"
+  ],
+  "address_counted_as_auto": true
+ }
+}

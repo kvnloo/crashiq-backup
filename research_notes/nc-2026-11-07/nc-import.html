@@ -1,0 +1,52 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>North Carolina crash data for CrashIQ</title>
+<style>body{background:#0b0b0b;color:#eee;font:15px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:16px;max-width:760px}h1{color:#e53935;font-size:22px;margin:0 0 4px}.sub{color:#999;margin:0 0 16px}section{border:1px solid #2a2a2a;border-left:4px solid #e53935;border-radius:8px;padding:12px 14px;margin:0 0 14px;background:#141414}h2{font-size:17px;margin:0 0 6px}p{margin:6px 0}ul{padding-left:18px;margin:6px 0}li{margin:4px 0}.ex{color:#ff8a80;font-size:13px}.n{color:#aaa;font-size:13px}b.k{color:#ff5252}a{color:#ff8a80}table{border-collapse:collapse;width:100%;font-size:13px}td,th{border-top:1px solid #2a2a2a;padding:4px 6px;text-align:left}th{color:#bbb}</style></head><body>
+<h1>North Carolina: can CrashIQ use it?</h1>
+<p class="sub">Checked live 2026-11-07. Short answer: <b>not the whole state yet</b>. The state's full crash system is for agencies only. Four open pieces work today.</p>
+
+<section><h2>1. The whole state: locked</h2>
+<p>NCDOT keeps every crash since 1990 in a program called TEAAS. Only government staff, towns, police, planning agencies and researchers get it, after a training class.</p>
+<p class="ex">Example: a consultant working for an MPO can get it through that MPO; a private company on its own cannot.</p>
+<p>What NCDOT does publish for everyone: a count table of every crash (about 305,000 a year) with only county and city, no location.</p>
+<p class="ex">Example: "2024, Durham, angle crash, no injury" with no street or point.</p></section>
+
+<section><h2>2. Open pieces that work today</h2>
+<ul>
+<li><b>Fatal and serious-injury crashes, whole state</b>, 2016-2025: 53,917 crashes, with GPS and street names.<div class="ex">Example: "NC 58, 0.1 mile north of SR 1607, serious injury, motorcycle".</div></li>
+<li><b>Pedestrian and bicycle crashes, whole state</b>, 2007-2025: 58,328 crashes, GPS, injury level for the walker or rider and the driver. No street names.</li>
+<li><b>Raleigh</b>, 2015-today, updated daily: about 22,000 crashes a year with GPS, both street names and the distance from the cross street.<div class="ex">Example: "Oakwood Ave, 220 ft east of Tarboro St, serious injury".</div></li>
+<li><b>Durham</b>, 2016-2025: about 6,000-9,000 crashes a year, GPS, streets, full injury levels.</li>
+</ul>
+<p>Not usable: <b>Charlotte</b> (550,000 crashes with GPS, but its licence forbids commercial use), <b>Greensboro</b> (stops at 2023, no street names), <b>Cary</b> (no GPS), <b>Winston-Salem</b> (nothing published).</p></section>
+
+<section><h2>3. Does our street-name method work there?</h2>
+<p>We hid the GPS on 2,000 Raleigh crashes from 2025 and let CrashIQ place them from the street names, on the Census street map of Wake County.</p>
+<table><tr><th></th><th>As written</th><th>With 2 small NC fixes</th></tr>
+<tr><td>Placed automatically</td><td>59%</td><td>72%</td></tr>
+<tr><td>Within 250 ft of the police point</td><td>62%</td><td>56%</td></tr></table>
+<p>For crashes the officer wrote "at" the intersection, <b>83%</b> land within 250 ft. The misses are mostly crashes written as "200 ft from" a street, where the officer's own point often doesn't match his distance.</p>
+<p class="ex">Example of an NC fix: Raleigh writes I-440 as just "440". CrashIQ can't find a street named "440" until we teach it.</p></section>
+
+<section><h2>4. NC's own rules (they differ from California)</h2>
+<ul>
+<li>Crash rates: one statewide table, crashes per 100 million vehicle miles, by road system. Statewide average 203 for 2021-2025.<div class="ex">Example: urban US routes 284, rural interstates 78.</div></li>
+<li>No published intersection rate per million entering vehicles.</li>
+<li>Costs per crash (2025): fatal $13,565,000, A $788,000, B $263,000, C $153,000, property damage $15,100.</li>
+<li>NC flags problem spots with "warrants", not rankings. <span class="ex">Example: an urban intersection with 12+ angle/turn crashes making up 60% of its crashes, a quarter of them in the last 2 years.</span></li>
+<li>Study periods: 5 years for city intersections, 10 years for rural ones.</li>
+</ul>
+<p class="n">Details with page numbers: <a href="nc-methods.md">nc-methods.md</a> (research_notes/nc-2026-11-07/ in the PR).</p></section>
+
+<section><h2>5. What we built</h2>
+<p>Readers for Raleigh, Durham and the two statewide NCDOT layers, with tests. They are not switched on in the app yet.</p></section>
+
+<section><h2>What you need to do</h2>
+<ul>
+<li>If a client agency or MPO has TEAAS, ask them for one crash export (one county, one year). That lets us build "upload your NC export".</li>
+<li>Ask Raleigh (Open Raleigh), Durham and NCDOT Traffic Safety, in one email each, whether a paid tool may show their crash data. None of them says yes or no in writing.</li>
+<li>Decide: NC has an "injury unknown" level. Count it like property damage (NC's way) or like a C injury (our California rule)?</li>
+</ul></section>
+
+<section><h2>What we didn't check</h2>
+<ul><li>What a TEAAS export looks like (no public spec).</li><li>How much of NC the national address file covers (its search kept failing).</li><li>Placement outside Raleigh, and on the statewide fatal/serious layer.</li><li>Whether Raleigh will fill in the injury and weather fields again (blank since October 2024).</li></ul></section>
+</body></html>
