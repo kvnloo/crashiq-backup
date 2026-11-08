@@ -1,0 +1,98 @@
+{
+ "state": "WI",
+ "bucket": "A*",
+ "status": "active",
+ "bucket_note": "open record-level files, GPS 95-99%, KABCO, street pair + offset on every crash; catches: stale (newest 2022) and no licence text",
+ "sources": [
+  {
+   "name": "WisDOT Wisconsin Motor Vehicle Crash Annual Data Sets (DT4000 crash file), Division of State Patrol",
+   "url": "https://wi-state-patrol.atlassian.net/wiki/spaces/OPENDATA/pages/2069528581/Wisconsin+Motor+Vehicle+Crash+Annual+Data+Sets",
+   "access": "open (public Box.com links, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "\"The Wisconsin Department of Transportation (WisDOT) is now making its annual motor vehicle crash data sets available as open data.\" No licence or terms text (page version 20230916-001).",
+   "years": "DT4000 2017-2022 (legacy format 1994-2016, not read); 2023 on not posted",
+   "rows_per_year": {
+    "2018": 144212,
+    "2019": 145288,
+    "2020": 114697,
+    "2021": 128296,
+    "2022": 128830
+   },
+   "gps_share": 0.9908,
+   "gps_share_per_year": {
+    "2018": 0.9521,
+    "2019": 0.9843,
+    "2020": 0.9846,
+    "2021": 0.9884,
+    "2022": 0.9908
+   },
+   "street_names_share": 1.0,
+   "street_names_note": "ONSTR/ONHWY + ATSTR/ATHWY on 99.997% of 2022 crashes; distance (miles) and direction to the intersection on 77%; house number (ATCODE 101) on 12% statewide",
+   "kabco": true,
+   "keys_linkable": "CRSHNMBR joins person, vehicle, object files (only the crash file is read)"
+  },
+  {
+   "name": "Community Maps (UW TOPS Lab for WisDOT BOTS)",
+   "url": "https://communitymaps.wi.gov/crash/search/BasicSearch.do",
+   "access": "open map + terms click-through; advanced download needs an account",
+   "licence_paid_use": "no",
+   "licence_quote": "\"Automated access, bulk data extraction, or use that degrades system performance is not permitted.\" \"\u2026intended for research purposes and to support traffic safety objectives.\"",
+   "years": "2010-present (fatal from 2001), nightly preliminary",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null
+  }
+ ],
+ "placement_sample": {
+  "area": "Milwaukee County (55079), 2022",
+  "n": 2000,
+  "gps_share": 0.9965,
+  "name_placed_share": 0.7545,
+  "auto_share": 0.738,
+  "within_250ft": 0.9749,
+  "within_250ft_low": 0.9656,
+  "house_address_share": 0.187,
+  "address_points_source": null,
+  "note": "TIGER-only network; auto = Gate() tiers with tiger_only_auto=True; WisDOT's offset distance and direction passed to locate.place. House numbers counted, not placed (NAD not checked)."
+ },
+ "end_to_end": {
+  "corridor": "W Capitol Dr (WIS 190), N 27th St to N 43rd St, Milwaukee (1.01 mi)",
+  "window": [
+   2018,
+   2022
+  ],
+  "pulled": 1404,
+  "counted": 1015,
+  "excluded": 389,
+  "no_gps_read": 1947,
+  "no_gps_placed_on_corridor": 14,
+  "severity": {
+   "K": 3,
+   "A": 17,
+   "B": 114,
+   "C": 175,
+   "U": 0,
+   "O": 706
+  },
+  "crash_cost_total": 131133181,
+  "findings_shown": 11,
+  "pdf_bytes": 108442,
+  "xlsx_bytes": 40590,
+  "seconds": 80
+ },
+ "importer_built": true,
+ "blockers": [
+  "open files stop at 2022 (posted 2023-09): default window 2018-2022 (final_lag_months=46)",
+  "no licence text for paid use",
+  "Community Maps (2023-now) forbids automated access and bulk extraction",
+  "each year is a 70-97 MB zip on first use (cached as ~7 MB)",
+  "no statewide average rates read; no Wisconsin AADT in CrashIQ"
+ ],
+ "user_actions": [
+  "Optional: email DSPTrafficCrashes@dot.wi.gov to ask (a) when 2023+ annual files will be posted, (b) whether paid use of the open files is allowed",
+  "Optional, for current years: TOPS Lab data request (transportal.cee.wisc.edu/services/crash-data/requests/) or a Community Maps advanced account; needs the user's registration"
+ ],
+ "cities": []
+}
