@@ -204,6 +204,10 @@ MIGRATIONS: list[str] = [
         PRIMARY KEY (study_id, kind, ref_id)
     );
     """,
+    # 16 — #19 state packs: a study belongs to one state, fixed at creation; every existing study is California
+    """
+    ALTER TABLE study ADD COLUMN state TEXT NOT NULL DEFAULT 'CA';
+    """,
 ]
 
 

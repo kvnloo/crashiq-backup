@@ -89,3 +89,26 @@ def test_meta_lists_exactly_the_two_v1_modes(client, clock):
     m = client.get("/api/studies/meta").json()
     assert [x["id"] for x in m["modes"]] == ["profile", "tis"]
     assert m["default_window"] == {"from_year": 2020, "to_year": 2024}
+
+
+# -- #19: a study belongs to one state ---------------------------------------------------------------------------
+def test_new_and_old_studies_are_california_and_the_state_is_fixed(client, clock):
+    s = client.post("/api/studies", json={"name": "Old client", "mode": "profile"}).json()
+    assert s["state"] == "CA"
+    assert client.post("/api/studies", json={"name": "Explicit", "mode": "profile", "state": "CA"}).json()["state"] == "CA"
+    r = client.patch(f"/api/studies/{s['id']}", json={"state": "TX"})       # StudyPatch has no state: ignored
+    assert r.status_code == 200 and r.json()["state"] == "CA"
+
+
+def test_a_state_that_isnt_ready_is_refused(client, clock):
+    r = client.post("/api/studies", json={"name": "T", "mode": "profile", "state": "TX"})
+    assert r.status_code == 422 and "Texas isn't ready yet." in r.text
+    assert client.post("/api/studies", json={"name": "T", "mode": "profile", "state": "ZZ"}).status_code == 422
+
+
+def test_meta_lists_states_ready_first_and_answers_for_one(client, clock):
+    m = client.get("/api/studies/meta").json()
+    assert m["state"] == "CA" and m["source_short"] == "CCRS" and m["states"][0]["ready"]
+    tx = next(s for s in m["states"] if s["code"] == "TX")
+    assert tx == {"code": "TX", "name": "Texas", "ready": False}
+    assert client.get("/api/studies/meta?state=TX").status_code == 400
