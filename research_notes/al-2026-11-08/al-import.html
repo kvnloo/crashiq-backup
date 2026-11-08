@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Alabama crash data</title><style>body{background:#111;color:#eee;font:16px/1.5 system-ui;margin:0;padding:18px;max-width:720px}
+h1{color:#e33;font-size:24px}h2{color:#f55;font-size:18px;margin-top:22px}.b{background:#1d1d1d;border-left:4px solid #e33;padding:10px 12px;margin:10px 0}li{margin:4px 0}</style></head><body>
+<h1>Alabama: works, but we need permission first</h1>
+<div class="b">A University of Alabama map service hands out every Alabama crash since 2020, with severity, location and street names, and no login. CrashIQ can read it. But ALDOT's own guidebook says these data <b>"are not to be shared with the public"</b>. So Alabama is built and not switched on.</div>
+<h2>What we found</h2><ul>
+<li><b>Lots of data, current to today.</b> About 140,000 crashes a year, 2020 to this week.</li>
+<li><b>Full injury levels.</b> Fatal, serious, minor, possible, property damage.</li>
+<li><b>A point on 85% of crashes.</b> In Birmingham only 67%. The rest have street names, and CrashIQ placed a third of those by name.</li>
+<li><b>A data glitch we fixed.</b> Since late 2024 the source shifted its columns: "severity" holds the intersection flag, "county" holds the year. CrashIQ reads each value from where it landed.</li>
+<li><b>Birmingham's twin streets confuse the name matching.</b> Example: 3rd Ave N and 3rd Ave S look the same to CrashIQ. Engineering has the fix.</li>
+<li>ALDOT's crash costs: fatal or serious $1.57M, minor or possible $129k, property damage $9.6k. The year isn't stated.</li></ul>
+<h2>Test run</h2><div class="b">3rd Ave N, downtown Birmingham, 1.2 mi, 2020-2024: 256 crashes counted (4 serious, 17 minor, 28 possible, 207 property damage), cost $14.1M. 295 couldn't be placed. PDF and Excel built.</div>
+<h2>What you need to do</h2><ul><li>Ask ALDOT (Office of Safety Operations) and UA CAPS in writing whether CrashIQ may use this map service in a paid tool, or buy an extract.</li>
+<li>If they say no: consultants with a CARE "SAFETY Private" login could upload their own export. We'd need one sample file.</li></ul>
+<h2>What we didn't check</h2><ul><li>House-address placement and address points.</li><li>Traffic counts for crash rates.</li><li>Whether the shifted-column glitch will change again.</li></ul></body></html>
