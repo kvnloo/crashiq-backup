@@ -1,0 +1,128 @@
+{
+ "state": "AK",
+ "bucket": "A*",
+ "status": "active",
+ "bucket_note": "Corrected from the 2026-11-02 screen (D, 'records request'; it found only the 2023 table with no location). DOT&PF's Public Crash Portal (public.alaskadata.net, CARE) serves record-level crashes with a point (99.0%) and crash KABCO, 2021-2025, with no login, through the API its map reads. Catches: the portal hides its download button (undocumented endpoint), no reuse licence, no street names, no person/vehicle records or people counts, only the latest five years.",
+ "sources": [
+  {
+   "name": "Alaska DOT&PF Public Crash Portal (CARE, datasource DOTPFDataCrash)",
+   "url": "https://public.alaskadata.net/ (API https://pub-ds.alaskadata.net/api/)",
+   "access": "open: POST FilterCache/PostReplacementFilterToCache (date range) then GET VariableData/GetFileDownload?fileFormat=1 (the map's CSV feed); no login",
+   "licence_paid_use": "unclear",
+   "licence_text": "Portal splash: 'This portal contains the best available data for the most recent five (5) complete years ... Although Alaska DOT&PF provides this portal, the Alaska Department of Motor Vehicles (DMV) is the official custodian of the data. ... The information in this report is compiled for highway safety planning purposes. Federal law prohibits its discovery or admissibility in litigation ... 23 U.S.C. \u00a7 407; 23 U.S.C. \u00a7 148(h)(4); Walden v. DOT ... DOT&PF does not endorse interpretations and conclusions drawn from this portal. By using this site, you acknowledge that you have read and agree to the above.' No reuse licence; portal config has showDownload: false.",
+   "licence_urls": [
+    "https://public.alaskadata.net/",
+    "https://public.alaskadata.net/assets/config/config.json"
+   ],
+   "years": "2021-2025 (MinimumDate 2021-01-01, MaximumDate 2025-12-31, built 2026-11-04)",
+   "rows_per_year": {
+    "2021": 7924,
+    "2022": 7924,
+    "2023": 9284,
+    "2024": 9209,
+    "2025": 8647
+   },
+   "gps_share": 0.9896,
+   "street_names_share": 0.0,
+   "kabco": "yes, crash level: Crash Severity (K 319, A 1,103, B 6,063, C 5,290, O 30,205, 'Died Prior to Crash' 8 -> O)",
+   "keys_linkable": false
+  },
+  {
+   "name": "AKDOT_GIS Crash_2023Table (ArcGIS Online)",
+   "url": "https://services.arcgis.com/r4A0V7UzH9fcLVvv/arcgis/rest/services/Crash_2023Table/FeatureServer/0",
+   "access": "open",
+   "licence_paid_use": "ok_with_attribution",
+   "licence_text": "Item licence: 'DOT&PF permits users to access, download, copy, analyze, modify, and redistribute the data ... for lawful purposes, including commercial use' with attribution.",
+   "licence_urls": [
+    "https://www.arcgis.com/home/item.html?id=2f1ccde8e8c240ac8c7871e63ecbbf64"
+   ],
+   "years": "2013-2023",
+   "rows_per_year": {
+    "2021": 7905,
+    "2022": 7877,
+    "2023": 9212
+   },
+   "gps_share": 0.0,
+   "street_names_share": 0.0,
+   "kabco": "no (serious/fatal flag only)",
+   "keys_linkable": false,
+   "note": "no crash id or location (city and borough only): can't be placed; used only to check the portal's counts (within 1%)"
+  }
+ ],
+ "other_layers_checked": [
+  {
+   "url": "https://services.arcgis.com/fX5IGselyy1TirdY/arcgis/rest/services/MSB_Crash_Data/FeatureServer/0",
+   "what": "Mat-Su Borough crashes 2013-2022 (13,172), 'Data source is Alaska DOT. Provided to Michael Baker Intl for ... the SS4A grant project': a consultant re-host, never a source; it shows the full DOT&PF export layout (Crash_Number, Latitude/Longitude, Street, Intersecting_Street, Distance_from_Intersection, Route, Milepoint, Crash_Severity, injury counts, per-unit driver fields)."
+  },
+  {
+   "url": "https://services.arcgis.com/r4A0V7UzH9fcLVvv/arcgis/rest/services/Crash_App/FeatureServer",
+   "what": "AKDOT_GIS 'Crash_App' / 'Crash_Entry': reference layers for the crash-entry app (boroughs, routes, mileposts), no crashes."
+  },
+  {
+   "url": "http://dotsobrh01.dot.soa.alaska.gov:6080/arcgis/rest/services/RH_CrashProcessors_Data/MapServer",
+   "what": "internal state server, not reachable."
+  },
+  {
+   "url": "https://services2.arcgis.com/Ce3DhLRthdwbHlfF/arcgis/rest/services/AMATS_HighCrashNetwork_Hosted/FeatureServer",
+   "what": "Municipality of Anchorage: high-crash hotspots and corridors only, no crash points."
+  }
+ ],
+ "placement_sample": {
+  "area": "statewide, 2021-2025 (all 42,988 crashes)",
+  "n": 42988,
+  "gps_share": 0.9896,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "446 crashes (1.0%) carry 0/0 and can't be placed: the portal has no street names or addresses, so the street-name test can't run (not measured). No point lies east of 180 deg."
+ },
+ "end_to_end": {
+  "corridor": "East Tudor Road, Anchorage, Lake Otis Pkwy to Elmore Rd",
+  "length_mi": 1.04,
+  "window": [
+   2021,
+   2025
+  ],
+  "pulled": 409,
+  "counted": 349,
+  "severity": {
+   "K": 1,
+   "A": 6,
+   "B": 58,
+   "C": 48,
+   "U": 0,
+   "O": 236
+  },
+  "excluded": {
+   "total": 60,
+   "note": "2021-2024 run: outside_buffer 16, outside_study_limits 28"
+  },
+  "crash_cost_total": 60488000,
+  "pdf_bytes": 66335,
+  "xlsx_bytes": 39104,
+  "findings_shown": 9
+ },
+ "importer_built": true,
+ "blockers": [
+  "No reuse licence, and the portal hides its download button: the reader uses the CSV feed the portal's own map loads, which DOT&PF could change or close",
+  "No street names or people counts: people killed and injured read 0 in every table",
+  "Only the latest five complete years: a 2027 study loses 2021"
+ ],
+ "user_actions": [
+  "Ask DOT&PF's crash data team (dot.crash.info@alaska.gov) in writing whether a paid tool may read the Public Crash Portal, and what notice to show. Flip status to reader_only in statepacks/ak.py if you'd rather wait.",
+  "Optional, for street names and people counts: request the full crash export (the layout the Mat-Su re-host shows) from dot.crash.info@alaska.gov; a 'bring your export' reader would then add Street / Intersecting_Street."
+ ],
+ "cities": [
+  {
+   "city": "Anchorage",
+   "source": "Municipality of Anchorage / AMATS: high-crash network hotspots and corridors only; no crash-point open data. The portal covers Anchorage (24,963 of 42,988 crashes).",
+   "url": "https://services2.arcgis.com/Ce3DhLRthdwbHlfF/arcgis/rest/services/AMATS_HighCrashNetwork_Hosted/FeatureServer",
+   "gps_share": null,
+   "years": null,
+   "licence": null
+  }
+ ]
+}

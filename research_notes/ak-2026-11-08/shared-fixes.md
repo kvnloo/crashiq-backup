@@ -1,0 +1,3 @@
+# Shared fixes from Alaska (2026-11-08)
+
+1. `backend/scripts/build_state_county_boxes.py`: `STATE_FIPS` lacks `"AK": "02"`, and its `shape.bbox` for Aleutians West (02016) spans -179.2..179.8 because the Near Islands lie east of 180°, so that box would contain every Alaska point and pull its TIGER files into every Alaska corridor. I built `county_boxes_ak.json` in a scratch script from the western-hemisphere points only. Fix: add the code and take the box from points with lon < 0 when a shape crosses 180°. Test: Alaska's 30 boxes all have -180 <= w < e < -129 (already asserted in `tests/test_source_ak.py`).

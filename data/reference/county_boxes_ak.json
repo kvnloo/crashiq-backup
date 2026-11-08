@@ -1,0 +1,276 @@
+{
+ "source": "Census cb_2024_us_county_500k (public domain), county bounding box + 5 km (Alaska: western-hemisphere part only; the Near Islands west of 180 deg are left out)",
+ "box": "[min lat, min lon, max lat, max lon]",
+ "counties": {
+  "02013": {
+   "name": "Aleutians East Borough",
+   "box": [
+    53.9089,
+    -166.2442,
+    56.9253,
+    -158.8484
+   ]
+  },
+  "02016": {
+   "name": "Aleutians West Census Area",
+   "box": [
+    51.1705,
+    -179.1918,
+    57.2947,
+    -165.9936
+   ]
+  },
+  "02020": {
+   "name": "Anchorage Municipality",
+   "box": [
+    60.6879,
+    -150.3309,
+    61.5291,
+    -148.4174
+   ]
+  },
+  "02050": {
+   "name": "Bethel Census Area",
+   "box": [
+    58.5053,
+    -173.1664,
+    62.3377,
+    -152.9566
+   ]
+  },
+  "02060": {
+   "name": "Bristol Bay Borough",
+   "box": [
+    58.5709,
+    -157.3059,
+    58.9302,
+    -156.271
+   ]
+  },
+  "02063": {
+   "name": "Chugach Census Area",
+   "box": [
+    59.7187,
+    -148.7909,
+    61.4713,
+    -141.9209
+   ]
+  },
+  "02066": {
+   "name": "Copper River Census Area",
+   "box": [
+    60.3466,
+    -147.7898,
+    63.2628,
+    -140.9568
+   ]
+  },
+  "02068": {
+   "name": "Denali Borough",
+   "box": [
+    62.6808,
+    -153.0447,
+    64.4033,
+    -146.9549
+   ]
+  },
+  "02070": {
+   "name": "Dillingham Census Area",
+   "box": [
+    58.3488,
+    -161.4101,
+    61.0379,
+    -155.955
+   ]
+  },
+  "02090": {
+   "name": "Fairbanks North Star Borough",
+   "box": [
+    64.2122,
+    -148.7083,
+    65.4986,
+    -143.839
+   ]
+  },
+  "02100": {
+   "name": "Haines Borough",
+   "box": [
+    58.1202,
+    -136.5408,
+    59.7734,
+    -134.2687
+   ]
+  },
+  "02105": {
+   "name": "Hoonah-Angoon Census Area",
+   "box": [
+    56.9694,
+    -137.9907,
+    59.4546,
+    -132.6048
+   ]
+  },
+  "02110": {
+   "name": "Juneau City and Borough",
+   "box": [
+    57.7471,
+    -135.2217,
+    59.0159,
+    -133.1273
+   ]
+  },
+  "02122": {
+   "name": "Kenai Peninsula Borough",
+   "box": [
+    58.6077,
+    -154.7939,
+    61.4713,
+    -148.518
+   ]
+  },
+  "02130": {
+   "name": "Ketchikan Gateway Borough",
+   "box": [
+    54.673,
+    -132.2478,
+    56.4511,
+    -129.9291
+   ]
+  },
+  "02150": {
+   "name": "Kodiak Island Borough",
+   "box": [
+    55.7126,
+    -156.8535,
+    59.0162,
+    -151.7441
+   ]
+  },
+  "02158": {
+   "name": "Kusilvak Census Area",
+   "box": [
+    60.8761,
+    -166.2326,
+    63.3169,
+    -160.1416
+   ]
+  },
+  "02164": {
+   "name": "Lake and Peninsula Borough",
+   "box": [
+    55.5937,
+    -159.9452,
+    60.9513,
+    -153.3522
+   ]
+  },
+  "02170": {
+   "name": "Matanuska-Susitna Borough",
+   "box": [
+    61.1451,
+    -153.0469,
+    63.5227,
+    -146.3789
+   ]
+  },
+  "02180": {
+   "name": "Nome Census Area",
+   "box": [
+    62.8926,
+    -171.892,
+    66.6267,
+    -159.3323
+   ]
+  },
+  "02185": {
+   "name": "North Slope Borough",
+   "box": [
+    67.9549,
+    -166.881,
+    71.4329,
+    -140.9556
+   ]
+  },
+  "02188": {
+   "name": "Northwest Arctic Borough",
+   "box": [
+    65.3921,
+    -165.4208,
+    68.3396,
+    -154.1012
+   ]
+  },
+  "02195": {
+   "name": "Petersburg Borough",
+   "box": [
+    56.4024,
+    -133.7211,
+    57.8698,
+    -132.0001
+   ]
+  },
+  "02198": {
+   "name": "Prince of Wales-Hyder Census Area",
+   "box": [
+    54.6186,
+    -134.7116,
+    57.1768,
+    -129.9584
+   ]
+  },
+  "02220": {
+   "name": "Sitka City and Borough",
+   "box": [
+    56.1167,
+    -136.4732,
+    58.0464,
+    -134.5708
+   ]
+  },
+  "02230": {
+   "name": "Skagway Municipality",
+   "box": [
+    59.3013,
+    -135.7681,
+    59.8431,
+    -134.9447
+   ]
+  },
+  "02240": {
+   "name": "Southeast Fairbanks Census Area",
+   "box": [
+    61.859,
+    -147.045,
+    65.8845,
+    -140.9563
+   ]
+  },
+  "02275": {
+   "name": "Wrangell City and Borough",
+   "box": [
+    55.5892,
+    -133.1151,
+    56.9484,
+    -130.9533
+   ]
+  },
+  "02282": {
+   "name": "Yakutat City and Borough",
+   "box": [
+    58.7635,
+    -143.9384,
+    60.5681,
+    -137.455
+   ]
+  },
+  "02290": {
+   "name": "Yukon-Koyukuk Census Area",
+   "box": [
+    61.9009,
+    -161.0932,
+    68.5451,
+    -140.9574
+   ]
+  }
+ }
+}
