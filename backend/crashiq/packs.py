@@ -73,8 +73,28 @@ PACKS["VA"] = StatePack(
                 "(about 60 of 1.18 million statewide).",
                 "Primary collision factor, DUI and speed rows are blank: Virginia's public layer has no violation codes."))
 
+def _ma_fetch(box, county_fips, years, cache_dir):
+    from .sources import ma_impact
+    boxes = json.loads((REF / "county_boxes_ma.json").read_text())["counties"]
+    return ma_impact.fetch_contract(box, county_fips, years, cache_dir, boxes)
+
+
+PACKS["MA"] = StatePack(
+    code="MA", name="Massachusetts", fips="25", status="active",
+    source="Crash data: MassDOT IMPACT open data (crash and person layers; 2002-2019 public domain, 2020 on under "
+           "MassDOT's disclaimer).",
+    source_short="MassDOT IMPACT", bounds=(41.2, -73.6, 42.9, -69.9), first_year=2002,
+    methods=REF / "methods_ma.json", fetch=_ma_fetch, county_boxes=REF / "county_boxes_ma.json",
+    # MassDOT's open-year disclaimer, quoted (research_notes/ma-2026-11-07/ma-import.md § licence)
+    legal=("MassDOT: \"MassDOT makes no representation as to the accuracy… not an official record… any crash records or "
+           "data provided for the years after 2020 are subject to change… open years' of crash data are for "
+           "informational purposes only and should not be used for analysis… (see 23 USC, Section 407)\""),
+    data_notes=("MassDOT's crash data in CrashIQ has no driver or vehicle records yet: road-user movements, motorcycle, "
+                "heavy-truck and e-bike counts and collision diagrams are empty.",
+                "Primary collision factor, DUI and speed rows are blank: MassDOT's crash layer has no violation codes."))
+
 # researched, no pack yet: listed greyed out on Setup (docs/state-pack-design.md § State picker)
-COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois", "MA": "Massachusetts", "WA": "Washington",
+COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois", "WA": "Washington",
           "OR": "Oregon", "DC": "District of Columbia", "NY": "New York"}
 
 

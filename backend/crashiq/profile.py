@@ -848,14 +848,14 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                                          ("sev_c", "Possible (C)")]) + [
         ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")]
         + ([("crash_cost", "Crash cost ($, Caltrans LRSM 2026)"), ("cost_control_unknown", "Cost: intersection control unknown")]
-           if pack.caltrans else [("crash_cost", f"Crash cost ($, {costs['dollar_year']} $, {pack.name})"),
+           if pack.caltrans else [("crash_cost", f"Crash cost ($, {pack.name}, {costs['dollar_year']})"),
                                   ("cost_unpriced", "Injury crashes not priced (level not reported)")] if costs else []),
         loc_rows, placed))
     if pack.caltrans:
         tables[-1]["source_note"] = crash_cost.SOURCE                 # the crash-cost basis (#273)
     elif costs:
-        tables[-1]["source_note"] = (f"{packs.cite(pack, 'crash_costs')}, {costs['dollar_year']} dollars, one cost per "
-                                     "KABCO level; injury crashes with no reported level (U) are not priced.")
+        tables[-1]["source_note"] = (f"{packs.cite(pack, 'crash_costs')}; dollar year: {costs['dollar_year']}; one cost "
+                                     "per KABCO level; injury crashes with no reported level (U) are not priced.")
     if statewide_any:                         # intersections with a Caltrans rate group (per million entering)
         _statewide_note(tables[-1], [c for c in STATEWIDE_COLS if c[0] != "statewide_rate_fatal"])
         for r in loc_rows:
@@ -935,6 +935,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                 "those years are not in the profile."})
     for note in pack.data_notes:              # what this state's source doesn't carry (#19)
         caveats.append({"key": "state_data", "text": note})
+    for note in (pull["cleaning"].get("reader") or {}).get("notes") or []:     # the reader's own, e.g. Boston (#19)
+        caveats.append({"key": "reader_note", "text": note, "limitation": True})
     if not pack.caltrans:
         caveats += state_method_caveats(pack, costs, sum(r["values"].get("cost_unpriced", 0) for r in loc_rows))
     from .shs import corridor_routes

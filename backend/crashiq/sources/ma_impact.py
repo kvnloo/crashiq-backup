@@ -1,6 +1,6 @@
 """Massachusetts crash source: MassDOT IMPACT open data (ArcGIS REST, no login).
 
-Not wired into the app yet (state-pack seam, #19). One FeatureServer per year with Crash, Vehicle and Person layers;
+Wired into the app through the MA state pack (packs.py, #19) by `fetch_contract`. One FeatureServer per year with Crash, Vehicle and Person layers;
 crashes and persons share `CRASH_NUMB`. Severity is KABCO (`MAX_INJR_SVRTY_CL` per crash, `INJY_STAT_DESCR` per
 person); reports before 2019 use the older injury words, mapped below. Closed years (2002-2019) say "public domain";
 the open years (2020+ on this server) carry only MassDOT's disclaimer (research_notes/ma-2026-11-07/ma-import.md).
@@ -230,3 +230,61 @@ def fetch(year: int, where: str, cache_dir: Path) -> list[dict]:
     cache_dir.mkdir(parents=True, exist_ok=True)
     cache.write_text(json.dumps(crashes))
     return crashes
+
+
+# -- state-pack contract (#19, docs/state-pack-design.md § Reader contract) --------------------------------------
+CCRS_TYPE = {"REAR-END": "REAR END", "FRONT TO REAR": "REAR END", "ANGLE": "BROADSIDE", "HEAD-ON": "HEAD-ON",
+             "FRONT TO FRONT": "HEAD-ON", "SIDESWIPE, SAME DIRECTION": "SIDE SWIPE",
+             "SIDESWIPE, OPPOSITE DIRECTION": "SIDE SWIPE"}
+CCRS_LIGHT = {"DARK - LIGHTED ROADWAY": "DARK - STREET LIGHTS", "DARK - ROADWAY NOT LIGHTED": "DARK - NO STREET LIGHTS"}
+BOSTON_NOTE = ("Boston is under-counted in MassDOT's crash data: Boston police reports reach the state's crash system "
+               "only in part (IMPACT 2025: 5,668 Boston crashes vs 5,302 in Worcester; research 2026-11-07), so this "
+               "corridor's counts are low. A Boston police crash source isn't in CrashIQ yet.")
+
+
+def contract_record(c: dict, fips_by_county: dict[str, str]) -> dict:
+    """One fetch() crash -> the shared crash dict (packs.check_crash)."""
+    up = lambda v: v.upper() if v else None
+    d = datetime.strptime(c["date"], "%Y-%m-%d") if c["date"] else None
+    prim, sec = c["primary_road"], c["secondary_road"]
+    if not sec and c.get("house_number") and prim:
+        prim = f"{c['house_number']} {prim}"          # the core's house-address path (D5) reads "1200 MAIN ST"
+    return {"crash_id": c["collision_id"], "report_version": 0, "deleted": False, "preliminary": False,
+            "date": c["date"], "year": c["year"], "hour": c["hour"], "day_of_week": d.strftime("%A") if d else None,
+            "lat": c["lat"], "lon": c["lon"], "bad_coords": c["bad_coords"], "primary_road": prim,
+            "secondary_road": sec, "offset_ft": c["offset_ft"] or None, "offset_dir": c["offset_dir"],
+            "city": up(c["city_name"]), "county_code": c["county_code"],
+            "county_fips": fips_by_county.get((c["county_code"] or "").upper()), "state": "MA",
+            "is_freeway": c["is_freeway"], "killed": c["killed"], "injured": c["injured"], "severity": c["severity"],
+            "ped": c["ped"], "bike": c["bike"], "ebike": False, "escooter": False, "motorcycle": False,
+            "heavy_truck": False, "parties": [],
+            "collision_type": CCRS_TYPE.get(up(c["collision_type"]) or "", up(c["collision_type"])),
+            "lighting": CCRS_LIGHT.get(up(c["lighting"]) or "", up(c["lighting"])), "weather": up(c["weather"]),
+            "surface": up(c["surface"]), "aadt": c.get("aadt"), "aadt_year": c.get("aadt_year")}
+
+
+def fetch_contract(box, county_fips: list[str], years: list[int], cache_dir: Path, boxes: dict | None = None) -> dict:
+    """Crashes with a point in the box, plus those without one in the counties the corridor crosses, per year.
+    `boxes`: {fips: {"name": "Suffolk County", ...}} (county_boxes_ma.json) for the county names IMPACT uses."""
+    s, w, n, e = box
+    names = {f: v["name"].upper().removesuffix(" COUNTY") for f, v in (boxes or {}).items()}
+    fips_by_county = {v: k for k, v in names.items()}
+    area = ", ".join(f"'{names[f]}'" for f in county_fips if f in names) or "''"
+    where = (f"(LAT >= {s:.6f} AND LAT <= {n:.6f} AND LON >= {w:.6f} AND LON <= {e:.6f}) OR "
+             f"(LAT IS NULL AND CNTY_NAME IN ({area}))")
+    rows, missing, errors = [], [], {}
+    for y in years:
+        try:
+            got = fetch(y, where, cache_dir)
+        except (RuntimeError, urllib.error.URLError) as ex:     # a year whose service isn't there: said, not hidden
+            missing.append(y)
+            errors[y] = str(ex)[:200]
+            continue
+        if not got:
+            missing.append(y)
+        rows += got
+    out = [contract_record(c, fips_by_county) for c in rows]
+    notes = [BOSTON_NOTE] if any(c["city"] == "BOSTON" for c in out) else []
+    return {"crashes": [c for c in out if c["county_fips"]], "years_missing": missing,
+            "cleaning": {"source_rows": len(rows), "no_county": sum(1 for c in out if not c["county_fips"]),
+                         "year_errors": errors, "notes": notes}}

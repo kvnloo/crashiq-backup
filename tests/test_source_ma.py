@@ -98,3 +98,27 @@ def test_layers_resolved_by_name(monkeypatch):
     assert m.service(2019).endswith("CrashClosedYear2019/FeatureServer")
     assert m.service(2023).endswith("MASSDOT_ODP_OPEN_2023v/FeatureServer")
     assert m.service(2020).endswith("Roads/CrashClosedYears/FeatureServer")
+
+
+def test_contract_rows_pass_the_pack_checker(fake_impact, tmp_path):
+    # #19: what the MA pack hands the core: box OR (no GPS in the corridor's counties), CCRS words, county FIPS
+    from crashiq import packs
+    pack = packs.get("MA")
+    boxes = json.loads((packs.REF / "county_boxes_ma.json").read_text())["counties"]
+    got = m.fetch_contract((42.3, -71.4, 42.5, -71.0), ["25017"], [2025], tmp_path, boxes)
+    where = next(p["where"] for u, p in fake_impact if p.get("returnIdsOnly") and "LAT" in p.get("where", ""))
+    assert "LAT >= 42.300000" in where and "CNTY_NAME IN ('MIDDLESEX')" in where
+    assert len(got["crashes"]) == 60 and got["years_missing"] == []
+    assert all(packs.check_crash(c, pack) == [] for c in got["crashes"])
+    assert {c["county_fips"] for c in got["crashes"]} == {"25017"}
+    assert "REAR END" in {c["collision_type"] for c in got["crashes"]}
+    assert "DARK - NO STREET LIGHTS" in {c["lighting"] for c in got["crashes"]}
+    assert got["cleaning"]["notes"] == []                      # no Boston crash in the fixture
+
+
+def test_a_boston_crash_brings_the_under_count_note():
+    c = m.crash_record({**FIX["crashes"][0], "CITY_TOWN_NAME": "BOSTON", "CNTY_NAME": "SUFFOLK"})
+    c["severity"] = "O"
+    r = m.contract_record(c, {"SUFFOLK": "25025"})
+    assert r["city"] == "BOSTON" and r["county_fips"] == "25025"
+    assert "under-counted" in m.BOSTON_NOTE

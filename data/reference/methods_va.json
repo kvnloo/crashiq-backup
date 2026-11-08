@@ -52,7 +52,7 @@
    "min_sites": 3,
    "manual": "hsm",
    "page": "Ch. 4, Sec. 4.2.3",
-   "state_method": "Potential for Safety Improvement (Virginia SPFs + Empirical Bayes), VHSIP Reference Guide 2025; not built in CrashIQ"
+   "state_method": "Potential for Safety Improvement (Virginia SPFs + Empirical Bayes) (VHSIP Reference Guide 2025)"
   },
   "min_years": {
    "missing": "VHSIP: 3 or 5 years (research 2026-11-07, page not re-checked)"
