@@ -663,6 +663,13 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   after the driveway when it has a name, otherwise "Driveway (signal)". A driveway without a signal stays part of the
   segment, and its crashes count there. Found in the #391 after-merge check: 19 removed stops had a signal; at 14 of
   them only a driveway or access road meets the corridor, mostly shopping-centre and campus entrances (Corte Madera Town Center, Doheny Park Plaza, Village at San Jacinto and others).
+  - **A driveway is never the study's start or end DECIDED (user, 2026-11-07, PM session, "No, streets only"; #420):**
+    A and B stay at real cross streets. A signalized driveway beyond the end cross street does not move the study
+    limits. Found in the Tester's #420 frozen run: a driveway at A or B widened the limits in 6 corridors (Glendora
+    +37 crashes, Victorville +40).
+  - **A driveway is not a leg for entering volume DECIDED (user, 2026-11-07, PM session, "Don't count it"; #420):**
+    a T intersection with a driveway opposite the side street stays a T for entering volume (half the minor AADT), so
+    its crash rate does not change. Found in the same run: 179 T intersections would otherwise have become 4-leg.
 - **County address points fill NAD's gaps DECIDED (user, 2026-11-04, CrashIQ chat; #393):** "I think 2 is easy. And
   it can be carried over to other states as well, so let's get that going." House-address crashes (D5) in counties
   USDOT NAD doesn't cover are placed at the county's own address points (`data/reference/address_points.json`), with
