@@ -1,0 +1,52 @@
+{
+ "state": "KS",
+ "bucket": "A*",
+ "sources": [
+  {
+   "name": "KDOT Crashes in Kansas (KanPlan ArcGIS)",
+   "url": "https://kanplan.ksdot.gov/arcgis_web_adaptor/rest/services/Transportation/Accidents/FeatureServer/0",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_note": "KDOT Website Terms of Use: \"You may not reproduce, distribute, or use any content from this website without explicit permission from KDOT.\"; item notice: 23 USC 407, no warranty",
+   "years": "2016-2026 (2026 to 2026-10-29)",
+   "rows_per_year": {"2016": 62899, "2017": 61170, "2018": 63422, "2019": 63363, "2020": 50523, "2021": 54574,
+                     "2022": 56122, "2023": 56826, "2024": 55685, "2025": 55827, "2026": 26366},
+   "published_share_of_reported": {"2023": 0.949, "2024": 0.906},
+   "gps_share": 1.0,
+   "street_names_share": 0.0,
+   "kabco": true,
+   "keys_linkable": "no (one row per crash; no person or vehicle tables)"
+  }
+ ],
+ "placement_sample": {
+  "area": "Wichita (Sedgwick County, 20173), 2024, 2,000 random of 8,853",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "no street or address fields, so name placement and hidden-GPS accuracy can't be measured; 6.9% of Wichita 2024 crashes sit on points holding 10+ crashes (intersection snapping)"
+ },
+ "importer_built": true,
+ "pack_status": "active",
+ "e2e": {"corridor": "N Rock Rd, Wichita (Central Ave to 13th St N)", "length_mi": 1.01, "window": [2020, 2024],
+         "counted": 233, "K": 1, "A": 1, "B": 26, "C": 46, "U": 0, "O": 159, "crash_cost": null,
+         "pdf_bytes": 47502, "xlsx_bytes": 35688},
+ "blockers": [
+  "licence for paid use needs KDOT's written OK",
+  "crash costs: KDOT prices per person; CrashIQ per crash (shared fix proposed)"
+ ],
+ "user_actions": [
+  "Ask KDOT (Bureau of Transportation Safety, Safety Data Section) for written permission to use the Crashes in Kansas layer in a paid product",
+  "Decide whether CrashIQ should price Kansas crashes per person (KDOT's method) — see shared-fixes.md"
+ ],
+ "cities": [
+  {"city": "Wichita", "source": "City of Wichita Traffic Accidents (ArcGIS)",
+   "url": "https://gismaps.wichita.gov/ageweb/rest/services/OpenData/TrafficAccidents/FeatureServer",
+   "gps_share": 1.0, "years": "2018-2026", "licence": "none stated",
+   "note": "street names but no severity and no KDOT key; not used"}
+ ]
+}

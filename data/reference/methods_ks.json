@@ -1,0 +1,70 @@
+{
+ "state": "KS",
+ "manuals": {
+  "ks_facts": {
+   "title": "2023 Kansas Traffic Crash Facts",
+   "publisher": "KDOT Bureau of Transportation Safety",
+   "jurisdiction": "KS",
+   "edition": "2023 data (latest PDF downloadable; the 2024 pages on ksdot.gov answered 403 to scripts)",
+   "url": "https://www.ktsro.org/files/2023FactsBook.pdf",
+   "sha256": "674e0302e046647ae711c58d476301c587a7995e1eacf73ddf79ff235d06fb50",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/ks-2026-11-08/ks-methods.md"
+  },
+  "ks_hsip": {
+   "title": "2025 Kansas Highway Safety Improvement Program (annual report to FHWA)",
+   "publisher": "KDOT",
+   "jurisdiction": "KS",
+   "edition": "2025 report (FHWA, posted 2026-09)",
+   "url": "https://highways.dot.gov/sites/fhwa.dot.gov/files/2026-09/KANSAS_HSIP%20REPORT_2025_508_0.pdf",
+   "note": "PDF refuses scripted downloads (403); read as extracted text, ~/.hermes/state-manuals/ks/KS_HSIP_Report_2025.txt"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "KDOT prices people, not crashes (Crash Facts: each K, A, B, C person adds a cost; $11,900 per PDO crash, 2019 dollars); CrashIQ prices one cost per crash level, so there is no per-crash KDOT figure to print (shared fix proposed in research_notes/ks-2026-11-08/shared-fixes.md)"
+  },
+  "person_costs": {
+   "K": 14029605,
+   "A": 774356,
+   "B": 248477,
+   "C": 141166,
+   "O_crash": 11900,
+   "dollar_year": 2019,
+   "manual": "ks_facts",
+   "page": "p. 77 (PDF p. 81), Definitions: Crash Costs",
+   "verified": true,
+   "rules": [
+    "per person: each possibly (C), non-disabling (B), disabling (A) or fatally (K) injured person adds that amount to the crash",
+    "a crash with nobody hurt costs $11,900",
+    "basis: FHWA-SA-17-01 adjusted to Kansas (2019 CPI, earnings, 2018 income, 2019 Kansas crashes)",
+    "not used by CrashIQ yet: the profile prices per crash"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "KDOT's Crash Facts gives all-roads rates only (2023: 187.95 crashes per 100 million vehicle miles, p. 1), not by facility type, and CrashIQ has no Kansas traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "crash frequency, crash rate, critical rate, EPDO, excess expected crashes with EB and level of service of safety (KDOT 2025 HSIP report, Intersection program, pp. 8-9)"
+  },
+  "min_years": {
+   "missing": "not stated in the KDOT documents read (2025 HSIP report, 2023 Crash Facts)"
+  },
+  "spf_calibration": {
+   "missing": "KDOT says it has its own calibration factors and SPFs (Kansas Register 2026-05-07, RFP 106-P-1815-27) but doesn't publish them; no SPF engine in CrashIQ"
+  }
+ }
+}
