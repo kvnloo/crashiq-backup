@@ -4,6 +4,7 @@
 import io
 import json
 import re
+import urllib.parse
 from collections import Counter
 
 from crashiq.sources import va_vdot
@@ -86,3 +87,24 @@ def test_query_error_is_raised():
     err = lambda req, timeout: io.BytesIO(b'{"error": {"code": 400, "message": "bad where"}}')
     with pytest.raises(RuntimeError):
         va_vdot.fetch("nope", None, opener=err)
+
+
+def test_contract_rows_pass_the_pack_checker_and_the_box_query_is_sent(tmp_path):
+    # #19: what the VA pack hands the core is the reader contract, with CCRS words where the profile reads them
+    from crashiq import packs
+    pack = packs.get("VA")
+    urls = []
+
+    def opener(req, timeout):
+        urls.append(urllib.parse.unquote_plus(req.full_url))
+        return io.BytesIO(json.dumps({"features": [{"attributes": a} for a in ROWS]}).encode())
+    got = va_vdot.fetch_contract((37.5, -77.5, 37.6, -77.4), ["51760"], [2023, 2024], tmp_path, opener=opener)
+    assert "LAT >= 37.500000 AND LAT <= 37.600000" in urls[0] and "CRASH_YEAR IN ('2023', '2024')" in urls[0]
+    assert got["crashes"] and all(packs.check_crash(c, pack) == [] for c in got["crashes"] if c["lat"] is not None)
+    assert got["years_missing"] == [2023]                         # the fixture is 2024 only
+    types = Counter(c["collision_type"] for c in got["crashes"])
+    assert "REAR END" in types and "Rear End" not in types
+    dark = [c for c in got["crashes"] if (c["lighting"] or "").startswith("DARK")]
+    assert dark and all(c["lighting"] != "Darkness - Road Lighted" for c in dark)
+    assert all(c["day_of_week"] in ("Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday")
+               for c in got["crashes"] if c["date"])

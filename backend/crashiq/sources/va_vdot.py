@@ -6,8 +6,8 @@ crashes, crash-level KABCO (CRASH_SEVERITY) and per-crash counts of K, A, B and 
 route, milepost, node and node offset are kept as they are. Codes are decoded with the maps measured in
 research_notes/va-2026-11-07 (VDOT codes joined to the DMV datathon's text, 16,693 crashes, every code 100% one text).
 
-Licence: no open licence; VDOT's disclaimer, 23 USC 407 and DPPA terms apply (see va-import.md). Not wired into the
-app: the state-pack seam is issue #19.
+Licence: no open licence; VDOT's disclaimer, 23 USC 407 and DPPA terms apply (see va-import.md). Wired into the app
+through the VA state pack (packs.py, #19) by `fetch_contract`.
 """
 
 from __future__ import annotations
@@ -267,3 +267,46 @@ def fetch(where: str, cache_dir: Path | None = None, opener=urllib.request.urlop
             cache_dir.mkdir(parents=True, exist_ok=True)
             cache.write_text(json.dumps(raw))
     return [crash_record(a) for a in raw]
+
+
+# -- state-pack contract (#19, docs/state-pack-design.md § Reader contract) --------------------------------------
+# VDOT words -> the CCRS words the profile and the collision diagram read; any other type keeps VDOT's own words
+CCRS_TYPE = {"Rear End": "REAR END", "Angle": "BROADSIDE", "Head On": "HEAD-ON", "Sideswipe - Same Direction": "SIDE SWIPE",
+             "Sideswipe - Opposite Direction": "SIDE SWIPE", "Fixed Object in Road": "HIT OBJECT",
+             "Fixed Object - Off Road": "HIT OBJECT", "Pedestrian": "VEHICLE/PEDESTRIAN"}
+CCRS_LIGHT = {"Darkness - Road Lighted": "DARK - STREET LIGHTS", "Darkness - Road Not Lighted": "DARK - NO STREET LIGHTS",
+              "Darkness - Unknown Road Lighting": "DARK - UNKNOWN STREET LIGHTS"}
+
+
+def contract_record(r: dict) -> dict:
+    """One crash_record() -> the shared crash dict (packs.check_crash)."""
+    d = datetime.fromisoformat(r["date"]).date() if r["date"] else None
+    up = lambda v: v.upper() if v else None
+    return {"crash_id": r["collision_id"], "report_version": 0, "deleted": False,
+            "preliminary": bool(d and d.year >= datetime.now(_TZ).year),     # VDOT: the current year is preliminary
+            "date": r["date"], "year": r["year"], "hour": r["hour"], "day_of_week": d.strftime("%A") if d else None,
+            "lat": r["lat"], "lon": r["lon"], "bad_coords": r["bad_coords"],
+            "primary_road": r["primary_road"], "secondary_road": None, "offset_ft": None, "offset_dir": None,
+            "city": up(r["city_name"]), "county_code": r["county_code"], "county_fips": r["county_fips"], "state": "VA",
+            "is_freeway": r["is_freeway"], "killed": r["killed"], "injured": r["injured"], "severity": r["severity"],
+            "ped": r["ped"], "bike": r["bike"], "ebike": False, "escooter": False, "motorcycle": r["motorcycle"],
+            "heavy_truck": r["heavy_truck"], "parties": [],
+            "collision_type": CCRS_TYPE.get(r["collision_type"], up(r["collision_type"])),
+            "lighting": CCRS_LIGHT.get(r["lighting"], up(r["lighting"])), "weather": up(r["weather"]),
+            "surface": up(r["surface"]), "report_number": r["report_number"],
+            "route": r["route"], "milepost": r["milepost"], "node": r["node"]}
+
+
+def fetch_contract(box, county_fips: list[str], years: list[int], cache_dir: Path, opener=urllib.request.urlopen) -> dict:
+    """Every crash with a point in the box (s, w, n, e) in those years. The ~60 crashes of 1.18M with no point
+    (research 2026-11-07) aren't read: the layer can't say where they are beyond the jurisdiction."""
+    s, w, n, e = box
+    yrs = ", ".join(f"'{y}'" for y in years)
+    where = f"LAT >= {s:.6f} AND LAT <= {n:.6f} AND LON >= {w:.6f} AND LON <= {e:.6f} AND CRASH_YEAR IN ({yrs})"
+    rows = fetch(where, cache_dir, opener)
+    have = {r["year"] for r in rows}
+    out = [contract_record(r) for r in rows if r["county_fips"]]
+    return {"crashes": out, "years_missing": [y for y in years if y not in have],
+            "cleaning": {"source_rows": len(rows), "no_jurisdiction": len(rows) - len(out),
+                         "severity_differs_from_vdot": sum(r["severity_mismatch"] for r in rows),
+                         "no_gps_not_read": "about 60 of 1.18M statewide crashes have no point; not read"}}

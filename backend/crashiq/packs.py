@@ -52,6 +52,27 @@ PACKS: dict[str, StatePack] = {
                     bounds=(32.4, -124.6, 42.1, -114.0), first_year=2016, methods=REF / "methods_ca.json",
                     caltrans=True),
 }
+# VDOT's Full Crash terms, quoted (research_notes/va-2026-11-07/va-import.md §1a)
+VA_LEGAL = ("VDOT: \"under Title 23 United State Code – Section 407, this crash information cannot be used in discovery or "
+            "as evidence …\" Users shall comply with the Federal Drivers Privacy Protection Act and DMV's rules on "
+            "disclosure or dissemination (VDOT Full Crash terms).")
+
+
+def _va_fetch(box, county_fips, years, cache_dir):
+    from .sources import va_vdot
+    return va_vdot.fetch_contract(box, county_fips, years, cache_dir)
+
+
+PACKS["VA"] = StatePack(
+    code="VA", name="Virginia", fips="51", status="active",
+    source="Crash data: VDOT Full Crash, Virginia Roads (DMV TREDS records; no open licence, VDOT terms, 23 USC 407).",
+    source_short="VDOT Full Crash", bounds=(36.5, -83.7, 39.5, -75.2), first_year=2017,
+    methods=REF / "methods_va.json", fetch=_va_fetch, county_boxes=REF / "county_boxes_va.json", legal=VA_LEGAL,
+    data_notes=("Virginia's public crash layer has one street field and no cross street, and no driver or vehicle "
+                "records: road-user movements and collision diagrams are empty, and a crash without GPS can't be placed "
+                "(about 60 of 1.18 million statewide).",
+                "Primary collision factor, DUI and speed rows are blank: Virginia's public layer has no violation codes."))
+
 # researched, no pack yet: listed greyed out on Setup (docs/state-pack-design.md § State picker)
 COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois", "MA": "Massachusetts", "WA": "Washington",
           "OR": "Oregon", "DC": "District of Columbia", "NY": "New York"}
