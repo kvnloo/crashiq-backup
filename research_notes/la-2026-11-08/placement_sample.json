@@ -1,0 +1,63 @@
+{
+ "area": "Orleans Parish (22071), 2019, LADOTD file layout",
+ "n": 2000,
+ "gps_share": 0.985,
+ "street_pair_share": 0.961,
+ "tiers": {
+  "exact": 1336,
+  "review": 402,
+  "unique_pair": 118,
+  "near": 18,
+  "relaxed": 27,
+  "verified_typo": 12,
+  "fuzzy": 9
+ },
+ "name_placed_share": 0.76,
+ "name_placed_share_of_pairs": 0.7908,
+ "auto_share": 0.0,
+ "auto_share_if_tiger_only_auto": 0.727,
+ "route_form_retry_used": 0,
+ "scored_against_gps": 1516,
+ "within_250ft_all_placed": 0.8562,
+ "within_250ft_all_placed_low": 0.8376,
+ "within_250ft_auto_if_tiger_only_auto": 0.8549,
+ "within_250ft_auto_if_tiger_only_auto_low": 0.8358,
+ "within_250ft_offset_le_250ft": 0.8866,
+ "within_250ft_offset_le_250ft_low": 0.8691,
+ "offset_le_250ft_n": 1428,
+ "not_placed": {
+  "no intersection of the two named streets": 328,
+  "no cross street": 78,
+  "exact: streets meet in more than one place": 68,
+  "missing street name": 4,
+  "relaxed: streets meet in more than one place": 2
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "I-10 & IRISH BAYOU",
+   "I-10 OFF RAMP & MORRISON EXIT",
+   "WALL BLVD & VESPASIAN ST",
+   "I-10 & SLIDELL EXIT",
+   "HOV & ELYSIAN FIELDS EXIT",
+   "CCC INBOUND & LA 428"
+  ],
+  "exact: streets meet in more than one place": [
+   "CROWDER BLVD & I 10 SERVICE RD",
+   "I-10 OFF RAMP & READ BLVD",
+   "I-10 SRVRD & TULANE AVENUE",
+   "I-10 & CROWDER BLVD",
+   "I-10 & I-610",
+   "I-10 & S CLAIBORNE RAMP"
+  ],
+  "missing street name": [
+   "RAMP & S CARROLLTON AVENUE",
+   "RAMP & GENERAL DE",
+   "RAMP & GENERAL DE GAULLE DR",
+   "GENERAL DE GAULLE DR & RAMP"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "CLAIBORNE AVE & I-10 WEST",
+   "I-10 & W TULANE ON-RAMP"
+  ]
+ }
+}
