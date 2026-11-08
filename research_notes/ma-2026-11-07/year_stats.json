@@ -1,0 +1,363 @@
+{
+ "2018": {
+  "url": "https://gis.massdot.state.ma.us/arcgis/rest/services/CrashClosedYear/CrashClosedYear2018/FeatureServer/0",
+  "n": 142272,
+  "geocoded": 136321,
+  "latlon": 136322,
+  "rdwy": 142065,
+  "rdwy_and_int_or_addr": 78737,
+  "street_numb": 67343,
+  "min_date": 1514764800000,
+  "max_date": 1546214400000,
+  "severity": {
+   "null": 8,
+   "Deceased not caused by crash": 43,
+   "Fatal injury (K)": 337,
+   "No Apparent Injury (O)": 12,
+   "No injury": 100055,
+   "Non-fatal injury - Incapacitating": 2198,
+   "Non-fatal injury - Non-incapacitating": 14314,
+   "Non-fatal injury - Possible": 17597,
+   "Not Applicable": 339,
+   "Not reported": 6197,
+   "Possible Injury (C)": 2,
+   "Suspected Minor Injury (B)": 1,
+   "Unknown": 1169
+  },
+  "layers": [
+   [
+    0,
+    "2018 Crashes"
+   ],
+   [
+    1,
+    "2018 Person Level Crash Details"
+   ],
+   [
+    2,
+    "2018 Vehicle Level Crash Details"
+   ]
+  ]
+ },
+ "2019": {
+  "url": "https://gis.massdot.state.ma.us/arcgis/rest/services/CrashClosedYear/CrashClosedYear2019/FeatureServer/0",
+  "n": 140939,
+  "geocoded": 133667,
+  "latlon": 133051,
+  "rdwy": 140736,
+  "rdwy_and_int_or_addr": 75870,
+  "street_numb": 66372,
+  "min_date": 1546300800000,
+  "max_date": 1577836200000,
+  "severity": {
+   "null": 41,
+   "Deceased not caused by crash": 32,
+   "Fatal injury (K)": 324,
+   "No Apparent Injury (O)": 66158,
+   "No injury": 33912,
+   "Non-fatal injury - Incapacitating": 685,
+   "Non-fatal injury - Non-incapacitating": 4412,
+   "Non-fatal injury - Possible": 6187,
+   "Not Applicable": 332,
+   "Not reported": 5910,
+   "Possible Injury (C)": 9069,
+   "Suspected Minor Injury (B)": 10968,
+   "Suspected Serious Injury (A)": 1630,
+   "Unknown": 1279
+  },
+  "layers": [
+   [
+    0,
+    "2019 Crashes"
+   ],
+   [
+    1,
+    "2019 Person Level Crash Details"
+   ],
+   [
+    2,
+    "2019 Vehicle Level Crash Details"
+   ]
+  ]
+ },
+ "2020": {
+  "url": "https://gis.massdot.state.ma.us/arcgis/rest/services/Roads/CrashClosedYears/FeatureServer/0",
+  "n": 100516,
+  "geocoded": 96902,
+  "latlon": 96901,
+  "rdwy": 100337,
+  "rdwy_and_int_or_addr": 55995,
+  "street_numb": 49043,
+  "min_date": 1577836860000,
+  "max_date": 1609458480000,
+  "severity": {
+   "null": 40,
+   "Deceased not caused by crash": 65,
+   "Fatal injury (K)": 327,
+   "No Apparent Injury (O)": 65072,
+   "No injury": 5072,
+   "Non-fatal injury - Incapacitating": 163,
+   "Non-fatal injury - Non-incapacitating": 813,
+   "Non-fatal injury - Possible": 1431,
+   "Not reported": 4691,
+   "Possible Injury (C)": 8153,
+   "Suspected Minor Injury (B)": 11737,
+   "Suspected Serious Injury (A)": 1858,
+   "Unknown": 1094
+  },
+  "layers": [
+   [
+    0,
+    "2020 Crashes"
+   ],
+   [
+    1,
+    "2020 Person Level Crash Details"
+   ],
+   [
+    2,
+    "2020 Vehicle Level Crash Details"
+   ],
+   [
+    3,
+    "MASSDOT.dbo.vCRASHCLOSEDYEAR2020_CRASH"
+   ]
+  ]
+ },
+ "2021": {
+  "url": "https://gis.crashdata.dot.mass.gov/arcgis/rest/services/MassDOT/MASSDOT_ODP_OPEN_2021/FeatureServer/0",
+  "n": 125212,
+  "geocoded": 119747,
+  "latlon": 119684,
+  "rdwy": 124963,
+  "rdwy_and_int_or_addr": 71595,
+  "street_numb": 59958,
+  "min_date": 1609459500000,
+  "max_date": 1640994900000,
+  "severity": {
+   "null": 17,
+   "Deceased not caused by crash": 31,
+   "Fatal injury (K)": 393,
+   "No Apparent Injury (O)": 85773,
+   "No injury": 2740,
+   "Non-fatal injury - Incapacitating": 186,
+   "Non-fatal injury - Non-incapacitating": 416,
+   "Non-fatal injury - Possible": 830,
+   "Not reported": 5633,
+   "Possible Injury (C)": 9976,
+   "Reported but invalid": 5,
+   "Suspected Minor Injury (B)": 15775,
+   "Suspected Serious Injury (A)": 2237,
+   "Unknown": 1200
+  },
+  "layers": [
+   [
+    0,
+    "Crash"
+   ],
+   [
+    1,
+    "Vehicle"
+   ],
+   [
+    2,
+    "Person"
+   ]
+  ]
+ },
+ "2022": {
+  "url": "https://gis.crashdata.dot.mass.gov/arcgis/rest/services/MassDOT/MASSDOT_ODP_OPEN_2022/FeatureServer/0",
+  "n": 134472,
+  "geocoded": 129789,
+  "latlon": 129788,
+  "rdwy": 134218,
+  "rdwy_and_int_or_addr": 74800,
+  "street_numb": 64903,
+  "min_date": 1640995260000,
+  "max_date": 1672531140000,
+  "severity": {
+   "null": 2,
+   "Deceased not caused by crash": 56,
+   "Fatal injury (K)": 413,
+   "No Apparent Injury (O)": 93379,
+   "No injury": 1542,
+   "Non-fatal injury - Incapacitating": 104,
+   "Non-fatal injury - Non-incapacitating": 138,
+   "Non-fatal injury - Possible": 488,
+   "Not reported": 7240,
+   "Possible Injury (C)": 10040,
+   "Reported but invalid": 103,
+   "Suspected Minor Injury (B)": 17299,
+   "Suspected Serious Injury (A)": 2429,
+   "Unknown": 1239
+  },
+  "layers": [
+   [
+    0,
+    "Crash"
+   ],
+   [
+    1,
+    "Vehicle"
+   ],
+   [
+    2,
+    "Person"
+   ]
+  ]
+ },
+ "2023": {
+  "url": "https://gis.crashdata.dot.mass.gov/arcgis/rest/services/MassDOT/MASSDOT_ODP_OPEN_2023v/FeatureServer/0",
+  "n": 135326,
+  "geocoded": 130128,
+  "latlon": 130127,
+  "rdwy": 127749,
+  "rdwy_and_int_or_addr": 71657,
+  "street_numb": 65343,
+  "min_date": 1672531260000,
+  "max_date": 1704066960000,
+  "severity": {
+   "null": 62,
+   "Deceased not caused by crash": 54,
+   "Fatal injury (K)": 324,
+   "No Apparent Injury (O)": 96023,
+   "No injury": 11,
+   "Non-fatal injury - Possible": 1,
+   "Not Applicable": 4,
+   "Not reported": 5119,
+   "Possible Injury (C)": 9771,
+   "Reported but invalid": 1385,
+   "Suspected Minor Injury (B)": 18731,
+   "Suspected Serious Injury (A)": 2429,
+   "Unknown": 1412
+  },
+  "layers": [
+   [
+    0,
+    "Crash"
+   ],
+   [
+    1,
+    "Vehicle"
+   ],
+   [
+    2,
+    "Person"
+   ]
+  ]
+ },
+ "2024": {
+  "url": "https://gis.crashdata.dot.mass.gov/arcgis/rest/services/MassDOT/MASSDOT_ODP_OPEN_2024/FeatureServer/0",
+  "n": 135406,
+  "geocoded": 130330,
+  "latlon": 130330,
+  "rdwy": 123561,
+  "rdwy_and_int_or_addr": 73791,
+  "street_numb": 67476,
+  "min_date": 1704067200000,
+  "max_date": 1735689300000,
+  "severity": {
+   "null": 44,
+   "Deceased not caused by crash": 42,
+   "Fatal injury (K)": 350,
+   "No Apparent Injury (O)": 97803,
+   "Not Applicable": 160,
+   "Not reported": 3969,
+   "Possible Injury (C)": 9655,
+   "Reported but invalid": 560,
+   "Suspected Minor Injury (B)": 19088,
+   "Suspected Serious Injury (A)": 2376,
+   "Unknown": 1359
+  },
+  "layers": [
+   [
+    0,
+    "Crash"
+   ],
+   [
+    1,
+    "Vehicle"
+   ],
+   [
+    2,
+    "Person"
+   ]
+  ]
+ },
+ "2025": {
+  "url": "https://gis.crashdata.dot.mass.gov/arcgis/rest/services/MassDOT/MASSDOT_ODP_OPEN_2025/FeatureServer/0",
+  "n": 130896,
+  "geocoded": 127374,
+  "latlon": 127375,
+  "rdwy": 125464,
+  "rdwy_and_int_or_addr": 76707,
+  "street_numb": 66321,
+  "min_date": 1735690800000,
+  "max_date": 1767225060000,
+  "severity": {
+   "null": 105,
+   "Deceased not caused by crash": 42,
+   "Fatal injury (K)": 336,
+   "No Apparent Injury (O)": 95263,
+   "Not Applicable": 182,
+   "Not reported": 3404,
+   "Possible Injury (C)": 8693,
+   "Reported but invalid": 182,
+   "Suspected Minor Injury (B)": 19156,
+   "Suspected Serious Injury (A)": 2271,
+   "Unknown": 1262
+  },
+  "layers": [
+   [
+    0,
+    "Crash"
+   ],
+   [
+    1,
+    "Vehicle"
+   ],
+   [
+    2,
+    "Person"
+   ]
+  ]
+ },
+ "2026": {
+  "url": "https://gis.crashdata.dot.mass.gov/arcgis/rest/services/MassDOT/MASSDOT_ODP_OPEN_2026/FeatureServer/0",
+  "n": 103495,
+  "geocoded": 96303,
+  "latlon": 96298,
+  "rdwy": 96728,
+  "rdwy_and_int_or_addr": 59700,
+  "street_numb": 53990,
+  "min_date": 1767225600000,
+  "max_date": 1793976540000,
+  "severity": {
+   "null": 90,
+   "Deceased not caused by crash": 22,
+   "Fatal injury (K)": 242,
+   "No Apparent Injury (O)": 75913,
+   "Not Applicable": 180,
+   "Not reported": 2528,
+   "Possible Injury (C)": 6789,
+   "Reported but invalid": 28,
+   "Suspected Minor Injury (B)": 15150,
+   "Suspected Serious Injury (A)": 1729,
+   "Unknown": 824
+  },
+  "layers": [
+   [
+    0,
+    "Crash"
+   ],
+   [
+    1,
+    "Vehicle"
+   ],
+   [
+    2,
+    "Person"
+   ]
+  ]
+ }
+}

@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Massachusetts crash data for CrashIQ</title>
+<style>
+body{background:#121212;color:#e8e8e8;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:24px;margin:.2em 0}h2{color:#ff6b6b;font-size:19px;margin:1.4em 0 .4em;border-bottom:1px solid #3a1d1d;padding-bottom:4px}
+.big{font-size:30px;color:#fff;font-weight:700}.card{background:#1d1d1d;border-left:4px solid #d32f2f;padding:10px 14px;margin:10px 0;border-radius:6px}
+.ex{color:#bbb;font-size:14px}.ok{color:#7bd389}.warn{color:#ffb74d}.bad{color:#ff6b6b}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #333;padding:5px 4px;text-align:left}th{color:#ff8a80}
+a{color:#ff8a80}
+</style></head><body>
+<h1>Massachusetts: can CrashIQ use it?</h1>
+<p><span class="big">Yes, mostly.</span> Statewide crash records are free to download, with GPS on about 97% of crashes and KABCO severity. Two catches: the licence for 2020 and later, and Boston.</p>
+<p class="ex">Checked live on Nov 7, 2026. Group: <b>A*</b> (open, one catch to clear).</p>
+
+<h2>1. The state data (MassDOT "IMPACT")</h2>
+<div class="card">About <b>131,000 crashes a year</b> (2025: 130,896), every year from 2002 to last night (newest crash: Nov 6, 2026).
+<div class="ex">Example: crash 5582854, Oct 8, 2025, 3 PM, Lowell, "FARWELL ST / CALVARY ST", no injury, with its GPS point and the people in it.</div></div>
+<div class="card"><b>GPS on 95–97%</b> of crashes every year (2025: 97.3%).</div>
+<div class="card"><b>Severity is KABCO</b>, per crash and per person, and people link to their crash by crash number. Old reports (before 2019) use older words; the importer translates them.
+<div class="ex">Example: "Non-fatal injury - Incapacitating" (2018) = A.</div></div>
+<div class="card">Each crash also carries the road's <b>traffic volume (AADT)</b>, road class, lanes and speed limit. California's data doesn't.</div>
+
+<h2>2. Licence</h2>
+<div class="card"><span class="ok">2002–2019: public domain.</span> MassDOT: "can be used by anyone for any purpose."</div>
+<div class="card"><span class="warn">2020–2026: not stated.</span> Only a disclaimer, which also says the recent years "should not be used for analysis". Nothing forbids reuse, but nothing grants it. We should ask MassDOT in writing.</div>
+
+<h2>3. Cities</h2>
+<table><tr><th>City</th><th>What's there</th><th>GPS</th></tr>
+<tr><td>Boston</td><td>Vision Zero list (ambulance calls, 3,411 in 2025), no severity. <span class="bad">Boston police send few reports to the state</span>: 5,668 crashes in 2025, about the same as Worcester.</td><td>100%</td></tr>
+<tr><td>Cambridge</td><td>Police crash data, 1,605 in 2025, public domain</td><td>58%</td></tr>
+<tr><td>Somerville</td><td>Police crash data, 397 in 2025 (share-alike licence)</td><td>100%</td></tr>
+<tr><td>Worcester</td><td>No city feed found; state data has 5,302 (2025)</td><td>98%</td></tr>
+<tr><td>Springfield</td><td>No city feed found; state data has 2,974 (2025)</td><td>99%</td></tr></table>
+
+<h2>4. Our own placement test</h2>
+<p>2,000 random 2025 crashes in Middlesex County. We hid the GPS and let CrashIQ place each crash from the street names, the way it does in California.</p>
+<div class="card"><span class="big">98.5%</span> already have good GPS. Only 30 of 2,000 don't, and 27 of those have no street names either. Our locator would add <b>1 crash</b> (0.05%).</div>
+<div class="card"><b>Street pairs:</b> 73% placed automatically, <b>96% within 250 ft</b> of the state's point.
+<div class="ex">Example: "FARWELL ST / CALVARY ST" lands at that corner.</div></div>
+<div class="card"><b>House addresses</b> (41% of crashes): 96% found on the state's address list, 83% within 250 ft. Rural addresses miss more, because the address point sits on the house, not the road.</div>
+<div class="card warn">The fairest test is crashes where the officer clicked the spot on a map: <b>85% within 250 ft</b>. That's below the 98% bar we set in California, so in Massachusetts the locator should <b>check</b> the state's GPS, not replace it.</div>
+<div class="card">What breaks: ramp names ("RAMP-RT 495 SB TO WEST MAIN ST EB"), both streets in one field ("Washington St Rte W / Lesher St Rte S", fixed in the importer), and the same street name in many towns ("MAIN ST & SCHOOL ST"), fixed by picking the crash's town first.</div>
+
+<h2>5. Importer</h2>
+<div class="card"><span class="ok">Built and tested</span> (6 tests, offline). It reads any year and county, links the people, and turns each crash into CrashIQ's California shape. Not switched on in the app yet.</div>
+
+<h2>6. Massachusetts rules (methods)</h2>
+<div class="card"><b>Crash rates:</b> per million entering vehicles (intersections) and per million vehicle miles (roads). Statewide average: <b>0.78</b> at signals, <b>0.57</b> at stop signs. Use 5 years of data (3 at least).</div>
+<div class="card"><b>Crash costs (2024):</b> K $19,435,000 · A $1,112,900 · B $354,100 · C $208,000 · O $20,900. California combines K and A; Massachusetts doesn't.</div>
+<div class="card"><b>Ranking:</b> any injury crash counts 21, a damage-only crash counts 1 ("EPDO"). The worst 5% of crash clusters in each region qualify for federal safety money, and each one needs a Road Safety Audit.
+<div class="ex">Example: in the Boston region (MAPC) an intersection qualifies at 108 points or more.</div></div>
+<div class="card"><b>Different from California:</b> Massachusetts prefers prediction models with "Empirical Bayes" (a weighted average of observed and predicted crashes); Caltrans avoids it. No critical-rate formula was found.</div>
+<p class="ex">Full detail with page numbers: <a href="ma-methods.md">ma-methods.md</a> · data detail: <a href="ma-import.md">ma-import.md</a></p>
+
+<h2>What you need to do</h2>
+<div class="card">1. Email MassDOT Traffic &amp; Safety (TrafficSafetyAnalysis@dot.state.ma.us) asking for written OK to use the 2020+ crash data in a paid product, with credit and the federal "not evidence" notice.<br>
+2. Decide on Boston: wait for Boston police data (a records request), or ship with a warning that Boston is under-counted.<br>
+3. Request MassDOT's free Safety Alternatives Analysis spreadsheets (Methods 1 and 2) on the HSIP page. They contain the state's preferred list of countermeasure factors.</div>
+
+<h2>What we didn't check</h2>
+<div class="card ex">MassDOT's answer on the licence; 2015–2017 statistics (the server refused); the state's mile-marker map for freeway crashes; OpenStreetMap (we used Census streets only); Boston police data access; Worcester and Springfield beyond a search; the crash-cost method PDF (the site blocked the download).</div>
+</body></html>
