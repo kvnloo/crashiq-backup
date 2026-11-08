@@ -271,7 +271,7 @@ def outside_corners(net: dict, cands: list[dict], raw: dict, gate: locate.Gate |
 
 
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
-                    raw: dict | None = None, tiger=None, postmiles=None, addresses=None) -> dict:
+                    raw: dict | None = None, tiger=None, postmiles=None, addresses=None, fars: bool = True) -> dict:
     gate = gate or locate.Gate()
     result["cleaning"]["mile_markers"] = place_mile_markers(net, result, gate, postmiles)
     result["cleaning"]["crossings"] = place_crossings(db, net, result, gate, overpass)
@@ -326,7 +326,8 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
                 counts["suggested"] += 1
             counts["still_unplaced"] += 1
     # FARS only after the locator: a fatal crash it placed exactly has a usable location (#191)
-    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass, tiger)
+    # (fars=False: the FARS store holds California rows only, #19)
+    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass, tiger) if fars else None
     replaced = [c["approximate_replaced"]["method"] for c in result["crashes"] if c.get("approximate_replaced")]
     if replaced:                          # approximate spots FARS replaced (#280) are counted as FARS
         for m in replaced:

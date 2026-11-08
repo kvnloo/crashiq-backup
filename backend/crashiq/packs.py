@@ -13,6 +13,7 @@ manuals: never Caltrans.
 from __future__ import annotations
 
 import json
+import os
 from dataclasses import dataclass
 from functools import lru_cache
 from pathlib import Path
@@ -21,6 +22,7 @@ from typing import Callable
 from .settings import ROOT
 
 REF = ROOT / "data" / "reference"
+CACHE = Path(os.getenv("CRASHIQ_STATES_DIR", ROOT / "data" / "cache" / "states"))   # readers' raw pulls, never committed
 
 
 @dataclass(frozen=True)

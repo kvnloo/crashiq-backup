@@ -636,6 +636,72 @@ def _no_cross_street(roads: list, on_idx: list[int]) -> bool:
     return all(_squeeze(rd) in NO_CROSS or len(_squeeze(rd)) <= 2 for rd in others)
 
 
+def sort_no_gps(c: dict, allowed, recs: list, *, log: dict, other_city: Counter, corridor_cities, corridor_keys,
+                gs_keys, cross_keys, net: dict) -> None:
+    """One report with no usable coordinates: kept only on the corridor street by name, in a city the corridor
+    enters, then sorted by its cross street (#39, #82, #94, #142)."""
+    if allowed is not None and _city_allowed(c.get("city"), allowed, corridor_cities["outside"]) is False:
+        log["no_coords_other_city"] += 1
+        other_city[c["city"]] += 1
+        return
+    log["implausible_coords"] += c.get("bad_coords", False)
+    roads = [c["primary_road"], c["secondary_road"]]
+    on_idx = [i for i, rd in enumerate(roads) if _names_street(rd, corridor_keys)]
+    on = [roads[i] for i in on_idx]
+    other = [street_key(rd) for i, rd in enumerate(roads) if i not in on_idx and street_key(rd)]
+    if not on:
+        log["no_coords_not_corridor_street"] += 1
+    elif grade.on_crossing_road(c, corridor_keys, gs_keys):
+        # On a road passing over or under the corridor: never meets it (N7, #67). Kept and listed.
+        log["no_coords_grade_separated"] += 1
+        c["exclude_rule"] = "grade_separated_crossing"
+        recs.append((c, "unmatched"))
+    elif (ha := house_address(roads, on_idx, corridor_keys)):
+        # A house address on the corridor instead of a cross street (D5, #283): placed at its NAD address point
+        # when there is one (placement.py), else on the review list with the TIGER address-range suggestion
+        log["no_coords_house_address"] = log.get("no_coords_house_address", 0) + 1
+        c["review_reason"], c["house_address"] = "house_address", ha
+        c["location_label"] = f"in front of {ha['number']} {ha['street']}"      # #397: the segment in front of it
+        recs.append((c, "unmatched"))
+    elif (mm := _mile_marker_on(roads, on_idx)) is not None:
+        # A mile marker on the corridor's state route instead of a cross street (#319): placed at that Caltrans
+        # postmile when the tier is on (placement.py), else on the review list with the point as the suggestion
+        log["no_coords_mile_marker"] = log.get("no_coords_mile_marker", 0) + 1
+        c["review_reason"], c["mile_marker"] = "mile_marker", {"prefix": mm[0], "pm": mm[1]}
+        recs.append((c, "unmatched"))
+    elif _no_cross_street(roads, on_idx):
+        # The report gives no usable cross street ('NOT STATED', blank, 'PRIVATE PROPERTY', junk): where on
+        # the corridor it happened is unknown. Not a side street (#82): its own rule and count.
+        rule = "private_property" if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd) \
+            else "no_cross_street"
+        log[f"no_coords_{rule}"] = log.get(f"no_coords_{rule}", 0) + 1
+        if rule == "private_property":
+            c["exclude_rule"] = rule        # not on the corridor
+        else:
+            c["review_reason"] = rule       # user, 2026-10-19 (#94): on the corridor, place unknown -> review
+        recs.append((c, "unmatched"))
+    else:
+        at_crossing = any(grade.same_road(k, x) for k in other for x in gs_keys)   # corridor, by an overpass
+        feature = next((f for f in (crossings_mod.read(roads[i]) for i in range(len(roads)) if i not in on_idx) if f),
+                       None)
+        if feature and not any(same_core(k, x) for k in other for x in cross_keys):
+            # The corridor and a railway or a trail or path, not one of its intersections (#318): placed where the
+            # corridor crosses it when that tier is on (placement.py), else on the review list with the spot
+            log["no_coords_crossing"] = log.get("no_coords_crossing", 0) + 1
+            c["review_reason"], c["crossing"] = "crossing", feature
+        elif (cross_keys or (net.get("is_freeway") and gs_keys)) and not at_crossing \
+                and not any(same_core(k, x) for k in other for x in cross_keys):
+            # (on a freeway with no at-grade intersections its known crossings are its grade separations, #328)
+            # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
+            # listed under its rule (#39, docs/03).
+            log["no_coords_off_study_stretch"] += 1
+            c["exclude_rule"] = "cross_street_not_on_corridor"
+            if (c.get("offset_ft") or 0) > 0 and c.get("offset_dir"):
+                # its reported distance may bring it back onto the stretch (#70): tried below, before the lookups
+                c["outside_corner"] = True
+        recs.append((c, "unmatched"))
+
+
 def pull(study: dict, net: dict, ckan: Ckan, progress=None, raw: dict | None = None) -> dict:
     """`progress(step, done, total)`, when given, is told what the pull is doing (#54, background pulls)."""
     tell = progress or (lambda step, done, total: None)
@@ -678,69 +744,9 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None, raw: dict | None = N
     log["area_source"] = None
     raw_by_year: dict[int, list[dict]] = {}
 
-    def no_gps(c: dict, allowed, recs: list) -> None:
-        """One report with no usable coordinates: kept only on the corridor street by name, in a city the corridor
-        enters, then sorted by its cross street (#39, #82, #94, #142)."""
-        if allowed is not None and _city_allowed(c.get("city"), allowed, corridor_cities["outside"]) is False:
-            log["no_coords_other_city"] += 1
-            other_city[c["city"]] += 1
-            return
-        log["implausible_coords"] += c["bad_coords"]
-        roads = [c["primary_road"], c["secondary_road"]]
-        on_idx = [i for i, rd in enumerate(roads) if _names_street(rd, corridor_keys)]
-        on = [roads[i] for i in on_idx]
-        other = [street_key(rd) for i, rd in enumerate(roads) if i not in on_idx and street_key(rd)]
-        if not on:
-            log["no_coords_not_corridor_street"] += 1
-        elif grade.on_crossing_road(c, corridor_keys, gs_keys):
-            # On a road passing over or under the corridor: never meets it (N7, #67). Kept and listed.
-            log["no_coords_grade_separated"] += 1
-            c["exclude_rule"] = "grade_separated_crossing"
-            recs.append((c, "unmatched"))
-        elif (ha := house_address(roads, on_idx, corridor_keys)):
-            # A house address on the corridor instead of a cross street (D5, #283): placed at its NAD address point
-            # when there is one (placement.py), else on the review list with the TIGER address-range suggestion
-            log["no_coords_house_address"] = log.get("no_coords_house_address", 0) + 1
-            c["review_reason"], c["house_address"] = "house_address", ha
-            c["location_label"] = f"in front of {ha['number']} {ha['street']}"      # #397: the segment in front of it
-            recs.append((c, "unmatched"))
-        elif (mm := _mile_marker_on(roads, on_idx)) is not None:
-            # A mile marker on the corridor's state route instead of a cross street (#319): placed at that Caltrans
-            # postmile when the tier is on (placement.py), else on the review list with the point as the suggestion
-            log["no_coords_mile_marker"] = log.get("no_coords_mile_marker", 0) + 1
-            c["review_reason"], c["mile_marker"] = "mile_marker", {"prefix": mm[0], "pm": mm[1]}
-            recs.append((c, "unmatched"))
-        elif _no_cross_street(roads, on_idx):
-            # The report gives no usable cross street ('NOT STATED', blank, 'PRIVATE PROPERTY', junk): where on
-            # the corridor it happened is unknown. Not a side street (#82): its own rule and count.
-            rule = "private_property" if any("PRIVATEPROPERTY" in _squeeze(rd) for rd in roads if rd) \
-                else "no_cross_street"
-            log[f"no_coords_{rule}"] = log.get(f"no_coords_{rule}", 0) + 1
-            if rule == "private_property":
-                c["exclude_rule"] = rule        # not on the corridor
-            else:
-                c["review_reason"] = rule       # user, 2026-10-19 (#94): on the corridor, place unknown -> review
-            recs.append((c, "unmatched"))
-        else:
-            at_crossing = any(grade.same_road(k, x) for k in other for x in gs_keys)   # corridor, by an overpass
-            feature = next((f for f in (crossings_mod.read(roads[i]) for i in range(len(roads)) if i not in on_idx) if f),
-                           None)
-            if feature and not any(same_core(k, x) for k in other for x in cross_keys):
-                # The corridor and a railway or a trail or path, not one of its intersections (#318): placed where the
-                # corridor crosses it when that tier is on (placement.py), else on the review list with the spot
-                log["no_coords_crossing"] = log.get("no_coords_crossing", 0) + 1
-                c["review_reason"], c["crossing"] = "crossing", feature
-            elif (cross_keys or (net.get("is_freeway") and gs_keys)) and not at_crossing \
-                    and not any(same_core(k, x) for k in other for x in cross_keys):
-                # (on a freeway with no at-grade intersections its known crossings are its grade separations, #328)
-                # Side street, not one of the corridor's own intersections: excluded, but kept, counted and
-                # listed under its rule (#39, docs/03).
-                log["no_coords_off_study_stretch"] += 1
-                c["exclude_rule"] = "cross_street_not_on_corridor"
-                if (c.get("offset_ft") or 0) > 0 and c.get("offset_dir"):
-                    # its reported distance may bring it back onto the stretch (#70): tried below, before the lookups
-                    c["outside_corner"] = True
-            recs.append((c, "unmatched"))
+    def no_gps(c: dict, allowed, recs: list) -> None:      # moved to module level for pull_reader (#19), same rules
+        sort_no_gps(c, allowed, recs, log=log, other_city=other_city, corridor_cities=corridor_cities,
+                    corridor_keys=corridor_keys, gs_keys=gs_keys, cross_keys=cross_keys, net=net)
 
     ignored: dict[str, dict] = {}         # collision id -> the GPS point not used, and why (#218)
     last_allowed: list = [None]           # the cities a no-GPS report may come from, as of the latest year read
@@ -1041,6 +1047,84 @@ def pull(study: dict, net: dict, ckan: Ckan, progress=None, raw: dict | None = N
             "pulled_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
 
 
+def pull_reader(pack, study: dict, net: dict, progress=None, cache_dir: Path | None = None) -> dict:
+    """A non-California study's pull (#19, step 6): the pack's reader returns contract crashes (severity, county_fips,
+    mode flags set) for the corridor box and its counties; the core keeps GPS crashes within the margin, sorts the
+    no-GPS ones by street name with California's own rules (`sort_no_gps`), then the window and report versions.
+    shortcut: no CHP-style GPS repairs (DMS, sign, default piles) and no city filter for no-GPS reports (the reader's
+    counties bound them); add per state when a state's data shows the need."""
+    from . import packs
+    from .sources import tiger_files
+    tell = progress or (lambda step, done, total: None)
+    if not net.get("line"):
+        raise PullError("Draw the corridor first.")
+    years = list(range(study["from_year"], study["to_year"] + 1))
+    margin = margin_ft(study)
+    line = Polyline([tuple(p) for p in net["line"]])
+    counties = tiger_files.counties_for([tuple(p) for p in net["line"]], pack)
+    tell(f"Crash reports ({pack.source_short})", 0, 1)
+    got = pack.fetch(bbox(net["line"], margin), counties, years, cache_dir or packs.CACHE / pack.code)
+    log = {"rows_read": len(got["crashes"]), "outside_window_dropped": 0, "duplicate_versions_dropped": 0,
+           "deleted_dropped": 0, "bad_dates_dropped": 0, "no_coords_read": 0, "no_coords_other_city": 0,
+           "no_coords_not_corridor_street": 0, "no_coords_off_study_stretch": 0, "no_coords_grade_separated": 0,
+           "gps_beyond_margin_dropped": 0, "implausible_coords": 0, "preliminary_kept": 0, "years_missing":
+           list(got.get("years_missing") or []), "parties_missing_years": [], "iwp_missing_years": [],
+           "files_pending": {}, "counties": counties, "reader": dict(got.get("cleaning") or {}),
+           "contract_errors": 0}
+    cross_keys = [k for i in net.get("intersections", []) if i.get("is_study")
+                  for k in [street_key(p) for nm in [i.get("name")] + list(i.get("alt_names") or [])
+                            for p in str(nm or "").split("/")] if k]
+    ctx = dict(log=log, other_city=Counter(), corridor_cities=None, corridor_keys=grade.corridor_keys(net),
+               gs_keys=grade.crossing_keys(net), cross_keys=cross_keys, net=net)
+    recs: list = []
+    for c in got["crashes"]:
+        if packs.check_crash(c, pack):
+            log["contract_errors"] += 1           # a reader bug, never a silent wrong count: listed in the log
+            continue
+        if c["lat"] is not None:
+            if line.project(c["lat"], c["lon"]).offset_ft > margin:
+                log["gps_beyond_margin_dropped"] += 1
+                continue
+            recs.append((c, "gps"))
+        else:
+            log["no_coords_read"] += 1
+            sort_no_gps(c, None, recs, **ctx)
+    crashes: dict[str, dict] = {}
+    for c, loc in recs:
+        if c["year"] is None:
+            log["bad_dates_dropped"] += 1
+            continue
+        if c["year"] not in years:
+            log["outside_window_dropped"] += 1
+            continue
+        c["location_source"] = loc
+        prev = crashes.get(c["crash_id"])
+        if prev is not None:
+            log["duplicate_versions_dropped"] += 1
+            if c["report_version"] <= prev["report_version"]:
+                continue
+        crashes[c["crash_id"]] = c
+    for cid in [k for k, c in crashes.items() if c["deleted"]]:
+        log["deleted_dropped"] += 1
+        del crashes[cid]
+    if len(log["years_missing"]) == len(years):
+        raise PullError(f"{pack.source_short} has no crashes for any year in the study window.")
+    out = []
+    for c in sorted(crashes.values(), key=lambda c: (c["date"], c["crash_id"])):
+        if c.get("exclude_rule"):
+            c["severity"] = None           # excluded reports are listed, never counted (as in pull)
+        log["preliminary_kept"] += c["preliminary"]
+        out.append(c)
+    log["kept"] = len(out)
+    if not out:
+        log["warning"] = "No crashes found on this corridor in the study window."
+    log["with_coords"] = sum(c["location_source"] in GPS_SOURCES for c in out)
+    log["without_coords"] = sum(c["location_source"] == "unmatched" for c in out)
+    log["excluded_listed"] = sum(bool(c.get("exclude_rule")) for c in out)
+    return {"crashes": out, "cleaning": log, "source": pack.source, "years": years,
+            "pulled_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+
+
 # -- cache + API -------------------------------------------------------------------------------------
 def get_cached(db: Database, sid: str) -> dict | None:
     r = db.one("SELECT * FROM crash_pull WHERE study_id = ?", (sid,))
@@ -1102,8 +1186,10 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
             hit = fresh(db, sid)
             if hit:
                 return hit, True
+        from . import packs
         for _ in range(2):
             study = study_mod.require(db, sid)
+            pack = packs.for_study(study)
             net = network_mod.network(db, sid)
             key = cache_key(study, net) if net.get("line") else None
             raw, ninfo, alt = None, None, None
@@ -1111,10 +1197,11 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
                 net = {**net, "cities": network_mod.corridor_cities(db, net["line"], study["buffer_ft"], overpass)}
                 # OSM + TIGER/Line (#229): the locator's network, and TIGER's names for the corridor and its corners
                 tiger = getattr(ckan, "tiger", None) if union_mod.enabled() else None
-                raw, ninfo = union_mod.corridor_network(db, net, tiger)
+                raw, ninfo = union_mod.corridor_network(db, net, tiger, pack)
                 alt = union_mod.alt_names(raw, net) if tiger is not None else None
                 net = union_mod.with_alt(net, alt)
-            result = pull(study, net, ckan, progress, raw)
+            # the one dispatch (#19): California reads CCRS; every other state its pack's reader
+            result = pull(study, net, ckan, progress, raw) if pack.fetch is None else pull_reader(pack, study, net, progress)
             if ninfo is not None:
                 result["cleaning"]["network"] = ninfo
                 result["cleaning"].setdefault("files_pending", {}).update(ninfo["tiger_pending"])
@@ -1129,10 +1216,11 @@ def ensure(db: Database, sid: str, ckan: Ckan, refresh: bool = False, progress=N
                 except network_mod.NetworkError as e:
                     result["cleaning"]["carriageways_error"] = str(e)
             from .placement import place_unmatched   # C4: place crashes without coordinates (locator, PR #16)
+            ca = pack.caltrans                     # Caltrans postmiles, the CA NAD rows and the CA FARS store (#19 step 7)
             place_unmatched(db, net, result, overpass=overpass, raw=raw,
                             tiger=getattr(ckan, "tiger", None) if union_mod.enabled() else None,
-                            postmiles=getattr(ckan, "postmiles", None),
-                            addresses=getattr(ckan, "addresses", None))
+                            postmiles=getattr(ckan, "postmiles", None) if ca else None,
+                            addresses=getattr(ckan, "addresses", None) if ca else None, fars=ca)
             now = study_mod.require(db, sid)
             now_net = network_mod.network(db, sid)
             if (cache_key(now, now_net) if now_net.get("line") else None) == key:
