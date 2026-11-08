@@ -1,0 +1,41 @@
+{
+ "statewide": {
+  "year": 2024,
+  "rows_with_marker": 135683,
+  "n": 500,
+  "placed": 490,
+  "placed_pct": 98.0,
+  "placed_low": 96.4,
+  "in_own_county": 488,
+  "in_own_county_pct": 99.6,
+  "in_own_county_low": 98.5,
+  "nyc_share_of_sample": 32,
+  "unmatched_examples": [
+   " 17K83011201",
+   "155 11011007",
+   "490I43022091",
+   "690 33011105",
+   "907MX5M14045",
+   "223 62011000",
+   "  4 14011015",
+   "365 26011161",
+   "914V16011013"
+  ]
+ },
+ "nyc_truth": {
+  "nyc_marker_crashes": 9488,
+  "nyc_marker_matched": 8928,
+  "linked_unique": 6294,
+  "ambiguous": 905,
+  "with_truth_gps": 5845,
+  "median_ft": 5,
+  "within_250ft": 4895,
+  "within_528ft": 5294,
+  "within_1320ft": 5451,
+  "within_250ft_pct": 83.7,
+  "within_528ft_pct": 90.6,
+  "within_1320ft_pct": 93.3,
+  "within_250ft_low": 82.8,
+  "within_528ft_low": 89.8
+ }
+}
