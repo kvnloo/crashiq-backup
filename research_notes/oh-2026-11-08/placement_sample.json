@@ -1,0 +1,85 @@
+{
+ "area": "Franklin County (39049), 2024, 10 pages of 200 at seeded random offsets",
+ "county_rows_2024": 24049,
+ "n": 2000,
+ "gps_plausible": 2000,
+ "gps_share": 1.0,
+ "inside_county_box": 2000,
+ "route_named_share": 0.385,
+ "nlfid_route_types": [
+  [
+   "MR",
+   719
+  ],
+  [
+   "CR",
+   408
+  ],
+  [
+   "IR",
+   307
+  ],
+  [
+   "US",
+   246
+  ],
+  [
+   "SR",
+   217
+  ],
+  [
+   "RA",
+   45
+  ],
+  [
+   "TR",
+   41
+  ],
+  [
+   "",
+   17
+  ]
+ ],
+ "location_types": [
+  [
+   "Not An Intersection",
+   1360
+  ],
+  [
+   "Four-Way Intersection",
+   339
+  ],
+  [
+   "T-Intersection",
+   188
+  ],
+  [
+   "5 Or More Point Intersection",
+   54
+  ],
+  [
+   "Traffic Circle/Roundabout",
+   27
+  ],
+  [
+   "On Ramp",
+   12
+  ],
+  [
+   "Off Ramp",
+   11
+  ],
+  [
+   "Driveway/Alley Access",
+   9
+  ]
+ ],
+ "severity": {
+  "B": 332,
+  "O": 1371,
+  "A": 40,
+  "C": 252,
+  "K": 5
+ },
+ "freeway": 417
+}

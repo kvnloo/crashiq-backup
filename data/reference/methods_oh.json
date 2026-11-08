@@ -1,0 +1,58 @@
+{
+ "state": "OH",
+ "manuals": {
+  "odot_crash_costs": {
+   "title": "Crash Costs for Highway Safety Analysis (ODOT crash cost update, with Historical ODOT Published Crash Costs)",
+   "publisher": "Ohio Department of Transportation, Office of Program Management (Safety), ECAT tools",
+   "jurisdiction": "OH",
+   "edition": "Year 2025 costs, updated 5/5/26",
+   "url": "https://dam.assets.ohio.gov/image/upload/transportation.ohio.gov/safety/highway-safety/Crash-Analysis-Tools/ecat/CrashCostsUpdate.pdf",
+   "sha256": "f18cc067fcdb842c188abf737b7be3bccd7360043b1ec20adf092825f3f6316f",
+   "downloaded": "2026-11-08",
+   "note": "saved in ~/.hermes/state-manuals/oh/; research_notes/oh-2026-11-08/oh-methods.md"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 2266992,
+   "A": 202748,
+   "B": 76258,
+   "C": 51688,
+   "O": 11648,
+   "dollar_year": 2025,
+   "manual": "odot_crash_costs",
+   "page": "p. 1, Economic Unit Cost column (Year 2025); p. 2, Historical ODOT Published Crash Costs, Economic Unit Costs, 2025 row",
+   "verified": true,
+   "rules": [
+    "one cost per KABCO level, every location type",
+    "ODOT's published series is the economic unit cost (p. 2); the comprehensive (MUWE) costs on p. 1 are not used",
+    "U (injury, level not reported) unpriced; Ohio's layer always gives a KABCO level"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "ODOT's public pages give no statewide average crash rates by facility type that CrashIQ could apply, and the pack has no Ohio traffic counts (ODOT TIMS has AADT layers; not wired)"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "ODOT prioritises the network with AASHTOWare Safety (HSM Part B) since 2024 and requires an HSM Part C analysis for HSIP applications (FHWA Ohio HSIP 2024 report; FHWA PDF, not saved)"
+  },
+  "min_years": {
+   "missing": "ODOT's HSIP application threshold counts crashes per year over three years (FHWA Ohio HSIP 2024 report, executive summary; FHWA PDF, not saved) but no minimum study period for a corridor study was found"
+  },
+  "spf_calibration": {
+   "missing": "Ohio SPFs live inside AASHTOWare Safety (agency login); no published calibration factors were found; not loaded (no SPF engine)"
+  }
+ }
+}

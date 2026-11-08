@@ -1,0 +1,70 @@
+{
+ "state": "OH",
+ "study": "fe76c500c192",
+ "corridor": "North High Street",
+ "length_mi": 1.21,
+ "window": [
+  2021,
+  2025
+ ],
+ "pulled": 643,
+ "counted": 500,
+ "ksi": 14,
+ "fatal": 1,
+ "injury": 172,
+ "pdo": 328,
+ "unplaced": 0,
+ "excluded": 143,
+ "severity_T3": {
+  "K": 1,
+  "A": 13,
+  "B": 98,
+  "C": 60,
+  "U": 0,
+  "O": 328
+ },
+ "crash_cost_total": 19297824,
+ "cost_column": true,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_statewide_rates",
+  "rates_not_computed"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": true,
+   "text": "Crash Costs for Highway Safety Analysis (ODOT crash cost update, with Historical ODOT Published Crash Costs) (Ohio Department of Transportation, Office of Program Management (Safety), ECAT tools, Year 2025 costs, updated 5/5/26), p. 1, Economic Unit Cost column (Year 2025); p. 2, Historical ODOT Published Crash Costs, Economic Unit Costs, 2025 row"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for Ohio: ODOT's public pages give no statewide average crash rates by facility type that CrashIQ could apply, and the pack has no Ohio traffic counts (ODOT TIMS has AADT layers; not wired)"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Highway Safety Manual (AASHTO, 1st, 2010), Ch. 4, Sec. 4.2.3. Ohio's own method, ODOT prioritises the network with AASHTOWare Safety (HSM Part B) since 2024 and requires an HSM Part C analysis for HSIP applications (FHWA Ohio HSIP 2024 report; FHWA PDF, not saved), isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": false,
+   "text": "not available for Ohio: ODOT's HSIP application threshold counts crashes per year over three years (FHWA Ohio HSIP 2024 report, executive summary; FHWA PDF, not saved) but no minimum study period for a corridor study was found"
+  }
+ ],
+ "findings_shown": 9,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 42605,
+ "pdf_bytes": 92589,
+ "seconds": 114
+}
