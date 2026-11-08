@@ -1,0 +1,54 @@
+{
+ "state": "MT",
+ "manuals": {
+  "mdt_aashtoware_costs": {
+   "title": "MTD - Crash Injury Severity (KABCO) Rankings (MDT default crash costs in AASHTOWare Safety)",
+   "publisher": "Numetric Help Center, for the Montana Department of Transportation",
+   "jurisdiction": "MT",
+   "edition": "article dated 2025-02-05",
+   "url": "https://support.numetric.com/en/articles/10509761-mtd-crash-injury-severity-kabco-rankings",
+   "note": "a vendor's help page, not an MDT document; no dollar year given. research_notes/mt-2026-11-08/mt-methods.md"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 6168300,
+   "A": 326400,
+   "B": 119200,
+   "C": 67100,
+   "O": 10800,
+   "manual": "mdt_aashtoware_costs",
+   "page": "the article's single table (Cost Category column)",
+   "verified": false,
+   "rules": [
+    "research figure: MDT's own safety manual is internal (FHWA HSIP reports 2022-2025: 'This is an internal document'); not printed until MDT confirms the values and their dollar year",
+    "U (injury, level not reported) unpriced"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "MDT publishes no statewide average crash-rate table by facility type that was found (2026-11-08); its Safety Manual is internal, and CrashIQ has no Montana traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "Montana-specific SPFs and Level of Service of Safety (Roadway Departure and Intersection Safety Studies), per MDT's HSIP reports to FHWA; the method document is internal"
+  },
+  "min_years": {
+   "missing": "not found: MDT's Safety Manual (which would say it) is internal"
+  },
+  "spf_calibration": {
+   "missing": "MDT's Montana-specific SPFs are not published (internal); no SPF engine"
+  }
+ }
+}

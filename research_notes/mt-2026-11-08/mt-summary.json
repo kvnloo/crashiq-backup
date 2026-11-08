@@ -1,0 +1,53 @@
+{
+ "state": "MT",
+ "bucket": "A*",
+ "bucket_note": "Open, record-level, statewide, 100% MDT-placed points, crash KABCO. Catch: no reuse licence (as-is, planning purposes only) and no street names, report number, time or people.",
+ "sources": [
+  {
+   "name": "MDT Public Crash Information (ArcGIS MapServer)",
+   "url": "https://gis.mtmdt.us/server/rest/services/MDTGIS/Public_Crash_Information/MapServer/0",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_text": "This data set is provided \"as-is\" without warranty of any kind. This data should be used for planning purposes only. ... MDT will not be liable for any damages incurred as a result of errors in this data set.",
+   "licence_urls": ["https://www.arcgis.com/home/item.html?id=13d4ffddc9cd4eadb7e8d41c342573f8"],
+   "years": "2016-2025",
+   "rows_per_year": {"2016": 22111, "2017": 23747, "2018": 22911, "2019": 22650, "2020": 20866, "2021": 22904, "2022": 22311, "2023": 20531, "2024": 20338, "2025": 21047},
+   "gps_share": 0.99999,
+   "gps_note": "219,416 of 219,418; the point is MDT's placement from ROUTE_ID + reference point",
+   "street_names_share": 0.0,
+   "kabco": "yes, crash level (Fatal / Suspected Serious / Suspected Minor / Possible / No apparent injury); 'Unknown' 8,009 -> U",
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": "Yellowstone County (Billings), 2025",
+  "n": 3291,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "no street names or addresses in the layer, so the locator test does not apply; 44% of crashes share their point with another (MDT places at the route reference point)"
+ },
+ "end_to_end": {
+  "corridor": "Grand Avenue, Billings", "length_mi": 1.02, "window": [2020, 2024], "port": 8110,
+  "rows_read": 154, "contract_errors": 0, "counted": 131, "excluded_outside_ends": 22,
+  "severity": {"K": 1, "A": 1, "B": 11, "C": 44, "U": 13, "O": 61},
+  "crash_cost": null, "findings_shown": 4, "pdf_bytes": 42156, "xlsx_bytes": 36056
+ },
+ "status": "active",
+ "importer_built": true,
+ "blockers": [
+  "no reuse licence for a paid product (MDT: as-is, planning purposes only)",
+  "crash costs only from a vendor page (Numetric, AASHTOWare Safety defaults for MDT): not printed until MDT confirms",
+  "no street names, time of day, report number, people or vehicles in the public layer"
+ ],
+ "user_actions": [
+  "Ask MDT (Traffic and Safety Bureau, or the GIS item owner) in writing whether a paid tool may load the Public Crash Information layer, and what notice it must show",
+  "Ask MDT for its HSIP crash unit costs with their dollar year",
+  "Decide: MDT 'Unknown' crash severity counts as injury-level-unknown (U, now) or not"
+ ],
+ "cities": []
+}
