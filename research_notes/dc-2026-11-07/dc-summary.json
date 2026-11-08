@@ -1,0 +1,154 @@
+{
+ "state": "DC",
+ "bucket": "A*",
+ "sources": [
+  {
+   "name": "Crashes in DC + Crash Details (DDOT, from MPD COBALT)",
+   "url": "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Public_Safety_WebMercator/MapServer/24",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "ok_with_attribution",
+   "licence": "CC BY 4.0 (item licenseInfo)",
+   "years": "2008-2026 (full years 2009-2025; usable GPS from 2016)",
+   "rows_per_year": {
+    "2008": 2658,
+    "2009": 12014,
+    "2010": 12141,
+    "2011": 13290,
+    "2012": 16754,
+    "2013": 17482,
+    "2014": 19391,
+    "2015": 22355,
+    "2016": 26572,
+    "2017": 26464,
+    "2018": 26558,
+    "2019": 26788,
+    "2020": 18314,
+    "2021": 21271,
+    "2022": 18906,
+    "2023": 20781,
+    "2024": 20257,
+    "2025": 18175,
+    "2026": 15066
+   },
+   "gps_share": 0.997,
+   "gps_share_note": "MPD GPS inside DC, 2016-2025; DDOT point on 100% (unlocatable crashes are not published)",
+   "street_names_share": 0.9997,
+   "street_names_note": "ADDRESS present 2016-2025; 2025: house address 88.7%, intersection 3.3%, street only 7.7%",
+   "kabco": "partial: fatal=K, major=A exact; minor = MMUCC B+C merged",
+   "keys_linkable": true
+  },
+  {
+   "name": "MAR Address Points (DC Master Address Repository)",
+   "url": "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Location_WebMercator/FeatureServer/0",
+   "access": "open",
+   "licence_paid_use": "ok_with_attribution",
+   "licence": "CC BY 4.0",
+   "years": "current",
+   "rows_per_year": {
+    "current": 144451
+   },
+   "gps_share": 1.0,
+   "street_names_share": 1.0,
+   "kabco": "n/a",
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": "Washington DC (FIPS 11001), crashes reported in 2025",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.8855,
+  "auto_share": 0.028,
+  "within_250ft": 0.987,
+  "within_250ft_low": 0.9806,
+  "within_250ft_note": "circular: MPD GPS is the MAR geocode of the typed address (90.6% of address placements within 5 ft)",
+  "house_address_share": 0.886,
+  "address_points_source": "MAR Address Points (CC BY 4.0); NAD not measured",
+  "no_gps_added_share": 0.0,
+  "tiers": {
+   "address": 1709,
+   "review": 229,
+   "fuzzy": 6,
+   "exact": 56
+  }
+ },
+ "importer_built": true,
+ "blockers": [
+  "KABCO B and C merged as 'minor' in the public data",
+  "No collision type, lighting, weather, surface or contributing factor",
+  "US Park Police (federal land) crashes are not in the data",
+  "Placement accuracy can't be measured independently (police GPS = geocoded address)"
+ ],
+ "user_actions": [
+  "Decide how DC 'minor injury' maps: B, or a combined B/C class",
+  "Accept CC BY 4.0 attribution line 'District Department of Transportation / Open Data DC' in the app and exports",
+  "Optional: ask DDOT Traffic Safety Division (leon.anderson@dc.gov per DDOT wiki) whether the KABCO injury code and collision type can be published"
+ ],
+ "cities": [
+  {
+   "city": "Washington",
+   "source": "Crashes in DC (DDOT)",
+   "url": "https://opendata.dc.gov/datasets/DCGIS::crashes-in-dc",
+   "gps_share": 0.997,
+   "years": "2008-2026",
+   "licence": "CC BY 4.0"
+  }
+ ],
+ "methods": {
+  "manuals": [
+   {
+    "title": "District of Columbia HSIP 2025 Annual Report",
+    "url": "https://highways.dot.gov/sites/fhwa.dot.gov/files/2026-09/DISTRICT%20OF%20COLUMBIA_HSIP%20REPORT_2025_508_0.pdf",
+    "date": "2026-09"
+   },
+   {
+    "title": "Traffic Safety Statistics Report for the District of Columbia (2015-2017), draft (HUTRC for DDOT)",
+    "url": "https://ddot.dc.gov/sites/default/files/dc/sites/ddot/publication/attachments/Crash%20Statistics%20Report%202015-2017_final%20draft.pdf",
+    "date": "2018 (draft; 2015-2017 data)"
+   },
+   {
+    "title": "High Crash Intersection Site Visits (DDOT)",
+    "url": "https://ddot.dc.gov/sites/default/files/dc/sites/ddot/page_content/attachments/High%20Crash%20Intersection%20Report_010716_FINAL%20(3).pdf",
+    "date": "2016-01-07"
+   },
+   {
+    "title": "Guidance for Comprehensive Transportation Review v2.0 (DDOT)",
+    "url": "https://ddot.dc.gov/sites/default/files/dc/sites/ddot/CTR%20Guidance%20-%20January%202022%20Version%202.0.pdf",
+    "date": "2022-01"
+   },
+   {
+    "title": "FHWA Crash Costs for Highway Safety Analysis fact sheet (cost source DC cites)",
+    "url": "https://highways.dot.gov/sites/fhwa.dot.gov/files/2025-10/CrashCostFactSheet_508_OCT2025.pdf",
+    "date": "2025-10"
+   }
+  ],
+  "rates_available": false,
+  "rates_unit": "intersection per MEV (TSS 2015-2017 p. 4); statewide per 100M VMT only; no facility-type averages (not found)",
+  "crash_costs": {
+   "K": null,
+   "A": null,
+   "B": null,
+   "C": null,
+   "O": null,
+   "year": null,
+   "note": "DC prints none; it uses FHWA published rates (TSS p. 5). FHWA Oct 2025 comprehensive, 2024 $: K 15,988,000; A 1,705,100; B 384,000; C 204,600; O 18,100",
+   "fhwa_2024_dollars": {
+    "K": 15988000,
+    "A": 1705100,
+    "B": 384000,
+    "C": 204600,
+    "O": 18100
+   }
+  },
+  "screening_method": "Ranked lists: frequency, rate (MEV), severity cost, delta trend; Composite Crash Index = 0.25 rank freq + 0.25 rank rate + 0.50 rank severity (TSS p. 5; HSIP 2025 p. 6, 10); TSI 2.0 score on 3 years (HSIP 2025 p. 18); HSM predictive SPF+CMF for HSIP intersections (p. 18); 'critical rate' named for the signs program, formula not given (p. 16)",
+  "differences_from_ca": [
+   "No published average crash rates by facility type (no TASAS base-rate equivalent); compare within DC",
+   "Screening is a weighted rank composite (CCI 25/25/50) plus TSI 2.0, not a rate-vs-average or LRSM B/C test",
+   "Crash costs are FHWA national, not Caltrans LRSM Appendix D",
+   "3 years of crashes (TSI 2.0, CCI), not LRSM's 5",
+   "HSM predictive method (SPF+CMF) formally used for HSIP intersections; no DC calibration factors published",
+   "Development CTR studies have had no crash analysis since 2022 (qualitative only)",
+   "Public severity merges KABCO B and C"
+  ]
+ }
+}
