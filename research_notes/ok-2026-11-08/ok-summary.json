@@ -1,0 +1,127 @@
+{
+ "state": "OK",
+ "bucket": "D",
+ "status": "gated",
+ "sources": [
+  {
+   "name": "ODOT SAFE-T (Statewide Analysis for Engineering & Technology; OU ITS Lab hosts it)",
+   "url": "https://www.oksafe-t.org/",
+   "access": "gated (personal account, eligibility tied to employment; private-sector users sign a Permit)",
+   "licence_paid_use": "no",
+   "years": "1998 on",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured ('Not all crashes found are mappable')",
+   "street_names_share": "not measured",
+   "kabco": true,
+   "keys_linkable": "Collision ID; each unit and person has its own ID, exported with the Collision ID (SAFE-T Training pp. 112-113)"
+  },
+  {
+   "name": "OCERS (Oklahoma Collision Electronic Records System, DPS / OHSO)",
+   "url": "https://oklahoma.gov/highwaysafety.html",
+   "access": "gated (agency login; single reports by request)",
+   "licence_paid_use": "unclear",
+   "years": "about 2023 on (official record; rollout to all agencies ongoing)",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured",
+   "street_names_share": "not measured",
+   "kabco": true,
+   "keys_linkable": "not measured"
+  },
+  {
+   "name": "OHSO public KAB layers (kab_crashes_2019, 2020_kab_crashes, 2021_kab_crashes)",
+   "url": "https://services2.arcgis.com/1RKb5IC5HFxsUYMS/arcgis/rest/services/2021_kab_crashes/FeatureServer/0",
+   "access": "open (ArcGIS REST)",
+   "licence_paid_use": "unclear",
+   "years": "2019-2021, fatal + serious + minor injury crashes only",
+   "rows_per_year": {
+    "2019": 9763,
+    "2020": 8609,
+    "2021": 9360
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.7945,
+   "kabco": "K/A/B only (no C, no O)",
+   "keys_linkable": "crash-level only (DOC_ID)"
+  },
+  {
+   "name": "OHSO SORTPO_OCERS (Southern Oklahoma RTPO region, 16 counties)",
+   "url": "https://services2.arcgis.com/1RKb5IC5HFxsUYMS/arcgis/rest/services/SORTPO_OCERS/FeatureServer/0",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2023-2025 (2022: 5 rows)",
+   "rows_per_year": {
+    "2023": 1502,
+    "2024": 2176,
+    "2025": 3805
+   },
+   "gps_share": "not measured (Latitude/Longitude columns)",
+   "street_names_share": "not measured (Street, IntersectingStreetName)",
+   "kabco": true,
+   "keys_linkable": "crash-level (CrashID)"
+  },
+  {
+   "name": "ODOT AllCollisions_2012_2021",
+   "url": "https://services6.arcgis.com/RBtoEUQ2lmN0K3GY/arcgis/rest/services/AllCollisions_2012_2021/FeatureServer/10",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2012-2021, I-35 corridor only (39,688 of 39,752 rows on I-35)",
+   "rows_per_year": {
+    "2012": 3500,
+    "2013": 3770,
+    "2014": 3730,
+    "2015": 4166,
+    "2016": 4094,
+    "2017": 4090,
+    "2018": 4456,
+    "2019": 4356,
+    "2020": 3294,
+    "2021": 4296
+   },
+   "gps_share": "Latitude/Longitude (Derived) columns, not measured",
+   "street_names_share": "route + milepoint only",
+   "kabco": true,
+   "keys_linkable": "none"
+  }
+ ],
+ "placement_sample": {
+  "area": "Tulsa County (40143), 2021, OHSO KAB layer",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.488,
+  "auto_share": 0.0,
+  "auto_share_if_tiger_only_auto": 0.474,
+  "within_250ft": 0.6322,
+  "within_250ft_low": 0.6015,
+  "house_address_share": "not measured (no house-number field)",
+  "address_points_source": null
+ },
+ "importer_built": false,
+ "blockers": [
+  "SAFE-T accounts are for 'government agencies for transportation safety related activities' and 'may not be used for private projects' (SAFE-T Training p. 5)",
+  "the open statewide layers are fatal/serious/minor-injury only and stop in 2021",
+  "no published SAFE-T or OCERS export column list (SAFE-T has a 'User Data Dictionary' behind the login)"
+ ],
+ "user_actions": [
+  "Ask ODOT Traffic Analysis (ODOT-CollisionData@odot.org) whether a private firm may hold a SAFE-T account and use exports inside a paid tool, or ask for a statewide 2020-2024 extract",
+  "Alternatively ask OHSO (405-523-1570) for a statewide OCERS extract, 2023 on, all severities",
+  "Send Engineering one SAFE-T 'Export Collisions' CSV (one county, one year, all fields) and its User Data Dictionary to confirm ok-column-map.json"
+ ],
+ "cities": [
+  {
+   "city": "Oklahoma City",
+   "source": "OKC VZAP- Crashes",
+   "url": "https://services5.arcgis.com/2mOVdIcRtNH2JsSF/arcgis/rest/services/OKC_Crash_Map_WFL1/FeatureServer/0",
+   "gps_share": "LATITUDE/LONGITUDE columns, not measured",
+   "years": "2017-2019 full (2020 1,166 and 2021 1,504 rows: partial)",
+   "licence": "none stated"
+  },
+  {
+   "city": "Tulsa region (INCOG)",
+   "source": "AGOL_Crashes_2011_thru_2020",
+   "url": "https://services2.arcgis.com/Yl3gDnSPJVdpCPgG/arcgis/rest/services/AGOL_Crashes_2011_thru_2020/FeatureServer/0",
+   "gps_share": "Lat/Long columns, not measured",
+   "years": "2011-2020",
+   "licence": "none stated"
+  }
+ ]
+}
