@@ -1,0 +1,30 @@
+{
+ "state": "Wyoming",
+ "bucket": "D (verified 2026-11-08)",
+ "status": "gated",
+ "sources": [
+  {"name": "WYDOT Highway Safety crash data request (WECRS)", "url": "https://dot.state.wy.us/home/dot_safety/crash-data.html",
+   "access": "records_request", "licence_paid_use": "unclear", "years": "per request", "rows_per_year": "not measured",
+   "gps_share": "not measured (form has GPS latitude/longitude)", "street_names_share": "not measured (form has street + intersecting street)",
+   "kabco": "yes (person K/A/B/C/O on the form)", "keys_linkable": "not measured"},
+  {"name": "Cheyenne Wyoming Crash Data_updated (Cheyenne and Laramie County GIS Cooperative org)",
+   "url": "https://services1.arcgis.com/e5t4ywWgRBNUuDeU/arcgis/rest/services/Cheyenne_Wyoming_Crash_Data_updated/FeatureServer/0",
+   "access": "open", "licence_paid_use": "unclear", "years": "2020-2024",
+   "rows_per_year": {"2020": 1636, "2021": 1849, "2022": 1614, "2023": 1708, "2024": 1633},
+   "coverage": "Cheyenne urban area (Laramie County) only", "gps_share": 1.0, "street_names_share": "STREET_1 100%, STREET_2 30%",
+   "kabco": "crash-level KABCO + U", "keys_linkable": false}
+ ],
+ "placement_sample": {"area": null, "n": 0, "gps_share": "not measured", "name_placed_share": "not measured",
+  "auto_share": "not measured", "within_250ft": "not measured", "within_250ft_low": "not measured",
+  "house_address_share": "not measured", "address_points_source": null},
+ "importer_built": false,
+ "blockers": ["statewide crash data only by WYDOT crash data request (about 10 business days)",
+              "no WYDOT crash layer on gisservices.wyoroad.info or ArcGIS Online",
+              "Cheyenne layer covers one urban area and has no licence"],
+ "user_actions": ["Submit a WYDOT crash data request for a crash-level WECRS export (columns in wy-import.md §3) and ask about paid use",
+                  "Optional: ask the Cheyenne and Laramie County GIS Cooperative whether their crash layer may be used in a paid tool",
+                  "Ask WYDOT Highway Safety for per-level crash costs"],
+ "cities": [{"city": "Cheyenne", "source": "Cheyenne and Laramie County GIS Cooperative (ArcGIS Online)",
+             "url": "https://services1.arcgis.com/e5t4ywWgRBNUuDeU/arcgis/rest/services/Cheyenne_Wyoming_Crash_Data_updated/FeatureServer/0",
+             "gps_share": 1.0, "years": "2020-2024 (yearly layers 2017-2021, 2024 also)", "licence": "unclear (none stated)"}]
+}
