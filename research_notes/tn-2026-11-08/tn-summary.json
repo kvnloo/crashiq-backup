@@ -1,0 +1,112 @@
+{
+ "state": "TN",
+ "bucket": "A*",
+ "bucket_note": "open, record-level, located, KABCO 2021-2024 (TDOT); KABC fatal+injury 2025 on (TDOSHS), PDO then only inside Nashville; no street names; no licence",
+ "status": "active",
+ "sources": [
+  {
+   "name": "TDOT Tennessee Crashes JAN 2021_JAN 2025",
+   "url": "https://services2.arcgis.com/nf3p7v7Zy4fTOh6M/arcgis/rest/services/Tennessee_Crashes_JAN_2021_JAN_2025/FeatureServer/0",
+   "access": "open (ArcGIS Online, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "All data presented here is for informational purposes only... Neither the Tennessee Department of Transportation, the State of Tennessee, nor any agency thereof... make any warranty, express or implied",
+   "years": "2021-2024 (+ Jan 2025)",
+   "rows_per_year": {
+    "2021": 196833,
+    "2022": 193471,
+    "2023": 184844,
+    "2024": 179966
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.0,
+   "route_number_share": 0.6297,
+   "kabco": true,
+   "keys_linkable": "no person/vehicle rows; CASENO per crash"
+  },
+  {
+   "name": "TDOSHS public crash dashboard layer (TITAN reports)",
+   "url": "https://tnmap.tn.gov/arcgis/rest/services/SAFETY/MapForDashboards/MapServer/0",
+   "access": "open (ArcGIS query, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": null,
+   "years": "2024-01-01 to current (weekly)",
+   "rows_per_year": {
+    "2024": 45524,
+    "2025": 45060,
+    "2026_to_10_21": 36410
+   },
+   "gps_share": 0.9999,
+   "street_names_share": 0.0,
+   "kabco": "KABC (no O)",
+   "keys_linkable": "no person/vehicle rows; MRN per crash"
+  },
+  {
+   "name": "TITAN",
+   "url": "https://www.tn.gov/safety/stats/titan.html",
+   "access": "gated (law enforcement membership)",
+   "licence_paid_use": "no",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "yes (inside TITAN)"
+  }
+ ],
+ "placement_sample": {
+  "area": "Davidson County: TDOT 2024 and TDOSHS + Metro 2025, every row",
+  "n": 52911,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "a point on every crash; neither state layer has street names, so the hide-the-GPS name test was not run (not measured)"
+ },
+ "end_to_end": {
+  "corridor": "Nolensville Pike",
+  "length_mi": 0.92,
+  "window": [
+   2021,
+   2024
+  ],
+  "pulled": 516,
+  "counted": 406,
+  "severity_T3": {
+   "K": 3,
+   "A": 9,
+   "B": 107,
+   "C": 41,
+   "U": 0,
+   "O": 246
+  },
+  "excluded": 110,
+  "crash_cost_total": null,
+  "findings_shown": 11,
+  "pdf_bytes": 79172,
+  "xlsx_bytes": 38971
+ },
+ "importer_built": true,
+ "blockers": [
+  "no reuse licence from TDOT or TDOSHS (disclaimer only)",
+  "TDOT's layer stops January 2025; 2025 on is fatal+injury only outside Nashville",
+  "no street names in either state layer"
+ ],
+ "user_actions": [
+  "Ask TDOT and TDOSHS in writing whether CrashIQ may show these layers in a paid tool",
+  "Ask TDOT whether it will publish 2025 crashes in the same layer",
+  "Optional: TITAN extract via records request for street names and statewide PDO from 2025"
+ ],
+ "cities": [
+  {
+   "city": "Nashville",
+   "source": "Metro Nashville Traffic Accidents (Nashville Open Data)",
+   "url": "https://services2.arcgis.com/HdTo6HJqh92wn4D8/arcgis/rest/services/Traffic_Accidents_2/FeatureServer/0",
+   "gps_share": 1.0,
+   "years": "2019-current",
+   "licence": "ok_with_attribution (Metro ToS exempts Open Data Portal data from its commercial-use ban; Open Data EO FO018)"
+  }
+ ]
+}
