@@ -154,6 +154,13 @@ def test_api_overpass_down_returns_502_with_message(client, sid):
     assert r.status_code == 502 and "OpenStreetMap" in r.json()["detail"]
 
 
+def test_a_line_outside_the_studys_state_is_refused_before_overpass(client, sid):
+    client.app.state.overpass = lambda *a, **k: (_ for _ in ()).throw(AssertionError("no Overpass call"))
+    r = client.put(f"/api/studies/{sid}/corridor", json={"line": [[33.45, -112.07], [33.46, -112.07]]})   # Phoenix
+    assert r.status_code == 400 and r.json()["detail"] == ("This line isn't in California. Start a new study and "
+                                                          "pick the state it's in.")
+
+
 def test_api_rejects_bad_edits(client, sid):
     assert client.post(f"/api/studies/{sid}/intersections", json={"lat": 33.9, "lon": -118.3}).status_code == 409
     client.put(f"/api/studies/{sid}/corridor", json={"line": LINE})

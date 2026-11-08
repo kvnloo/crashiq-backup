@@ -723,11 +723,15 @@ def get_network(sid: str, request: Request) -> dict:
 
 @router.put("/studies/{sid}/corridor")
 def put_corridor(sid: str, body: CorridorIn, request: Request) -> dict:
+    from . import packs
     db = _db(request)
-    study_mod.require(db, sid)
+    pack = packs.for_study(study_mod.require(db, sid))
     for lat, lon in body.line:
         if not (-90 <= lat <= 90 and -180 <= lon <= 180):
             raise ValueError("Line points must be (lat, lon) in degrees.")
+    # #19 check 1, offline: a line with no point in the state's box is clearly elsewhere (no Overpass call, no pull)
+    if not any(packs.in_bounds(pack, lat, lon) for lat, lon in body.line):
+        raise HTTPException(400, f"This line isn't in {pack.name}. Start a new study and pick the state it's in.")
     try:
         st = request.app.state
         osm = fetch_overpass(db, overpass_query(body.line), transport=getattr(st, "overpass", None),
