@@ -1,0 +1,64 @@
+{
+ "state": "VA",
+ "manuals": {
+  "va_costs": {
+   "title": "VDOT Traffic Crash Costs 2026 (memo)",
+   "publisher": "VDOT Traffic Operations Division",
+   "jurisdiction": "VA",
+   "edition": "memo dated 09/01/2026",
+   "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/about/strategic-highway-safety-plan/VDOT-Crash-Costs-Memo-2026_acc10062026_RM.pdf",
+   "sha256": "1c7d73a522b2830540862368294a90c5c52b4efe4f51cd015bafa0ba3d4cfc0f",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/va-2026-11-07/va-methods.md \u00a72"
+  },
+  "vhsip": {
+   "title": "VHSIP HSIP Implementation Guidelines (Reference Guide)",
+   "publisher": "VDOT",
+   "jurisdiction": "VA",
+   "edition": "2025",
+   "url": "https://www.vdot.virginia.gov/media/vdotvirginiagov/about/strategic-highway-safety-plan/VHSIP-Reference-Guide_2025_acc08182025_RM.pdf"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 17009543,
+   "A": 998777,
+   "B": 329990,
+   "C": 190773,
+   "O": 17344,
+   "dollar_year": 2026,
+   "manual": "va_costs",
+   "page": "p. 1, Table 1 (comprehensive crash costs)",
+   "verified": true,
+   "rules": [
+    "one cost per KABCO level, every location type",
+    "U (injury, level not reported) unpriced"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "VDOT publishes no statewide average-rate table (averages only in its Power BI Crash Summary Book; research 2026-11-07), and CrashIQ has no Virginia traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "Potential for Safety Improvement (Virginia SPFs + Empirical Bayes), VHSIP Reference Guide 2025; not built in CrashIQ"
+  },
+  "min_years": {
+   "missing": "VHSIP: 3 or 5 years (research 2026-11-07, page not re-checked)"
+  },
+  "spf_calibration": {
+   "missing": "VTRC 26-R34 publishes intersection calibration factors; not loaded (no SPF engine)"
+  }
+ }
+}
