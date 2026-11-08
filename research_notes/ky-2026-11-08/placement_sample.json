@@ -1,0 +1,75 @@
+{
+ "area": "central Louisville box (38.15,-85.80)-(38.30,-85.60), 2025-01-01..2025-02-28, every row",
+ "n": 1970,
+ "gps_share": 1.0,
+ "gps_inside_query_box": 1.0,
+ "primary_share": 0.9619,
+ "street_pair_share": 0.5066,
+ "house_number_share": 0.2132,
+ "severity": {
+  "O": 1692,
+  "U": 273,
+  "K": 5
+ },
+ "county": {
+  "JEFFERSON": 1970
+ },
+ "freeway_share": 0.1898,
+ "parking_lot_share": 0.0513,
+ "earliest_years_jan_tiny_box": {
+  "2015": 190,
+  "2016": 225,
+  "2019": 161
+ },
+ "placement": {
+  "area": "Jefferson County (21111), 2025-01..02, random 2,000 with GPS (seed 2026)",
+  "n": 1970,
+  "street_pair_share": 0.5066,
+  "tiers": {
+   "review": 128,
+   "exact": 457,
+   "unique_pair": 404,
+   "verified_typo": 1,
+   "near": 7,
+   "fuzzy": 1
+  },
+  "name_placed_share": 0.4416,
+  "auto_share": 0.4371,
+  "gate": "Gate(tiger_only_auto=True) on a TIGER-only network",
+  "within_250ft": 0.8688,
+  "within_250ft_low": 0.8446,
+  "within_250ft_all_placed": 0.8678,
+  "not_placed": {
+   "no cross street in source": 972,
+   "no intersection of the two named streets": 94,
+   "exact: streets meet in more than one place": 21,
+   "relaxed: streets meet in more than one place": 13
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "I264 EB & I264 EB EXIT17A OFF RAMP TO KY155 SB",
+    "I264 WB & I264 WB EXIT16 ON RAMP FROM US31E",
+    "HIKES & BUECHEL",
+    "I264 W & I264 W EXIT15 ON RAMP FROM KY1703",
+    "FERN VALLEY & KY1747 CROSSOVER",
+    "FERN VALLEY & KY1747 CROSSOVER"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "WATTERSON & HURSTBOURNE",
+    "HURSTBOURNE & AMBROSSE",
+    "HURSTBOURNE & WATTERSON",
+    "SOUTHSIDE & KENWOOD",
+    "WATTERSON & HURSTBOURNE",
+    "SOUTHSIDE & KENWOOD"
+   ],
+   "exact: streets meet in more than one place": [
+    "OLD MANSLICK & MANSLICK",
+    "CRITTENDEN & PARK",
+    "GRINSTEAD & CHEROKEE",
+    "BRECKENRIDGE & DUTCHMANS",
+    "DIXIE & MILLERS",
+    "ALGONQUIN & WINKLER"
+   ]
+  }
+ }
+}

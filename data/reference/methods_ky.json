@@ -1,0 +1,45 @@
+{
+ "state": "KY",
+ "manuals": {
+  "ktc_crash_analysis": {
+   "title": "Analysis of Traffic Crash Data in Kentucky (2020-2024)",
+   "publisher": "Kentucky Transportation Center, University of Kentucky, for KYTC",
+   "jurisdiction": "KY",
+   "edition": "2020-2024 (KTC research report, 2025)",
+   "url": "https://transportation.ky.gov/HighwaySafety/KYTrafficCrashAnalysis/AnalysisTrafficCrash2020-2024.pdf",
+   "sha256": "7a3874edcb7ba9436e7ba06dcb884aee34c938a701baf4d52365c670fd46c56c",
+   "downloaded": "2026-11-08",
+   "note": "linked from KYTC Highway Safety Resources; research_notes/ky-2026-11-08/ky-methods.md"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "KYTC prices crashes with the National Safety Council's comprehensive costs (KYTC HSIP reports 2023-2025, benefit/cost lines) and publishes no table of its own; and the public data has no A/B/C level, so only K and O could be priced and a cost total would be misleading"
+  },
+  "statewide_rates": {
+   "missing": "KTC publishes statewide average and critical crash rates per 100 MVM by highway type (Analysis of Traffic Crash Data in Kentucky 2020-2024, rate tables after p. ix), but CrashIQ has no Kentucky traffic counts to apply them"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "KYTC ranks HSIP sites by the cost of excess expected crashes (KTC SPFs + Empirical Bayes, KA/B/C/O); KTC's high-crash-location critical rate uses K = 2.576 (p = 0.995), Cc = Ca + K*sqrt(Ca/M) + 1/(2M) (KTC 2020-2024, p. ix, PDF p. 11)"
+  },
+  "min_years": {
+   "missing": "KTC's analysis and KYTC's screening use five years of crashes (KTC 2020-2024, Table 1, PDF p. 20) but set no minimum study period for a corridor study"
+  },
+  "spf_calibration": {
+   "missing": "KTC develops Kentucky-specific SPFs (KAB and CO) each year rather than calibrating HSM SPFs (KTC 2020-2024, Safety Performance Functions section); not loaded (no SPF engine)"
+  }
+ }
+}
