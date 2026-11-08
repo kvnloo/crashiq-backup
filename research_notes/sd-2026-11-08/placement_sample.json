@@ -1,0 +1,69 @@
+{
+ "Minnehaha (Sioux Falls)": {
+  "area": "Minnehaha (Sioux Falls) (46099), 2025",
+  "county_crashes": 5836,
+  "gps_share": 1.0,
+  "street_pair_share": 0.9702,
+  "no_gps_with_pair": 0,
+  "no_gps": 0,
+  "n": 2000,
+  "tiers": {
+   "exact": 1405,
+   "near": 21,
+   "unique_pair": 83,
+   "review": 487,
+   "verified_typo": 3,
+   "relaxed": 1
+  },
+  "name_placed_share": 0.7565,
+  "auto_share": 0.0,
+  "within_250ft_auto": null,
+  "within_250ft_auto_low": 0.0,
+  "auto_share_tiger_only_auto": 0.744,
+  "within_250ft_tiger_only_auto": 0.914,
+  "within_250ft_tiger_only_auto_low": 0.8986,
+  "within_250ft_all_placed": 0.9055,
+  "within_250ft_all_placed_low": 0.8897,
+  "not_placed": {
+   "no intersection of the two named streets": 436,
+   "exact: streets meet in more than one place": 45,
+   "relaxed: streets meet in more than one place": 6
+  },
+  "examples": {
+   "exact: streets meet in more than one place": [
+    "I 229 N & E 26TH ST",
+    "N WESTERN AVE & W 6TH ST",
+    "W 10TH ST & S WEST AVE",
+    "E 10TH ST & W 10TH ST",
+    "N MINNESOTA AVE & S MINNESOTA AVE",
+    "E 26TH ST & I 229 N1"
+   ],
+   "placed >250 ft off": [
+    "I 29 N & I 90 E4 [exact] 1359 ft",
+    "S MINNESOTA AVE & I 229 S2 [exact] 310 ft",
+    "S CLIFF AVE & S 10TH AVE [near] 70878 ft",
+    "W BENSON RD & I 29 N2 [exact] 368 ft",
+    "S CLIFF AVE & 26TH ST [unique_pair] 15620 ft",
+    "S FREDERICK DR & S YEAGER RD [exact] 400 ft",
+    "S MINNESOTA AVE & I 229 N2 [exact] 376 ft",
+    "I 229 N1 & S CLIFF AVE [exact] 394 ft"
+   ],
+   "no intersection of the two named streets": [
+    "W 77TH ST & W BITTERROOT ST",
+    "SD HWY 42 & PERRY PL",
+    "I 29 S & I 29 S8",
+    "N LOUISE DR & W HOVLAND AVE",
+    "S JESSICA AVE & S HIGHLAND AVE",
+    "S MARY DR & S VAN EPS AVE"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "E MADISON ST & MADISON ST",
+    "E MADISON ST & MADISON ST",
+    "SUNSET CIR & OAK RD",
+    "W LAKE SHORE BLVD & W JEANNE DR",
+    "E MADISON ST & MADISON ST",
+    "MAIN AVE & THIRD ST"
+   ]
+  }
+ }
+}

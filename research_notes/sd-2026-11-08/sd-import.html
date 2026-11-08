@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>South Dakota crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state pack · 8 Nov 2026 · written by Hermes</p>
+<h1>South Dakota: every crash, 2011–2025</h1>
+
+<div class="card"><b>In one line:</b> South Dakota posts every crash, one file a year, no login: a map point on all of them, street names on 98%, and each person's injury level (K A B C O). There's no licence that says a paid tool may use it.</div>
+<h2>1. What South Dakota has</h2>
+<table>
+<tr><th>What</th><th>Example</th></tr>
+<tr><td>Crashes</td><td class="ok">17,600–19,500 a year (2025: 18,974).</td></tr>
+<tr><td>Map point</td><td class="ok">Every crash (one 2025 row was garbled and dropped).</td></tr>
+<tr><td>Street names</td><td class="ok">Road and nearest cross street with distance: <code>N LINCOLN AVE</code>, 101 ft S of <code>W BURNSIDE ST</code>.</td></tr>
+<tr><td>Injury level</td><td class="ok">Per person: fatal, incapacitating, non-incapacitating, possible, none = K A B C O.</td></tr>
+<tr><td>Missing</td><td class="warn">Crash costs per level, statewide average rates.</td></tr>
+</table>
+<h2>2. Does it place without GPS? Mostly</h2>
+<div class="card"><div class="big">91%</div>of Sioux Falls crashes CrashIQ placed from the street names alone (GPS hidden) landed within 250 ft of the state's point. Since every crash already has a point, this is only a cross-check.</div>
+<h2>3. A real corridor</h2>
+<div class="card">South Minnesota Avenue, 41st to 57th Street, Sioux Falls, 0.97 mi, 2020–2024: <b>340 crashes</b>: 0 fatal, 2 serious, 17 minor, 53 possible, 268 property damage. No dollar total (South Dakota publishes no crash costs per level). PDF and Excel exports work.</div>
+<h2>What you need to do</h2>
+<ol>
+<li>Ask SD Public Safety (arinfo@state.sd.us) in writing if a paid tool may load its raw crash data, and what notice to show.</li>
+<li>Decide on crash costs: SDDOT has none per injury level.</li>
+</ol>
+<h2>What we didn't check</h2>
+<p>The 2011–2019 file columns, contributing-circumstance and DUI flags, house addresses.</p>
+</main></body></html>
