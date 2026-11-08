@@ -668,8 +668,14 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     limits. Found in the Tester's #420 frozen run: a driveway at A or B widened the limits in 6 corridors (Glendora
     +37 crashes, Victorville +40).
   - **A driveway is not a leg for entering volume DECIDED (user, 2026-11-07, PM session, "Don't count it"; #420):**
-    a T intersection with a driveway opposite the side street stays a T for entering volume (half the minor AADT), so
-    its crash rate does not change. Found in the same run: 179 T intersections would otherwise have become 4-leg.
+    a driveway leg is never counted in a street intersection's leg count. A T intersection with a driveway opposite
+    the side street stays a T for entering volume (half the minor AADT), so its crash rate does not change. Found in
+    the same run: 179 T intersections would otherwise have become 4-leg, and 19 other stops would have taken a leg
+    count from a driveway alone.
+  - **Driveway stops take an engineer-entered volume DECIDED (user, 2026-11-07, PM session, "Engineer enters it"; #420):**
+    at a stop where only a driveway meets the corridor, the driveway's entering volume is left blank for the engineer
+    to enter, like a side street with no count. No crash rate is shown there until it is entered. Found in the
+    Tester's #423 review: the 74 new driveway stops have no side-street leg.
 - **County address points fill NAD's gaps DECIDED (user, 2026-11-04, CrashIQ chat; #393):** "I think 2 is easy. And
   it can be carried over to other states as well, so let's get that going." House-address crashes (D5) in counties
   USDOT NAD doesn't cover are placed at the county's own address points (`data/reference/address_points.json`), with
