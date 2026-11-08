@@ -1,6 +1,7 @@
 # State pack design (#19): the smallest seam for a second state
 
-Hermes · 2026-11-07 · docs only, nothing built. User, 2026-11-07: "start the other states". #19 has been parked since
+Hermes · 2026-11-07 · docs only, nothing built. Extended 2026-11-07 (user): state picker as the first step,
+and each state's manuals, rates and costs as cited data (§ State picker, § Methods). User, 2026-11-07: "start the other states". #19 has been parked since
 2026-11-02 ("finish, test, ship"), so building any step below needs the PM to reopen it. Inputs: #19, #18, #4,
 `reports/State pack outline CA NY TX WA MA.md`, `reports/Crash data and study methods by state.md`, docs/03
 ("Market DECIDED", 2026-10-18), docs/04, and the code at `87c2ad4`.
@@ -34,19 +35,21 @@ class StatePack:
     route_prefixes: tuple        # the state's state-route spellings: ("CA",), ("SH", "FM", "RM", "IH", "LOOP", "SPUR")
     special_areas: re.Pattern | None  # report "cities" that are campuses, park districts, ports (never judged)
     ref: dict                    # data/reference files: cities, county_boxes, address_points, aliases, gps_piles, pcf
-    crash_costs: Path | None     # same CSV shape as crash_costs_ca.csv; None = no cost columns
-    rate_groups: Path | None     # Caltrans rate-group table; None = no statewide comparison
+    name: str                    # "California": the Setup dropdown and every "in <state>" sentence
+    methods: Path                # data/reference/methods_ca.json: cited manuals, rates, costs, screening (§ Methods)
     postmiles: Callable | None   # factory(settings) -> object with .at(route, county, pm, prefix) and .for_crash(c)
     aadt: Callable | None        # factory(settings) -> AadtCache-like; None = no state-highway rates (T22-T25)
     tiers: dict[str, tuple]      # location methods per road type, e.g. {"freeway": (...), "street": (...)}
 
 PACKS = {"CA": StatePack(code="CA", reader=ca_ccrs, ...)}   # one line per state, added when it's activated
-def get(code: str = "CA") -> StatePack: ...
+COMING = {"TX": "Texas", ...}   # researched, no pack yet: listed greyed out on Setup (§ State picker)
+def get(code: str) -> StatePack: ...   # no default: CA comes only from the study column's DB default
 ```
 
 In five lines:
 
-1. A study belongs to one state (`study.state`, default `CA`); `packs.get(study["state"])` is the one lookup.
+1. A study belongs to one state (`study.state`, picked first on Setup, default `CA` for existing studies);
+   `packs.get(study["state"])` is the one lookup. `get()` has no default, so nothing falls back to California.
 2. `crashes.ensure()` line 1117 is the one dispatch: CA calls today's `pull()`; any other state calls
    `pull_reader(pack, ...)`, which calls `pack.reader.fetch(...)` and then the same cleaning California uses.
 3. A reader only returns CCRS-shaped crash dicts (contract below), with `severity`, `county_fips` and the mode flags
@@ -122,8 +125,8 @@ Paths are under `backend/crashiq/` unless they start with `data/`.
 | 16 | Caltrans county abbreviation by CCRS code (LA-405) | `postmile.py:45` | inside the CA postmile service |
 | 17 | Caltrans SHN postmile layer (URL) | `postmile.py:34`, `crashes.py:1276-1295`, `export.py:50, 264` | `postmiles` |
 | 18 | Caltrans Traffic Census AADT, Oct–Sep count year, ramp ADT | `aadt.py:1-46`, `config/aadt.json`, `shs.py:1-8, 77`, `ramps.py:1-17`, `crashes.py:1301-1311` | `aadt` |
-| 19 | Caltrans rate groups + statewide expected rate | `rate_groups.py:17, 24`, `data/reference/caltrans_rate_groups.csv`, `network.py:665`, `profile.py:399-427`, db migration 15 | `rate_groups` |
-| 20 | LRSM v1.8 crash costs by KABCO and location type | `crash_cost.py:3-19`, `data/reference/crash_costs_ca.csv`, `profile.py:782, 827` | `crash_costs` |
+| 19 | Caltrans rate groups + statewide expected rate | `rate_groups.py:17, 24`, `data/reference/caltrans_rate_groups.csv`, `network.py:665`, `profile.py:399-427`, db migration 15 | `methods` → `statewide_rates` (M4-M6) |
+| 20 | LRSM v1.8 crash costs by KABCO and location type | `crash_cost.py:3-19`, `data/reference/crash_costs_ca.csv`, `profile.py:782, 827` | `methods` → `crash_costs` (M1-M3) |
 | 21 | California Vehicle Code → 24 SWITRS PCF categories | `pcf.py:1-27`, `data/reference/pcf_categories.csv`, `profile.py:100-105`, `findings.py:413` | `ref["pcf"]` (None elsewhere) |
 | 22 | CCRS county code → FIPS (`2n-1`) and → county name | `fars.py:30-33, 110`, `addrfeat.py:32-35, 131`, `nad.py:39-42, 126`, `data/reference/caltrans_districts.csv` | `county_fips` on every crash |
 | 23 | FARS store: California rows only (STATE 6) | `fars.py:26, 58-70`, `db.py:167` | `fips` |
@@ -145,6 +148,186 @@ Not California-specific (reused as is): KABCO colours and labels (`severity.py`)
 and the OSM + TIGER network, the profile tables, the findings validator, exports, the FARS fatal check (once
 `county_fips` exists), NAD (national; needs that state's rows).
 
+## State picker: the first step (user, 2026-11-07)
+
+The user picks the state before anything else; everything after it (data source, location methods, rates, crash
+costs, screening method, wording, legal notices) comes from that state's pack.
+
+**Study record.** DB migration 16: `ALTER TABLE study ADD COLUMN state TEXT NOT NULL DEFAULT 'CA'`. Every existing
+study reads as California with no data rewrite, and that column default is the only place "CA" is assumed.
+`study.create(..., state)` (`study.py:104`) accepts only a code in `PACKS` with `status == "active"`; a `COMING` or
+`reader_only` code fails with "Texas isn't ready yet." `StudyIn` (`study.py:165`) gets `state: str = "CA"`, so old
+clients and tests keep working. `StudyPatch` (`study.py:172`) does **not** get it: the state is fixed once the study
+exists, because the pull cache, rate groups, aliases and hand-placed crashes all belong to that state's data. Another
+state means a new study. `validate_window` and `window_options` take `pack.first_year`/`pack.final_lag_months`
+instead of `CCRS_FIRST_YEAR`/`FINAL_LAG_MONTHS` (`study.py:20, 23, 63-64`).
+
+**API.** `GET /studies/meta?state=CA` (`study.py:188`) adds `states: [{code, name, ready}]` (`PACKS` active =
+ready; `reader_only` and `COMING` = not ready), and returns the window options, first year and wording of the state
+asked for: `source_short` ("CCRS") and `short_window_note` (with its cite, from the methods file). No state param
+means the first ready state.
+
+**Setup screen** (`frontend/src/screens/Setup.jsx`). One new field, first in the start bar, before "Study":
+
+```jsx
+<label htmlFor="state">State</label>
+<select id="state" className="input" value={state} onChange={...} disabled={!meta || !!study}>
+  {meta.states.map((s) => <option key={s.code} value={s.code} disabled={!s.ready}>
+    {s.ready ? s.name : `${s.name} (coming)`}</option>)}
+</select>
+```
+
+Native disabled options are greyed and skipped by the keyboard, so no custom widget. Ready states first, then
+coming ones, both alphabetical. Changing the state refetches `meta?state=` and resets the years dropdown. An existing
+study shows its state disabled, with one muted line: "A study's state is fixed. Start a new study for another
+state." The POST body carries `state`. Copy that names California comes from meta: line 26 "(CCRS)" →
+`source_short`, line 136 → `short_window_note`. Setup.test.jsx: CA selected by default, a "Texas (coming)" option
+that's disabled, the POST body has `state`, an existing study's select is disabled.
+
+The list is `PACKS` plus `COMING` (CA + tonight's 9 researched states), not all 50: a state with no research isn't
+promised. Adding all 50 later is one dict.
+
+**A corridor that isn't in the chosen state.** Two checks, both from data CrashIQ already fetches:
+
+1. **Hard stop, offline.** `put_corridor` (`network.py:725`) already checks every point is a valid lat/lon. It adds:
+   if no point lies inside `pack.bounds`, reply 400 "This line isn't in California. Start a new study and pick the
+   state it's in." No crash pull, no Overpass call. `bounds` is a box, so it only catches lines clearly elsewhere.
+2. **Border corridors, named.** `corridor_cities` (`network.py:118-148`, run at pull time from `crashes.py:1111`)
+   already asks Overpass for the admin areas at sample points along the line. Widen its level filter from
+   `^(6|8)$` to `^(4|6|8)$` and return `states` (the level-4 `ISO3166-2` tag, "US-NV") with the share of sample
+   points in each. If any point is in another state, the corridor is kept (border corridors are real: Stateline at
+   Lake Tahoe, US-95 at Needles), and the profile and export carry a caveat: "About 30% of this corridor is in
+   Nevada. This study has California crashes only, so that part shows none." One study never pulls two states. When
+   Overpass can't answer, check 1 still holds and the caveat says the state line couldn't be checked.
+
+## Methods: each state's manuals, rates and costs as cited data (user, 2026-11-07)
+
+Each state has its own HSIP manual, crash analysis guidelines, statewide average crash rates by facility type,
+crash costs per KABCO level, screening method and SPF calibration. The pack holds them as **cited data**: every value
+names its manual, edition and page. Nothing is AI-derived: a value is copied from the downloaded document's text (or
+extracted by a script, as `scripts/extract_caltrans_rate_groups.py` does), never typed from memory or a model's answer.
+
+### Where California's are hard-coded today (code at 87c2ad4)
+
+15 items in about 55 places, plus M16, which has none. Paths under `backend/crashiq/` unless they start with `data/` or `frontend/`.
+
+| # | What | Where | Becomes |
+|---|---|---|---|
+| M1 | LRSM v1.8 crash-cost table, file and source line | `crash_cost.py:3-7, 17, 19-21`; `data/reference/crash_costs_ca.csv:1-2`; `crash_costs_ca.md` | `crash_costs` |
+| M2 | LRSM location types (KA by roadway / signalized / non-signalized), U priced at C, unknown control at the signalized price | `crash_cost.py:18, 31-38, 40-44` | `crash_costs.rules` (CA only) |
+| M3 | Cost column label and source note "Caltrans LRSM 2026" | `profile.py:782, 794, 827, 829`; `frontend/src/screens/Profile.jsx:364` | label from the cite |
+| M4 | Caltrans rate groups: TASAS base rate + ADT factor, F+I and fatal shares | `rate_groups.py:1-6, 17, 24, 51-69`; `data/reference/caltrans_rate_groups.csv`, `.md` | `statewide_rates` |
+| M5 | Statewide columns, "pp. 83–90" note, "Caltrans' statewide averages" caveat | `profile.py:399-427, 502-503, 605-607, 908-909` | text from `statewide_rates` |
+| M6 | Rate group entered per location (the Caltrans picker) | `network.py:665-667`; `db.py:197-205` (migration 15); `Profile.jsx:393, 451, 966` | same table; label = `facility_label` |
+| M7 | Critical rate: K = 1.645, 3-site minimum, own-corridor average (HSM Ch. 4) | `profile.py:287-288, 300-304, 801-813, 938-946`; `export.py:383-384` | `screening` |
+| M8 | Caltrans citations: LRSM, HCCL, the critical-rate entry, "TASAS planned" | `config/references.json:35-43, 215-250` (+ `ct_lrsm` cites at 88-100, 103-120, 174-190, 302-310) | `manuals` + per-state method entries |
+| M9 | Caltrans Traffic Census AADT (Oct–Sep count year), source label | `aadt.py:1-23, 46, 404`; `config/aadt.json`; `shs.py:1-8, 77`; `crashes.py:1301-1311` | `pack.aadt` + `aadt` cite |
+| M10 | Truck AADT and ramp ADT (T24, T25) | `profile.py:453-513, 530-559, 567-613`; `ramps.py:1-17` | `pack.aadt` |
+| M11 | "At least 3 years, preferably 5" (LRSM) | `study.py:26`; `Setup.jsx:136` | `min_years` |
+| M12 | First CCRS year 2016, CHP 18-month lag | `study.py:20, 23, 63-64` | `first_year`, `final_lag_months` (row 30) |
+| M13 | K factor 10% default, Caltrans K and D definition | `study.py:25`; `config/references.json:193-200` | `k_factor` |
+| M14 | Intersection influence radius 250 ft "HSM / Caltrans" | `network.py:49` | `influence_radius_ft` |
+| M15 | HSIP "< 500 ft" intersection rule (named, not built) | `assign.py:7` | none until built |
+| M16 | SPF calibration | nowhere (0 hits for SPF/calibration) | `spf_calibration`, data only |
+
+Inventory rows 19 and 20 above are M4 and M1. Not California-specific: the rate formulas (`profile.py:291-345`,
+FHWA/HSM), KABCO, EPDO (planned, HSM). They stay shared.
+
+### The methods file
+
+One file per state, next to California's existing tables: `data/reference/methods_ca.json`, `methods_tx.json`.
+California's CSVs and their `.md` source notes stay where they are; the methods file points at them.
+
+```json
+{
+  "state": "CA",
+  "manuals": {
+    "lrsm":  {"title": "Local Roadway Safety Manual", "publisher": "Caltrans", "jurisdiction": "CA",
+              "edition": "v1.8", "date": "2026-05", "url": "https://dot.ca.gov/.../lrsm2026final.pdf",
+              "sha256": "d5ec1b7f...", "downloaded": "2026-11-01", "note": "knowledge/sources/ca-caltrans-lrsm.md"},
+    "cshwy": {"title": "2024 Crash Data on California State Highways", "jurisdiction": "CA", "edition": "2024 (v3)", ...},
+    "hsm":   {"title": "Highway Safety Manual", "publisher": "AASHTO", "jurisdiction": "US", "edition": "1st, 2010", ...}
+  },
+  "values": {
+    "hsip_manual":     {"manual": "lrsm", "page": "cover"},
+    "analysis_guide":  {"manual": "lrsm", "page": "Sec. 3.1, p. 24"},
+    "min_years":       {"value": 3, "preferred": 5, "manual": "lrsm", "page": "..."},
+    "crash_costs":     {"file": "crash_costs_ca.csv", "dollar_year": 2026, "manual": "lrsm",
+                        "page": "App. D, p. 100 (PDF 106)",
+                        "rules": [{"text": "U priced at C", "decided": "user 2026-11-01 #273"}]},
+    "statewide_rates": {"file": "caltrans_rate_groups.csv", "facility_label": "Caltrans rate group",
+                        "unit": {"segment": "per MVM", "intersection": "per MEV", "ramp": "per MV"},
+                        "manual": "cshwy", "page": "pp. 83-90"},
+    "screening":       {"engine": "critical_rate_own_sites", "k": 1.645, "min_sites": 3,
+                        "manual": "hsm", "page": "Ch. 4, Sec. 4.2.3"},
+    "aadt":            {"manual": "ct_census", "page": "workbook per count year (config/aadt.json)"},
+    "k_factor":        {"value": 0.10, "manual": "ct_kd", "page": "...", "decided": "user (\"10% is typical\")"},
+    "spf_calibration": {"missing": "not looked up for CA yet"}
+  }
+}
+```
+
+Rules, enforced by `packs.check_methods(pack)` at load (tests fail on a bad file):
+
+- Each value is either **cited** (`manual` + `page`, the manual having `title`, `edition`, `url`) or **missing**
+  (`"missing": "<why>"`). Nothing else.
+- `"verified": false` marks a value from research that no one has matched against the document yet. The engine treats
+  it as missing; the report says "found in research, not yet checked against <manual>".
+- A manual's `jurisdiction` is the pack's state or `US`. A Texas pack citing a California manual fails to load:
+  **the check is the rule "never silently borrow California's"**. A national manual (HSM, FHWA crash costs,
+  `fhwa_costs` in references.json) is allowed only with a `decided` line naming the user's decision.
+- `screening.engine` is one CrashIQ has built (`critical_rate_own_sites` today, plus `statewide_rate_group` for CA),
+  or `null`: the state's own method is recorded with its cite but isn't run.
+- `spf_calibration` is data only (calibration factor per facility type and cite). No SPF engine exists; none is built
+  for this.
+
+**Engine changes (small, reuse the code that's there).**
+- `crash_cost.cost()` (`crash_cost.py:40`) looks up `(sev, loc)`, then `(sev, "any")`, then for K/A `("KA", loc)` and
+  `("KA", "any")`. One reader serves CA's KA-by-location table and a plain K/A/B/C/O row per state. U is priced only
+  when the state's `rules` say how; otherwise U crashes are left unpriced and counted in the caveat.
+- `rate_groups.table()` takes the pack's file. A state's file has `group, kind, base_rate, pct_fatal, pct_fi,
+  printed_page` with no `adt_factor`; a missing factor adds 0, so `expected()` is unchanged. The `rate_group` table
+  (migration 15) already stores any string, so the per-location picker is reused, labelled with `facility_label`.
+- `profile.py:287-288` read `k` and `min_sites` from `screening`; the labels at M3, M5 and `export.py:383` read the cite.
+
+**Fallback: shown, never silent.** When a value is missing, unverified, or its engine is `null`, the part it feeds is
+left out and a caveat says why, in the profile, the PDF and the workbook:
+
+| Missing | What the report does |
+|---|---|
+| `crash_costs` | No cost column, no ranking by cost. "No Texas crash costs in CrashIQ yet (TxDOT HSIP manual not checked)." |
+| `statewide_rates` | No statewide columns. "No Texas statewide average rates in CrashIQ; rates are compared with this corridor's own sites only." |
+| `screening` engine `null` | "Texas screens with <method> (<manual>, p. N); CrashIQ hasn't built it. This report shows the HSM critical rate against the corridor's own sites (national method)." |
+| `aadt` | Today's "no state traffic counts" path (step 7); no T22-T25. |
+| `min_years` | No short-window warning. |
+
+Every report gets one **"State methods and sources"** block (References screen, PDF method section, workbook Sources
+sheet), built from the methods file: per value, what was used and its manual, edition and page, or "not available for
+<state>" and what the report did instead. `config/references.json` keeps national sources and shared methods; its
+Caltrans entries (M8) move into `methods_ca.json`, and `/references?state=` merges the two.
+
+Test that guards it: a fixture TX pack with `crash_costs` and `statewide_rates` missing runs through profile and
+export; the output has no `crash_cost` values, both caveats, and none of the strings "Caltrans", "LRSM", "TASAS",
+"CCRS", "CHP" anywhere.
+
+### Plugging in tonight's research (9 states)
+
+Each session writes `research_notes/<st>-2026-11-07/<st>-summary.json` with a `methods` key. A converter
+(`scripts/methods_from_summary.py <st>`, step 9) copies it **verbatim** into a draft `methods_<st>.json`, every value
+`"verified": false`:
+
+| `summary.methods` | Goes to |
+|---|---|
+| `manuals[{title, url, date}]` | `manuals.<slug>` with `jurisdiction: <ST>`; `edition`, `sha256`, `downloaded` left blank to fill |
+| `crash_costs{K,A,B,C,O,year}` | `crash_costs_<st>.csv` rows `K,any,<$>` …; `crash_costs.dollar_year = year`; `page` blank |
+| `rates_available`, `rates_unit` | true → `statewide_rates {unit, verified: false}` (the table itself is extracted later from the PDF by a script); false → `missing: "state publishes none (research 2026-11-07)"` |
+| `screening_method` | `screening {engine: null, name: <text>, verified: false}` |
+| `differences_from_ca[]` | not pack data: the checklist for that state's build issue |
+
+Verifying a value means downloading the manual, recording its SHA-256, finding the number in its text (pdftotext) and
+filling `page`; then `verified` goes to true. `check_methods` rejects `verified: true` with no page or no `sha256`.
+Unverified values never reach a report as numbers, so a wrong research figure can't be printed as a state's cost.
+
 ## Migration order (draft GitHub issues, not filed)
 
 Every step: full suite green (955 tests at 87c2ad4), and the Tester's California statewide numbers identical, except
@@ -161,6 +344,14 @@ DB migration 16: `study.state TEXT NOT NULL DEFAULT 'CA'`. `study.create` takes 
 packs. The study API returns it. Accept: existing studies read as CA; creating a TX study fails while TX is
 `reader_only`.
 
+**2b. State picker on Setup.** `/studies/meta?state=`, `states` list, the dropdown, the two copy lines from meta
+(§ State picker). With only CA ready, the list shows California plus the 9 researched states as "(coming)". Accept:
+Setup tests above; creating a study with no `state` still makes a CA study.
+
+**2c. Corridor outside the state.** The `bounds` stop in `put_corridor` and the level-4 check in `corridor_cities`
+with its caveat. Accept: a line in Reno is refused for a CA study; a Stateline (Lake Tahoe) line saves and the profile
+names Nevada and its share; a CA line's Overpass query result is otherwise unchanged.
+
 **3. `county_fips` and `state` on every crash.**
 `ca_ccrs.crash_record` adds both (from `caltrans_districts.csv`); `PULL_FORMAT` 34. `fars.fips`, `addrfeat._fips` and
 `nad._county_codes` read `county_fips` instead of converting the CCRS code. Accept: FARS links, ADDRFEAT downloads and
@@ -168,9 +359,13 @@ NAD matches identical on the Tester's corridors.
 
 **4. California constants become pack fields.**
 Mechanical swaps, CA values unchanged: `bounds` (rows 6), `first_year`/`final_lag_months` (30), the reference files
-(12, 24-27), `crash_costs` (20), `rate_groups` (19), `ref["pcf"]` (21), `source`/`legal` (32-35). The pack comes from
+(12, 24-27), `methods` (19, 20; step 4b), `ref["pcf"]` (21), `source`/`legal` (32-35). The pack comes from
 `packs.get(study["state"])` at the entry points (`ensure`, `place_unmatched`, profile, export) and is passed down.
 Accept: grep finds no `ca_` file name or CA bound outside `packs.py` and the CA reader.
+
+**4b. California's methods file.** Write `methods_ca.json` from the existing `.md` source notes (no new numbers),
+add `check_methods`, and point M1-M14 at it. Accept: CA profile and export identical (costs, statewide columns,
+critical rates, labels); the TX fixture test in § Methods passes.
 
 **5. Text rules from the pack.**
 `placeholders`, `special_areas`, and `route_prefixes` (rows 10, 11, 13). `names.py` regexes are module-level and used
@@ -196,8 +391,12 @@ takes the existing "not available" path; the profile caveat says "no state traff
 One `PACKS` line for the state the user picks (likely TX), its reference files (county boxes, cities, address
 points, cost table or none), and golden cases. It stays `reader_only` until it meets California's bar
 (`state-crash-data-onboarding`: golden cases, placement accuracy on hidden-truth crashes, coverage by road type, the
-3-corridor click-through) and the paid-use licence is cleared. Then the user flips it to `active` and the frontend
-gets a state picker (separate issue, row 36).
+3-corridor click-through) and the paid-use licence is cleared. Then the user flips it to `active`; the
+Setup dropdown (step 2b) enables it with no frontend change.
+
+**9. Draft methods files from tonight's research.** The converter (§ Plugging in) for each state whose
+`<st>-summary.json` exists; drafts stay `verified: false` and their states stay in `COMING`. Accept: each draft
+loads through `check_methods`; no draft value is used by a report.
 
 ## Risks
 
@@ -219,3 +418,9 @@ gets a state picker (separate issue, row 36).
 7. Step 3 bumps `PULL_FORMAT`, so every cached study re-pulls from data.ca.gov once.
 8. Block numbers are not house numbers: "1200 MAIN ST" from a block field may match no NAD point, or the wrong one.
    Measure before letting it auto-place.
+9. **The `bounds` box is coarse.** California's box covers parts of Nevada, Arizona and Oregon, so check 1 only stops
+   lines that are clearly elsewhere; the Overpass state check is what names a border corridor, and it needs Overpass.
+10. **Research figures look final but aren't.** A summary's `crash_costs` may be from a stale edition or a secondary
+    page. That's why every converted value starts `verified: false` and is never printed until a page is filled.
+11. **A fixed state on a study** means an engineer who picked the wrong state redraws in a new study. Cheap today
+    (Setup is the first step); revisit only if users ask.
