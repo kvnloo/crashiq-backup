@@ -1,0 +1,78 @@
+{
+ "area": "Grafton County (33009), 2015-2016, UVLSRPC re-host of NHDOT crash data",
+ "n": 1773,
+ "gps_share": 1.0,
+ "house_number_in_street_share": 0.5228,
+ "street_pair_share": 0.8409,
+ "tiers": {
+  "exact": 589,
+  "review": 728,
+  "verified_typo": 58,
+  "unique_pair": 83,
+  "relaxed": 11,
+  "near": 5,
+  "fuzzy": 17
+ },
+ "name_placed_share": 0.4303,
+ "name_placed_share_of_pairs": 0.5117,
+ "auto_share": 0.0,
+ "auto_share_if_tiger_only_auto": 0.379,
+ "route_form_retry_used": 5,
+ "scored_against_gps": 763,
+ "within_250ft_all_placed": 0.3486,
+ "within_250ft_all_placed_low": 0.3156,
+ "within_250ft_auto_if_tiger_only_auto": 0.3497,
+ "within_250ft_auto_if_tiger_only_auto_low": 0.3146,
+ "within_250ft_offset_le_250ft": 0.3665,
+ "within_250ft_offset_le_250ft_low": 0.3277,
+ "offset_le_250ft_n": 562,
+ "not_placed": {
+  "no intersection of the two named streets": 642,
+  "no cross street": 282,
+  "exact: streets meet in more than one place": 48,
+  "relaxed: streets meet in more than one place": 25,
+  "fuzzy: streets meet in more than one place": 8,
+  "missing street name": 5
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "1028 & JERUSALEM RD",
+   "PLAINFIELD RD & AIRPORT RD",
+   "SANDS OF TIME RD & WOLFBORO RD",
+   "RT 4 & C-MORE FARMS RD",
+   "USHY 4 & DANEILS DR",
+   "RT 4 & HIGH ST"
+  ],
+  "exact: streets meet in more than one place": [
+   "GOSS RD & MOOSE MTN RD",
+   "N PLAINFIELD RD & RT 12A",
+   "S MAIN ST & MAPLE ST",
+   "ROUTE 118 & N. DORCHESTER ROAD",
+   "DOGFORD RD & HANOVER CENTER RD",
+   "LYME RD & RIVER RD"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "PLAINFIELD RD & INTERCHANGE DR",
+   "PLAINFIELD RD & INTERCHANGE DR",
+   "PLAINFIELD RD & RT 12A",
+   "INTERCHANGE DR & PLAINFIELD RD",
+   "PLAINFIELD RD & INTERCHANGE DR",
+   "PLAINFIELD RD & INTERCHANGE DR"
+  ],
+  "missing street name": [
+   "EXIT 17 & RAMP",
+   "RT 89 S/B & S/B OFF RAMP",
+   "RT 89 & EXIT OFF RAMP",
+   "MAIN ST & OVERPASS",
+   "EXIT 20 RAMP & EXIT RAMP"
+  ],
+  "fuzzy: streets meet in more than one place": [
+   "PLAINFIELD RD & INTERCHANGE DR Q",
+   "INTERCHANGE DDR & PLAINFIELD RD",
+   "SHAKER HILL RD & LIVINGSTON LODGE R",
+   "PLAINFIELD RD & INERHANGE DR",
+   "INTERCANGE DR & PLAINFIELD RD",
+   "PLAINFIELD RD & INERCHANGE DR"
+  ]
+ }
+}

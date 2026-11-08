@@ -1,0 +1,63 @@
+{
+ "state": "NH",
+ "bucket": "D",
+ "status": "gated",
+ "bucket_note": "Verified: no agency-published record-level crash data (NH state ArcGIS org, NHDOT GIS snapshots on GRANIT, NHDOT GIS Data Catalog). Records sit in NH DMV VISION under RSA 260:14; NHDOT shares located snapshots with RPCs only.",
+ "sources": [
+  {
+   "name": "NH DMV VISION crash records / NHDOT GIS crash layer (request)",
+   "url": "https://gc.nh.gov/rsa/html/xxi/260/260-14.htm",
+   "access": "records request (RSA 260:14; bulk: Saf-C 5602, form DSMV 494)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "records released on \"representation ... that the use of the records will be strictly limited to\" listed uses, incl. \"use by a legitimate business in research activities, and ... in statistical reports, so long as personal information is not disclosed\" (RSA 260:14)",
+   "years": "not confirmed",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured statewide (RT114 re-host: 1.0)",
+   "street_names_share": "not measured statewide (UVLSRPC re-host: 0.8409 with a cross street)",
+   "kabco": true,
+   "keys_linkable": "ACCIDENTNUMBER; person/vehicle tables not seen"
+  },
+  {
+   "name": "UVLSRPC Crash History (re-host of NHDOT data, not a source)",
+   "url": "https://services1.arcgis.com/Lxx6ZzbB9K8v0kCg/arcgis/rest/services/Crash_History/FeatureServer/0",
+   "access": "open (ArcGIS REST)",
+   "licence_paid_use": "no",
+   "years": "2002 - Jun 2017",
+   "rows_per_year": {
+    "2015": 1986,
+    "2016": 2008
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.8409,
+   "kabco": true,
+   "keys_linkable": "no report number"
+  }
+ ],
+ "placement_sample": {
+  "area": "Grafton County (33009), 2015-2016, UVLSRPC re-host of NHDOT crash data",
+  "n": 1773,
+  "gps_share": 1.0,
+  "name_placed_share": 0.4303,
+  "auto_share": 0.0,
+  "auto_share_if_tiger_only_auto": 0.379,
+  "within_250ft": 0.3486,
+  "within_250ft_low": 0.3156,
+  "within_250ft_offset_le_250ft": 0.3665,
+  "within_250ft_offset_le_250ft_low": 0.3277,
+  "truth_note": "scored against NHDOT's LRS-located point, not GPS: 39% of rows share a point with 5+ others",
+  "house_address_share": 0.5228,
+  "address_points_source": "not checked (NAD coverage of NH not measured)"
+ },
+ "importer_built": false,
+ "blockers": [
+  "no agency-published record-level crash data",
+  "RSA 260:14 limits release to listed uses; no paid-use grant",
+  "re-hosts are stale (UVLSRPC to 2017) or one corridor (RT114) and carry no grant"
+ ],
+ "user_actions": [
+  "Ask NHDOT (GISMaps@dot.nh.gov / crash data analyst) for one county-year sample in its GIS crash layout, with written permission for paid use",
+  "If routed to NH DMV: bulk request under RSA 260:14 / Saf-C 5602 (DSMV 494) for research/statistical use without personal information",
+  "Re-check in 2027 for NH OHS's planned public crash portal"
+ ],
+ "cities": []
+}
