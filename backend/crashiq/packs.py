@@ -190,6 +190,30 @@ PACKS["NY"] = StatePack(
 COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois"}
 
 
+def _load_plugins() -> None:
+    """One module per state in crashiq/statepacks/<st>.py, each defining PACK (a StatePack): a new state adds files
+    only, so state branches built in parallel never conflict here. A module that fails to import is skipped and named
+    in PLUGIN_ERRORS (a broken state must never take California down)."""
+    import importlib
+    import pkgutil
+
+    from . import statepacks
+    for m in pkgutil.iter_modules(statepacks.__path__):
+        try:
+            pack = importlib.import_module(f"{statepacks.__name__}.{m.name}").PACK
+        except Exception as e:                       # noqa: BLE001 - reported, never fatal
+            PLUGIN_ERRORS[m.name] = f"{type(e).__name__}: {e}"
+            continue
+        if pack.code in PACKS:
+            PLUGIN_ERRORS[m.name] = f"{pack.code} is already registered"
+            continue
+        PACKS[pack.code] = pack
+
+
+PLUGIN_ERRORS: dict[str, str] = {}
+_load_plugins()
+
+
 def get(code: str) -> StatePack:
     """The pack of a state code; KeyError for anything not registered (never a California fallback)."""
     return PACKS[code]

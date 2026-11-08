@@ -60,3 +60,14 @@ def test_setup_lists_ready_states_first():
     for part in (ready, s[len(ready):]):
         assert [x["name"] for x in part] == sorted(x["name"] for x in part)
     assert not set(packs.COMING) & {x["code"] for x in ready}           # a built state is never also "coming"
+
+
+def test_state_plugins_load_and_a_broken_one_never_takes_california_down(tmp_path, monkeypatch):
+    from crashiq import packs, statepacks
+    assert "CA" in packs.PACKS and not packs.PLUGIN_ERRORS
+    bad = tmp_path / "zz_broken.py"
+    bad.write_text("raise RuntimeError('boom')\n")
+    monkeypatch.setattr(statepacks, "__path__", [str(tmp_path)])
+    monkeypatch.setattr(packs, "PLUGIN_ERRORS", {})
+    packs._load_plugins()
+    assert "zz_broken" in packs.PLUGIN_ERRORS and packs.get("CA").name == "California"
