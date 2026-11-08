@@ -1,0 +1,87 @@
+{
+ "area": "Brooklyn (Kings County, FIPS 36047), NYC crashes 2024",
+ "borough_crashes": 22792,
+ "borough_gps": 22448,
+ "borough_gps_pct": 98.5,
+ "n": 2000,
+ "with_street_pair_or_address": 2000,
+ "tiers": {
+  "exact": 1209,
+  "address": 557,
+  "review": 223,
+  "fuzzy": 6,
+  "unique_pair": 1,
+  "near": 3,
+  "relaxed": 1
+ },
+ "by_tier": {
+  "address": {
+   "n": 557,
+   "within_250ft": 523,
+   "pct": 93.9,
+   "low": 91.6
+  },
+  "exact": {
+   "n": 1209,
+   "within_250ft": 1209,
+   "pct": 100.0,
+   "low": 99.7
+  },
+  "fuzzy": {
+   "n": 6,
+   "within_250ft": 6,
+   "pct": 100.0,
+   "low": 61.0
+  },
+  "near": {
+   "n": 3,
+   "within_250ft": 2,
+   "pct": 66.7,
+   "low": 20.8
+  },
+  "relaxed": {
+   "n": 1,
+   "within_250ft": 1,
+   "pct": 100.0,
+   "low": 20.7
+  },
+  "unique_pair": {
+   "n": 1,
+   "within_250ft": 1,
+   "pct": 100.0,
+   "low": 20.7
+  }
+ },
+ "placed": 1777,
+ "placed_pct": 88.8,
+ "auto": 1210,
+ "auto_pct": 60.5,
+ "auto_within_250ft": 1210,
+ "auto_within_250ft_pct": 100.0,
+ "auto_within_250ft_low": 99.7,
+ "placed_within_250ft_pct": 98.0,
+ "placed_within_250ft_low": 97.3,
+ "address_crashes": 755,
+ "address_placed": 557,
+ "sam_points_fetched": 88933,
+ "review_reasons": {
+  "missing street name": 176,
+  "no intersection of the two named streets": 25,
+  "address not found": 22
+ },
+ "network": "TIGER/Line 2024 only (no OSM); tiger.elements leaves ways untagged, so Gate() treats them like OSM",
+ "no_gps": {
+  "n": 344,
+  "tiers": {
+   "exact": 139,
+   "review": 58,
+   "address": 144,
+   "verified_typo": 1,
+   "relaxed": 1,
+   "fuzzy": 1
+  },
+  "auto": 139,
+  "auto_pct_of_no_gps": 40.4,
+  "auto_pct_of_all_borough": 0.61
+ }
+}

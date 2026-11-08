@@ -1,0 +1,1905 @@
+{
+"_source": "SDOT Collisions All Years + Persons, City of Seattle ArcGIS, 2025 rows, recorded 2026-11-07 (outSR=4326)",
+"crashes": [
+{
+"attributes": {
+"OBJECTID": 251951,
+"INCKEY": 386924,
+"COLDETKEY": 388464,
+"REPORTNO": "EG31337",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 24537,
+"LOCATION": "BANNER WAY NE AND NE 80TH ST",
+"INCDTTM": "9/24/2025 8:56:00 AM",
+"PERSONCOUNT": 3,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 3,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Rear Ended",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, REAR END",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.3250990185658,
+"y": 47.686768355198815
+}
+},
+{
+"attributes": {
+"OBJECTID": 250755,
+"INCKEY": 385504,
+"COLDETKEY": 387044,
+"REPORTNO": "3931301",
+"STATUS": "Unmatched",
+"ADDRTYPE": "I",
+"INTKEY": 35009,
+"LOCATION": "16TH AVE SW AND SW SULLIVAN ST",
+"INCDTTM": "7/6/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.35506793075358,
+"y": 47.52744763651459
+}
+},
+{
+"attributes": {
+"OBJECTID": 253915,
+"INCKEY": 384838,
+"COLDETKEY": 386378,
+"REPORTNO": "EF72688",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 35270,
+"LOCATION": "M L KING JR WR WAY S AND S FAIRBANKS ST",
+"INCDTTM": "2/12/2025 8:01:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 1,
+"VEHCOUNT": 1,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Cycles",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK PEDALCYCLIST, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.27941841019704,
+"y": 47.522586720108926
+}
+},
+{
+"attributes": {
+"OBJECTID": 251683,
+"INCKEY": 385418,
+"COLDETKEY": 386958,
+"REPORTNO": "EG09861",
+"STATUS": "Unmatched",
+"ADDRTYPE": "I",
+"INTKEY": 28773,
+"LOCATION": "9TH AVE N AND REPUBLICAN ST",
+"INCDTTM": "7/14/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK PEDALCYCLIST, FRONT END AT ANGLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.33975127127506,
+"y": 47.623214065437274
+}
+},
+{
+"attributes": {
+"OBJECTID": 261904,
+"INCKEY": 380623,
+"COLDETKEY": 382143,
+"REPORTNO": "EF76809",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 31915,
+"LOCATION": "38TH AVE SW AND FAUNTLEROY WAY SW",
+"INCDTTM": "3/24/2025 5:50:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Angles",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": "Other",
+"ROADCOND": "Unknown",
+"LIGHTCOND": "Unknown",
+"HITPARKEDCAR": "N",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.38009272065256,
+"y": 47.562257030518154
+}
+},
+{
+"attributes": {
+"OBJECTID": 260795,
+"INCKEY": 381828,
+"COLDETKEY": 383348,
+"REPORTNO": "3892912",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 28586,
+"LOCATION": "HIGHLAND DR AND QUEEN ANNE AVE N",
+"INCDTTM": "5/23/2025 1:28:00 PM",
+"PERSONCOUNT": 3,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Angles",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.35662206393582,
+"y": 47.629572571413306
+}
+},
+{
+"attributes": {
+"OBJECTID": 261111,
+"INCKEY": 380207,
+"COLDETKEY": 381727,
+"REPORTNO": "EF76498",
+"STATUS": "Unmatched",
+"ADDRTYPE": "I",
+"INTKEY": 29658,
+"LOCATION": "3RD AVE AND BROAD ST",
+"INCDTTM": "3/22/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.3507872563209,
+"y": 47.61824782774304
+}
+},
+{
+"attributes": {
+"OBJECTID": 259681,
+"INCKEY": 381168,
+"COLDETKEY": 382688,
+"REPORTNO": "3924420",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 29894,
+"LOCATION": "6TH AVE AND PIKE ST",
+"INCDTTM": "5/6/2025 8:31:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 1,
+"VEHCOUNT": 1,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Cycles",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK PEDALCYCLIST, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dusk",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.3344637698629,
+"y": 47.61114239799386
+}
+},
+{
+"attributes": {
+"OBJECTID": 252886,
+"INCKEY": 387203,
+"COLDETKEY": 388743,
+"REPORTNO": "EG40103",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 29579,
+"LOCATION": "4TH AVE AND PINE ST",
+"INCDTTM": "10/21/2025 7:58:00 AM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 1,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 1,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Pedestrian",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTORIZED SCOOTER, FRONT END AT ANGLE",
+"WEATHER": "Overcast",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.33759198158764,
+"y": 47.61120737279311
+}
+},
+{
+"attributes": {
+"OBJECTID": 251301,
+"INCKEY": 386161,
+"COLDETKEY": 387701,
+"REPORTNO": "EG18693",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 36586,
+"LOCATION": "1ST AVE NE AND NE NORTHGATE WAY",
+"INCDTTM": "7/30/2025 4:22:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Sideswipe",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.32863426558531,
+"y": 47.70862872035411
+}
+},
+{
+"attributes": {
+"OBJECTID": 258374,
+"INCKEY": 387741,
+"COLDETKEY": 389281,
+"REPORTNO": "EG43353",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "MERCER ST BETWEEN MINOR AVE N AND PONTIUS AVE N",
+"INCDTTM": "10/23/2025 11:55:00 AM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 1,
+"VEHCOUNT": 1,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Cycles",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK PEDALCYCLIST, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.33236611863623,
+"y": 47.62427037040122
+}
+},
+{
+"attributes": {
+"OBJECTID": 249970,
+"INCKEY": 385116,
+"COLDETKEY": 386656,
+"REPORTNO": "EF79752",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "SWIFT AVE S BETWEEN 19TH ER AVE S AND S GRAHAM ST",
+"INCDTTM": "1/16/2025 3:36:00 PM",
+"PERSONCOUNT": 3,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Rear Ended",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, REAR END",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.30827965073074,
+"y": 47.547171216795235
+}
+},
+{
+"attributes": {
+"OBJECTID": 261831,
+"INCKEY": 381839,
+"COLDETKEY": 383359,
+"REPORTNO": "3931854",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "S LUCILE ST BETWEEN 13TH AVE S AND 15TH AVE S",
+"INCDTTM": "5/26/2025 9:41:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (but intersection related)",
+"ST_COLLISIONTYPE": "Rear Ended",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, REAR END",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dusk",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.31480750115229,
+"y": 47.553447649476766
+}
+},
+{
+"attributes": {
+"OBJECTID": 254081,
+"INCKEY": 384598,
+"COLDETKEY": 386138,
+"REPORTNO": "EF62329",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "3RD AVE NW BETWEEN NW 43RD ST AND NW 44TH S ST",
+"INCDTTM": "1/27/2025 7:09:00 AM",
+"PERSONCOUNT": 3,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 3,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Parked Car",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, LEFT SIDE SIDESWIPE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dawn",
+"HITPARKEDCAR": "Y",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.36079880379023,
+"y": 47.65957907967135
+}
+},
+{
+"attributes": {
+"OBJECTID": 256795,
+"INCKEY": 378674,
+"COLDETKEY": 380194,
+"REPORTNO": "EF57052",
+"STATUS": "Unmatched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "W EMERSON ST BETWEEN 6TH AVE W AND 8TH AVE W",
+"INCDTTM": "1/15/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "Y",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.36648569509731,
+"y": 47.65120545530384
+}
+},
+{
+"attributes": {
+"OBJECTID": 259786,
+"INCKEY": 380564,
+"COLDETKEY": 382084,
+"REPORTNO": "3924457",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "NICKERSON ST BETWEEN DRAVUS ST AND WARREN AVE N",
+"INCDTTM": "4/6/2025 7:41:00 AM",
+"PERSONCOUNT": 1,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 1,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Other",
+"SDOT_COLDESC": "MOTOR VEHICLE RAN OFF ROAD - HIT FIXED OBJECT",
+"WEATHER": "Raining",
+"ROADCOND": "Wet",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.35487069062467,
+"y": 47.648484440975835
+}
+},
+{
+"attributes": {
+"OBJECTID": 260913,
+"INCKEY": 388302,
+"COLDETKEY": 389842,
+"REPORTNO": "3943524",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "E REPUBLICAN ST BETWEEN BOYLSTON AVE E AND HARVARD AVE E",
+"INCDTTM": "11/24/2025 9:19:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Other",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": "Overcast",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.32253475378903,
+"y": 47.62313460864716
+}
+},
+{
+"attributes": {
+"OBJECTID": 260961,
+"INCKEY": 388061,
+"COLDETKEY": 389601,
+"REPORTNO": "3930974",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "4TH AVE S BETWEEN DIAGONAL AVE S AND COSTCO DR",
+"INCDTTM": "11/17/2025 3:11:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Driveway Junction",
+"ST_COLLISIONTYPE": "Angles",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": "Overcast",
+"ROADCOND": "Wet",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.32939511562593,
+"y": 47.565964226267035
+}
+},
+{
+"attributes": {
+"OBJECTID": 275,
+"INCKEY": 379127,
+"COLDETKEY": 380647,
+"REPORTNO": "3924334",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "ELLIOTT AVE W BETWEEN W MERCER PL AND W PROSPECT ST",
+"INCDTTM": "1/17/2025 2:43:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Rear Ended",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, REAR END",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.36969892772625,
+"y": 47.6275736034895
+}
+},
+{
+"attributes": {
+"OBJECTID": 260415,
+"INCKEY": 380215,
+"COLDETKEY": 381735,
+"REPORTNO": "3930092",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "NW 132ND ST BETWEEN 2ND AVE NW AND 3RD AVE NW",
+"INCDTTM": "2/15/2025 6:13:00 PM",
+"PERSONCOUNT": 1,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 1,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Other",
+"SDOT_COLDESC": "MOTOR VEHICLE RAN OFF ROAD - HIT FIXED OBJECT",
+"WEATHER": "Clear",
+"ROADCOND": "Wet",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.36027002927715,
+"y": 47.725073055591174
+}
+},
+{
+"attributes": {
+"OBJECTID": 258495,
+"INCKEY": 389305,
+"COLDETKEY": 390845,
+"REPORTNO": "3936833",
+"STATUS": "Unmatched",
+"ADDRTYPE": "A",
+"INTKEY": null,
+"LOCATION": null,
+"INCDTTM": "12/15/2025 8:30:00 AM",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": null,
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "NOT ENOUGH INFORMATION / NOT APPLICABLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+}
+},
+{
+"attributes": {
+"OBJECTID": 252937,
+"INCKEY": 383925,
+"COLDETKEY": 385465,
+"REPORTNO": "EG05293",
+"STATUS": "Unmatched",
+"ADDRTYPE": "A",
+"INTKEY": null,
+"LOCATION": null,
+"INCDTTM": "6/29/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": null,
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "NOT ENOUGH INFORMATION / NOT APPLICABLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+}
+},
+{
+"attributes": {
+"OBJECTID": 260208,
+"INCKEY": 387419,
+"COLDETKEY": 388959,
+"REPORTNO": "3931590",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "N 130TH ST BETWEEN STONE AVE N AND ASHWORTH AVE N",
+"INCDTTM": "10/15/2025 10:14:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Rear Ended",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, REAR END",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.34093161256143,
+"y": 47.72321028206408
+}
+},
+{
+"attributes": {
+"OBJECTID": 260728,
+"INCKEY": 379364,
+"COLDETKEY": 380884,
+"REPORTNO": "EF68557",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "EAST MARGINAL WAY S BETWEEN S ALASKA ST AND XW ALASKA",
+"INCDTTM": "2/22/2025 6:00:00 PM",
+"PERSONCOUNT": 1,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 1,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Other",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK OBJECT IN ROAD",
+"WEATHER": "Raining",
+"ROADCOND": "Wet",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.33944055109971,
+"y": 47.55993554686824
+}
+},
+{
+"attributes": {
+"OBJECTID": 252149,
+"INCKEY": 383748,
+"COLDETKEY": 385288,
+"REPORTNO": "EF82498",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "S OTHELLO ST BETWEEN 46TH AVE S AND 48TH AVE S",
+"INCDTTM": "4/3/2025 2:43:00 PM",
+"PERSONCOUNT": 4,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 3,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Parked Car",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "Y",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.2740071877688,
+"y": 47.53694533726443
+}
+},
+{
+"attributes": {
+"OBJECTID": 259767,
+"INCKEY": 388583,
+"COLDETKEY": 390123,
+"REPORTNO": "EG68441",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "EASTLAKE AVE NE BETWEEN ROOSEVELT WAY NE AND NE 41ST ST",
+"INCDTTM": "11/6/2025 7:30:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 1,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 1,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Pedestrian",
+"SDOT_COLDESC": "MOTOR VEHCILE STRUCK PEDESTRIAN",
+"WEATHER": "Raining",
+"ROADCOND": "Wet",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.31756541070628,
+"y": 47.65646850697425
+}
+},
+{
+"attributes": {
+"OBJECTID": 250831,
+"INCKEY": 387096,
+"COLDETKEY": 388636,
+"REPORTNO": "3943502",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 28187,
+"LOCATION": "HARVARD AVE E AND E SHELBY ST",
+"INCDTTM": "10/12/2025 3:46:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Angles",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": "Raining",
+"ROADCOND": "Wet",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.32210299337194,
+"y": 47.6469219262209
+}
+},
+{
+"attributes": {
+"OBJECTID": 252858,
+"INCKEY": 382460,
+"COLDETKEY": 383980,
+"REPORTNO": "EF95974",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "M L KING JR WAY S BETWEEN S LANE ST AND S DEARBORN ST",
+"INCDTTM": "5/26/2025 10:14:00 AM",
+"PERSONCOUNT": 4,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 3,
+"INJURIES": 1,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Parked Car",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "2",
+"MAXSEVERITYDESC": "Injury Collision"
+},
+"geometry": {
+"x": -122.29750683817127,
+"y": 47.59612779995489
+}
+},
+{
+"attributes": {
+"OBJECTID": 250016,
+"INCKEY": 386302,
+"COLDETKEY": 387842,
+"REPORTNO": "EG28331",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 25789,
+"LOCATION": "ROOSEVELT WAY NE AND NE 50TH ST",
+"INCDTTM": "9/6/2025 10:49:00 PM",
+"PERSONCOUNT": 4,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 1,
+"VEHCOUNT": 1,
+"INJURIES": 1,
+"SERIOUSINJURIES": 1,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Cycles",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK PEDALCYCLIST, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Wet",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "3",
+"MAXSEVERITYDESC": "Serious Injury Collision"
+},
+"geometry": {
+"x": -122.31740379073636,
+"y": 47.66493734388379
+}
+},
+{
+"attributes": {
+"OBJECTID": 249960,
+"INCKEY": 385754,
+"COLDETKEY": 387294,
+"REPORTNO": "EG22266",
+"STATUS": "Unmatched",
+"ADDRTYPE": "I",
+"INTKEY": 30408,
+"LOCATION": "14TH AVE AND E YESLER WAY",
+"INCDTTM": "5/30/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 1,
+"SERIOUSINJURIES": 1,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK PEDALCYCLIST, FRONT END AT ANGLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "3",
+"MAXSEVERITYDESC": "Serious Injury Collision"
+},
+"geometry": {
+"x": -122.31416192561012,
+"y": 47.60168875701373
+}
+},
+{
+"attributes": {
+"OBJECTID": 249983,
+"INCKEY": 386472,
+"COLDETKEY": 388012,
+"REPORTNO": "3943385",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "SR99 SB BETWEEN S LANDER ST AND ALASKAN WY VI SB WSB WB OFF RP",
+"INCDTTM": "9/17/2025 3:16:00 AM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 1,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 1,
+"INJURIES": 1,
+"SERIOUSINJURIES": 1,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Pedestrian",
+"SDOT_COLDESC": "MOTOR VEHCILE STRUCK PEDESTRIAN",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "3",
+"MAXSEVERITYDESC": "Serious Injury Collision"
+},
+"geometry": {
+"x": -122.33940745790852,
+"y": 47.57642438413905
+}
+},
+{
+"attributes": {
+"OBJECTID": 258008,
+"INCKEY": 379031,
+"COLDETKEY": 380551,
+"REPORTNO": "3932272",
+"STATUS": "Matched",
+"ADDRTYPE": "I",
+"INTKEY": 35847,
+"LOCATION": "AURORA AVE N AND N 125TH ST",
+"INCDTTM": "2/1/2025 2:11:00 AM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 1,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 1,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 1,
+"JUNCTIONTYPE": "At Intersection (intersection related)",
+"ST_COLLISIONTYPE": "Pedestrian",
+"SDOT_COLDESC": "MOTOR VEHCILE STRUCK PEDESTRIAN",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "4",
+"MAXSEVERITYDESC": "Fatal Collision"
+},
+"geometry": {
+"x": -122.34493681922717,
+"y": 47.719572211403275
+}
+},
+{
+"attributes": {
+"OBJECTID": 254443,
+"INCKEY": 383893,
+"COLDETKEY": 385433,
+"REPORTNO": "3943307",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "M L KING JR WR WAY S BETWEEN S NORFOLK ST AND CITY LIMITS",
+"INCDTTM": "8/29/2025 4:58:00 AM",
+"PERSONCOUNT": 3,
+"PEDCOUNT": 1,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 2,
+"INJURIES": 2,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 1,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Rear Ended",
+"SDOT_COLDESC": "MOTOR VEHCILE STRUCK PEDESTRIAN",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Dark - Street Lights On",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "4",
+"MAXSEVERITYDESC": "Fatal Collision"
+},
+"geometry": {
+"x": -122.27872142036338,
+"y": 47.51164581437969
+}
+},
+{
+"attributes": {
+"OBJECTID": 249511,
+"INCKEY": 390738,
+"COLDETKEY": 392278,
+"REPORTNO": "25-02655",
+"STATUS": "Unmatched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "LENORA ST BETWEEN DEAD END AND WESTERN AVE",
+"INCDTTM": "8/31/2025 9:57:00 PM",
+"PERSONCOUNT": 1,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 1,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 1,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Other",
+"SDOT_COLDESC": "MOTORIZED SCOOTER OVERTURNED IN ROAD",
+"WEATHER": "Unknown",
+"ROADCOND": "Unknown",
+"LIGHTCOND": "Unknown",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "4",
+"MAXSEVERITYDESC": "Fatal Collision"
+},
+"geometry": {
+"x": -122.34517228312174,
+"y": 47.610863027517745
+}
+},
+{
+"attributes": {
+"OBJECTID": 260654,
+"INCKEY": 389380,
+"COLDETKEY": 390920,
+"REPORTNO": "3943478",
+"STATUS": "Unmatched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "JAMES ST BETWEEN 8TH AVE AND 9TH AVE",
+"INCDTTM": "11/1/2025 2:37:00 AM",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, REAR END",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": null,
+"MAXSEVERITYDESC": null
+},
+"geometry": {
+"x": -122.32530615810332,
+"y": 47.60532163300278
+}
+},
+{
+"attributes": {
+"OBJECTID": 254014,
+"INCKEY": 383615,
+"COLDETKEY": 385155,
+"REPORTNO": "3931770",
+"STATUS": "Unmatched",
+"ADDRTYPE": "A",
+"INTKEY": null,
+"LOCATION": null,
+"INCDTTM": "8/20/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": null,
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTOR VEHICLE, REAR END",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "Y",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+}
+},
+{
+"attributes": {
+"OBJECTID": 260917,
+"INCKEY": 389386,
+"COLDETKEY": 390926,
+"REPORTNO": "EG49892",
+"STATUS": "Unmatched",
+"ADDRTYPE": "A",
+"INTKEY": null,
+"LOCATION": null,
+"INCDTTM": "11/17/2025 11:16:00 AM",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": null,
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "NOT ENOUGH INFORMATION / NOT APPLICABLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": null,
+"MAXSEVERITYDESC": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 261049,
+"INCKEY": 380865,
+"COLDETKEY": 382385,
+"REPORTNO": "3931639",
+"STATUS": "Unmatched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "M L KING JR WR WAY S BETWEEN S DIRECTOR ST AND BEACON AVE S",
+"INCDTTM": "4/11/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK OBJECT IN ROAD",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+},
+"geometry": {
+"x": -122.27983893181741,
+"y": 47.521288487958685
+}
+},
+{
+"attributes": {
+"OBJECTID": 250183,
+"INCKEY": 385786,
+"COLDETKEY": 387326,
+"REPORTNO": "3943277",
+"STATUS": "Matched",
+"ADDRTYPE": "B",
+"INTKEY": null,
+"LOCATION": "S WEBSTER ST BETWEEN 40TH AVE S AND M L KING JR WR WAY S",
+"INCDTTM": "11/4/2025 2:33:00 PM",
+"PERSONCOUNT": 2,
+"PEDCOUNT": 1,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 1,
+"INJURIES": 1,
+"SERIOUSINJURIES": 1,
+"FATALITIES": 0,
+"JUNCTIONTYPE": "Mid-Block (not related to intersection)",
+"ST_COLLISIONTYPE": "Pedestrian",
+"SDOT_COLDESC": "MOTOR VEHICLE STRUCK MOTORIZED SCOOTER, FRONT END AT ANGLE",
+"WEATHER": "Clear",
+"ROADCOND": "Dry",
+"LIGHTCOND": "Daylight",
+"HITPARKEDCAR": "N",
+"SOURCE": "PTCR",
+"MAXSEVERITYCODE": "3",
+"MAXSEVERITYDESC": "Serious Injury Collision"
+},
+"geometry": {
+"x": -122.28136999848198,
+"y": 47.5353967436441
+}
+},
+{
+"attributes": {
+"OBJECTID": 261667,
+"INCKEY": 380944,
+"COLDETKEY": 382464,
+"REPORTNO": "EF86191",
+"STATUS": "Unmatched",
+"ADDRTYPE": "A",
+"INTKEY": null,
+"LOCATION": null,
+"INCDTTM": "4/24/2025",
+"PERSONCOUNT": 0,
+"PEDCOUNT": 0,
+"PEDCYLCOUNT": 0,
+"VEHCOUNT": 0,
+"INJURIES": 0,
+"SERIOUSINJURIES": 0,
+"FATALITIES": 0,
+"JUNCTIONTYPE": null,
+"ST_COLLISIONTYPE": null,
+"SDOT_COLDESC": "NOT ENOUGH INFORMATION / NOT APPLICABLE",
+"WEATHER": null,
+"ROADCOND": null,
+"LIGHTCOND": null,
+"HITPARKEDCAR": "N",
+"SOURCE": "CVCR",
+"MAXSEVERITYCODE": "1",
+"MAXSEVERITYDESC": "Property Damage Only Collision"
+}
+}
+],
+"persons": [
+{
+"attributes": {
+"OBJECTID": 660,
+"COLDETKEY": 380647,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 36
+}
+},
+{
+"attributes": {
+"OBJECTID": 661,
+"COLDETKEY": 380647,
+"ST_INJRY_CLSS_DESC": "Possible Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 56
+}
+},
+{
+"attributes": {
+"OBJECTID": 535085,
+"COLDETKEY": 386656,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 36
+}
+},
+{
+"attributes": {
+"OBJECTID": 535086,
+"COLDETKEY": 386656,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 42
+}
+},
+{
+"attributes": {
+"OBJECTID": 535087,
+"COLDETKEY": 386656,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle passenger",
+"ST_AGE": 62
+}
+},
+{
+"attributes": {
+"OBJECTID": 535110,
+"COLDETKEY": 388012,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Pedestrian",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 535111,
+"COLDETKEY": 388012,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 535182,
+"COLDETKEY": 387842,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 19
+}
+},
+{
+"attributes": {
+"OBJECTID": 535183,
+"COLDETKEY": 387842,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle passenger",
+"ST_AGE": 19
+}
+},
+{
+"attributes": {
+"OBJECTID": 535184,
+"COLDETKEY": 387842,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle passenger",
+"ST_AGE": 20
+}
+},
+{
+"attributes": {
+"OBJECTID": 535185,
+"COLDETKEY": 387842,
+"ST_INJRY_CLSS_DESC": "Serious Injury",
+"ST_PARTCPNT_TYPE_DESC": "Pedal cycle driver",
+"ST_AGE": 36
+}
+},
+{
+"attributes": {
+"OBJECTID": 535518,
+"COLDETKEY": 387326,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 535519,
+"COLDETKEY": 387326,
+"ST_INJRY_CLSS_DESC": "Serious Injury",
+"ST_PARTCPNT_TYPE_DESC": "Pedestrian",
+"ST_AGE": 19
+}
+},
+{
+"attributes": {
+"OBJECTID": 536827,
+"COLDETKEY": 388636,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 41
+}
+},
+{
+"attributes": {
+"OBJECTID": 536828,
+"COLDETKEY": 388636,
+"ST_INJRY_CLSS_DESC": "Non Serious Injury (Evident Injury)",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 35
+}
+},
+{
+"attributes": {
+"OBJECTID": 537741,
+"COLDETKEY": 387701,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 23
+}
+},
+{
+"attributes": {
+"OBJECTID": 537742,
+"COLDETKEY": 387701,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 37
+}
+},
+{
+"attributes": {
+"OBJECTID": 538977,
+"COLDETKEY": 388464,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 30
+}
+},
+{
+"attributes": {
+"OBJECTID": 538978,
+"COLDETKEY": 388464,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 26
+}
+},
+{
+"attributes": {
+"OBJECTID": 538979,
+"COLDETKEY": 388464,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 48
+}
+},
+{
+"attributes": {
+"OBJECTID": 539384,
+"COLDETKEY": 385288,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 52
+}
+},
+{
+"attributes": {
+"OBJECTID": 539385,
+"COLDETKEY": 385288,
+"ST_INJRY_CLSS_DESC": null,
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 539386,
+"COLDETKEY": 385288,
+"ST_INJRY_CLSS_DESC": null,
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 539387,
+"COLDETKEY": 385288,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle passenger",
+"ST_AGE": 50
+}
+},
+{
+"attributes": {
+"OBJECTID": 540844,
+"COLDETKEY": 383980,
+"ST_INJRY_CLSS_DESC": null,
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 540845,
+"COLDETKEY": 383980,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle passenger",
+"ST_AGE": 35
+}
+},
+{
+"attributes": {
+"OBJECTID": 540846,
+"COLDETKEY": 383980,
+"ST_INJRY_CLSS_DESC": "Non Serious Injury (Evident Injury)",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 33
+}
+},
+{
+"attributes": {
+"OBJECTID": 540847,
+"COLDETKEY": 383980,
+"ST_INJRY_CLSS_DESC": null,
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 540897,
+"COLDETKEY": 388743,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 22
+}
+},
+{
+"attributes": {
+"OBJECTID": 540898,
+"COLDETKEY": 388743,
+"ST_INJRY_CLSS_DESC": "Possible Injury",
+"ST_PARTCPNT_TYPE_DESC": "Pedestrian",
+"ST_AGE": 57
+}
+},
+{
+"attributes": {
+"OBJECTID": 542989,
+"COLDETKEY": 386378,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 41
+}
+},
+{
+"attributes": {
+"OBJECTID": 542990,
+"COLDETKEY": 386378,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Pedal cycle driver",
+"ST_AGE": 21
+}
+},
+{
+"attributes": {
+"OBJECTID": 543375,
+"COLDETKEY": 386138,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 57
+}
+},
+{
+"attributes": {
+"OBJECTID": 543376,
+"COLDETKEY": 386138,
+"ST_INJRY_CLSS_DESC": null,
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 543377,
+"COLDETKEY": 386138,
+"ST_INJRY_CLSS_DESC": null,
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 544146,
+"COLDETKEY": 385433,
+"ST_INJRY_CLSS_DESC": "Non Serious Injury (Evident Injury)",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 35
+}
+},
+{
+"attributes": {
+"OBJECTID": 544147,
+"COLDETKEY": 385433,
+"ST_INJRY_CLSS_DESC": "Non Serious Injury (Evident Injury)",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 20
+}
+},
+{
+"attributes": {
+"OBJECTID": 544148,
+"COLDETKEY": 385433,
+"ST_INJRY_CLSS_DESC": "Dead At Scene",
+"ST_PARTCPNT_TYPE_DESC": "Pedestrian",
+"ST_AGE": 23
+}
+},
+{
+"attributes": {
+"OBJECTID": 550678,
+"COLDETKEY": 380551,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 550679,
+"COLDETKEY": 380551,
+"ST_INJRY_CLSS_DESC": "Died At Hospital",
+"ST_PARTCPNT_TYPE_DESC": "Pedestrian",
+"ST_AGE": 43
+}
+},
+{
+"attributes": {
+"OBJECTID": 551464,
+"COLDETKEY": 389281,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 44
+}
+},
+{
+"attributes": {
+"OBJECTID": 551465,
+"COLDETKEY": 389281,
+"ST_INJRY_CLSS_DESC": "Non Serious Injury (Evident Injury)",
+"ST_PARTCPNT_TYPE_DESC": "Pedal cycle driver",
+"ST_AGE": 24
+}
+},
+{
+"attributes": {
+"OBJECTID": 553994,
+"COLDETKEY": 382688,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 34
+}
+},
+{
+"attributes": {
+"OBJECTID": 553995,
+"COLDETKEY": 382688,
+"ST_INJRY_CLSS_DESC": "Possible Injury",
+"ST_PARTCPNT_TYPE_DESC": "Pedal cycle driver",
+"ST_AGE": 31
+}
+},
+{
+"attributes": {
+"OBJECTID": 554160,
+"COLDETKEY": 390123,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 61
+}
+},
+{
+"attributes": {
+"OBJECTID": 554161,
+"COLDETKEY": 390123,
+"ST_INJRY_CLSS_DESC": "Non Serious Injury (Evident Injury)",
+"ST_PARTCPNT_TYPE_DESC": "Pedestrian",
+"ST_AGE": 18
+}
+},
+{
+"attributes": {
+"OBJECTID": 554193,
+"COLDETKEY": 382084,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 38
+}
+},
+{
+"attributes": {
+"OBJECTID": 554975,
+"COLDETKEY": 388959,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 26
+}
+},
+{
+"attributes": {
+"OBJECTID": 554976,
+"COLDETKEY": 388959,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 19
+}
+},
+{
+"attributes": {
+"OBJECTID": 555315,
+"COLDETKEY": 381735,
+"ST_INJRY_CLSS_DESC": "Possible Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 40
+}
+},
+{
+"attributes": {
+"OBJECTID": 555911,
+"COLDETKEY": 380884,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 52
+}
+},
+{
+"attributes": {
+"OBJECTID": 556028,
+"COLDETKEY": 383348,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 69
+}
+},
+{
+"attributes": {
+"OBJECTID": 556029,
+"COLDETKEY": 383348,
+"ST_INJRY_CLSS_DESC": "Non Serious Injury (Evident Injury)",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 24
+}
+},
+{
+"attributes": {
+"OBJECTID": 556030,
+"COLDETKEY": 383348,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle passenger",
+"ST_AGE": 62
+}
+},
+{
+"attributes": {
+"OBJECTID": 556240,
+"COLDETKEY": 389842,
+"ST_INJRY_CLSS_DESC": null,
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 556241,
+"COLDETKEY": 389842,
+"ST_INJRY_CLSS_DESC": null,
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 556326,
+"COLDETKEY": 389601,
+"ST_INJRY_CLSS_DESC": "Non Serious Injury (Evident Injury)",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 73
+}
+},
+{
+"attributes": {
+"OBJECTID": 556327,
+"COLDETKEY": 389601,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 557966,
+"COLDETKEY": 383359,
+"ST_INJRY_CLSS_DESC": "No Injury",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": 20
+}
+},
+{
+"attributes": {
+"OBJECTID": 557967,
+"COLDETKEY": 383359,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 558096,
+"COLDETKEY": 382143,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+},
+{
+"attributes": {
+"OBJECTID": 558097,
+"COLDETKEY": 382143,
+"ST_INJRY_CLSS_DESC": "Unknown",
+"ST_PARTCPNT_TYPE_DESC": "Motor vehicle driver",
+"ST_AGE": null
+}
+}
+]
+}

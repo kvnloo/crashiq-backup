@@ -1,0 +1,90 @@
+{
+ "area": "All (Kings+Queens+New York+Bronx+Richmond County, FIPS 36047+36081+36061+36005+36085), NYC crashes 2024",
+ "borough_crashes": 91316,
+ "borough_gps": 83697,
+ "borough_gps_pct": 91.7,
+ "n": 2000,
+ "with_street_pair_or_address": 1665,
+ "tiers": {
+  "exact": 991,
+  "review": 591,
+  "address": 408,
+  "verified_typo": 3,
+  "fuzzy": 3,
+  "unique_pair": 2,
+  "near": 2
+ },
+ "by_tier": {
+  "address": {
+   "n": 408,
+   "within_250ft": 354,
+   "pct": 86.8,
+   "low": 83.1
+  },
+  "exact": {
+   "n": 991,
+   "within_250ft": 988,
+   "pct": 99.7,
+   "low": 99.1
+  },
+  "fuzzy": {
+   "n": 3,
+   "within_250ft": 2,
+   "pct": 66.7,
+   "low": 20.8
+  },
+  "near": {
+   "n": 2,
+   "within_250ft": 1,
+   "pct": 50.0,
+   "low": 9.5
+  },
+  "unique_pair": {
+   "n": 2,
+   "within_250ft": 1,
+   "pct": 50.0,
+   "low": 9.5
+  },
+  "verified_typo": {
+   "n": 3,
+   "within_250ft": 3,
+   "pct": 100.0,
+   "low": 43.8
+  }
+ },
+ "placed": 1409,
+ "placed_pct": 70.5,
+ "auto": 993,
+ "auto_pct": 49.6,
+ "auto_within_250ft": 989,
+ "auto_within_250ft_pct": 99.6,
+ "auto_within_250ft_low": 99.0,
+ "placed_within_250ft_pct": 95.7,
+ "placed_within_250ft_low": 94.6,
+ "address_crashes": 623,
+ "address_placed": 408,
+ "sam_points_fetched": 562470,
+ "review_reasons": {
+  "missing street name": 541,
+  "no intersection of the two named streets": 34,
+  "exact: streets meet in more than one place": 9,
+  "address not found": 7
+ },
+ "network": "TIGER/Line 2024 only (no OSM); tiger.elements leaves ways untagged, so Gate() treats them like OSM",
+ "no_gps": {
+  "n": 7619,
+  "tiers": {
+   "exact": 1520,
+   "review": 5356,
+   "address": 593,
+   "near": 63,
+   "fuzzy": 24,
+   "verified_typo": 47,
+   "relaxed": 12,
+   "unique_pair": 4
+  },
+  "auto": 1524,
+  "auto_pct_of_no_gps": 20.0,
+  "auto_pct_of_all_borough": 1.67
+ }
+}

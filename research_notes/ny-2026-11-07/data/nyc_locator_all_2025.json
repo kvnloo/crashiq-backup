@@ -1,0 +1,98 @@
+{
+ "area": "All (Kings+Queens+New York+Bronx+Richmond County, FIPS 36047+36081+36061+36005+36085), NYC crashes 2025",
+ "borough_crashes": 85559,
+ "borough_gps": 82918,
+ "borough_gps_pct": 96.9,
+ "n": 2000,
+ "with_street_pair_or_address": 1809,
+ "tiers": {
+  "review": 449,
+  "address": 394,
+  "exact": 1146,
+  "near": 5,
+  "verified_typo": 2,
+  "unique_pair": 2,
+  "fuzzy": 1,
+  "relaxed": 1
+ },
+ "by_tier": {
+  "address": {
+   "n": 394,
+   "within_250ft": 389,
+   "pct": 98.7,
+   "low": 97.1
+  },
+  "exact": {
+   "n": 1146,
+   "within_250ft": 1137,
+   "pct": 99.2,
+   "low": 98.5
+  },
+  "fuzzy": {
+   "n": 1,
+   "within_250ft": 1,
+   "pct": 100.0,
+   "low": 20.7
+  },
+  "near": {
+   "n": 5,
+   "within_250ft": 3,
+   "pct": 60.0,
+   "low": 23.1
+  },
+  "relaxed": {
+   "n": 1,
+   "within_250ft": 1,
+   "pct": 100.0,
+   "low": 20.7
+  },
+  "unique_pair": {
+   "n": 2,
+   "within_250ft": 2,
+   "pct": 100.0,
+   "low": 34.2
+  },
+  "verified_typo": {
+   "n": 2,
+   "within_250ft": 2,
+   "pct": 100.0,
+   "low": 34.2
+  }
+ },
+ "placed": 1551,
+ "placed_pct": 77.5,
+ "auto": 1148,
+ "auto_pct": 57.4,
+ "auto_within_250ft": 1139,
+ "auto_within_250ft_pct": 99.2,
+ "auto_within_250ft_low": 98.5,
+ "placed_within_250ft_pct": 99.0,
+ "placed_within_250ft_low": 98.3,
+ "address_crashes": 603,
+ "address_placed": 394,
+ "sam_points_fetched": 610074,
+ "review_reasons": {
+  "missing street name": 394,
+  "no intersection of the two named streets": 33,
+  "exact: streets meet in more than one place": 14,
+  "address not found": 7,
+  "relaxed: streets meet in more than one place": 1
+ },
+ "network": "TIGER/Line 2024 only (no OSM); tiger.elements leaves ways untagged, so Gate() treats them like OSM",
+ "no_gps": {
+  "n": 2641,
+  "tiers": {
+   "review": 1409,
+   "address": 993,
+   "exact": 187,
+   "verified_typo": 25,
+   "relaxed": 7,
+   "near": 11,
+   "unique_pair": 2,
+   "fuzzy": 7
+  },
+  "auto": 189,
+  "auto_pct_of_no_gps": 7.2,
+  "auto_pct_of_all_borough": 0.22
+ }
+}

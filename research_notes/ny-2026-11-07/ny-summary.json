@@ -1,0 +1,96 @@
+{
+  "state": "NY",
+  "date": "2026-11-07",
+  "bucket": "C",
+  "bucket_note": "Statewide public table locates only state-highway crashes, by reference marker (bucket C); NYC open data is a city-level A; CLEAR is D (gated, export importer built from published layouts).",
+  "sources": [
+    {"name": "NYS DMV Motor Vehicle Crashes - Case Information (e8ky-4vqe)", "url": "https://data.ny.gov/resource/e8ky-4vqe.json", "access": "open", "licence_paid_use": "ok",
+     "licence_quote": "use our government information however you wish, in private sector projects (OPEN-NY Terms of Use)",
+     "years": "2021-2024", "rows_per_year": {"2021": 372159, "2022": 390855, "2023": 381290, "2024": 380819},
+     "gps_share": 0.0, "reference_marker_share": {"2021": 33.6, "2022": 57.1, "2023": 44.5, "2024": 35.6},
+     "street_names_share": 0.0, "kabco": false, "keys_linkable": false,
+     "notes": "Severity Fatal/Injury/PD only; person table (ir4y-sesj) has Killed/Severe/Moderate/Minor but no key to the case."},
+    {"name": "NYSDOT Reference Marker layer (Roadway FeatureServer/0)", "url": "https://gisportalny.dot.ny.gov/hostingny/rest/services/Roadways/Roadway/FeatureServer/0", "access": "open", "licence_paid_use": "unclear",
+     "years": "current (TO_DATE marks retired panels)", "rows_per_year": {"all": 185384}, "gps_share": 100.0, "street_names_share": null, "kabco": null, "keys_linkable": true,
+     "notes": "Join key = Panel; crash value rjust(12)."},
+    {"name": "NYC Motor Vehicle Collisions - Crashes (h9gi-nx95) + Person (f55k-p6yu)", "url": "https://data.cityofnewyork.us/resource/h9gi-nx95.json", "access": "open", "licence_paid_use": "ok",
+     "licence_quote": "There are no restrictions on the use of Open Data. (NYC Open Data FAQ)",
+     "years": "2012-07-01 to 2026-11-03", "rows_per_year": {"2021": 110558, "2022": 103888, "2023": 96608, "2024": 91316, "2025": 85559, "2026_partial": 70720},
+     "gps_share": 96.9, "gps_share_by_year": {"2021": 91.3, "2022": 89.6, "2023": 92.1, "2024": 91.7, "2025": 96.9},
+     "street_names_share": 90.5, "street_names_note": "2025 sample of 2,000: street pair or numbered house address (1,809); table-wide 2025 on+cross 59.5%, off-street 30.8% (overlap not measured)",
+     "kabco": false, "keys_linkable": true, "notes": "Persons link by collision_id (June 2025: 99.5% of crashes have person rows, 100% of person rows link). Injury Killed/Injured only."},
+    {"name": "NYSDOT CLEAR crash export (FOIL or agency/consultant access)", "url": "https://www.dot.ny.gov/divisions/operating/osss/highway/crash-analysis-toolbox", "access": "gated", "licence_paid_use": "unclear",
+     "years": "2012-present", "rows_per_year": null, "gps_share": null, "street_names_share": null, "kabco": true, "keys_linkable": true,
+     "notes": "Layout from two public NYSDOT exports (ALIS-era): Case Num, Comp X/Y (UTM 18), Severity, Num Serious Injuries (A), On Street, Closest Cross Street, Comp Ref Marker. GPS share not measured (no sample)."},
+    {"name": "NYS SAM Address Points", "url": "https://nysgeohub.ny.gov/arcgis/rest/services/Address/NYS_Address_Points/MapServer/0", "access": "open", "licence_paid_use": "unclear",
+     "years": "current (updated twice a month)", "rows_per_year": null, "gps_share": 100.0, "street_names_share": 100.0, "kabco": null, "keys_linkable": null,
+     "notes": "Licence text is an as-is disclaimer with no grant."}
+  ],
+  "placement_sample": {
+    "area": "New York City, all five boroughs (TIGER 2024 of counties 36005/36047/36061/36081/36085), crashes of 2025",
+    "n": 2000,
+    "gps_share": 96.9,
+    "name_placed_share": 77.5,
+    "auto_share": 57.4,
+    "within_250ft": 99.2,
+    "within_250ft_low": 98.5,
+    "house_address_share": 30.1,
+    "address_placed_share": 19.7,
+    "address_within_250ft": 98.7,
+    "address_within_250ft_low": 97.1,
+    "address_points_source": "NYS SAM Address Points (NYS ITS); USDOT NAD not measured (service timed out)",
+    "no_gps_added": {"2025": {"no_gps": 2641, "auto": 189, "placed_any_tier": 1232, "share_of_all_crashes_placed": 1.44},
+                     "2024": {"no_gps": 7619, "auto": 1524, "placed_any_tier": 2263, "share_of_all_crashes_placed": 2.48}},
+    "caveat": "NYPD GPS on street-pair and address crashes is probably geocoded from the same names, so accuracy is agreement with the city's geocoder.",
+    "statewide_reference_marker": {"n": 500, "year": 2024, "matched": 490, "matched_pct": 98.0, "matched_low": 96.4,
+                                   "in_own_county_pct": 99.6, "in_own_county_low": 98.5,
+                                   "nyc_truth_links": 5845, "median_ft": 5, "within_250ft": 83.7, "within_250ft_low": 82.8,
+                                   "share_of_non_nyc_crashes_placeable": 42.4,
+                                   "caveat": "NYC truth GPS appears derived from the marker; method precision is +-0.05 mi along route."}
+  },
+  "importer_built": true,
+  "importers": ["backend/crashiq/sources/ny_nyc.py", "backend/crashiq/sources/ny_dmv.py", "backend/crashiq/sources/ny_clear.py"],
+  "blockers": [
+    "DMV statewide table: no GPS, no street names, no case key; ~58% of crashes outside NYC (non-state roads) can only be placed at municipality level.",
+    "Statewide KABCO only through CLEAR, which is gated to government staff and their consultants (FOIL otherwise).",
+    "No CLEAR-era export sample; reader built from ALIS-era exports; person-level export layout unseen.",
+    "Licence for paid use unclear for the NYSDOT marker layer, CLEAR exports and SAM address points.",
+    "DMV table stops at 2024 (2025 not posted as of 2026-11-07)."
+  ],
+  "user_actions": [
+    "Obtain one CLEAR crash-level and person-level export (one county, one year) via a NYSDOT/agency contact or FOIL.",
+    "Ask NYSDOT (dot.sm.clear@dot.ny.gov) whether CLEAR exports may be used inside a paid tool by consultant users.",
+    "Decide how CrashIQ shows DMV crashes that have only a municipality."
+  ],
+  "cities": [
+    {"city": "New York City", "source": "NYC Open Data h9gi-nx95", "url": "https://data.cityofnewyork.us/resource/h9gi-nx95.json", "gps_share": 96.9, "years": "2012-2026", "licence": "ok (no restrictions)"},
+    {"city": "Buffalo", "source": "OpenData Buffalo 6at3-hpb5 Received Traffic Incident Calls (911 calls, not crash reports)", "url": "https://data.buffalony.gov/resource/6at3-hpb5.json", "gps_share": 92.3, "years": "2006-2026", "licence": "Public Domain U.S. Government (dataset licence field)"},
+    {"city": "Rochester", "source": "ROC Vision Zero dashboard only; no open crash dataset found", "url": "https://www.cityofrochester.gov/departments/department-environmental-services-des/roc-vision-zero-dashboard", "gps_share": null, "years": null, "licence": "not found"},
+    {"city": "Syracuse", "source": "no crash dataset on data.syr.gov", "url": "https://data.syr.gov/", "gps_share": null, "years": null, "licence": null},
+    {"city": "Albany", "source": "no city open-data portal found (data.albanyny.gov does not resolve)", "url": null, "gps_share": null, "years": null, "licence": null}
+  ],
+  "methods": {
+    "manuals": [
+      {"title": "NYSDOT Highway Safety Improvement Program Procedures and Techniques (Red Book)", "url": "https://www.dot.ny.gov/divisions/operating/osss/highway-repository/RedBook.pdf", "date": "2026-04"},
+      {"title": "NYSDOT Highway Safety Investigation Procedures Manual (Yellow Book)", "url": "https://www.dot.ny.gov/divisions/operating/osss/highway-repository/YellowBook.pdf", "date": "2026-04"},
+      {"title": "NYSDOT Highway Design Manual Chapter 5 Basic Design (5.3 Crash Analysis), Rev. 104", "url": "https://www.dot.ny.gov/divisions/engineering/design/dqab/hdm/hdm-repository/chapt_05.pdf", "date": "2026-04-24"},
+      {"title": "NYSDOT SPF Parameters for Intersections, Ramps, and Segments v1.1", "url": "https://www.dot.ny.gov/divisions/operating/osss/highway-repository/SPF_Parameters.xlsx", "date": "undated"},
+      {"title": "NYSDOT Average Crash Rates for State Highways 2017-2019 (as reproduced in PIN 1045.18 Route 378 PSR Appendix 2)", "url": "https://www.dot.ny.gov/portal/page/portal/content/delivery/region1/projects/104518-Home/104518-Repository/02%20Final%20DRAFT_NYS%20378%20Bridge%20rpt_PSR_PEL_20241_02112026%20Appendix%202.pdf", "date": "2025-08"},
+      {"title": "NYSDOT Average Accident Rates index (links broken)", "url": "https://www.dot.ny.gov/divisions/operating/osss/highway/accident-rates", "date": "newest file 2016"}
+    ],
+    "rates_available": "partial: 2017-2019 table via a project report; current rates only inside CLEAR Safety (gated)",
+    "rates_unit": "acc/MVM (segments), acc/MEV (intersections)",
+    "crash_costs": {"K": 18186968, "A": 991313, "B": 309976, "C": 194893, "O": 18794, "year": 2024,
+                    "source": "Yellow Book Table 2 p.16; Red Book Table 3 p.48"},
+    "screening_method": "Potential for Safety Improvement: Empirical Bayes excess expected KA crashes vs NY SPFs (excess observed per mile / per intersection where AADT is missing); sliding window 0.3 mi / 0.1 mi; 5 years; LOSS 4 triggers a Highway Safety Investigation",
+    "differences_from_ca": [
+      "Screening by EB excess expected fatal+serious (KA) crashes and LOSS, not a rate vs TASAS base rate test",
+      "Current average crash rates are only in CLEAR Safety; last public table 2017-2019",
+      "Crash costs per KABCO level in 2024 dollars from the FHWA 2018 method (K $18.19M)",
+      "Study period 2/3/5 years by AADT (HDM 5.3.2); screening uses 5 years",
+      "Non-reportable property-damage crashes exist as a class",
+      "State highways referenced by reference markers / milepoint LRS, not postmiles",
+      "HSIP discount rate 3%"
+    ]
+  }
+}
