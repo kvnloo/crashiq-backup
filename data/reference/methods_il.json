@@ -1,0 +1,57 @@
+{
+ "state": "IL",
+ "manuals": {
+  "il_sepm": {
+   "title": "Safety Engineering Policy Memorandum Safety 1-06, Highway Safety Improvement Program (HSIP)",
+   "publisher": "Illinois Department of Transportation",
+   "jurisdiction": "IL",
+   "edition": "effective November 1, 2006 (as posted 2026-11-08)",
+   "url": "https://idot.illinois.gov/content/dam/soi/en/web/idot/documents/transportation-system/manuals-guides-and-handbooks/safety/safety-1.06---safety-engineering-policy-memorandum.pdf",
+   "sha256": "abb5c9c3fe26cce3d59372b1a834e34f319b684ccc6dd624b09a2b8cbea0e467",
+   "downloaded": "2026-11-08",
+   "note": "~/.hermes/state-manuals/il/safety-1.06-sepm.pdf; research_notes/il-2026-11-08/il-methods.md"
+  },
+  "il_crash_facts": {
+   "title": "2024 Illinois Crash Facts & Statistics",
+   "publisher": "Illinois Department of Transportation, Bureau of Data Collection",
+   "jurisdiction": "IL",
+   "edition": "2024 data",
+   "url": "https://idot.illinois.gov/content/dam/soi/en/web/idot/documents/transportation-system/resources/safety/crash-reports/crash-facts/2024-crash-facts.pdf",
+   "sha256": "07ca96614c4b21d1f9c70027a211bc1b6c565068fd9f03bb1189cd3e52bc8b8e",
+   "downloaded": "2026-11-08"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "IDOT publishes costs per person killed or injured, not per crash (2024 Crash Facts p. 23: fatality $2,009,575, A-injury $171,925, B $45,300, C $27,795, property damage crash $6,485, from National Safety Council 2024 estimates); its only per-crash table is 1999-2003, marked 'reference only' (Safety 1-06, p. 225). Pricing a crash by its worst injury with per-person costs would be wrong, so no cost column until IDOT's current HSIP benefit-cost crash costs are found"
+  },
+  "statewide_rates": {
+   "missing": "IDOT's only published statewide averages here are fatal and A-injury crashes per 100 centerline miles for rural collectors and local roads (Safety 1-06, p. 7, high-risk rural roads), not crash rates per vehicle-mile; and CrashIQ has no Illinois traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "IDOT screens by peer group with frequency, rate and EPDO critical values (Safety 1-06 HSIP candidate form, 'HALIS Peer Group ... Critical Values Exceeded: Freq Rate EPDO', p. 252) and the 5% report"
+  },
+  "min_years": {
+   "value": 5,
+   "manual": "il_sepm",
+   "page": "p. 8: 'five years of crash data should be used for the analysis' (also p. 7 table note: 'a minimum of 5 most recent years of crash data'); written for HSIP analyses",
+   "verified": true
+  },
+  "spf_calibration": {
+   "missing": "IDOT's SPF and calibration work is not published in Safety 1-06; not loaded (no SPF engine)"
+  }
+ }
+}

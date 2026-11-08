@@ -1,0 +1,15 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Illinois crash data</title><style>body{background:#111;color:#eee;font:16px/1.5 system-ui;margin:0;padding:18px;max-width:720px}
+h1{color:#e33;font-size:24px}h2{color:#f55;font-size:18px;margin-top:22px}.b{background:#1d1d1d;border-left:4px solid #e33;padding:10px 12px;margin:10px 0}li{margin:4px 0}</style></head><body>
+<h1>Illinois: ready</h1>
+<div class="b">IDOT puts every Illinois crash, 2014 to 2025, on its public map site, free and without a login: about 300,000 a year, Chicago included. Each has a GPS point and the full injury scale (fatal, A, B, C, no injury). CrashIQ now reads it. Last week's screen said Illinois needed a login; that was wrong.</div>
+<h2>What we found</h2><ul>
+<li><b>GPS on 99.8% of crashes.</b> 2025: 538 of 303,087 have no point.</li>
+<li><b>Real injury levels.</b> Example: Western Ave in Chicago, 2021-2025: 1 fatal, 13 A, 67 B, 49 C crashes.</li>
+<li><b>Street names only for 2025.</b> Older years give a route number, not a street. They're still placed by GPS.</li>
+<li><b>Names place well in the suburbs.</b> In DuPage County, hiding the GPS and placing from the two street names put 32% of crashes on the map, 92% of them within 250 ft. Chicago's police write a house number instead, which we didn't test.</li>
+<li><b>One messy year.</b> In 2019 a quarter of the rows have columns shifted by a stray comma. CrashIQ reads around it.</li></ul>
+<h2>Test run</h2><div class="b">N Western Ave, Chicago (Fullerton to Belmont), 1.0 mi, 2021-2025: 796 crashes counted (1 fatal, 129 injury, 666 property damage). PDF and Excel built. No crash cost: IDOT prices people, not crashes.</div>
+<h2>What you need to do</h2><ul><li>Ask IDOT (DOT.DTS.DataRequests@illinois.gov) in writing whether CrashIQ may show these crash layers in a paid tool. 2014-2020 say CC BY-SA; 2021-2025 say nothing.</li>
+<li>Optional: ask IDOT for street names for 2014-2024 and its current crash costs per crash.</li></ul>
+<h2>What we didn't check</h2><ul><li>House-number placement in Chicago.</li><li>The 2025 people and vehicle tables (published, not read yet).</li><li>Whether IDOT minds automated queries.</li><li>Traffic counts for crash rates.</li></ul></body></html>
