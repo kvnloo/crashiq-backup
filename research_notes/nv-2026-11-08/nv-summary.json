@@ -1,0 +1,85 @@
+{
+ "state": "NV",
+ "bucket": "D",
+ "status": "gated",
+ "sources": [
+  {
+   "name": "NDOT Traffic Safety Engineering crash data (request)",
+   "url": "https://survey123.arcgis.com/share/2361c89935aa497183387106ec46e18d",
+   "access": "records request (Survey123 form / publicrecordsreq@dot.nv.gov)",
+   "licence_paid_use": "unclear",
+   "years": "2020-2024 offered",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured (no X/Y in the documented layout)",
+   "street_names_share": "not measured statewide (Las Vegas copy 0.90)",
+   "kabco": true,
+   "keys_linkable": "Accident Rec Num; vehicles flattened V1/V2; no person table documented"
+  },
+  {
+   "name": "NDOT open layer CrashData_OpenData_2019_2023",
+   "url": "https://gis.dot.nv.gov/arcgis/rest/services/TrafficSafety/CrashData_OpenData_2019_2023/FeatureServer",
+   "access": "down (service not started, 2026-11-08)",
+   "licence_paid_use": "unclear",
+   "years": "2019-2023 (by name)",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null
+  },
+  {
+   "name": "City of Las Vegas CLV Traffic Crashes",
+   "url": "https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/Traffic_Crashes/FeatureServer/0",
+   "access": "open (ArcGIS REST)",
+   "licence_paid_use": "unclear",
+   "years": "2015-2020 (stale)",
+   "rows_per_year": {
+    "2015": 9957,
+    "2016": 13112,
+    "2017": 14140,
+    "2018": 13457,
+    "2019": 11351,
+    "2020": 8871
+   },
+   "gps_share": 0.0,
+   "street_names_share": 0.9005,
+   "kabco": true,
+   "keys_linkable": "Accident_R; vehicles flattened"
+  }
+ ],
+ "placement_sample": {
+  "area": "City of Las Vegas (Clark 32003), 2020",
+  "n": 2000,
+  "gps_share": 0.0,
+  "name_placed_share": 0.6595,
+  "auto_share": 0.0,
+  "auto_share_if_tiger_only_auto": 0.655,
+  "within_250ft": "not measured (no GPS in source)",
+  "within_250ft_low": null,
+  "within_250ft_offset_le_250ft": null,
+  "within_250ft_offset_le_250ft_low": null,
+  "house_address_share": "not measured (no house-number field)",
+  "address_points_source": null
+ },
+ "importer_built": false,
+ "blockers": [
+  "NDOT statewide data by request only; its open layer is stopped",
+  "no licence grant for paid use (23 U.S.C. 407 notice only)",
+  "documented export has no lat/lon; Las Vegas feed ends 2020 and has no points"
+ ],
+ "user_actions": [
+  "Submit NDOT Crash Data Request (Survey123) for statewide 2020-2024, asking for X/Y and written permission for use in a paid tool",
+  "Ask NDOT when the Crash Data Web Map / open layer returns and its licence",
+  "Send one delivered file (one county, one year) to confirm nv-column-map.json"
+ ],
+ "cities": [
+  {
+   "city": "Las Vegas",
+   "source": "CLV Traffic Crashes",
+   "url": "https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/Traffic_Crashes/FeatureServer/0",
+   "gps_share": 0.0,
+   "years": "2015-2020",
+   "licence": "unclear (no-warranty disclaimer only)"
+  }
+ ]
+}
