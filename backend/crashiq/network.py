@@ -369,7 +369,9 @@ def detect(osm: dict, line_ll: list[tuple[float, float]], driveways: dict | None
     # signal (one within CONTROL_FT, as for an intersection's control) is a study intersection; one without stays part
     # of the segment. Added after the terminus rule above, so it never changes which corridor pieces end the study.
     signal_nodes = [n for n in nodes.values() if n.get("tags", {}).get("highway") == "traffic_signals"]
+    street_nodes = set(is_candidate)
     driveway_nodes: set[int] = set()
+    drive_sides: dict[int, set[int]] = defaultdict(set)   # kept apart from cross_sides: "Don't count it" (below)
     for w in drive_ways:
         names = [n for n in _names(w.get("tags", {})) if _core(n) not in corridor_cores]
         wn = w.get("nodes", [])
@@ -389,7 +391,7 @@ def detect(osm: dict, line_ll: list[tuple[float, float]], driveways: dict | None
             for step in (-1, 1):
                 side = _leaving_side(line, nodes, proj, corridor_nodes, wn, k, step)
                 if side:
-                    cross_sides[nid].add(side)
+                    drive_sides[nid].add(side)
 
     # 4. cluster along the line
     cands = sorted(is_candidate, key=lambda n: proj[n].station_ft)
@@ -408,6 +410,11 @@ def detect(osm: dict, line_ll: list[tuple[float, float]], driveways: dict | None
                 last.append(nid)
                 continue
         clusters.append([nid])
+    # user 2026-11-07 on #420, "No, streets only": a driveway is never the study's A or B. A driveway intersection
+    # before the first or after the last street intersection is left out, so the study limits stay where the streets
+    # put them (Glendora and Arcadia at A, Victorville and Alhambra at B).
+    on_street = [k for k, c in enumerate(clusters) if set(c) & street_nodes]
+    clusters = clusters[on_street[0]:on_street[-1] + 1] if on_street else []
 
     # 5. intersections with control from tags
     tagged = [(n, n.get("tags", {}).get("highway")) for n in nodes.values()]
@@ -433,10 +440,13 @@ def detect(osm: dict, line_ll: list[tuple[float, float]], driveways: dict | None
             names.update(cross_names[n])
         name = (" / ".join(n for n, _ in names.most_common())
                 or ("Driveway (signal)" if set(c) & driveway_nodes else "Unnamed road"))
-        # named by its driveways alone: the locator's street network has no driveways, so placement adds this one (#421)
-        driveway = bool(set(c) & driveway_nodes) and all(n in driveway_nodes for n in c if cross_names[n])
+        # a driveway alone, no street: the locator's street network has no driveways, so placement adds this one (#421)
+        driveway = not set(c) & street_nodes
 
-        sides = set().union(*(cross_sides[n] for n in c))
+        # user 2026-11-07 on #420, "Don't count it": a driveway leg doesn't change a street intersection's leg count,
+        # so a T with a driveway opposite stays a T for entering volume (half the minor AADT). An intersection that is
+        # a driveway alone gets its legs from the driveway.
+        sides = set().union(*((drive_sides if driveway else cross_sides)[n] for n in c))
         legs = 2 + len(sides) if sides else None     # 3 = T (cross street on one side), 4 = through cross street
         control = ("signal" if _any_within(line, signals, cx, cy, CONTROL_FT)
                    else "roundabout" if set(c) & ring_ids or _any_within(line, rings, cx, cy, RING_FT)
