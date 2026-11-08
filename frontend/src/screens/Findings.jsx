@@ -113,7 +113,7 @@ function Detail({ f, i, lib, records, diagram, study, onDecide }) {
           {tab === 'records' && (
             <div className="sf-table-wrap">
               <table className="sf-table">
-                <thead><tr><th>Date</th><th className="sf-num">Hour</th><th>Type</th><th>Severity</th><th>Lighting</th><th>As written in CCRS</th></tr></thead>
+                <thead><tr><th>Date</th><th className="sf-num">Hour</th><th>Type</th><th>Severity</th><th>Lighting</th><th>As written in {(study?.state || 'CA') === 'CA' ? 'CCRS' : 'the report'}</th></tr></thead>
                 <tbody>
                   {(records || []).map((c) => (
                     <tr key={c.crash_id}>
@@ -131,7 +131,7 @@ function Detail({ f, i, lib, records, diagram, study, onDecide }) {
           )}
           {tab === 'audit' && (
             <dl className="card-pad audit">
-              <dt>Data</dt><dd>CCRS {study?.from_year}–{study?.to_year} · {m.corridor_crashes ?? '—'} crashes placed on the corridor</dd>
+              <dt>Data</dt><dd>{(study?.state || 'CA') === 'CA' ? 'CCRS' : 'Crash reports'} {study?.from_year}–{study?.to_year} · {m.corridor_crashes ?? '—'} crashes placed on the corridor</dd>
               <dt>Assignment</dt><dd>{study?.radius_ft ?? 250} ft intersection influence area; {study?.buffer_ft ?? 100} ft corridor buffer</dd>
               {fatal ? <><dt>Test</dt><dd>None: every fatal crash is listed (user decision 2026-10-25)</dd></> : <>
                 <dt>Test</dt><dd>Excess proportion of specific crash types (HSM Part B screening), compared with the {m.reference || 'corridor locations'}. {m.method}.</dd>

@@ -10,7 +10,7 @@ export function mockApi(routes) {
     const method = (opts.method || 'GET').toUpperCase()
     const path = String(url).replace(/^\/api/, '').split('?')[0]
     const body = opts.body ? JSON.parse(opts.body) : undefined
-    calls.push({ method, path, body, url: String(url) })
+    calls.push({ method, path, body })
     const key = Object.keys(routes).find((k) => {
       const [m, p] = k.split(' ')
       if (m !== method) return false
