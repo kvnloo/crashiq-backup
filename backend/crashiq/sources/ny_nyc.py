@@ -169,9 +169,9 @@ def fetch_contract(box, county_fips: list[str], years: list[int], cache_dir: Pat
     else:
         raw = _pull(CRASHES, where, "*", "collision_id")
         ids = [str(r["collision_id"]) for r in raw if r.get("collision_id")]
-        per = []
+        per = []                                  # persons' collision_id is text on Socrata: quoted
         for i in range(0, len(ids), 200):
-            per += _pull(PERSONS, f"collision_id in ({', '.join(ids[i:i + 200])})", ",".join(PERSON_FIELDS), "unique_id")
+            per += _pull(PERSONS, "collision_id in (" + ", ".join(f"'{x}'" for x in ids[i:i + 200]) + ")", ",".join(PERSON_FIELDS), "unique_id")
         data = {"crashes": raw, "persons": per}
         cache_dir.mkdir(parents=True, exist_ok=True)
         cache.write_text(json.dumps(data))

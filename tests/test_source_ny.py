@@ -184,6 +184,7 @@ def test_statewide_contract_nyc_inside_dmv_outside_and_no_made_up_levels(monkeyp
     # NYC fixture is 2025 only; DMV has no 2025: each part says what it lacks
     got = ny_dmv.fetch_contract(pack.bounds, ["36047", "36081"] + upstate, [2024, 2025], tmp_path, boxes)
     assert "borough in ('BROOKLYN', 'QUEENS')" in asked[0] and "latitude between" in asked[0]
+    assert asked[1].startswith("collision_id in ('")         # text column: a bare number is a 400
     assert any("year in ('2024')" in w and "IS NOT NULL" in w for w in asked)
     assert got["years_missing"] == [2024, 2025] and got["cleaning"]["dmv_town_only_not_placed"] == 10
     cs = got["crashes"]
