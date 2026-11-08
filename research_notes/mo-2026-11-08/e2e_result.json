@@ -1,0 +1,74 @@
+{
+ "state": "MO",
+ "study": "43721342b429",
+ "corridor": "Troost Avenue",
+ "length_mi": 0.99,
+ "window": [
+  2020,
+  2024
+ ],
+ "pulled": 523,
+ "counted": 307,
+ "ksi": 6,
+ "fatal": 1,
+ "injury": 122,
+ "pdo": 185,
+ "unplaced": 5,
+ "excluded": 211,
+ "severity_T3": {
+  "K": 1,
+  "A": 5,
+  "B": 0,
+  "C": 0,
+  "U": 116,
+  "O": 185
+ },
+ "crash_cost_total": null,
+ "cost_column": false,
+ "caveats": [
+  "covid",
+  "unplaced",
+  "injury_level_unknown",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_crash_costs",
+  "no_statewide_rates",
+  "rates_not_computed"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": false,
+   "text": "not available for Missouri: MoDOT multiplies crashes by \"a dollars per crash value, based on periodic FHWA determined values and adapted to Missouri's Consumer Price Index. Contact the MoDOT project core team for the appropriate values\" (EPG 905.3.6.3.1 Benefit-Cost Analysis): no published table; and MSHP's minor injury has no B/C split"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for Missouri: MoDOT's statewide average crash rates \"can be obtained through MoDOT\" (EPG 905.3.6.1.3 Parameters); no published table, and CrashIQ has no Missouri traffic counts"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Engineering Policy Guide, 905.3 Transportation Impact Analysis (Missouri Department of Transportation, online EPG article, as served 2026-11-08), 905.3.6.1.4 Analysis, Critical Crash Rate. Missouri's own method, MoDOT's critical crash rate = statewide average + K*sqrt(average/exposure) + 1/(2*exposure), K = 1.645 (95% confidence), against statewide averages by similar cross-section (EPG 905.3.6.1.4); CrashIQ has no statewide averages, so it compares the corridor's own sites with the same K, isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": true,
+   "text": "Engineering Policy Guide, 905.3 Transportation Impact Analysis (Missouri Department of Transportation, online EPG article, as served 2026-11-08), 905.3.6.1.3 Parameters, Time Period: \"the most recently available five (5) full years of crash history data is standard\""
+  }
+ ],
+ "findings_shown": 8,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 36513,
+ "pdf_bytes": 53885,
+ "seconds": 163
+}

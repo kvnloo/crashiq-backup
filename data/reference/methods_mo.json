@@ -1,0 +1,56 @@
+{
+ "state": "MO",
+ "manuals": {
+  "modot_epg_905_3": {
+   "title": "Engineering Policy Guide, 905.3 Transportation Impact Analysis",
+   "publisher": "Missouri Department of Transportation",
+   "jurisdiction": "MO",
+   "edition": "online EPG article, as served 2026-11-08",
+   "url": "https://epg.modot.org/index.php/905.3_Transportation_Impact_Analysis",
+   "sha256": "180c025c6eede669cfee1cae86cbc7290329d5e213267fad940ccda68b62c530",
+   "downloaded": "2026-11-08",
+   "note": "~/.hermes/state-manuals/mo/ (saved HTML); research_notes/mo-2026-11-08/mo-methods.md"
+  },
+  "mucr_2019": {
+   "title": "Missouri Uniform Crash Report Preparation Manual (SHP-2 STARS Statewide Manual)",
+   "publisher": "Missouri STARS Committee / Missouri State Highway Patrol",
+   "jurisdiction": "MO",
+   "edition": "Revised January 1, 2019, Version 1.0",
+   "url": "https://www.mshp.dps.missouri.gov/MSHPWeb/PatrolDivisions/PRD/documents/SHP-2%20STARS%20Statewide%20Manual.pdf",
+   "sha256": "e55ac78a967e73d76add02cb25d4953705615e51161628ad84f48a6456c4b136",
+   "downloaded": "2026-11-08"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "MoDOT multiplies crashes by \"a dollars per crash value, based on periodic FHWA determined values and adapted to Missouri's Consumer Price Index. Contact the MoDOT project core team for the appropriate values\" (EPG 905.3.6.3.1 Benefit-Cost Analysis): no published table; and MSHP's minor injury has no B/C split"
+  },
+  "statewide_rates": {
+   "missing": "MoDOT's statewide average crash rates \"can be obtained through MoDOT\" (EPG 905.3.6.1.3 Parameters); no published table, and CrashIQ has no Missouri traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "modot_epg_905_3",
+   "page": "905.3.6.1.4 Analysis, Critical Crash Rate",
+   "state_method": "MoDOT's critical crash rate = statewide average + K*sqrt(average/exposure) + 1/(2*exposure), K = 1.645 (95% confidence), against statewide averages by similar cross-section (EPG 905.3.6.1.4); CrashIQ has no statewide averages, so it compares the corridor's own sites with the same K"
+  },
+  "min_years": {
+   "value": 5,
+   "manual": "modot_epg_905_3",
+   "page": "905.3.6.1.3 Parameters, Time Period: \"the most recently available five (5) full years of crash history data is standard\""
+  },
+  "spf_calibration": {
+   "missing": "MoDOT's own crash prediction tool and HSM spreadsheets (EPG 905.3.6.2.3-4); no calibration factors loaded (no SPF engine)"
+  }
+ }
+}

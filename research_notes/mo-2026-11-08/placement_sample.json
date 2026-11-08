@@ -1,0 +1,86 @@
+{
+ "area": "Jackson County (29095), 2023, every row",
+ "n": 19822,
+ "cleaning": {
+  "source_rows": 25274,
+  "no_county": 0,
+  "no_gps": 995,
+  "severity": "K/A/U/O: MSHP's minor injury is MUCR's B and C together"
+ },
+ "gps_share": 0.9498,
+ "primary_share": 0.9947,
+ "street_pair_share": 0.8522,
+ "offset_share": 0.6863,
+ "severity": {
+  "O": 13847,
+  "A": 537,
+  "U": 5316,
+  "K": 122
+ },
+ "freeway_share": 0.1273,
+ "duplicate_ids": 0,
+ "city": {
+  "KANSAS CITY": 12351,
+  "INDEPENDENCE": 2312,
+  "LEES SUMMIT": 1936,
+  "BLUE SPRINGS": 1161
+ },
+ "placement": {
+  "area": "Jackson County (29095), 2023, random 2,000 with GPS (seed 2026)",
+  "n": 2000,
+  "street_pair_share": 0.8695,
+  "tiers": {
+   "exact": 923,
+   "unique_pair": 315,
+   "review": 478,
+   "relaxed": 13,
+   "verified_typo": 5,
+   "near": 4,
+   "fuzzy": 1
+  },
+  "name_placed_share": 0.6305,
+  "auto_share": 0.619,
+  "gate": "Gate(tiger_only_auto=True) on a TIGER-only network",
+  "within_250ft": 0.9556,
+  "within_250ft_low": 0.9426,
+  "within_250ft_all_placed": 0.9548,
+  "not_placed": {
+   "no intersection of the two named streets": 421,
+   "no cross street in source": 261,
+   "exact: streets meet in more than one place": 49,
+   "relaxed: streets meet in more than one place": 7,
+   "fuzzy: streets meet in more than one place": 1
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "MO 7 & NOR 50",
+    "BURRIS RD & US 40",
+    "RP 5929 & I 470",
+    "ADAMS DAIRY PKWY & ROANOKE DR",
+    "BROADWAY BLVD & W 6TH ST",
+    "BLUE RIDGE BLVD & TRUMANS MARKET PLACE ST"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "FRONT ST & N OLIVE ST",
+    "TRUMAN RD & FOREST AVE",
+    "GREGORY BLVD & LAKESIDE DR",
+    "TRUMAN RD & MO 7",
+    "MO 291 & COURTNEY RD",
+    "COURTNEY RD & MO 291"
+   ],
+   "exact: streets meet in more than one place": [
+    "MO 7 & I 70",
+    "I 35 & I 29",
+    "US 71 & I 70 SJ",
+    "ROANOKE PKWY & WARD PKWY",
+    "WARD PKWY & ROANOKE PKWY",
+    "WARD PKWY & ROANOKE PKWY"
+   ],
+   "fuzzy: streets meet in more than one place": [
+    "NE DOUGLAS ST & NE OLD DOUGLAS RD"
+   ]
+  },
+  "no_gps_crashes": 995,
+  "no_gps_with_street_pair": 607
+ }
+}
