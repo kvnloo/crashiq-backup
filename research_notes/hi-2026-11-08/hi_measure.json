@@ -1,0 +1,151 @@
+{
+ "per_year": {
+  "2015": {
+   "rows": 3921,
+   "point_in_hawaii": 3921,
+   "on_a_point_shared_by_10+": 3,
+   "state_jurisdiction": 3921,
+   "county_jurisdiction": 0,
+   "major_injury_flag_1": 0,
+   "major_injury_flag_null": 3921
+  },
+  "2016": {
+   "rows": 4087,
+   "point_in_hawaii": 4087,
+   "on_a_point_shared_by_10+": 0,
+   "state_jurisdiction": 4087,
+   "county_jurisdiction": 0,
+   "major_injury_flag_1": 0,
+   "major_injury_flag_null": 4087
+  },
+  "2017": {
+   "rows": 3442,
+   "point_in_hawaii": 3442,
+   "on_a_point_shared_by_10+": 2,
+   "state_jurisdiction": 3442,
+   "county_jurisdiction": 0,
+   "major_injury_flag_1": 0,
+   "major_injury_flag_null": 3442
+  },
+  "2018": {
+   "rows": 3637,
+   "point_in_hawaii": 3637,
+   "on_a_point_shared_by_10+": 10,
+   "state_jurisdiction": 3637,
+   "county_jurisdiction": 0,
+   "major_injury_flag_1": 158,
+   "major_injury_flag_null": 0
+  },
+  "2019": {
+   "rows": 3472,
+   "point_in_hawaii": 3472,
+   "on_a_point_shared_by_10+": 16,
+   "state_jurisdiction": 3472,
+   "county_jurisdiction": 0,
+   "major_injury_flag_1": 248,
+   "major_injury_flag_null": 0
+  },
+  "2020": {
+   "rows": 2400,
+   "point_in_hawaii": 2400,
+   "on_a_point_shared_by_10+": 9,
+   "state_jurisdiction": 2400,
+   "county_jurisdiction": 0,
+   "major_injury_flag_1": 197,
+   "major_injury_flag_null": 0
+  },
+  "2021": {
+   "rows": 2720,
+   "point_in_hawaii": 2720,
+   "on_a_point_shared_by_10+": 13,
+   "state_jurisdiction": 2720,
+   "county_jurisdiction": 0,
+   "major_injury_flag_1": 231,
+   "major_injury_flag_null": 0
+  },
+  "2022": {
+   "rows": 2322,
+   "point_in_hawaii": 2320,
+   "on_a_point_shared_by_10+": 8,
+   "state_jurisdiction": 2322,
+   "county_jurisdiction": 0,
+   "major_injury_flag_1": 208,
+   "major_injury_flag_null": 0
+  },
+  "2023": {
+   "rows": 5643,
+   "point_in_hawaii": 5632,
+   "on_a_point_shared_by_10+": 12,
+   "state_jurisdiction": 2401,
+   "county_jurisdiction": 3239,
+   "major_injury_flag_1": 495,
+   "major_injury_flag_null": 0
+  },
+  "2024": {
+   "rows": 5671,
+   "point_in_hawaii": 5657,
+   "on_a_point_shared_by_10+": 14,
+   "state_jurisdiction": 2357,
+   "county_jurisdiction": 3304,
+   "major_injury_flag_1": 524,
+   "major_injury_flag_null": 2
+  }
+ },
+ "rows": 37315,
+ "point_in_hawaii_share": 0.9993,
+ "most_shared_points": [
+  {
+   "point": [
+    21.48085,
+    -157.92313
+   ],
+   "rows": 36
+  },
+  {
+   "point": [
+    0,
+    0
+   ],
+   "rows": 27
+  },
+  {
+   "point": [
+    19.54335,
+    -154.97491
+   ],
+   "rows": 12
+  },
+  {
+   "point": [
+    19.54674,
+    -154.97836
+   ],
+   "rows": 12
+  },
+  {
+   "point": [
+    19.54675,
+    -154.97835
+   ],
+   "rows": 9
+  }
+ ],
+ "fatal_crashes_per_year": {
+  "2012": 114,
+  "2013": 93,
+  "2014": 94,
+  "2015": 93,
+  "2016": 119,
+  "2017": 96,
+  "2018": 109,
+  "2019": 102,
+  "2020": 81,
+  "2021": 94,
+  "2022": 111,
+  "2023": 90,
+  "2024": 97,
+  "2025": 123
+ },
+ "fatal_rows": 1416,
+ "fatal_rows_with_crash_id": 458
+}
