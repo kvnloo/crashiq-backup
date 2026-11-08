@@ -1,0 +1,109 @@
+{
+ "state": "SC",
+ "bucket": "D",
+ "status": "gated",
+ "bucket_note": "Verified 2026-11-08: the master crash file is by request. SCDPS's CC BY 4.0 public layer (2017 - Oct 2021) now returns 0 rows and its source needs a token; refreshed, it would make SC bucket A.",
+ "sources": [
+  {
+   "name": "SCDPS master crash file (OHSJP Statistics Section)",
+   "url": "https://scdps.sc.gov/media-and-public-information/traffic-collision-facts",
+   "access": "gated (request)",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": "yes (TR-310)",
+   "keys_linkable": null
+  },
+  {
+   "name": "SCDPS Collisions (public view, CC BY 4.0)",
+   "url": "https://services7.arcgis.com/TdsEnMqzMcTd7pnb/arcgis/rest/services/Extrnl_Collisions_Collision_Dashboard/FeatureServer/0",
+   "access": "public view, 0 rows; source layer Extrnl_Collisions/FeatureServer/16 needs a token",
+   "licence_paid_use": "ok_with_attribution",
+   "licence_text": "This work is licensed under a Creative Commons Attribution 4.0 International License.",
+   "licence_urls": [
+    "https://www.arcgis.com/home/item.html?id=6b1c4cc6aa5b4042ab8458a0f24c422b"
+   ],
+   "years": "2017 - Oct 2021 (last data edit 2021-12-07)",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": "crash counts by K / A / B / C (NumberOfFatalities, Suspected_Serious/Minor_Injuries, Possible_Injuries)",
+   "keys_linkable": false
+  },
+  {
+   "name": "2017 to 2025 GPATS Crash Data (Greenville MPO)",
+   "url": "https://services3.arcgis.com/bjOyhhlaaCIcmO3H/arcgis/rest/services/2017_to_2025_GPATS_Crash_Data/FeatureServer/0",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_text": "none stated",
+   "years": "2017-2025",
+   "rows_total": 188597,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": "crash max injury (Fatal / Serious|Incapacitating / Minor|Non-Incapacitating / Possible / No Injury)",
+   "keys_linkable": false,
+   "coverage": "GPATS MPO (mostly Greenville County)"
+  },
+  {
+   "name": "Spartanburg County Crash Data Monthly Update",
+   "url": "https://services6.arcgis.com/bom7L4u7y1k0qkF1/arcgis/rest/services/Spartanburg_County_Crash_Data_Monthly_Update/FeatureServer/0",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_text": "none stated",
+   "years": "2024-01-01 to 2025-04-27 (not updated since 2025-05-05)",
+   "rows_per_year": {
+    "2024": 10674
+   },
+   "gps_share": 0.9995,
+   "street_names_share": 0.9935,
+   "kabco": "per person (TR-310 words)",
+   "keys_linkable": "crash_number groups the person rows"
+  }
+ ],
+ "placement_sample": {
+  "area": "Spartanburg County (45083), 2024 (county layer)",
+  "n": 2000,
+  "gps_share": 0.9995,
+  "name_placed_share": 0.8435,
+  "auto_share": 0.0,
+  "tier_gate_share": 0.8055,
+  "within_250ft": 0.4767,
+  "within_250ft_low": 0.4524,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "auto_share 0: TIGER-only network, tiger_only_auto off. Accuracy is 72-74% at the intersection for offsets under 0.1 mi but 13% for offsets of 0.1 mi or more; applying the offset made it worse (direction meaning unverified)"
+ },
+ "importer_built": false,
+ "end_to_end": null,
+ "blockers": [
+  "statewide data by request only; the CC BY 4.0 public layer is empty (0 rows) and stale (2017-2021)",
+  "TR-310 offset direction meaning unverified (manual is scanned)",
+  "regional layers (GPATS, Spartanburg) have no licence"
+ ],
+ "user_actions": [
+  "Ask SCDPS (OHSJP Statistics Section) to refresh the CC BY 4.0 'SCDPS Collisions' layer with 2022-2025, or for the statewide master crash file (crash + unit + occupant) with written permission for a paid tool",
+  "Ask SCDPS what TR-310's offset direction means (from the base point, or toward it)",
+  "Optional: ask Greenville County GIS / GPATS for a licence on its 2017-2025 crash layer"
+ ],
+ "cities": [
+  {
+   "city": "Greenville (GPATS MPO)",
+   "source": "2017 to 2025 GPATS Crash Data",
+   "url": "https://services3.arcgis.com/bjOyhhlaaCIcmO3H/arcgis/rest/services/2017_to_2025_GPATS_Crash_Data/FeatureServer/0",
+   "gps_share": null,
+   "years": "2017-2025",
+   "licence": "none stated"
+  },
+  {
+   "city": "Spartanburg County",
+   "source": "Spartanburg County Crash Data Monthly Update",
+   "url": "https://services6.arcgis.com/bom7L4u7y1k0qkF1/arcgis/rest/services/Spartanburg_County_Crash_Data_Monthly_Update/FeatureServer/0",
+   "gps_share": 0.9995,
+   "years": "2024 - Apr 2025",
+   "licence": "none stated"
+  }
+ ]
+}
