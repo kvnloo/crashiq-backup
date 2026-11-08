@@ -1,0 +1,70 @@
+{
+ "state": "PA",
+ "manuals": {
+  "pa_crash_facts": {
+   "title": "2025 Pennsylvania Crash Facts and Statistics",
+   "publisher": "PennDOT",
+   "jurisdiction": "PA",
+   "edition": "2025 (posted 2026)",
+   "url": "https://www.pa.gov/content/dam/copapwp-pagov/en/penndot/documents/travelinpa/safety/documents/2025_cfb_linked.pdf",
+   "sha256": "122e3cba32e8128373d45c5f1a634f89b1c46a69edfc6d12333e9800d1fe14b0",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/pa-2026-11-08/pa-methods.md \u00a71"
+  },
+  "pub638": {
+   "title": "Publication 638: District Highway Safety Program Guide",
+   "publisher": "PennDOT",
+   "jurisdiction": "PA",
+   "edition": "2024 Edition (July 2024)",
+   "url": "https://www.pa.gov/content/dam/copapwp-pagov/en/penndot/documents/public/pubsforms/publications/pub%20638.pdf",
+   "sha256": "2d3d64ab887a3a48822b97e66d7a526a7a078ac98a35eedeae5ee7ee406aabbe",
+   "downloaded": "2026-11-08"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 15327533,
+   "A": 874868,
+   "B": 280486,
+   "C": 155850,
+   "O": 14505,
+   "dollar_year": 2025,
+   "manual": "pa_crash_facts",
+   "page": "p. 8 (PDF p. 10), Comprehensive Loss Due to Reportable Traffic Crashes, Average Cost by max severity",
+   "verified": true,
+   "rules": [
+    "one cost per crash by its maximum severity (the book: 'Cost is now based on max crash severity'), every location type",
+    "Pub 638 (2024) Table 4-3, p. 4-9, prices 'Possible Injury and Unknown Severity' together at the C cost, and the 2025 book's possible-injury count includes PennDOT's unknown-severity and unknown-if-injured crashes; CrashIQ's core leaves U unpriced until shared-fixes.md item 1 lands",
+    "Pub 638 \u00a74.8 (p. 4-8): costs are updated each year in the Crash Facts book; use the most current edition"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "Pub 638 \u00a75.2.3 (p. 5-12): statewide average rates for State facilities are kept by PennDOT HSTOD (CDART Homogeneous Report) and given on request; no published table, and CrashIQ has no Pennsylvania traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "Potential for Safety Improvement / excess yearly crash cost from PA regionalized SPFs and Empirical Bayes (Pub 638, 2024, \u00a75.2.2, pp. 5-9 to 5-10); PennDOT allows crash rates only at the District's direction (\u00a75.2.3, p. 5-11)"
+  },
+  "min_years": {
+   "years": "3-5",
+   "manual": "pub638",
+   "page": "\u00a75.2.3, p. 5-11 (Eqn. 5-3 and 5-4: 'study period (generally 3-5 years)')",
+   "verified": false
+  },
+  "spf_calibration": {
+   "missing": "Pub 638A (2021) gives district calibration factors for PA regionalized SPFs; not loaded (CrashIQ has no SPF engine)"
+  }
+ }
+}
