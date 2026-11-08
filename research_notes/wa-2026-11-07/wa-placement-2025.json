@@ -1,0 +1,129 @@
+{
+ "seattle": {
+  "area": "Seattle (SDOT Collisions 2025)",
+  "n": 2000,
+  "gps": 1962,
+  "gps_share": 0.981,
+  "names": 1966,
+  "no_gps": 38,
+  "no_gps_with_names": 4,
+  "addr_type": {
+   "I": 717,
+   "B": 1249,
+   "A": 34
+  },
+  "names_share": 0.983,
+  "by_type": {
+   "I": {
+    "n": 714,
+    "tiers": {
+     "exact": 659,
+     "review": 46,
+     "verified_typo": 4,
+     "fuzzy": 2,
+     "unique_pair": 1,
+     "near": 2
+    },
+    "placed": 668,
+    "placed_share": 0.9356,
+    "auto": 660,
+    "auto_share": 0.9244,
+    "within_250ft_of_placed": 0.9955,
+    "within_250ft_low": 0.9869,
+    "auto_within_250ft": 0.9955,
+    "auto_within_250ft_low": 0.9867,
+    "block_midpoint": null
+   },
+   "B": {
+    "n": 1248,
+    "tiers": {
+     "exact": 1045,
+     "review": 180,
+     "relaxed": 2,
+     "fuzzy": 4,
+     "verified_typo": 4,
+     "near": 10,
+     "unique_pair": 3
+    },
+    "placed": 1068,
+    "placed_share": 0.8558,
+    "auto": 1048,
+    "auto_share": 0.8397,
+    "within_250ft_of_placed": 0.5936,
+    "within_250ft_low": 0.5639,
+    "auto_within_250ft": 0.5945,
+    "auto_within_250ft_low": 0.5644,
+    "block_midpoint": {
+     "n": 1003,
+     "auto_share_of_block_crashes": 0.7861,
+     "within_250ft": 0.997,
+     "low": 0.9912
+    }
+   }
+  },
+  "all_named": {
+   "n": 1962,
+   "tiers": {
+    "exact": 1704,
+    "review": 226,
+    "verified_typo": 8,
+    "relaxed": 2,
+    "fuzzy": 6,
+    "near": 12,
+    "unique_pair": 4
+   },
+   "placed": 1736,
+   "placed_share": 0.8848,
+   "auto": 1708,
+   "auto_share": 0.8705,
+   "within_250ft_of_placed": 0.7483,
+   "within_250ft_low": 0.7273,
+   "auto_within_250ft": 0.7494,
+   "auto_within_250ft_low": 0.7283,
+   "block_midpoint": null
+  },
+  "no_gps_auto_placed": 3
+ },
+ "sdot_vs_wsdot": {
+  "wsdot_rows": 7265,
+  "sdot_rows": 5763,
+  "matched_with_both_points": 4171,
+  "within_250ft": 0.819,
+  "median_ft": 60,
+  "jurisdiction_of_wsdot_rows": {
+   "City Street": 3757,
+   "State Route": 3507,
+   "Miscellaneous Trafficway": 1
+  }
+ },
+ "tacoma": {
+  "area": "Tacoma city streets (WSDOT layout, City of Tacoma open data, 2025)",
+  "n_all": 2940,
+  "city_street": 2503,
+  "gps_share": 1.0,
+  "names_share_city": 0.9988,
+  "with_offset": 1115,
+  "block_number_share_city": 0.8781,
+  "result": {
+   "n": 2500,
+   "tiers": {
+    "exact": 2092,
+    "unique_pair": 280,
+    "review": 106,
+    "near": 10,
+    "fuzzy": 7,
+    "relaxed": 4,
+    "verified_typo": 1
+   },
+   "placed": 2394,
+   "placed_share": 0.9576,
+   "auto": 2372,
+   "auto_share": 0.9488,
+   "within_250ft_of_placed": 0.9791,
+   "within_250ft_low": 0.9726,
+   "auto_within_250ft": 0.9831,
+   "auto_within_250ft_low": 0.9771,
+   "block_midpoint": null
+  }
+ }
+}

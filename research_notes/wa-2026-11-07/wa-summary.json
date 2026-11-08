@@ -1,0 +1,287 @@
+{
+ "state": "WA",
+ "bucket": "A*",
+ "bucket_note": "Seattle (SDOT) is A: open, licensed, GPS + street names + person KABCO. Statewide WSDOT is A*: record-level JSON with GPS and KABCO from an undocumented public portal endpoint, no licence, no street names. The full export (street names, offsets, vehicles) comes by free emailed request (Form 780-032), so statewide-with-names is D (bring your own export), with its reader built.",
+ "sources": [
+  {
+   "name": "SDOT Collisions All Years + Collisions Persons + Collisions Vehicles (City of Seattle)",
+   "url": "https://services.arcgis.com/ZOyb2t4B0UYuYNYH/arcgis/rest/services/SDOT_Collisions_All_Years_1/FeatureServer/0",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "ok",
+   "licence_text": "City of Seattle Open Data Policy \u00a7E: 'An open license on a dataset signifies there are no restrictions on copying, publishing, further distributing, modifying or using the data for a noncommercial or commercial purpose.' Terms of Use: 'Unless otherwise indicated, data on this site does not require specific attribution', but 'To the extent the data consists of a list of individuals ... it is not to be used for a commercial purpose.' (check for the persons layer)",
+   "licence_urls": [
+    "https://www.seattle.gov/documents/Departments/Tech/OpenData/COS_OpenDataPolicy.pdf",
+    "https://data.seattle.gov/stories/s/Terms-of-Use/6ukr-wvup/"
+   ],
+   "years": "2004-2026 (latest crash 2026-10-30; refreshed daily)",
+   "rows_total": 263270,
+   "rows_per_year": {
+    "2019": 11236,
+    "2020": 7254,
+    "2021": 8170,
+    "2022": 7681,
+    "2023": 7369,
+    "2024": 6464,
+    "2025": 5763,
+    "2026_partial": 3575
+   },
+   "gps_share": 0.9774,
+   "gps_note": "2025: 5,633 of 5,763 have a point, SDOT's geocode snapped to the intersection or mid-block (not officer GPS)",
+   "street_names_share": 0.9806,
+   "street_names_note": "LOCATION 'A AND B' (intersection, 36%) or 'A BETWEEN B AND C' (block, 62%); alleys (2%) have no text",
+   "kabco": "crash level 4/3/2/1 = K/A/injury (B or C not given)/O; person level full KABCO (ST_INJRY_CLSS)",
+   "keys_linkable": true,
+   "keys_note": "COLDETKEY links crashes, persons (560,802 rows) and vehicles (435,724 rows); REPORTNO = WSDOT report number"
+  },
+  {
+   "name": "WSDOT Crash Data Portal, record-level endpoint GetPublicPortalData",
+   "url": "https://remoteapps.wsdot.wa.gov/highwaysafety/collision/data/portal/public/",
+   "access": "open but undocumented (JSON behind the public dashboard, no login)",
+   "licence_paid_use": "unclear",
+   "licence_text": "No licence. Every report carries the 23 USC 148/407 notice. RCW 46.52.080 makes the police reports themselves confidential; the portal rows are WSDOT's derived records.",
+   "years": "10 full years + current (2016-2026); summary endpoint 2011-2026",
+   "rows_per_year": {
+    "2021": 103388,
+    "2022": 103462,
+    "2023": 104535,
+    "2024": 104308,
+    "2025": 100651,
+    "2026_partial": 69480
+   },
+   "gps_share": 1.0,
+   "gps_note": "2025 King (30,467), Spokane (6,283), Okanogan (398) counties: every row has lat/lon and the row count equals the portal total",
+   "street_names_share": 0.0,
+   "kabco": "yes, most severe injury per crash (Dead at Scene/DOA/Died in Hospital, Suspected Serious, Suspected Minor, Possible, No Apparent, Unknown)",
+   "keys_linkable": false,
+   "keys_note": "report number only; no persons or vehicles"
+  },
+  {
+   "name": "WSDOT crash export by request (history report / single row flat file; Form 780-032 or Public Disclosure Request Center)",
+   "url": "https://wsdot.wa.gov/about/transportation-data/crash-data",
+   "access": "free emailed request, about 10 days; anyone may request",
+   "licence_paid_use": "unclear",
+   "licence_text": "23 USC 148/407 notice on every release; the Safety Analysis Guide requires it in the footer of every page, table or graph",
+   "years": "15 full years + current (final each July)",
+   "rows_per_year": "as the portal above",
+   "gps_share": "not measured on a WSDOT file; Tacoma and SRTC republications 100% (33,068 and 33,731 rows have a point)",
+   "street_names_share": "Tacoma city streets 2025: 99.9%; state routes give route + milepost only",
+   "kabco": "yes: crash level + totals per level",
+   "keys_linkable": "vehicles 1-3 and drivers are columns of the crash row"
+  },
+  {
+   "name": "Vision Zero Crashes (Tacoma), WSDOT export republished by City of Tacoma",
+   "url": "https://services3.arcgis.com/SCwJH1pD8WSn5T5y/arcgis/rest/services/tacoma_vision_zero_crashes/FeatureServer/14",
+   "access": "open (ArcGIS REST)",
+   "licence_paid_use": "ok_with_attribution",
+   "licence_text": "Tacoma Open Data: 'With no legal restrictions on use or reuse, you could really use the data available on Tacoma Open Data for just about anything.' The underlying data is WSDOT's (\u00a7407).",
+   "licence_urls": [
+    "https://tacoma.gov/services/tacoma-open-data-maps/"
+   ],
+   "years": "2016-2025",
+   "rows_per_year": {
+    "2021": 3579,
+    "2022": 3377,
+    "2023": 3275,
+    "2024": 3045,
+    "2025": 2940
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.9988,
+   "kabco": "yes",
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": "Seattle, SDOT Collisions 2025 (random 2,000 of 5,763); TIGER/Line 2024 King County 53033",
+  "n": 2000,
+  "gps_share": 0.981,
+  "name_placed_share": 0.8517,
+  "auto_share": 0.8364,
+  "within_250ft": 0.9964,
+  "within_250ft_low": 0.9922,
+  "house_address_share": 0.0,
+  "address_points_source": "NAD covers WA (points in all 9 test boxes, incl. rural Okanogan); not needed for Seattle (no house addresses). WSDOT BLOCK NUMBER (87.8% of Tacoma city-street rows) could use NAD: not measured",
+  "notes": "Combined figures: intersections with the locator unchanged + block crashes at the middle of the block (wrapper in tests/statewide/wa_placement.py). Locator unchanged on block crashes: 84.0% auto but 59.4% within 250 ft (it puts them on the corner). No GPS: 38 of 2,000; 4 have street names; 3 auto-placed.",
+  "by_type": {
+   "intersection": {
+    "n": 714,
+    "placed_share": 0.9356,
+    "auto_share": 0.9244,
+    "within_250ft_of_placed": 0.9955,
+    "within_250ft_low": 0.9869
+   },
+   "block_as_is": {
+    "n": 1248,
+    "placed_share": 0.8558,
+    "auto_share": 0.8397,
+    "within_250ft_of_placed": 0.5936,
+    "within_250ft_low": 0.5639
+   },
+   "block_midpoint": {
+    "n": 1003,
+    "auto_share_of_block_crashes": 0.7861,
+    "within_250ft": 0.997,
+    "low": 0.9912
+   }
+  },
+  "second_sample": {
+   "area": "Tacoma city streets (WSDOT layout, City of Tacoma open data, 2025)",
+   "n": 2500,
+   "gps_share": 1.0,
+   "auto_share": 0.9488,
+   "within_250ft": 0.9831,
+   "within_250ft_low": 0.9771,
+   "network": "TIGER/Line 2024 Pierce County 53053"
+  },
+  "sdot_vs_wsdot_points": {
+   "wsdot_rows": 7265,
+   "sdot_rows": 5763,
+   "matched_with_both_points": 4171,
+   "within_250ft": 0.819,
+   "median_ft": 60,
+   "jurisdiction_of_wsdot_rows": {
+    "City Street": 3757,
+    "State Route": 3507,
+    "Miscellaneous Trafficway": 1
+   }
+  }
+ },
+ "importer_built": true,
+ "importers": [
+  "backend/crashiq/sources/wa_sdot.py (Seattle: fetch + reader)",
+  "backend/crashiq/sources/wa_wsdot.py (WSDOT export reader for user uploads and the Tacoma/SRTC republications; WSDOT portal fetch + reader)"
+ ],
+ "blockers": [
+  "No published licence for WSDOT crash data in a paid product; \u00a7407 notice on every release",
+  "WSDOT portal endpoint is undocumented and can change or vanish",
+  "State-route crashes in the WSDOT export carry route + milepost only: placing them needs WSDOT's LRS (not built)",
+  "WSDOT does not use crash rates; no average-rate table exists for rate comparisons"
+ ],
+ "user_actions": [
+  "Ask WSDOT Crash Data and Reporting Branch (crashanalysis@wsdot.wa.gov, 360-570-2420) in writing whether CrashIQ may load the public portal records and users' requested exports in a paid tool, and which notice to show",
+  "Request one county-year export (e.g. King County 2025, all roads, single row flat file, Excel) with Form 780-032, to check the export reader on a true WSDOT file",
+  "Decide how WSDOT 'Unknown' injury counts (mapped to U now)",
+  "Decide whether to ask open.data@seattle.gov about the persons layer under the 'list of individuals' clause"
+ ],
+ "cities": [
+  {
+   "city": "Seattle",
+   "source": "SDOT Collisions All Years (+ Persons, Vehicles)",
+   "url": "https://services.arcgis.com/ZOyb2t4B0UYuYNYH/arcgis/rest/services/SDOT_Collisions_All_Years_1/FeatureServer/0",
+   "gps_share": 0.9774,
+   "years": "2004-2026",
+   "licence": "open licence, commercial use OK (Open Data Policy \u00a7E)"
+  },
+  {
+   "city": "Tacoma",
+   "source": "Vision Zero Crashes (Tacoma), WSDOT layout, limited-access highways left out",
+   "url": "https://services3.arcgis.com/SCwJH1pD8WSn5T5y/arcgis/rest/services/tacoma_vision_zero_crashes/FeatureServer/14",
+   "gps_share": 1.0,
+   "years": "2016-2025",
+   "licence": "'no legal restrictions on use or reuse'; WSDOT data underneath"
+  },
+  {
+   "city": "Spokane (county)",
+   "source": "SRTC Crash Points 2021-2025, WSDOT layout (33,734 rows)",
+   "url": "https://services1.arcgis.com/Ub7Rr4y0UspW2NcJ/arcgis/rest/services/Crash_Points_2021_2025/FeatureServer/104",
+   "gps_share": 0.9999,
+   "years": "2021-2026",
+   "licence": "none stated (unclear)"
+  },
+  {
+   "city": "Bellevue",
+   "source": "Vision Zero Collisions, KSI only (364 rows); serious injuries moved to the nearest intersection",
+   "url": "https://services1.arcgis.com/EYzEZbDhXZjURPbP/arcgis/rest/services/Vision_Zero_Collisions_-_Serious_Injury_or_Fatality_KSI_view/FeatureServer/0",
+   "gps_share": "not measured",
+   "years": "2010-2025",
+   "licence": "disclaimer only (unclear)"
+  },
+  {
+   "city": "Vancouver",
+   "source": "Motor Vehicle Crashes Summary Data by Year (6 summary rows, no records)",
+   "url": "https://services.arcgis.com/oNvpY90qsPDizwkN/arcgis/rest/services/CrashDataByMonthWSDOT/FeatureServer/0",
+   "gps_share": null,
+   "years": "summary only",
+   "licence": "n/a"
+  },
+  {
+   "city": "Any WA city",
+   "source": "WSDOT portal, locationType=City (Seattle 7,265, Tacoma 4,153, Spokane 3,275, Bellevue 2,817, Vancouver 2,156 crashes in 2025)",
+   "url": "https://remoteapps.wsdot.wa.gov/highwaysafety/collision/data/portal/public/",
+   "gps_share": 1.0,
+   "years": "2016-2026",
+   "licence": "unclear (no licence; \u00a7407)"
+  }
+ ],
+ "methods": {
+  "manuals": [
+   {
+    "title": "Safety Analysis Guide for Design Projects",
+    "url": "https://wsdot.wa.gov/publications/fulltext/design/ASDE/Safety-Analysis-Guide.pdf",
+    "date": "2024-08"
+   },
+   {
+    "title": "2024 Washington State Safety Implementation Plan (HSIP Implementation Plan)",
+    "url": "https://wsdot.wa.gov/about/data/Multimodal-mobility-dashboard/doc/TargetZero-ImplementationPlan-HSIP2024.pdf",
+    "date": "2024"
+   },
+   {
+    "title": "Design Manual M 22-01.23 Ch. 321 Safety Analysis",
+    "url": "https://wsdot.wa.gov/publications/manuals/fulltext/m22-01/321.pdf",
+    "date": "2024-09"
+   },
+   {
+    "title": "Design Manual M 22-01.23 Ch. 1300 Intersection Control",
+    "url": "https://wsdot.wa.gov/publications/manuals/fulltext/m22-01/1300.pdf",
+    "date": "2024-09"
+   },
+   {
+    "title": "Project Delivery Memo 25-02, Roundabout First and ICE",
+    "url": "https://wsdot.wa.gov/publications/fulltext/ProjectDev/ProjectDeliveryMemos/Memo25-02.pdf",
+    "date": "2025-07-08"
+   },
+   {
+    "title": "2026 City Safety Program application",
+    "url": "https://wsdot.wa.gov/sites/default/files/2025-10/LP-City-Safety-Program-2026-Application.docx",
+    "date": "2025-10"
+   },
+   {
+    "title": "Crash data request, 2026 City Safety Program layout (DOT Form 780-032)",
+    "url": "https://wsdot.wa.gov/sites/default/files/2026-04/2026-City-Safety-Program.pdf",
+    "date": "2026-04"
+   },
+   {
+    "title": "Local Road Safety Plan template",
+    "url": "https://wsdot.wa.gov/sites/default/files/2023-03/LocalRoadSafetyPlan-Template-Feb2023.pdf",
+    "date": "2023-02"
+   },
+   {
+    "title": "Safety Guidance for Corridor Planning Studies",
+    "url": "https://wsdot.wa.gov/sites/default/files/2021-10/SafetyGuidance_CorridorPlanningStudies_June2016.pdf",
+    "date": "2015-06"
+   }
+  ],
+  "rates_available": false,
+  "rates_unit": "none: WSDOT 'no longer uses crash rates for decision-making' (Safety Analysis Guide 2024, printed p.19); only statewide fatality and serious-injury rates per 100 million VMT for federal targets",
+  "crash_costs": {
+   "K": 4308200,
+   "A": 4308200,
+   "B": 304200,
+   "C": 180600,
+   "O": 19300,
+   "year": "not stated (applied to 2023 crashes; HSIP Implementation Plan 2024, Exhibit 6 note 3, printed p.11)"
+  },
+  "screening_method": "HSM SPFs + Empirical Bayes expected fatal + serious crash frequency, sliding window + peak searching; cut-off 0.5 expected (CAL/CAC) or 0.3 excess (IAL) crashes per year; calibration factor 1.00; 5 full calendar years (min 2)",
+  "differences_from_ca": [
+   "No average crash-rate table (CA: TASAS base rates by rate group)",
+   "K and A priced the same ($4,308,200), no location-type split (CA LRSM 2026: KA by signalized / non-signalized / roadway)",
+   "Screening by SPF + EB excess; no hot spots or heat maps (CA tools rank by counts, rates, cost)",
+   "HSM calibration factor 1.00 by policy",
+   "5 full calendar years (CA HSIP 3-5)",
+   "City Safety needs a Local Road Safety Plan and the KSI crash report numbers 2020-2024",
+   "Roundabout-first ICE with separate vehicle and active-transportation safety assessments",
+   "\u00a7148/\u00a7407 footer on every page, table or graph of safety analysis",
+   "CMFs from the WSDOT short list first; Clearinghouse needs approval (CA: LRSM Appendix B CRFs)"
+  ]
+ }
+}

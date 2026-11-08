@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washington crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}.no{color:var(--red)}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+a{color:#ff8a8c}ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state onboarding · 7 Nov 2026 · written by Hermes</p>
+<h1>Washington: Seattle is ready, the rest of the state needs WSDOT's OK</h1>
+
+<div class="card"><b>In one line:</b> Seattle publishes every crash with a map point, the two street names and each person's injury level, under a licence that allows paid use. WSDOT also shows every crash in the state with a map point, but has no licence and no street names in the public version.</div>
+
+<h2>1. What Washington has</h2>
+<table>
+<tr><th>Source</th><th>What you get</th><th>Paid use?</th></tr>
+<tr><td><b>Seattle (SDOT)</b><br><span class="dim">2004–2026, daily</span></td><td>98% of crashes have a point, 98% the street names, injury level per person. Example: <code>15TH AVE NW BETWEEN NW 85TH ST AND NW 87TH ST</code></td><td class="ok">Yes: city's open licence allows commercial use</td></tr>
+<tr><td><b>WSDOT public portal</b><br><span class="dim">all of WA, 2016–2026</span></td><td>Every crash with a point (100% in King, Spokane, Okanogan counties, 2025) and its worst injury (K A B C O). No street names, no crash type.</td><td class="warn">Unclear: no licence, hidden endpoint</td></tr>
+<tr><td><b>WSDOT export</b><br><span class="dim">free email request, ~10 days</span></td><td>Street names, block number, "206 ft east of 64th Ave W", vehicles, drivers. Tacoma and Spokane's MPO republish it.</td><td class="warn">Unclear: federal §407 notice on every file</td></tr>
+<tr><td><b>Tacoma</b> (city)</td><td>WSDOT export for city streets, 2016–2025, 100% points</td><td class="ok">City says "no legal restrictions" (data is WSDOT's)</td></tr>
+<tr><td><b>Spokane, Bellevue, Vancouver</b></td><td>Spokane: SRTC county file 2021–2026. Bellevue: serious/fatal only (364). Vancouver: yearly totals only.</td><td class="warn">Not stated</td></tr>
+</table>
+
+<h2>2. Can CrashIQ place crashes from street names? Yes</h2>
+<div class="card"><div class="big">99.6%</div>of Seattle crashes CrashIQ placed from street names alone (GPS hidden) landed within 250 ft of the city's own point. 2,000 crashes from 2025; 83.6% placed automatically.</div>
+<div class="card"><div class="big">98.3%</div>Tacoma, using the WSDOT export format a user would upload: 94.9% placed automatically, 98.3% of those within 250 ft. Example: "686 ft southeast of Division Ave on S Stadium Way" was placed automatically, 222 ft from WSDOT's point.</div>
+<div class="card"><b>One catch:</b> Seattle writes block crashes as "A between B and C". Today's locator puts them on the corner (only 59% within 250 ft). Putting them in the middle of the block fixes it (99.7%). That needs a small change in the shared locator.</div>
+<p class="dim">Other fixes the shared code needs: "M L KING JR WAY" must match "Martin Luther King Jr Way"; ramps and bridges ("SR99 TUNNEL SB"); state-highway crashes in the export give only a milepost, so they need WSDOT's route system.</p>
+
+<h2>3. Washington does safety studies differently</h2>
+<ul>
+<li><b>No crash rates.</b> WSDOT "no longer uses crash rates for decision-making". There's no table of average rates like Caltrans TASAS.</li>
+<li><b>Crash costs</b> (2024 HSIP plan): fatal and serious both <b>$4,308,200</b>, minor $304,200, possible $180,600, property damage $19,300. California prices them by intersection type.</li>
+<li><b>Screening</b> uses the Highway Safety Manual: expected vs. typical fatal and serious crashes (calibration 1.00), not hot spots.</li>
+<li><b>Five full years</b> of data, and every page or table needs the federal §407 footer.</li>
+<li>City grants need a Local Road Safety Plan and the report numbers of the fatal/serious crashes 2020–2024.</li>
+</ul>
+<p class="dim">Details with page numbers: <code>research_notes/wa-2026-11-07/wa-methods.md</code>; data: <code>wa-import.md</code>, <code>wa-summary.json</code>.</p>
+
+<h2>4. Built</h2>
+<p>A Seattle reader and a WSDOT reader (for the export users bring and for the public portal), with tests on real 2025 rows. Not switched on in the app yet.</p>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Email WSDOT's crash data branch (crashanalysis@wsdot.wa.gov) and ask in writing: may a paid tool load the public portal records and the exports users request, and what notice must it show?</li>
+<li>Request one export to test with: King County, 2025, all roads, Excel (form 780-032).</li>
+<li>Decide: WSDOT marks some injuries "Unknown". Count them as injured-level-unknown (now) or not?</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>Placing state-highway and county-road crashes by milepost.</li>
+<li>House-number placement from WSDOT block numbers (address points exist statewide; accuracy not measured).</li>
+<li>Whether Seattle's per-person table falls under its "list of individuals" rule for commercial use.</li>
+<li>WSDOT's internal crash-cost sheet (may be newer) and its countermeasure short list.</li>
+</ul>
+</main></body></html>
