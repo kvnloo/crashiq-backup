@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New Mexico crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state pack · 8 Nov 2026 · written by Hermes</p>
+<h1>New Mexico: Albuquerque is open, the rest is by request</h1>
+
+<div class="card"><b>In one line:</b> NMDOT only gives crash data on request, but the City of Albuquerque posts every crash in Bernalillo County, 2020–2024, with a map point, street names and K/A/B/C counts. CrashIQ reads it; it's kept off the menu until the reuse terms are clear.</div>
+<h2>1. What New Mexico has</h2>
+<table>
+<tr><th>What</th><th>Example</th></tr>
+<tr><td>Statewide</td><td class="warn">By request only. UNM: "will not release traffic crash data directly to end users."</td></tr>
+<tr><td>Bernalillo County</td><td class="ok">75,460 crashes, 2020–2024 (2024: 15,529).</td></tr>
+<tr><td>Map point</td><td class="ok">99.8% of crashes.</td></tr>
+<tr><td>Street names</td><td class="ok">Street + cross street or landmark: <code>GIBSON BLVD SE</code>, 100 ft E of <code>CARLISLE BLVD SE</code>.</td></tr>
+<tr><td>Injury level</td><td class="ok">People killed and class A, B, C injured on each crash, so K A B C O.</td></tr>
+<tr><td>Missing</td><td class="warn">People and vehicle records, road surface, crash costs NMDOT signs off on.</td></tr>
+</table>
+<h2>2. Does it place without GPS? Yes, mostly</h2>
+<div class="card"><div class="big">92%</div>of the Albuquerque crashes CrashIQ auto-placed from the street names alone (GPS hidden, 2,000 crashes from 2024) landed within 250 ft of UNM's point. Only 11 of 15,528 crashes lack a point, so this is a cross-check.</div>
+<h2>3. A real corridor</h2>
+<div class="card">Central Avenue, San Mateo to Louisiana, 1.06 mi, 2020–2024: <b>779 crashes</b>: 11 fatal, 18 serious, 65 minor, 165 possible, 520 property damage. 19 findings. No dollar total yet. PDF and Excel exports work.</div>
+<h2>What you need to do</h2>
+<ol>
+<li>Ask the City of Albuquerque and NMDOT in writing whether a paid tool may use the Bernalillo crash layer, and what notice to show.</li>
+<li>For other counties, send NMDOT's crash data request form (dot.nm.gov/traffic-records-system) for the counties and years you need.</li>
+<li>Ask NMDOT's HSIP manager for its crash cost per injury level.</li>
+<li>Decide whether to offer New Mexico as "Albuquerque only".</li>
+</ol>
+<h2>What we didn't check</h2>
+<p>A real NMDOT request export, the 2016–2019 Albuquerque layers, house addresses, NMDOT's network-screening memos.</p>
+</main></body></html>
