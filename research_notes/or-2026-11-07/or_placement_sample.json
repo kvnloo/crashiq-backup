@@ -1,0 +1,232 @@
+{
+ "area": "Multnomah County (Portland), 2024, ODOT decode DB",
+ "n": 2000,
+ "seed": 20261107,
+ "county_crashes": 8874,
+ "gps_plausible": 1973,
+ "gps_share": 0.9865,
+ "both_street_names": 1942,
+ "street_names_share": 0.971,
+ "house_address": 0,
+ "freeway": 480,
+ "hidden_gps_raw": {
+  "n": 1941,
+  "tiers": {
+   "review": 776,
+   "exact": 1136,
+   "relaxed": 18,
+   "near": 5,
+   "verified_typo": 4,
+   "fuzzy": 1,
+   "unique_pair": 1
+  },
+  "placed": 1165,
+  "placed_share": 0.6002060793405462,
+  "placed_within_250ft": 1123,
+  "placed_within_250ft_low": 0.9516281458801071,
+  "auto_gate": 1137,
+  "auto_gate_share": 0.5857805255023184,
+  "auto_tiers_ignoring_tiger_rule": 1137,
+  "auto_tiers_share": 0.5857805255023184,
+  "auto_tiers_within_250ft": 1100,
+  "auto_tiers_within_250ft_share": 0.9674582233948988,
+  "auto_tiers_within_250ft_low": 0.9554682300208261,
+  "by_tier": {
+   "exact": {
+    "n": 1136,
+    "within_250ft": 1099,
+    "low": 0.9554293119446166
+   },
+   "relaxed": {
+    "n": 18,
+    "within_250ft": 16,
+    "low": 0.6719975513339578
+   },
+   "near": {
+    "n": 5,
+    "within_250ft": 4,
+    "low": 0.37552826411853885
+   },
+   "verified_typo": {
+    "n": 4,
+    "within_250ft": 3,
+    "low": 0.30063605244263664
+   },
+   "fuzzy": {
+    "n": 1,
+    "within_250ft": 0,
+    "low": 0.0
+   },
+   "unique_pair": {
+    "n": 1,
+    "within_250ft": 1,
+    "low": 0.20654329147389294
+   }
+  },
+  "by_road": {
+   "freeway": {
+    "n": 449,
+    "placed": 3,
+    "auto": 3,
+    "auto_within_250ft": 3,
+    "auto_low": 0.4384939195509822
+   },
+   "non_freeway": {
+    "n": 1492,
+    "placed": 1162,
+    "auto": 1134,
+    "auto_within_250ft": 1097,
+    "auto_low": 0.9553512713748886
+   }
+  },
+  "review_notes": [
+   [
+    "no intersection of the two named streets",
+    757
+   ],
+   [
+    "exact",
+    13
+   ],
+   [
+    "fuzzy",
+    3
+   ],
+   [
+    "relaxed",
+    3
+   ]
+  ]
+ },
+ "hidden_gps_pre_split": {
+  "n": 1941,
+  "tiers": {
+   "review": 733,
+   "exact": 1172,
+   "relaxed": 23,
+   "near": 5,
+   "verified_typo": 4,
+   "fuzzy": 3,
+   "unique_pair": 1
+  },
+  "placed": 1208,
+  "placed_share": 0.622359608449253,
+  "placed_within_250ft": 1163,
+  "placed_within_250ft_low": 0.9505183919027395,
+  "auto_gate": 1173,
+  "auto_gate_share": 0.6043276661514683,
+  "auto_tiers_ignoring_tiger_rule": 1173,
+  "auto_tiers_share": 0.6043276661514683,
+  "auto_tiers_within_250ft": 1133,
+  "auto_tiers_within_250ft_share": 0.9658994032395567,
+  "auto_tiers_within_250ft_low": 0.9538984450514212,
+  "by_tier": {
+   "exact": {
+    "n": 1172,
+    "within_250ft": 1132,
+    "low": 0.9538593919191948
+   },
+   "relaxed": {
+    "n": 23,
+    "within_250ft": 21,
+    "low": 0.7320359570190598
+   },
+   "near": {
+    "n": 5,
+    "within_250ft": 4,
+    "low": 0.37552826411853885
+   },
+   "verified_typo": {
+    "n": 4,
+    "within_250ft": 3,
+    "low": 0.30063605244263664
+   },
+   "fuzzy": {
+    "n": 3,
+    "within_250ft": 2,
+    "low": 0.20765495512648788
+   },
+   "unique_pair": {
+    "n": 1,
+    "within_250ft": 1,
+    "low": 0.20654329147389294
+   }
+  },
+  "by_road": {
+   "freeway": {
+    "n": 449,
+    "placed": 3,
+    "auto": 3,
+    "auto_within_250ft": 3,
+    "auto_low": 0.4384939195509822
+   },
+   "non_freeway": {
+    "n": 1492,
+    "placed": 1205,
+    "auto": 1170,
+    "auto_within_250ft": 1130,
+    "auto_low": 0.9537810868363991
+   }
+  },
+  "review_notes": [
+   [
+    "no intersection of the two named streets",
+    710
+   ],
+   [
+    "exact",
+    17
+   ],
+   [
+    "fuzzy",
+    3
+   ],
+   [
+    "relaxed",
+    3
+   ]
+  ]
+ },
+ "no_gps_all_county": {
+  "n": 156,
+  "both_names": 5,
+  "pre_split": {
+   "n": 156,
+   "tiers": {
+    "review": 156
+   },
+   "placed": 0,
+   "placed_share": 0.0,
+   "auto_gate": 0,
+   "auto_gate_share": 0.0,
+   "auto_tiers_ignoring_tiger_rule": 0,
+   "auto_tiers_share": 0.0,
+   "by_road": {
+    "freeway": {
+     "n": 75,
+     "placed": 0,
+     "auto": 0,
+     "auto_within_250ft": 0,
+     "auto_low": null
+    },
+    "non_freeway": {
+     "n": 81,
+     "placed": 0,
+     "auto": 0,
+     "auto_within_250ft": 0,
+     "auto_low": null
+    }
+   },
+   "review_notes": [
+    [
+     "missing street name",
+     151
+    ],
+    [
+     "no intersection of the two named streets",
+     5
+    ]
+   ]
+  }
+ }
+}
