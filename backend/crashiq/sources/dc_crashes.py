@@ -14,7 +14,7 @@ Severity: DDOT publishes FATAL / MAJORINJURY / MINORINJURY flags, not the KABCO 
 fatal -> K, major -> A (MMUCC suspected serious), minor -> B. shortcut: DC "minor" folds MMUCC B and C together, so
 C never appears; upgrade when DDOT publishes the injury code or the user picks another split.
 
-Standalone: not wired into the app (state-pack seam, issue #19).
+Wired into the app through the DC state pack (packs.py, #19) by `fetch_contract`.
 """
 from __future__ import annotations
 
@@ -199,3 +199,50 @@ def severity(raw: dict, persons: list[dict]) -> str:
     levels += ["K"] * (_count(raw, "FATAL") > 0) + ["A"] * (_count(raw, "MAJOR") > 0) + ["B"] * (_count(raw, "MINOR") > 0)
     levels += ["U"] * (_count(raw, "UNKNOWN") > 0)
     return min(levels, key=SEVERITY_ORDER.index, default="O")
+
+
+# -- state-pack contract (#19) --------------------------------------------------------------------------------------
+def contract_record(c: dict) -> dict:
+    """One records() crash -> the shared crash dict. DDOT's "minor" injury covers MMUCC B and C, so it is counted as
+    injury, level not reported (U), never as B: no level is made up (#19)."""
+    d = datetime.fromisoformat(c["date"]).date() if c["date"] else None
+    return {"crash_id": c["collision_id"], "report_version": 0, "deleted": False, "preliminary": False,
+            "date": c["date"], "year": c["year"], "hour": c["hour"], "day_of_week": d.strftime("%A") if d else None,
+            "lat": c["lat"], "lon": c["lon"], "bad_coords": c["bad_coords"],
+            "primary_road": c["primary_road"] if c["address_form"] != "house" else f"{c['house_number']} {c['primary_road']}",
+            "secondary_road": None if c["address_form"] == "house" else c["secondary_road"],
+            "offset_ft": None, "offset_dir": None, "city": "WASHINGTON", "county_code": "11001", "county_fips": "11001",
+            "state": "DC", "is_freeway": c["is_freeway"], "killed": c["killed"], "injured": c["injured"],
+            "severity": "U" if c["severity"] == "B" else c["severity"], "ped": c["ped"], "bike": c["bike"],
+            "ebike": False, "escooter": False, "motorcycle": False, "heavy_truck": False, "parties": [],
+            "collision_type": None, "lighting": None, "weather": None, "surface": None,
+            "report_number": c["report_number"], "location_source_dc": c["location_source"]}
+
+
+def fetch_contract(box, county_fips: list[str], years: list[int], cache_dir, opener=urllib.request.urlopen) -> dict:
+    """Crashes whose DDOT point is in the box (s, w, n, e), year by year, with their persons; cached raw per year+box.
+    Every published DC crash has a point (DDOT drops the ones it can't locate)."""
+    import hashlib
+    s, w, n, e = box
+    out, missing = [], []
+    for y in years:
+        where = (f"REPORTDATE >= date '{y}-01-01' AND REPORTDATE < date '{y + 1}-01-01' AND LATITUDE >= {s:.6f} AND "
+                 f"LATITUDE <= {n:.6f} AND LONGITUDE >= {w:.6f} AND LONGITUDE <= {e:.6f}")
+        cache = cache_dir / f"dc_{hashlib.sha1(where.encode()).hexdigest()[:10]}.json"
+        if cache.exists():
+            raw = json.loads(cache.read_text())
+        else:
+            crashes = _pages(CRASH_URL, where, opener)
+            ids = [c["CRIMEID"] for c in crashes]
+            persons = []
+            for i in range(0, len(ids), 100):
+                persons += _pages(PERSON_URL, "CRIMEID IN (" + ",".join(f"'{x}'" for x in ids[i:i + 100]) + ")", opener)
+            raw = {"crashes": crashes, "persons": persons}
+            cache_dir.mkdir(parents=True, exist_ok=True)
+            cache.write_text(json.dumps(raw))
+        got = [contract_record(c) for c in records(raw["crashes"], raw["persons"])]
+        if not got:
+            missing.append(y)
+        out += got
+    return {"crashes": out, "years_missing": missing,
+            "cleaning": {"source_rows": len(out), "minor_injury_as_u": sum(c["severity"] == "U" for c in out)}}

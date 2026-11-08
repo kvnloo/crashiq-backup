@@ -143,9 +143,26 @@ PACKS["OR"] = StatePack(
                 "movements and collision diagrams are empty.",
                 "Primary collision factor, DUI and speed rows are blank: CrashIQ doesn't read ODOT's cause codes yet."))
 
+def _dc_fetch(box, county_fips, years, cache_dir):
+    from .sources import dc_crashes
+    return dc_crashes.fetch_contract(box, county_fips, years, cache_dir)
+
+
+PACKS["DC"] = StatePack(
+    code="DC", name="District of Columbia", fips="11", status="active",
+    source="Crash data: Crashes in DC, District Department of Transportation (Open Data DC), CC BY 4.0, from MPD crash "
+           "reports.",
+    source_short="DDOT Crashes in DC", bounds=(38.79, -77.12, 39.00, -76.90), first_year=2016,
+    methods=REF / "methods_dc.json", fetch=_dc_fetch, county_boxes=REF / "county_boxes_dc.json",
+    legal="Crashes in DC, District Department of Transportation (Open Data DC), CC BY 4.0.",
+    data_notes=("DDOT publishes fatal, major and minor injury only. Major is counted as suspected serious injury (A); "
+                "minor covers both B and C, so it is counted as injury, level not reported (U): there is no B/C split.",
+                "DDOT publishes no crash type, light, weather or road surface, and no vehicle types: those tables are "
+                "blank, and road-user movements and collision diagrams are empty.",
+                "Primary collision factor, DUI and speed rows are blank: DDOT's layer has no violation codes."))
+
 # researched, no pack yet: listed greyed out on Setup (docs/state-pack-design.md § State picker)
-COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois",
-          "DC": "District of Columbia", "NY": "New York"}
+COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois", "NY": "New York"}
 
 
 def get(code: str) -> StatePack:

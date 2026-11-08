@@ -103,3 +103,22 @@ def test_server_error_raises():
     opener = lambda req, timeout=None: io.BytesIO(b'{"error": {"code": 400}}')
     with pytest.raises(RuntimeError):
         dc.fetch(2025, opener=opener)
+
+
+def test_contract_rows_pass_the_pack_checker_and_minor_is_not_b(tmp_path):
+    # #19: the DC pack queries the corridor box; "minor" (MMUCC B or C) is U, never a made-up B
+    from crashiq import packs
+    seen = []
+
+    def opener(req, timeout=None):
+        q = dict(urllib.parse.parse_qsl(req.data.decode()))
+        seen.append(q["where"])
+        last = int(q["where"].rsplit("OBJECTID >", 1)[1])
+        rows = FX["crashes"] if req.full_url == dc.CRASH_URL else FX["persons"]
+        return io.BytesIO(json.dumps({"features": [{"attributes": r} for r in rows if r["OBJECTID"] > last]}).encode())
+    got = dc.fetch_contract((38.80, -77.10, 38.99, -76.91), ["11001"], [2025], tmp_path, opener=opener)
+    assert "LATITUDE >= 38.800000" in seen[0] and "date '2025-01-01'" in seen[0]
+    assert got["crashes"] and all(packs.check_crash(c, packs.get("DC")) == [] for c in got["crashes"])
+    sev = Counter(c["severity"] for c in got["crashes"])
+    assert not sev["B"] and not sev["C"] and sev["U"] == got["cleaning"]["minor_injury_as_u"] + sum(
+        1 for r in dc.records(FX["crashes"], FX["persons"]) if r["severity"] == "U")
