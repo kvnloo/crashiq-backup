@@ -1,0 +1,76 @@
+{
+ "state": "MA",
+ "bucket": "A*",
+ "bucket_catch": "paid-use licence: 2002-2019 public domain, 2020-2026 disclaimer only; Boston under-reported to the RMV",
+ "sources": [
+  {"name": "MassDOT IMPACT open data (crash/vehicle/person, ArcGIS REST)", "url": "https://massdot-impact-crashes-vhb.opendata.arcgis.com/",
+   "access": "open (no login)", "licence_paid_use": "unclear", "licence_note": "2002-2019 public domain ('can be used by anyone for any purpose'); 2020-2026 disclaimer only, 'should not be used for analysis' for open years",
+   "years": "2002-2026 (2026 to 2026-11-06)",
+   "rows_per_year": {"2018": 142272, "2019": 140939, "2020": 100516, "2021": 125212, "2022": 134472, "2023": 135326, "2024": 135406, "2025": 130896, "2026_partial": 103495},
+   "gps_share": {"2018": 0.958, "2019": 0.944, "2020": 0.964, "2021": 0.956, "2022": 0.965, "2023": 0.962, "2024": 0.963, "2025": 0.973, "2026_partial": 0.930},
+   "street_names_share": {"rdwy_named_2025": 0.959, "pair_or_house_number_middlesex_sample_2025": 0.883},
+   "kabco": true, "keys_linkable": "CRASH_NUMB links crash, vehicle (VEHC_UNIT_NUMB) and person (PERS_NUMB); 2000/2000 sample crashes had persons"},
+  {"name": "MassGIS Master Address Data (statewide address points)", "url": "https://arcgisserver.digital.mass.gov/arcgisserver/rest/services/AGOL/MassGIS_Master_Address_Points/FeatureServer/0",
+   "access": "open", "licence_paid_use": "ok_with_attribution", "years": "current (weekly)", "rows_per_year": {"points": 3717497},
+   "gps_share": 1.0, "street_names_share": 1.0, "kabco": null, "keys_linkable": null}
+ ],
+ "placement_sample": {
+  "area": "Middlesex County MA (25017), IMPACT 2025, 2,000 random crashes",
+  "n": 2000, "gps_share": 0.985, "name_placed_share": 0.7505, "auto_share": 0.738,
+  "pairs": {"n_with_gps": 946, "auto_share": 0.7336, "within_250ft": 0.9597, "within_250ft_low": 0.9423},
+  "addresses": {"n_with_gps": 817, "placed_share": 0.9559, "within_250ft": 0.8259, "within_250ft_low": 0.7977},
+  "operator_designated_truth": {"n": 269, "auto_share": 0.4349, "within_250ft": 0.8547, "within_250ft_low": 0.7796},
+  "within_250ft": 0.8888, "within_250ft_low": 0.8717,
+  "no_gps_added_share": 0.0005,
+  "house_address_share": 0.4095, "address_points_source": "MassGIS Master Address Data (MAD)"
+ },
+ "importer_built": true,
+ "importer": "backend/crashiq/sources/ma_impact.py (tests/test_source_ma.py, fixture tests/fixtures/ma_impact_2025.json)",
+ "blockers": [
+  "Licence for paid use of 2020-2026 IMPACT data is not stated (disclaimer only); 2002-2019 is public domain",
+  "Boston is under-reported in IMPACT (5,668 crashes in 2025 vs Worcester 5,302); Boston PD data needs its own request",
+  "IMPACT open-year server was unstable on 2026-11-07 (503s, then count=0 for minutes): importer retries but a pull must verify counts",
+  "Ramp/freeway names (RAMP-RT 495 SB TO ...), mile markers and exit numbers are not placed by the current locator"
+ ],
+ "user_actions": [
+  "Email MassDOT Traffic & Safety (TrafficSafetyAnalysis@dot.state.ma.us) asking for written permission to use IMPACT open-year (2020+) crash data in a paid product, with attribution and the 23 USC 409 notice",
+  "Decide whether Boston studies wait for a Boston PD crash data source (records request to BPD) or ship with an under-reporting caveat",
+  "Request the MassDOT Safety Alternatives Analysis spreadsheet tools Methods 1 and 2 (they contain the state-preferred CMF list) via the HSIP page form"
+ ],
+ "cities": [
+  {"city": "Boston", "source": "Vision Zero Crash Records (EMS-dispatched)", "url": "https://data.boston.gov/dataset/vision-zero-crash-records", "gps_share": 1.0, "years": "2015-2026", "licence": "ODC PDDL", "note": "no severity, no IMPACT link; 3,411 in 2025"},
+  {"city": "Cambridge", "source": "Police Department Crash Data - Updated (gb5w-yva3)", "url": "https://data.cambridgema.gov/d/gb5w-yva3", "gps_share": 0.581, "years": "2015-2026", "licence": "ODC PDDL", "note": "1,605 in 2025; person injury words close to KABCO"},
+  {"city": "Somerville", "source": "Police Data: Crashes (mtik-28va)", "url": "https://data.somervillema.gov/d/mtik-28va", "gps_share": 1.0, "years": "2018-2026", "licence": "ODbL (share-alike)", "note": "397 in 2025"},
+  {"city": "Worcester", "source": "none found; use IMPACT", "url": "https://opendata.worcesterma.gov/", "gps_share": 0.976, "years": "IMPACT 2002-2026", "licence": "as IMPACT", "note": "IMPACT 2025: 5,302 crashes, 5,176 geocoded"},
+  {"city": "Springfield", "source": "none found; use IMPACT", "url": "https://www.springfield-ma.gov/police/data", "gps_share": 0.987, "years": "IMPACT 2002-2026", "licence": "as IMPACT", "note": "IMPACT 2025: 2,974 crashes, 2,935 geocoded"}
+ ],
+ "methods": {
+  "manuals": [
+   {"title": "Intersection and roadway crash rate data for analysis", "url": "https://www.mass.gov/info-details/intersection-and-roadway-crash-rate-data-for-analysis", "date": "intersection 2018-06-26; functional class 2023-06-01"},
+   {"title": "Crash Rate Procedures + Intersection/Segment Crash Rate Worksheets", "url": "https://www.mass.gov/doc/crash-rate-analysis-instructions/download", "date": "undated"},
+   {"title": "Crash Costs for Highway Safety Analysis", "url": "https://www.mass.gov/info-details/crash-costs-for-highway-safety-analysis", "date": "2024 costs"},
+   {"title": "MassDOT Safety Alternatives Analysis Guide", "url": "https://www.mass.gov/doc/massdot-safety-alternatives-analysis-guide/download", "date": "2021-10"},
+   {"title": "HSIP Project Selection Criteria", "url": "https://www.mass.gov/doc/highway-safety-improvement-program-criteria/download", "date": "undated (2018-2020 clusters)"},
+   {"title": "Calibration of SPFs for Massachusetts Urban and Suburban Intersections", "url": "https://www.mass.gov/doc/calibration-of-safety-performance-functions-for-massachusetts-urban-and-suburban-intersections/download", "date": "2016-03"},
+   {"title": "Development of SPFs for Network Screening: Segments and Intersections on Arterials and Collectors", "url": "https://www.mass.gov/doc/development-of-safety-performance-functions-for-network-screening-roadway-segments-and-intersections-on-arterials-and-collectors/download", "date": "2024-02"},
+   {"title": "Road Safety Audit Guidelines", "url": "https://www.mass.gov/doc/massdot-road-safety-audit-guidelines/download", "date": "2024-10"},
+   {"title": "Traffic and Safety Engineering 25% Design Submission Guidelines", "url": "https://www.mass.gov/doc/25-design-traffic-submission-guidelines/download", "date": "2022-05-31"},
+   {"title": "ICE Procedure Requirements", "url": "https://mass.gov/doc/massdot-ice-procedure-requirements/download", "date": "2024-10-10"},
+   {"title": "Massachusetts HSIP Implementation Plan", "url": "https://www.mass.gov/doc/2027-massachusetts-hsip-implementation-plan/download", "date": "2026-09"},
+   {"title": "2023 Strategic Highway Safety Plan", "url": "https://www.mass.gov/doc/massachusetts-shsp-2023/download", "date": "2023"}
+  ],
+  "rates_available": true,
+  "rates_unit": "crashes per MEV (intersections: statewide signalized 0.78, unsignalized 0.57, plus districts); crashes per MVMT (segments, by rural/urban functional class)",
+  "crash_costs": {"K": 19435000, "A": 1112900, "B": 354100, "C": 208000, "O": 20900, "year": 2024},
+  "screening_method": "EPDO (fatal+injury = 21, PDO = 1) crash clusters, top 5% per region = HSIP-eligible; segments by excess expected crash frequency (SPF + Empirical Bayes) in the IMPACT network-screening tool; crash rate vs statewide average as a fallback",
+  "differences_from_ca": [
+   "EPDO 21:1 weighting for ranking instead of per-KABCO LRSM costs",
+   "Separate K and A costs (2024 $19,435,000 / $1,112,900) vs LRSM's combined KA by location type",
+   "SPF + Empirical Bayes preferred (HSIP ranking, alternatives Method 1); Caltrans LRSM avoids EB and uses observed crashes",
+   "Statewide average rates by intersection control and functional class; no TASAS-style rate groups; no critical-rate formula found",
+   "HSIP eligibility is top 5% EPDO per region with a required RSA, not a statewide BCR cutoff",
+   "7% discount rate in alternatives analysis",
+   "Calibrated HSM intersection SPFs: Ci 1.50 (3SG), 0.77 (3ST), 1.49 (4SG), 1.03 (4ST); MA-specific SPFs recommended"
+  ]
+ }
+}
