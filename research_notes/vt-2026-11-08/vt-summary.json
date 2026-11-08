@@ -1,0 +1,74 @@
+{
+ "state": "VT",
+ "bucket": "A*",
+ "status": "active",
+ "bucket_note": "open, record-level, GPS ~99%, street + cross street; catch: no KABCO (Fatal/Injury/PDO), no people counts, no licence",
+ "sources": [
+  {
+   "name": "VTrans CrashPQT (Public Crash Data Query Tool layer)",
+   "url": "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/arcgis/rest/services/CrashPQT/FeatureServer/0",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "Errors or Omissions may occur in the data or queries. Only non-personal data is included for analysis in this tool. Users assume responsibility for the queries they create. This data is exempt from discovery or admission under 23 U.S.C. 409.",
+   "years": "2010-present (latest 2026-11-06)",
+   "rows_per_year": {
+    "2020": 10549,
+    "2021": 10533,
+    "2022": 8433,
+    "2023": 7177,
+    "2024": 7064,
+    "2025": 7636,
+    "2026": 6065
+   },
+   "gps_share": 0.9883,
+   "street_names_share": 0.846,
+   "street_names_note": "street + cross street on 84.6% of the Chittenden 2025 sample",
+   "kabco": false,
+   "keys_linkable": "no person/vehicle tables"
+  }
+ ],
+ "placement_sample": {
+  "area": "Chittenden County (50007), 2025",
+  "n": 2000,
+  "gps_share": 0.997,
+  "name_placed_share": 0.337,
+  "auto_share": 0.307,
+  "within_250ft": 0.7866,
+  "within_250ft_low": 0.7525,
+  "house_address_share": 0.071,
+  "address_points_source": null,
+  "note": "TIGER-only network; auto = Gate() tiers with tiger_only_auto=True. NAD returned HTTP 400 on 2026-11-08: address placement not measured. Low accuracy: VTrans' cross street is often a landmark or business; VTrans' own point is often LRS/address-geocoded."
+ },
+ "end_to_end": {
+  "corridor": "Shelburne Rd (US 7), Imperial Dr to Home Ave, South Burlington (1.0 mi)",
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 659,
+  "counted": 449,
+  "severity": {
+   "K": 4,
+   "A": 0,
+   "B": 0,
+   "C": 0,
+   "U": 54,
+   "O": 391
+  },
+  "crash_cost_total": null,
+  "pdf_bytes": 72517,
+  "xlsx_bytes": 40801,
+  "seconds": 75
+ },
+ "importer_built": true,
+ "blockers": [
+  "no published licence for a paid product",
+  "no injury levels: K/U/O only, no crash costs (VTrans' costs are per person and the layer has no people counts)",
+  "street-name placement measured 78.7% within 250 ft (low 75.3%): the ~1-2.5% no-GPS crashes the locator places in Vermont are less reliable than elsewhere"
+ ],
+ "user_actions": [
+  "Ask VTrans (Office of Highway Safety, Data Section) for written permission to show CrashPQT data in a paid product",
+  "Optional: ask VTrans for current statewide average crash rates and a per-crash cost table"
+ ],
+ "cities": []
+}

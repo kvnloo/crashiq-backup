@@ -1,0 +1,67 @@
+{
+ "area": "Chittenden County (50007), 2025",
+ "n": 2000,
+ "gps_share": 0.997,
+ "street_pair_share": 0.846,
+ "house_address_share": 0.071,
+ "tiers": {
+  "review": 1018,
+  "exact": 613,
+  "verified_typo": 18,
+  "relaxed": 30,
+  "fuzzy": 5,
+  "near": 7,
+  "unique_pair": 1
+ },
+ "name_placed_share": 0.337,
+ "name_placed_share_of_pairs": 0.3983,
+ "auto_share": 0.307,
+ "auto_share_of_pairs": 0.3629,
+ "route_prefix_retry_used": 0,
+ "gate": "Gate() tiers with tiger_only_auto=True (TIGER-only network; plain Gate() auto-places 0 here)",
+ "within_250ft": 0.7866,
+ "within_250ft_low": 0.7525,
+ "within_250ft_all_placed": 0.7923,
+ "within_250ft_all_placed_low": 0.76,
+ "not_placed": {
+  "no intersection of the two named streets": 996,
+  "no cross street in source": 166,
+  "exact: streets meet in more than one place": 18,
+  "missing street name": 3,
+  "fuzzy: streets meet in more than one place": 1
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "1 East St & Parking Lot Of Beverage Warehouse",
+   "I-89 N MM 70 & Exit 10 Waterbury",
+   "434-446 US Route 7 S & Cornelia Court",
+   "48 University Pl & Billings Hall",
+   "30 Hawthorne Street & Bliss Bee Parking Lot",
+   "E Allen St & Exit 15 NB Exit Ramp"
+  ],
+  "placed >250 ft off": [
+   "Hercules Dr & Lower Mountain View Drive [exact] 793 ft",
+   "Dorset St & Williston Road [exact] 425 ft",
+   "S Willard St & Main St [exact] 859 ft",
+   "Williston Road & Interstate 89 (N) [exact] 780 ft",
+   "Williston Rd & I89 S On Ramp [exact] 809 ft",
+   "3130 SAINT GEORGE RD & I89 [exact] 701 ft"
+  ],
+  "exact: streets meet in more than one place": [
+   "US Route 2 & I89 North Bound On Ramp",
+   "College Pkwy & Campus Rd",
+   "Roosevelt Hwy & I-89 Exit 17",
+   "Main St & Church St",
+   "Roosevelt Hwy & Route 2",
+   "329 Harvest Lane & Marshall Avenue"
+  ],
+  "missing street name": [
+   "Williston Rd & Overpass",
+   "127 Exit Ramp (North Ave Beaches) & Ethan Allen Homestead",
+   "Williston Rd & Overpass WB"
+  ],
+  "fuzzy: streets meet in more than one place": [
+   "Route 127 & Plattsburgh Ave"
+  ]
+ }
+}
