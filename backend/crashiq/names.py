@@ -59,6 +59,26 @@ class StreetKey(NamedTuple):
     suffix: str | None  # e.g. "BLVD"; None when not written
 
 
+# Street types a bare number can stand before: NYC writes "E 26 ST", "4508 2 AVE", "63 DR"; TIGER and OSM write the
+# ordinal ("E 26th St", "2nd Ave", "63rd Dr"). Only these, so "HWY 1", "AVENUE 26" and "PIER 39 WAY" never change (#19).
+NUMBERED_TYPES = {"ST", "STREET", "AVE", "AVENUE", "AV", "RD", "ROAD", "PL", "PLACE", "DR", "DRIVE", "CT", "COURT",
+                  "TER", "TERRACE", "LN", "LANE"}
+# Abbreviated names a source spells as initials (Seattle: M L KING JR WAY S = Martin Luther King Jr Way S)
+PHRASES = ((re.compile(r"\bM L KING\b"), "MARTIN LUTHER KING"),)
+
+
+def _numbered(toks: list[str]) -> list[str]:
+    """[EAST, 26, ST] -> [EAST, 26TH, ST]; [4508, 2, AVE] -> [2ND, AVE] (the leading number is the house number)."""
+    j = len(toks) - 2 if len(toks) > 2 and toks[-1] in DIRECTIONAL else len(toks) - 1   # 26 ST W
+    if j < 1 or toks[j] not in NUMBERED_TYPES or not re.fullmatch(r"\d{1,3}", toks[j - 1]):
+        return toks
+    head = toks[:j - 1]
+    if head and not (len(head) == 1 and (head[0] in ("NORTH", "SOUTH", "EAST", "WEST") or head[0].isdigit())):
+        return toks                                  # more words before the number: a name, not a numbered street
+    head = [] if head and head[0].isdigit() else head
+    return head + [_ordinal(int(toks[j - 1]))] + toks[j:]
+
+
 def _ordinal(n: int) -> str:
     tail = "TH" if 10 <= n % 100 <= 20 else {1: "ST", 2: "ND", 3: "RD"}.get(n % 10, "TH")
     return f"{n}{tail}"
@@ -124,6 +144,8 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     s = ROUTE_TAIL.sub("", s)
     s = re.sub(r"[.,#'\"]", " ", s).replace("&", " ")
     s = re.sub(r"\s+", " ", s).strip()
+    for rx, full in PHRASES:
+        s = rx.sub(full, s)
     if aliases and s in aliases:
         s = aliases[s]
     route = ROUTE.match(s)
@@ -132,8 +154,11 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
                 "RTE": "SR", "STATE HWY": "SR", "STATE HIGHWAY": "SR", "STATE RTE": "SR", "US HWY": "US",
                 "US HIGHWAY": "US", "US ROUTE": "US"}.get(route.group(1), route.group(1))
         return StreetKey(f"{kind} {int(route.group(2))}", None)
-    numbered = bool(re.match(r"^\d+\s+(?=[A-Z])", s))
-    s = re.sub(r"^\d+\s+(?=[A-Z])", "", s)       # house number "3144 W 147TH ST"
+    # a bare numbered street ("63 DRIVE", "2 AVE N") is the street, not a house number before a type word (#19)
+    bare = re.fullmatch(r"\d{1,3} (?:" + "|".join(NUMBERED_TYPES) + r")(?: [NSEW]| NORTH| SOUTH| EAST| WEST)?", s)
+    numbered = bool(re.match(r"^\d+\s+(?=[A-Z])", s)) and not bare
+    if not bare:
+        s = re.sub(r"^\d+\s+(?=[A-Z])", "", s)   # house number "3144 W 147TH ST"
     # "Avenue of Flags", "Avenue of the Stars": OF belongs to the name here. CHP writes AVE OF, AV OF, and adds or drops
     # THE (Buellton: AVENUE OF FLAGS and AVENUE OF THE FLAGS), so THE is left out of the key (#154)
     s = re.sub(r"\b(?:AVENUE|AVE|AV) OF (?:THE )?", "AVENUE_OF_", s)
@@ -156,6 +181,7 @@ def _street_key_ours(raw: str | None, aliases: dict[str, str] | None = None) -> 
     toks = [str(int(t[:-2])) + t[-2:] if re.fullmatch(r"0\d+(ST|ND|RD|TH)", t) else t for t in toks]  # 07TH -> 7TH
     toks = [_ordinal(ORDINAL_WORDS[t]) if t in ORDINAL_WORDS else t for t in toks]
     toks = [WORDS.get(t, t) for t in toks]
+    toks = _numbered(toks)
     suffix = None
     if len(toks) > 1 and toks[-1] in SUFFIX:
         suffix = SUFFIX[toks.pop()]

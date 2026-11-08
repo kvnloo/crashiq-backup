@@ -1,3 +1,5 @@
+import pytest
+
 from crashiq.names import StreetKey, route_numbers, same_core, same_street, similarity, street_key
 
 
@@ -128,3 +130,16 @@ def test_the_corridor_street_check_reads_its_own_bare_route():
     keys = [street_key("San Diego Freeway"), street_key("I 405")]
     assert crashes._names_street("405 SB", keys)
     assert not crashes._names_street("110 SB", keys)            # another route's number: not this corridor
+
+
+@pytest.mark.parametrize("raw,key", [
+    ("E 26 ST", ("EAST 26TH", "ST")), ("4508 2 AVE", ("2ND", "AVE")), ("63 DRIVE", ("63RD", "DR")),
+    ("2 AVE N", ("2ND", "AVE")), ("M L KING JR WAY S", ("MARTIN LUTHER KING JUNIOR", "WAY")),
+    # unchanged: a named avenue, a route, a numbered name that isn't a street type, house number + ordinal
+    ("AVENUE 26", ("AVENUE 26", None)), ("HWY 1", ("SR 1", None)), ("PIER 39 WAY", ("PIER 39", "WAY")),
+    ("3144 W 147TH ST", ("WEST 147TH", "ST")),
+])
+def test_bare_numbered_streets_and_initials_read_as_the_map_writes_them(raw, key):
+    # #19: NYC writes "E 26 ST", Seattle "M L KING"; TIGER and OSM write "E 26th St", "Martin Luther King Jr Way"
+    assert tuple(street_key(raw)) == key
+    assert street_key("East 26th Street") == street_key("E 26 ST")

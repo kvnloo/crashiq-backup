@@ -31,7 +31,7 @@ def elements(edges_zip: Path, featnames_zip: Path, keep: Callable[[float, float]
             alt[r["TLID"]].add(r["FULLNAME"].strip())
     er = _reader(edges_zip)
     efields = [f[0] for f in er.fields[1:]]
-    els, coords, next_id = [], {}, [-1]
+    els, coords = [], {}
 
     def node_for(key, lat, lon):
         if key not in coords:
@@ -50,14 +50,16 @@ def elements(edges_zip: Path, featnames_zip: Path, keep: Callable[[float, float]
         if keep and not keep(*mid):
             continue
         ids = [node_for(int(r["TNIDF"]), *pts[0])]
-        for p in pts[1:-1]:                                # shape points get private ids (never intersections)
-            next_id[0] -= 1
-            ids.append(node_for(next_id[0], *p))
+        # shape points get private ids (never intersections), from the segment's TLID: unique across counties, so a
+        # network of several counties (NYC's five) never joins two counties' shape points (#19)
+        for i, p in enumerate(pts[1:-1], start=1):
+            ids.append(node_for(-(int(r["TLID"]) * 10_000 + i), *p))
         ids.append(node_for(int(r["TNIDT"]), *pts[-1]))
         names = {r["FULLNAME"].strip()} if r.get("FULLNAME") else set()
         names |= alt.get(r["TLID"], set())
         name = sorted(names)[0]
         others = sorted(names - {name})
         els.append({"type": "way", "id": int(r["TLID"]), "nodes": ids,
-                    "tags": {"name": name, **({"alt_name": ";".join(others)} if others else {})}})
+                    "tags": {"name": name, **({"alt_name": ";".join(others)} if others else {}),
+                             "crashiq:source": "tiger"}})     # so Gate().tiger_only_auto applies on a TIGER-only network
     return {"elements": els}

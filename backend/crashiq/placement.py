@@ -270,6 +270,23 @@ def outside_corners(net: dict, cands: list[dict], raw: dict, gate: locate.Gate |
     return {"tried": len(cands), "kept": kept}
 
 
+BLOCK_MAX_M = 1200          # a block's two corners further apart than this: not one block, so no midpoint
+
+
+def _block(onet, c: dict, gate, pl):
+    """A block crash ('A BETWEEN B AND C', Seattle; `block_end_road` = C): placed mid-block, halfway between the corners
+    A & B and A & C, when both auto-place one block apart. Otherwise it isn't auto-placed (the corner A & B is only a
+    suggestion): the locator alone would put a block crash on the corner (#19, wa-import.md)."""
+    if not c.get("block_end_road") or not gate.auto(pl):
+        return pl
+    p2 = locate.place(onet, {**c, "secondary_road": c["block_end_road"]})
+    if gate.auto(p2) and osm.metres((pl.lat, pl.lon), (p2.lat, p2.lon)) < BLOCK_MAX_M:
+        return locate.Placement(pl.tier, (pl.lat + p2.lat) / 2, (pl.lon + p2.lon) / 2,
+                                note=f"mid-block between {c['secondary_road']} and {c['block_end_road']}",
+                                tiger=pl.tiger or p2.tiger, tiger_road=pl.tiger_road or p2.tiger_road)
+    return locate.Placement("review", pl.lat, pl.lon, note="block crash: the block's far corner wasn't placed")
+
+
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
                     raw: dict | None = None, tiger=None, postmiles=None, addresses=None, fars: bool = True) -> dict:
     gate = gate or locate.Gate()
@@ -300,7 +317,7 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
     result["cleaning"]["gps_offset_applied"] = gps_rules.apply_offsets(onet, net, offset_cands) if onet else 0
     if todo and onet is not None:
         for c in todo:
-            pl = locate.place(onet, c)
+            pl = _block(onet, c, gate, locate.place(onet, c))
             # the street-name locator first: a freeway crash it places today keeps that placement (PM review of #252);
             # the report's freeway description is tried only when the locator doesn't auto-place
             sp = freeway.place(raw, c) if fwy and c.get("is_freeway") and not gate.auto(pl) else None
