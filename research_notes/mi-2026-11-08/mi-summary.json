@@ -1,0 +1,113 @@
+{
+ "state": "MI",
+ "bucket": "D",
+ "bucket_note": "statewide record-level data is public in MTCF's query tool (lat/lon, KABCO, 2004-2025), but its terms allow noncommercial use only and forbid scraping; bulk data is by request to MSP; Mi-CAT is gated",
+ "bucket_2026_11_02": "D (confirmed; reason is the licence, not access)",
+ "status": "gated",
+ "sources": [
+  {
+   "name": "Michigan Traffic Crash Facts Data Query Tool (MSP OHSP / UMTRI)",
+   "url": "https://www.michigantrafficcrashfacts.org/data/querytool",
+   "access": "open query tool, 90-row list pages; bulk by request",
+   "licence_paid_use": "no",
+   "licence_quote": "MTCF grants permission to copy and distribute publications and query output for noncommercial and non-profit use ... Attempts to circumvent these limits, including scraping data and repeated downloads, can lead to being restricted from the future use of Michigan crash data. Bulk downloads should be requested via the Contact information.",
+   "years": "2004-2025",
+   "rows_per_year": {
+    "2024": 288880
+   },
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "crash/unit/person analysis levels inside the tool"
+  },
+  {
+   "name": "MSP Traffic Crash Reporting Unit bulk extract",
+   "url": "https://www.michigan.gov/msp/divisions/cjic/traffic-crash-reporting-unit/annual-reports-and-statistics",
+   "access": "records request (CrashTCRS@michigan.gov)",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "not checked"
+  },
+  {
+   "name": "Mi-CAT",
+   "url": "https://www.michigan.gov/msp/divisions/cjic/traffic-crash-reporting-unit/michigan-traffic-crash-analysis-tool",
+   "access": "gated (law enforcement and approved traffic safety partners, application)",
+   "licence_paid_use": "no",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "not checked"
+  },
+  {
+   "name": "SEMCOG Crash Locations 2016-2025 (SE Michigan, 7 counties)",
+   "url": "https://services1.arcgis.com/xUx8EjNc6egUPYWh/arcgis/rest/services/crash2025_10year/FeatureServer/0",
+   "access": "open ArcGIS layer",
+   "licence_paid_use": "unclear",
+   "licence_quote": "perpetual, non-exclusive, royalty-free license to use, reproduce, modify, distribute, publish ... (b) Third Party Rights ... nothing in this Agreement will be deemed to be a grant ... to use any third-party rights",
+   "years": "2016-2025",
+   "rows_per_year": {
+    "2016": 145510,
+    "2017": 145427,
+    "2018": 144104,
+    "2019": 141390,
+    "2020": 105485,
+    "2021": 124631,
+    "2022": 128821,
+    "2023": 131448,
+    "2024": 129853,
+    "2025": 128144
+   },
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "CRASHID_UD10 (crash-level only)"
+  }
+ ],
+ "placement_sample": {
+  "area": null,
+  "n": 0,
+  "gps_share": null,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "not measured: no open statewide record set usable without breaking MTCF's terms"
+ },
+ "importer_built": false,
+ "blockers": [
+  "MTCF terms: noncommercial use only, no scraping; bulk by request",
+  "no statewide open crash layer at MDOT",
+  "SEMCOG layer is regional (45% of 2024 crashes) and its licence doesn't cover MSP's records"
+ ],
+ "user_actions": [
+  "Email MSP Traffic Crash Reporting Unit (CrashTCRS@michigan.gov, 517-241-1699): request a statewide crash+unit+person extract 2021-2025, the field dictionary, and terms for use in a paid product",
+  "Decide whether a SE-Michigan-only pack from SEMCOG is wanted; if so ask SEMCOG whether its licence covers commercial redistribution of the MSP-derived crash layer",
+  "Optionally ask MTCF/UMTRI for commercial permission for List exports"
+ ],
+ "cities": [
+  {
+   "city": "Detroit",
+   "source": "City of Detroit Traffic Crashes (ArcGIS)",
+   "url": "https://services2.arcgis.com/qvkbeam7Wirps6zC/arcgis/rest/services/Traffic_Crashes/FeatureServer",
+   "gps_share": null,
+   "years": null,
+   "licence": "not checked"
+  },
+  {
+   "city": "SE Michigan (7 counties)",
+   "source": "SEMCOG Crash Locations 2016-2025",
+   "url": "https://services1.arcgis.com/xUx8EjNc6egUPYWh/arcgis/rest/services/crash2025_10year/FeatureServer/0",
+   "gps_share": null,
+   "years": "2016-2025",
+   "licence": "SEMCOG Copyright License Agreement (attribution; third-party rights excluded)"
+  }
+ ]
+}
