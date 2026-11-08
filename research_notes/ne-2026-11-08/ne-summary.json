@@ -1,0 +1,78 @@
+{
+ "state": "NE",
+ "bucket": "A",
+ "bucket_note": "Open web-map query, record-level, statewide, 100% GPS, KABCO per crash, 2021-now. Catches: a CONFIDENTIAL notice forbidding further distribution, no people/vehicles, undocumented endpoint.",
+ "sources": [
+  {
+   "name": "NTIP crash map (NDOT)",
+   "url": "https://ntip2021.nebraska.gov/NTIP2021/Map",
+   "access": "open (POST /NTIP2021/Map/Crashes, no login)",
+   "licence_paid_use": "no",
+   "licence_text": "'... has not authorized further distribution of this document or its contents to anyone other than the original recipient.'",
+   "licence_urls": [
+    "https://ntip2021.nebraska.gov/NTIP2021/Map"
+   ],
+   "years": "2021 - now",
+   "rows_per_year": {
+    "2024": 36842,
+    "2025": 35634
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.952,
+   "kabco": "yes (crash level)",
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": "Douglas County (31055), 2024",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.848,
+  "auto_share": 0.8405,
+  "within_250ft": 0.8263,
+  "within_250ft_low": 0.8074,
+  "house_address_share": null,
+  "address_points_source": "not needed (100% GPS); not measured"
+ },
+ "importer_built": true,
+ "status": "reader_only",
+ "end_to_end": {
+  "corridor": "Dodge Street",
+  "length_mi": 0.89,
+  "window": [
+   2021,
+   2025
+  ],
+  "pulled": 427,
+  "counted": 362,
+  "severity_T3": {
+   "K": 0,
+   "A": 13,
+   "B": 51,
+   "C": 68,
+   "U": 0,
+   "O": 230
+  },
+  "crash_cost_total": null,
+  "xlsx_bytes": 33671,
+  "pdf_bytes": 54264,
+  "seconds": 1070
+ },
+ "blockers": [
+  "NTIP's CONFIDENTIAL notice: NDOT has not authorized further distribution",
+  "Pedestrian and bicycle filters look incomplete (Omaha 2024: 21 and 3 crashes)"
+ ],
+ "user_actions": [
+  "Ask NDOT for written permission to use NTIP crash data in a paid product (or a bulk extract with reuse terms); then flip the pack to active"
+ ],
+ "cities": [
+  {
+   "city": "Lincoln",
+   "source": "Lincoln open data, yearly Traffic Crashes layers",
+   "url": "https://opendata.lincoln.ne.gov/",
+   "gps_share": "not measured",
+   "years": "2025-2026 seen",
+   "licence": "not checked"
+  }
+ ]
+}
