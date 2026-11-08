@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Florida crash data for CrashIQ</title>
+<style>
+body{margin:0;background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:680px;margin:auto;padding:18px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff4d4d;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1212;border-left:4px solid #ff4d4d;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.93em;border-left:2px solid #555;padding-left:8px;margin:4px 0 10px}
+table{border-collapse:collapse;width:100%;font-size:.92em}td,th{border-bottom:1px solid #333;padding:5px 4px;text-align:left}th{color:#ff8080}
+a{color:#ff8080}.ok{color:#7ddc7d}.bad{color:#ff6b6b}.mid{color:#ffc56b}li{margin:4px 0}
+</style></head><body><main>
+<h1>Florida: what crash data we can use</h1>
+<p>Checked 7 Nov 2026. Every number below was counted by code. Full notes: <code>fl-import.md</code>, rules and costs: <a href="fl-methods.md">fl-methods.md</a>.</p>
+
+<p class="big">Short answer: Florida's real crash database (<b>Signal Four</b>) is locked to agencies and the consultants they approve. Your users have it, so CrashIQ should <b>read the file they download from it</b>. Free public files exist, but none says we may use it in a paid product.</p>
+
+<h2>1. The data</h2>
+<ol>
+<li><b>Signal Four Analytics (S4)</b>: FDOT's official crash system. It has every crash with street names, its own map point, and the injury level. <span class="bad">Login only</span>: FDOT staff, agencies, universities and approved consultants.
+<div class="ex">Every FDOT manual says to use S4. The design manual says: use "all location verified statuses (i.e. verified as well as preliminary)".</div></li>
+<li><b>State crash file from FLHSMV</b> (free download): 700,000 crashes a year, 2023 to March 2026. <span class="mid">3 of 4 have a map point. None have street names.</span>
+<div class="ex">2025: 687,313 crashes; 514,659 have a map point. The other 172,654 only say the county, so nobody can place them.</div></li>
+<li><b>Copies of S4 that regions put online</b> (free): Palm Beach (268,619 crashes, 2019–2024), Orlando region (526,438, 2018–2025), City of Orlando, Hillsborough, Jacksonville. They have street names and S4's map point. <span class="mid">None gives permission for paid use.</span>
+<div class="ex">Palm Beach's copy only says "no warranties". It has no report number, so it can't be matched to the people in each crash.</div></li>
+<li><b>Big cities</b>: Miami-Dade and Tampa publish only deaths and serious injuries (9,468 and 1,497 crashes). No city has a full open crash table like New York's.</li>
+</ol>
+
+<h2>2. Can CrashIQ put crashes on the map itself?</h2>
+<p>We took 2,000 Palm Beach crashes from 2024, hid S4's map point, and let CrashIQ place them from the street names on the report, using the Census street map.</p>
+<table>
+<tr><th></th><th>Crashes</th></tr>
+<tr><td>Report names two streets or an address</td><td>1,961 (98%)</td></tr>
+<tr><td>CrashIQ placed them (after reading Florida's name style)</td><td>1,533 (77%)</td></tr>
+<tr><td>Placed on its own, no person needed</td><td>1,309 (65%)</td></tr>
+<tr><td>Of those, within 250 ft of S4's point: <b>city streets</b></td><td class="ok">91% (at least 89.5%)</td></tr>
+<tr><td>Of those, within 250 ft: <b>I-95 and the Turnpike</b></td><td class="bad">4%</td></tr>
+</table>
+<div class="ex">Example that breaks: "S/B INTERSTATE 95 (STATE ROAD 9)" at "STATE ROAD 806 (ATLANTIC AVE)". Florida writes the route number and the street name together, plus the direction. Out of the box CrashIQ placed only 56%. Freeway crashes need the freeway method we built for California.</div>
+<p>Here this adds no new crashes, because S4 already maps them all. It matters as a check on S4's point, and for exports that come without S4's point.</p>
+
+<h2>3. Florida's rules (not California's)</h2>
+<ul>
+<li><b>Crash costs</b> (FDOT Design Manual 2026): fatal <b>$10,890,000</b>, serious $888,030, moderate $180,180, minor $103,950, damage only $7,700.
+<div class="ex">California prices fatal and serious together: $2.4M–$3.8M. A Florida fatal crash counts about 4.6 times as much.</div></li>
+<li><b>Years</b>: 5 full calendar years ("shall", for the HSM method).</li>
+<li><b>High-crash test</b>: FDOT compares a site's rate to the average for the same kind of road <i>in its district</i>, and reports how sure it is (50% to 99.99%).
+<div class="ex">FDOT doesn't publish those averages. There's no table like California's TASAS rates.</div></li>
+<li><b>Preferred method</b>: HSM predicted crashes with Florida's own adjustment numbers (e.g. urban 4-lane divided ×1.63).</li>
+<li><b>Forms</b>: FDOT collision diagram and collision summary forms (750-020-05i/j/k).</li>
+<li><b>New</b>: FDOT stopped its intersection control evaluation (ICE) program on 2 Nov 2026.</li>
+</ul>
+
+<h2>4. What we built</h2>
+<p>Two readers, tested on saved samples: one for an S4 download (it also reads the regional copies), one for the state FLHSMV file. They aren't connected to the app yet.</p>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Get one S4 download through an FDOT project manager: <b>Palm Beach County, 2024, the crash "Event" file as CSV</b>. That shows whether our reader matches the real file.</li>
+<li>Email FLHSMV Crash Statistics (850-617-3105) and ask if their free crash file can be shown in a paid tool.</li>
+<li>Decide: Florida as "bring your S4 file" only (recommended), or also the free regional copies for Palm Beach and Orlando.</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>FDOT's own map server (it was down that day).</li>
+<li>A real S4 download (we built the reader from S4's public field list).</li>
+<li>Whether S4's points are accurate. We compared against them, but S4 doesn't check every point by hand.</li>
+<li>Street-name placement limited to each city (we used one map for the whole county).</li>
+<li>Florida's average crash rates (not public). Address lists for counties other than Palm Beach.</li>
+</ul>
+</main></body></html>

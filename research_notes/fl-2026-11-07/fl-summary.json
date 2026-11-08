@@ -1,0 +1,278 @@
+{
+ "state": "FL",
+ "bucket": "D",
+ "bucket_note": "Statewide located data (Signal Four Analytics) is agency/consultant-only: D. Open fallbacks: FLHSMV Crash Facts (A*: GPS ~75%, KABCO, no street names, licence unclear) and MPO/county S4 copies (A*: licence unclear).",
+ "sources": [
+  {
+   "name": "FLHSMV Crash Facts aggregated crash data (quarterly zip)",
+   "url": "https://www.flhsmv.gov/crash-facts/",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2023-2025 + 2026 Jan-Mar (Q1 2026 file)",
+   "rows_per_year": {
+    "2023": 717474,
+    "2024": 702930,
+    "2025": 687313,
+    "2026_partial": 192789
+   },
+   "gps_share": {
+    "2023": 0.716,
+    "2024": 0.739,
+    "2025": 0.749
+   },
+   "street_names_share": 0.0,
+   "kabco": true,
+   "keys_linkable": "Crash Key / Vehicle Key / Person Key in one person-level file; no report number"
+  },
+  {
+   "name": "Signal Four Analytics (UF GeoPlan) - FDOT crash database of record",
+   "url": "https://signal4analytics.com/",
+   "access": "gated (FDOT-approved agencies, consultants, universities)",
+   "licence_paid_use": "no",
+   "years": "2011-present (daily)",
+   "rows_per_year": "~700,000 (FDOT Systemic Safety memo 2024, Table A.1: 2022 706,267)",
+   "gps_share": "not measured (open copies: 100% S4 point)",
+   "street_names_share": "not measured (open copies: 83-91% street + cross street)",
+   "kabco": true,
+   "keys_linkable": "Report Number links Event, Vehicle, Driver, Passenger, Non-Motorist (S4 Data Dictionary)"
+  },
+  {
+   "name": "Palm Beach MPO 'Signal 4 Crash Events' (open S4 copy)",
+   "url": "https://services5.arcgis.com/79IoFXBn9ZeqmVlC/arcgis/rest/services/pal_crash_event/FeatureServer/0",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2019-2024",
+   "rows_per_year": {
+    "2019": 44416,
+    "2020": 34564,
+    "2021": 44608,
+    "2022": 46788,
+    "2023": 48890,
+    "2024": 49353
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.827,
+   "kabco": true,
+   "keys_linkable": "no (no report number; OBJECTID only)"
+  },
+  {
+   "name": "MetroPlan Orlando Crash Data (open S4 copy)",
+   "url": "https://services3.arcgis.com/0gEhw9JctymdZD3f/arcgis/rest/services/MetroPlan_Orlando_Crash_Data_2018_2022/FeatureServer/0",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2018-2025",
+   "rows_per_year": {
+    "2018": 74426,
+    "2019": 74599,
+    "2020": 52709,
+    "2021": 62521,
+    "2022": 61805,
+    "2023": 65815,
+    "2024": 67056,
+    "2025": 67507
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.909,
+   "kabco": true,
+   "keys_linkable": "report number on the event only"
+  },
+  {
+   "name": "FDOT open data hub crash layers",
+   "url": "https://gis-fdot.opendata.arcgis.com/",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "non-motorist KSI 2011-2019; CMV injury+ 2019-2024",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured",
+   "street_names_share": "not measured",
+   "kabco": true,
+   "keys_linkable": "no"
+  },
+  {
+   "name": "FDOT gis.fdot.gov Crashes_All / sso/ssogis",
+   "url": "https://gis.fdot.gov/arcgis/rest/services/Crashes_All/MapServer/0",
+   "access": "open (server down)",
+   "licence_paid_use": "unclear",
+   "years": "not measured (HTTP 502 on 2026-11-07)",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured",
+   "street_names_share": "not measured",
+   "kabco": true,
+   "keys_linkable": "not measured"
+  }
+ ],
+ "placement_sample": {
+  "area": "Palm Beach County, FL (12099), 2024, Palm Beach MPO S4 copy",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.7665,
+  "name_placed_share_raw_names": 0.562,
+  "auto_share": 0.6545,
+  "within_250ft": 0.7632,
+  "within_250ft_low": 0.7394,
+  "within_250ft_not_freeway": 0.9133,
+  "within_250ft_not_freeway_low": 0.895,
+  "within_250ft_freeway": 0.04,
+  "truth": "S4 mapped point (not independent police GPS)",
+  "house_address_share": 0.159,
+  "address_points_source": "Palm Beach County Situs Addresses (public domain per OpenAddresses us/fl/palm_beach.json)",
+  "no_gps_added_share": 0.0
+ },
+ "importer_built": true,
+ "importers": [
+  "backend/crashiq/sources/fl_s4.py",
+  "backend/crashiq/sources/fl_flhsmv.py"
+ ],
+ "blockers": [
+  "Signal Four Analytics (the source every FDOT manual requires) needs FDOT-approved access; no real S4 export seen, the reader is built from the public S4 Data Dictionary and the open MPO copies",
+  "No licence for paid use on FLHSMV Crash Facts or any open S4 copy",
+  "FLHSMV open file has no street names or report number: its ~25% no-GPS crashes can't be placed",
+  "Freeway/interchange crashes: street-pair placement is 4% within 250 ft; needs the freeway method with FDOT route geometry",
+  "No current public statewide average crash-rate table (FDOT computes district averages inside CAR/S4)"
+ ],
+ "user_actions": [
+  "Request S4 access through an FDOT project manager / District Safety office (AARF) and download one sample: Palm Beach County 2024 Event CSV (+ Driver/Passenger/Non-Motorist tables)",
+  "Ask FLHSMV Crash Statistics (850-617-3105) in writing whether the Crash Facts download may be displayed in a paid product",
+  "Ask Palm Beach MPO and MetroPlan Orlando whether their S4 layers may be used commercially",
+  "Decide: Florida as 'bring your S4 export' only, or also the open MPO copies for Palm Beach and the Orlando region"
+ ],
+ "cities": [
+  {
+   "city": "Orlando (City)",
+   "source": "Cleaned Crash Data 2014-2024 (S4 copy)",
+   "url": "https://services5.arcgis.com/mMuoPCaIYD4wEgDl/arcgis/rest/services/Cleaned_Crash_Data_2014_2024/FeatureServer/0",
+   "gps_share": "layer geometry on all; officer lat 0.171",
+   "years": "2014-2024",
+   "licence": "none stated"
+  },
+  {
+   "city": "Orlando region (Orange/Osceola/Seminole)",
+   "source": "MetroPlan Orlando S4 crashes",
+   "url": "https://services3.arcgis.com/0gEhw9JctymdZD3f/arcgis/rest/services/MetroPlan_Orlando_Crash_Data_2018_2022/FeatureServer/0",
+   "gps_share": 1.0,
+   "years": "2018-2025",
+   "licence": "none stated"
+  },
+  {
+   "city": "Palm Beach County",
+   "source": "Palm Beach MPO Signal 4 Crash Events",
+   "url": "https://services5.arcgis.com/79IoFXBn9ZeqmVlC/arcgis/rest/services/pal_crash_event/FeatureServer/0",
+   "gps_share": 1.0,
+   "years": "2019-2024",
+   "licence": "warranty disclaimer only"
+  },
+  {
+   "city": "Hillsborough County (Tampa)",
+   "source": "Crash_Data_Hillsborough All_Crashes (S4 via UF)",
+   "url": "https://services.arcgis.com/apTfC6SUmnNfnxuF/arcgis/rest/services/Crash_Data_Hillsborough/FeatureServer/7",
+   "gps_share": 1.0,
+   "years": "not in a field (item 2023-07-19)",
+   "licence": "none stated"
+  },
+  {
+   "city": "Hillsborough County (Tampa)",
+   "source": "Signal4 Crashes Hillsborough 2020-2024 (HDR account)",
+   "url": "https://services.arcgis.com/04HiymDgLlsbhaV4/arcgis/rest/services/Signal4_Crashes_Hillsborough_2020_2024/FeatureServer/1",
+   "gps_share": 0.707,
+   "years": "2020-2024",
+   "licence": "none stated"
+  },
+  {
+   "city": "Tampa (City)",
+   "source": "Serious Injury and Fatal Crashes",
+   "url": "https://services1.arcgis.com/IbNXlmt2RVVRCZ6M/arcgis/rest/services/Serious_Injury_and_Fatal_Crashes/FeatureServer/0",
+   "gps_share": 1.0,
+   "years": "2021-2026 (K/A only)",
+   "licence": "none stated"
+  },
+  {
+   "city": "Jacksonville / Duval",
+   "source": "Traffic_Crash_RoadData (account 'leronev', owner unconfirmed)",
+   "url": "https://services1.arcgis.com/NXfNVaFp7QMxnE3j/arcgis/rest/services/Traffic_Crash_RoadData/FeatureServer/0",
+   "gps_share": 0.997,
+   "years": "2019-2026",
+   "licence": "none stated"
+  },
+  {
+   "city": "Miami-Dade County",
+   "source": "KSI Crashes 2019-2023 Enriched (S4)",
+   "url": "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/KSI_Crash_Events_Public/FeatureServer/0",
+   "gps_share": 0.996,
+   "years": "2019-2025 (K/A only)",
+   "licence": "'as is', illustration only"
+  }
+ ],
+ "methods": {
+  "manuals": [
+   {
+    "title": "FDOT Design Manual 2026, Ch. 122 (Tables 122.6.1-122.6.4)",
+    "url": "https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/roadway/fdm/2026/2026fdm122varexcept.pdf?sfvrsn=c229234b_4",
+    "date": "2026-01-01"
+   },
+   {
+    "title": "FDOT Highway Safety Improvement Program Guidelines",
+    "url": "https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/safety/6-resources/florida-hsip-manual-v2021-f-(2021-08-12).pdf?sfvrsn=960bbf43_2",
+    "date": "2021-08"
+   },
+   {
+    "title": "FDOT Safety Crash Data Guidance (Crash Data Process v18)",
+    "url": "https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/safety/11a-safetyengineering/crash-data/crash-data-process_v18.pdf?sfvrsn=311253ee_1",
+    "date": "2023-04"
+   },
+   {
+    "title": "FDOT Manual on Uniform Traffic Studies (MUTS) 2027",
+    "url": "https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/traffic/trafficservices/studies/muts/muts-2027/manual-on-uniform-traffic-studies-(muts)-2027_clean.pdf?sfvrsn=4f1d4f70_2",
+    "date": "2027-01 (released 2026-10-30)"
+   },
+   {
+    "title": "TEO Bulletin 26-03 (2027 MUTS; ICE program retired)",
+    "url": "https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/traffic/trafficservices/studies/muts/muts-2027/teoo_bulletin_26-03_2027_muts.pdf?sfvrsn=59acd074_1",
+    "date": "2026-10-30"
+   },
+   {
+    "title": "FDOT Safety Office crash data FAQ (crash rate / confidence method)",
+    "url": "https://www.fdot.gov/docs/default-source/safety/11a-safetyengineering/crash-data/frequently-asked-questions.pdf",
+    "date": "undated"
+   },
+   {
+    "title": "FDOT Crash Data Academy CDA-9 High Crash Location Analysis for the SHS",
+    "url": "https://www.fdot.gov/docs/default-source/safety/11a-safetyengineering/crash-data-academy/FDOT_CDA-9_HighCrashLocAnalysisforSHS_2017-03-02.pdf",
+    "date": "2017-03-02"
+   },
+   {
+    "title": "FDOT Highway Safety Manual User Guide",
+    "url": "https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/safety/safety/11a-safetyengineering/transsafeng/strategicplandocs/2015fdothsmuserguide.pdf?sfvrsn=217d6331_0",
+    "date": "2015"
+   },
+   {
+    "title": "FDOT Crash Reduction Factors",
+    "url": "https://fdotwww.blob.core.windows.net/sitefinity/docs/default-source/roadway/qa/tools/crf.pdf?sfvrsn=ffd98504_2",
+    "date": "2014-02-14"
+   }
+  ],
+  "rates_available": false,
+  "rates_unit": "crashes per MVM (segments: ADT x miles x days / 1e6) and per MEV (intersections: ADT x days / 1e6); averages per district and rate category, computed inside CAR/S4, no current public table",
+  "crash_costs": {
+   "K": 10890000,
+   "A": 888030,
+   "B": 180180,
+   "C": 103950,
+   "O": 7700,
+   "year": "FDM 2026 Table 122.6.2 (CAR 2015-2019 crashes, published 2022-02-23; dollar year not stated)"
+  },
+  "screening_method": "HSM peak searching on expected fatal+injury crash frequency (HSIP Guidelines 4.1.1); FDOT preference order: EB excess expected, SPF predicted, relative severity, critical rate (FDOT solves for K and reports a confidence level vs the district average), qualitative",
+  "years_required": "5 full calendar years (MUTS 5.4.3.3 'shall' for EB; Crash Data Guidance); 3-5 years (HSIP)",
+  "calibration_factors": "FDM 2026 Table 122.6.3 (e.g. U4D 1.63, USA4SG 2.27, R4D 0.68)",
+  "differences_from_ca": [
+   "Separate K and A costs (K $10.89M, A $888k) vs Caltrans LRSM combined KA by location type ($2.379M-$3.784M); FL PDO $7,700 vs CA $20,000",
+   "Average cost per crash by facility type (FDM Table 122.6.1) for relative-severity analysis; no CA equivalent in CrashIQ",
+   "Crash-rate test reports a confidence level vs the district category average (solve for K) instead of a fixed-K critical rate",
+   "No public statewide base-rate table like TASAS",
+   "EB excess expected crashes with Florida-calibrated SPFs is FDOT's preferred method",
+   "Signal Four is the required crash source; 5 full calendar years",
+   "FDOT forms: Condition Diagram 750-020-04, Collision Diagrams 750-020-05i/j, Collision Summary 750-020-05k",
+   "FDOT ICE program and manual retired effective 2026-11-02 (TEO Bulletin 26-03)",
+   "B/C discount rate 4% (FDM 122.6)"
+  ]
+ }
+}
