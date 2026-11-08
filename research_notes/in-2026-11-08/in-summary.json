@@ -1,0 +1,113 @@
+{
+ "state": "IN",
+ "bucket": "D",
+ "bucket_note": "verified 2026-11-08: no statewide record-level crash data without an account or a paid request; the 2026-11-02 screen was right",
+ "status": "gated",
+ "sources": [
+  {
+   "name": "INDOT AASHTOWare Safety (ARIES crash data with INDOT's KABCO/SSI fields)",
+   "url": "https://support.numetric.com/en/articles/12384809-indot-how-to-log-into-aashtoware-safety-via-access-indiana-and-itap",
+   "access": "gated (Access Indiana account, then ITAP 'Enroll New Application' -> AASHTOWare Safety, approved by INDOT)",
+   "licence_paid_use": "no",
+   "years": "ARIES; SSI-based KABCO from 2022",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "yes (inside the tool)"
+  },
+  {
+   "name": "ISP crash reports via BuyCrash (LexisNexis)",
+   "url": "https://www.in.gov/isp/crash-reports/",
+   "access": "paid, one report at a time",
+   "licence_paid_use": "no",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": "no"
+  },
+  {
+   "name": "ARIES research requests (LexisNexis Risk Solutions)",
+   "url": "https://www.in.gov/cji/research/crash-statistics/index",
+   "access": "request, fee ('charges a small fee for crash records and research requests')",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": "unknown"
+  },
+  {
+   "name": "ARIES portal public downloads",
+   "url": "https://ariesportal.com/Downloads/Download",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2025 yearly statistics PDF/zip only",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": false,
+   "keys_linkable": "no (summaries, not records)"
+  },
+  {
+   "name": "Indiana MPH Historical Crash Points (ArcGIS, 2016 demo layer)",
+   "url": "https://services2.arcgis.com/hUPR9iC6qnMcwWsa/arcgis/rest/services/Historical_Crash_Points/FeatureServer/0",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2011-2016 (2016 partial): 60,261 / 74,369 / 88,287 / 119,052 / 124,086 / 42,121",
+   "rows_per_year": {
+    "2011": 60261,
+    "2012": 74369,
+    "2013": 88287,
+    "2014": 119052,
+    "2015": 124086,
+    "2016": 42121
+   },
+   "gps_share": 1.0,
+   "street_names_share": null,
+   "kabco": false,
+   "keys_linkable": "INDIVID only",
+   "note": "stale, incomplete (Indiana: 198,247 collisions in 2024, IUPPI Crash Facts), injury 'Unknown' on 92%; not usable"
+  }
+ ],
+ "placement_sample": null,
+ "importer_built": false,
+ "blockers": [
+  "no open record-level statewide crash data: AASHTOWare Safety needs an Access Indiana/ITAP account approved by INDOT; records otherwise through BuyCrash or a LexisNexis research request (fee)",
+  "no published export spec for AASHTOWare Safety; the only ARIES data dictionary (VCRS 2007/2009, NHTSA) is behind an Akamai block for scripts"
+ ],
+ "user_actions": [
+  "Request INDOT AASHTOWare Safety access: create an Access Indiana account (https://access.in.gov), log into ITAP (https://itap.indot.in.gov/Dashboard), 'Enroll New Application' -> AASHTOWare Safety; say it's for consultant safety studies. Or have an INDOT/LPA project manager ask INDOT's Office of Traffic Safety for the crash extract of the project area.",
+  "Once in, export crashes (collision level, with latitude/longitude, road and intersecting road, 'Crash Severity Level (NEW)') for the counties and years of the study, 5 years (2021-2025), as CSV; send the header row so the column map can be confirmed and a reader built.",
+  "Ask INDOT in writing whether an AASHTOWare export may be used inside a paid tool (licence unknown)."
+ ],
+ "cities": [
+  {
+   "city": "Indianapolis region (IMPO)",
+   "source": "IMPO 2018-2025 Fatal and SSI Crash Data (ArcGIS)",
+   "url": "https://services5.arcgis.com/qVN2o0aio8BMbwcJ/arcgis/rest/services/2015_2017_Crash_Data/FeatureServer/0",
+   "gps_share": 1.0,
+   "years": "2018-2025, fatal and serious injury only (8,753 rows)",
+   "licence": "none published; K and A only, not a crash dataset for corridor studies"
+  },
+  {
+   "city": "Indianapolis region (IMPO)",
+   "source": "Bike and Ped Crashes 2022 to Feb 2025",
+   "url": "https://services5.arcgis.com/qVN2o0aio8BMbwcJ/arcgis/rest/services/Bike_and_Ped_Crashes_22toJuly24/FeatureServer/0",
+   "gps_share": 1.0,
+   "years": "2022-2025, pedestrian and bicycle only (2,073 rows)",
+   "licence": "none published"
+  },
+  {
+   "city": "Bloomington / Monroe County",
+   "source": "Monroe County Crashes (ARIES export)",
+   "url": "https://services1.arcgis.com/4OouWsRyOft5wqPC/arcgis/rest/services/Monroe_County_Crashes/FeatureServer/0",
+   "gps_share": null,
+   "years": "2003-2015 (51,092 rows, ~4,000 a year)",
+   "licence": "none published; stale"
+  }
+ ]
+}
