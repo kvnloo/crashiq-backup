@@ -1,0 +1,109 @@
+{
+ "area": "Washington DC (FIPS 11001), crashes reported in 2025",
+ "n": 2000,
+ "gps_mpd_plausible": 2000,
+ "gps_ddot_plausible": 2000,
+ "address_forms": {
+  "house": 1772,
+  "street_only": 152,
+  "intersection": 72,
+  "coords": 4
+ },
+ "tiers": {
+  "address": 1709,
+  "review": 229,
+  "fuzzy": 6,
+  "exact": 56
+ },
+ "auto_by_tier": {
+  "exact": 56
+ },
+ "name_placed_share": 0.8855,
+ "auto_share": 0.028,
+ "address_tier_share": 0.8545,
+ "accuracy_by_tier": {
+  "address": {
+   "n": 1709,
+   "within_250ft": 0.9877,
+   "within_250ft_low": 0.9813,
+   "median_ft": 0
+  },
+  "fuzzy": {
+   "n": 6,
+   "within_250ft": 1.0,
+   "within_250ft_low": 0.6097,
+   "median_ft": 7
+  },
+  "exact": {
+   "n": 56,
+   "within_250ft": 0.9643,
+   "within_250ft_low": 0.8788,
+   "median_ft": 0
+  }
+ },
+ "accuracy_all_placed": {
+  "n": 1771,
+  "within_250ft": 0.987,
+  "within_250ft_low": 0.9806,
+  "median_ft": 0
+ },
+ "accuracy_auto": {
+  "n": 56,
+  "within_250ft": 0.9643,
+  "within_250ft_low": 0.8788,
+  "median_ft": 0
+ },
+ "house_address_refused_by_shared_place": 63,
+ "network": {
+  "streets": 1914,
+  "intersections": 11635
+ },
+ "mar_points_used": 141186,
+ "examples_over_250ft": [
+  {
+   "address": "1750 MARTIN LUTHER KING JR AVENUE SE",
+   "tier": "address",
+   "ft_off": 315
+  },
+  {
+   "address": "6825 16TH STREET NW",
+   "tier": "address",
+   "ft_off": 1720
+  },
+  {
+   "address": "1850 ANACOSTIA DRIVE SE",
+   "tier": "address",
+   "ft_off": 462
+  },
+  {
+   "address": "32 NEW YORK AVENUE NE",
+   "tier": "address",
+   "ft_off": 517
+  },
+  {
+   "address": "2425 MARKET STREET NE",
+   "tier": "address",
+   "ft_off": 1177
+  },
+  {
+   "address": "801 NEW JERSEY AVENUE SE",
+   "tier": "address",
+   "ft_off": 369
+  }
+ ],
+ "nearest_int_test_not_independent": {
+  "tiers": {
+   "exact": 1318,
+   "review": 223,
+   "near": 21,
+   "relaxed": 3,
+   "verified_typo": 1
+  },
+  "accuracy": {
+   "n": 1343,
+   "within_250ft": 0.7848,
+   "within_250ft_low": 0.762,
+   "median_ft": 139
+  }
+ }
+}

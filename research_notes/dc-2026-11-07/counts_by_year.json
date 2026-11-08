@@ -1,0 +1,194 @@
+{
+ "2008": {
+  "all": 2658,
+  "lat": 2658,
+  "mpd_gps": 29,
+  "address": 2658,
+  "nearest_int": 2658,
+  "mar_200": 1976,
+  "address_housenum": 2457,
+  "address_and": 171
+ },
+ "2009": {
+  "all": 12014,
+  "lat": 12014,
+  "mpd_gps": 2251,
+  "address": 12014,
+  "nearest_int": 12014,
+  "mar_200": 9088,
+  "address_housenum": 10531,
+  "address_and": 2034
+ },
+ "2010": {
+  "all": 12141,
+  "lat": 12141,
+  "mpd_gps": 143,
+  "address": 12141,
+  "nearest_int": 12141,
+  "mar_200": 8791,
+  "address_housenum": 11068,
+  "address_and": 1049
+ },
+ "2011": {
+  "all": 13290,
+  "lat": 13290,
+  "mpd_gps": 2159,
+  "address": 13290,
+  "nearest_int": 13290,
+  "mar_200": 10146,
+  "address_housenum": 11618,
+  "address_and": 1292
+ },
+ "2012": {
+  "all": 16754,
+  "lat": 16754,
+  "mpd_gps": 9978,
+  "address": 16754,
+  "nearest_int": 16754,
+  "mar_200": 15361,
+  "address_housenum": 14006,
+  "address_and": 2739
+ },
+ "2013": {
+  "all": 17482,
+  "lat": 17482,
+  "mpd_gps": 10875,
+  "address": 17482,
+  "nearest_int": 17482,
+  "mar_200": 16185,
+  "address_housenum": 14888,
+  "address_and": 2412
+ },
+ "2014": {
+  "all": 19391,
+  "lat": 19391,
+  "mpd_gps": 8372,
+  "address": 19391,
+  "nearest_int": 19391,
+  "mar_200": 17657,
+  "address_housenum": 16373,
+  "address_and": 266
+ },
+ "2015": {
+  "all": 22355,
+  "lat": 22354,
+  "mpd_gps": 15544,
+  "address": 22348,
+  "nearest_int": 22354,
+  "mar_200": 21301,
+  "address_housenum": 17733,
+  "address_and": 3202
+ },
+ "2016": {
+  "all": 26572,
+  "lat": 26571,
+  "mpd_gps": 26489,
+  "address": 26555,
+  "nearest_int": 26571,
+  "mar_200": 26565,
+  "address_housenum": 21030,
+  "address_and": 4832
+ },
+ "2017": {
+  "all": 26464,
+  "lat": 26464,
+  "mpd_gps": 26421,
+  "address": 26451,
+  "nearest_int": 26464,
+  "mar_200": 26439,
+  "address_housenum": 21667,
+  "address_and": 4355
+ },
+ "2018": {
+  "all": 26558,
+  "lat": 26558,
+  "mpd_gps": 26541,
+  "address": 26542,
+  "nearest_int": 26557,
+  "mar_200": 26517,
+  "address_housenum": 21962,
+  "address_and": 4034
+ },
+ "2019": {
+  "all": 26788,
+  "lat": 26788,
+  "mpd_gps": 26771,
+  "address": 26769,
+  "nearest_int": 26787,
+  "mar_200": 26753,
+  "address_housenum": 22325,
+  "address_and": 3850
+ },
+ "2020": {
+  "all": 18314,
+  "lat": 18314,
+  "mpd_gps": 18296,
+  "address": 18308,
+  "nearest_int": 18299,
+  "mar_200": 18292,
+  "address_housenum": 15308,
+  "address_and": 2517
+ },
+ "2021": {
+  "all": 21271,
+  "lat": 21271,
+  "mpd_gps": 21182,
+  "address": 21269,
+  "nearest_int": 20583,
+  "mar_200": 21215,
+  "address_housenum": 18742,
+  "address_and": 1717
+ },
+ "2022": {
+  "all": 18906,
+  "lat": 18906,
+  "mpd_gps": 18636,
+  "address": 18906,
+  "nearest_int": 17620,
+  "mar_200": 18811,
+  "address_housenum": 16290,
+  "address_and": 2320
+ },
+ "2023": {
+  "all": 20781,
+  "lat": 20781,
+  "mpd_gps": 20732,
+  "address": 20781,
+  "nearest_int": 19466,
+  "mar_200": 20772,
+  "address_housenum": 19358,
+  "address_and": 76
+ },
+ "2024": {
+  "all": 20257,
+  "lat": 20257,
+  "mpd_gps": 20181,
+  "address": 20257,
+  "nearest_int": 18944,
+  "mar_200": 20250,
+  "address_housenum": 18917,
+  "address_and": 186
+ },
+ "2025": {
+  "all": 18175,
+  "lat": 18175,
+  "mpd_gps": 18174,
+  "address": 18175,
+  "nearest_int": 16751,
+  "mar_200": 18175,
+  "address_housenum": 16643,
+  "address_and": 603
+ },
+ "2026": {
+  "all": 15066,
+  "lat": 15066,
+  "mpd_gps": 15066,
+  "address": 15066,
+  "nearest_int": 13850,
+  "mar_200": 15066,
+  "address_housenum": 13198,
+  "address_and": 1630
+ },
+ "undated_or_bad": 1748,
+ "total": 356985
+}
