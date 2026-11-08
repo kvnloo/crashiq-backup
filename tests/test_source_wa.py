@@ -92,3 +92,25 @@ def test_wsdot_portal():
     assert [o["severity"] for o in out[:4]] == ["K", "U", "K", "O"]
     assert out[0]["report_number"] == "3898784" and out[0]["hour"] == 23
     assert all(o["lat"] is not None and o["primary_road"] is None for o in out)
+
+
+def test_statewide_portal_contract_with_seattle_enrichment(monkeypatch, tmp_path):
+    # #19: the WA pack is the statewide portal; inside Seattle the SDOT record of the same report adds street names
+    from crashiq import packs
+    pack = packs.get("WA")
+    portal = [wa_wsdot.portal_record(r) for r in json.loads((FX / "wsdot_portal_seattle_2025_sample.json").read_text())["rows"]]
+    d = json.loads((FX / "sdot_2025_sample.json").read_text())
+    sdot = wa_sdot.build(d["crashes"], d["persons"])
+    sdot[0]["report_number"] = portal[0]["report_number"]      # the fixtures share no report: make one shared
+    asked = []
+    monkeypatch.setattr(wa_wsdot, "fetch_portal", lambda y, kind, name, cache: asked.append((y, kind, name)) or portal)
+    monkeypatch.setattr(wa_sdot, "fetch", lambda y, cache: sdot)
+    boxes = json.loads((packs.REF / "county_boxes_wa.json").read_text())["counties"]
+    got = wa_wsdot.fetch_contract((47.0, -123.0, 48.0, -122.0), ["53033"], [2025], tmp_path, boxes)
+    assert asked == [(2025, "County", "King")]
+    assert len(got["crashes"]) == sum(r["lat"] is not None for r in portal)
+    assert all(packs.check_crash(c, pack) == [] for c in got["crashes"] if c["severity"])
+    both = {r["report_number"] for r in sdot} & {r["report_number"] for r in portal}
+    assert got["cleaning"]["enriched_by_sdot"] == len(both) == 1
+    rich = [c for c in got["crashes"] if c["enriched_by"]]
+    assert all(c["primary_road"] for c in rich) and not any(c["primary_road"] for c in got["crashes"] if not c["enriched_by"])

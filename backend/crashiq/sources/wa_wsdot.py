@@ -1,4 +1,4 @@
-"""Washington statewide crash source: WSDOT Crash Data & Reporting Branch. Two readers, not wired into the app (#19).
+"""Washington statewide crash source: WSDOT Crash Data & Reporting Branch. Two readers; the portal one is the WA state pack's (packs.py, #19).
 
 1. `export_record`: one row of WSDOT's crash export (the "history report" layout a user gets from a crash data
    request, Form 780-032 or the Public Disclosure Request Center). The same layout is republished live by City of
@@ -210,3 +210,56 @@ def fetch_portal(year: int, location_type: str, location_name: str, cache_dir: P
         cache_dir.mkdir(parents=True, exist_ok=True)
         cache.write_text(json.dumps(rows))
     return [portal_record(r) for r in json.loads(cache.read_text())]
+
+
+# -- state-pack contract (#19): the statewide portal, with Seattle's SDOT feed as enrichment inside Seattle ----------
+SDOT_TYPE = {"REAR ENDED": "REAR END", "ANGLES": "BROADSIDE", "SIDESWIPE": "SIDE SWIPE", "HEAD ON": "HEAD-ON",
+             "PEDESTRIAN": "VEHICLE/PEDESTRIAN"}
+
+
+def contract_record(r: dict, county_fips: str, sdot: dict | None = None) -> dict:
+    """One portal_record() -> the shared crash dict. `sdot`: the same report in Seattle's feed (wa_sdot.crash_record),
+    which adds what the portal lacks: street names (block crashes too), crash type, light, weather, surface, road users."""
+    d = dt.date.fromisoformat(r["date"]) if r["date"] else None
+    e = sdot or {}
+    up = lambda v: str(v).upper() if v else None
+    ctype = up(e.get("collision_type"))
+    return {"crash_id": r["collision_id"], "report_version": 0, "deleted": False, "preliminary": False,
+            "date": r["date"], "year": r["year"], "hour": r["hour"], "day_of_week": d.strftime("%A") if d else None,
+            "lat": r["lat"], "lon": r["lon"], "bad_coords": False,
+            "primary_road": e.get("primary_road"), "secondary_road": e.get("secondary_road"),
+            "block_end_road": e.get("block_end_road"), "offset_ft": None, "offset_dir": None,
+            "city": r["city_name"] or "UNINCORPORATED", "county_code": r["county_code"], "county_fips": county_fips,
+            "state": "WA", "is_freeway": r["is_freeway"], "killed": e.get("killed", 0), "injured": e.get("injured", 0),
+            "severity": r["severity"],
+            "ped": bool(e.get("pedestrians")), "bike": bool(e.get("cyclists")), "ebike": False, "escooter": False,
+            "motorcycle": False, "heavy_truck": False, "parties": [],
+            "collision_type": SDOT_TYPE.get(ctype or "", ctype), "lighting": up(e.get("lighting")),
+            "weather": up(e.get("weather")), "surface": up(e.get("surface")), "report_number": r["report_number"],
+            "jurisdiction": r["jurisdiction"], "enriched_by": "SDOT" if sdot else None}
+
+
+def fetch_contract(box, county_fips: list[str], years: list[int], cache_dir: Path, boxes: dict) -> dict:
+    """Every portal crash with a point in the box (s, w, n, e), county by county and year by year; inside Seattle,
+    the SDOT record of the same report number fills in the street names and crash details."""
+    from . import wa_sdot
+    s, w, n, e = box
+    out, missing, enriched, no_sev = [], [], 0, 0
+    for y in years:
+        got = 0
+        sdot = None
+        for f in county_fips:
+            rows = [r for r in fetch_portal(y, "County", boxes[f]["name"].removesuffix(" County"), cache_dir)
+                    if r["lat"] is not None and s <= r["lat"] <= n and w <= r["lon"] <= e]
+            got += len(rows)
+            if sdot is None and any(r["city_name"] == "SEATTLE" for r in rows):
+                sdot = {c["report_number"]: c for c in wa_sdot.fetch(y, cache_dir)}
+            for r in rows:
+                m = (sdot or {}).get(r["report_number"]) if r["city_name"] == "SEATTLE" else None
+                enriched += m is not None
+                no_sev += r["severity"] is None
+                out.append(contract_record(r, f, m))
+        if not got:
+            missing.append(y)
+    return {"crashes": out, "years_missing": missing,
+            "cleaning": {"enriched_by_sdot": enriched, "no_severity": no_sev}}

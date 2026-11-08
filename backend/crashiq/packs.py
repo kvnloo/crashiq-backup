@@ -93,8 +93,36 @@ PACKS["MA"] = StatePack(
                 "heavy-truck and e-bike counts and collision diagrams are empty.",
                 "Primary collision factor, DUI and speed rows are blank: MassDOT's crash layer has no violation codes."))
 
+def _wa_fetch(box, county_fips, years, cache_dir):
+    from .sources import wa_wsdot
+    boxes = json.loads((REF / "county_boxes_wa.json").read_text())["counties"]
+    return wa_wsdot.fetch_contract(box, county_fips, years, cache_dir, boxes)
+
+
+# WSDOT's standard disclaimer, quoted (Safety Analysis Guide, Aug 2024, §6.3.1, PDF p. 14-15): "must be in the footer"
+WA_LEGAL = ("Under 23 U.S. Code § 148 and 23 U.S. Code § 407, safety data, reports, surveys, schedules, lists compiled or "
+            "collected for the purpose of identifying, evaluating, or planning the safety enhancement of potential crash "
+            "sites, hazardous roadway conditions, or railway-highway crossings are not subject to discovery or admitted "
+            "into evidence in a Federal or State court proceeding or considered for other purposes in any action for "
+            "damages arising from any occurrence at a location mentioned or addressed in such reports, surveys, "
+            "schedules, lists, or data.")
+
+PACKS["WA"] = StatePack(
+    code="WA", name="Washington", fips="53", status="active",
+    source="Crash data: WSDOT Crash Data Portal (public record-level data, statewide; no published reuse licence); "
+           "inside Seattle, street names and crash details from SDOT Collisions (City of Seattle open data).",
+    source_short="WSDOT Crash Data Portal", bounds=(45.5, -124.9, 49.1, -116.8), first_year=2016,   # "10 full years"
+    methods=REF / "methods_wa.json", fetch=_wa_fetch, county_boxes=REF / "county_boxes_wa.json", legal=WA_LEGAL,
+    data_notes=("WSDOT's public portal gives each crash's point and severity but no street names, crash type, light, "
+                "road users or people counts; inside Seattle CrashIQ adds them from SDOT's feed by report number. "
+                "Elsewhere in Washington those tables are blank, and people killed and injured aren't counted.",
+                "WSDOT's 'Unknown' injury is counted as injury, level not reported (U), pending a decision.",
+                "Crashes WSDOT files under 'State Route' count as freeway crashes, so an arterial that is a state route "
+                "(SR 99 Aurora Ave) loses them: check such corridors by hand.",
+                "Primary collision factor, DUI and speed rows are blank: WSDOT's portal has no violation codes."))
+
 # researched, no pack yet: listed greyed out on Setup (docs/state-pack-design.md § State picker)
-COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois", "WA": "Washington",
+COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois",
           "OR": "Oregon", "DC": "District of Columbia", "NY": "New York"}
 
 
