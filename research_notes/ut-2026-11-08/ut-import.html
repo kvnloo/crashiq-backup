@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Utah crash data for CrashIQ</title><style>body{background:#111;color:#eee;font:16px/1.5 system-ui,sans-serif;margin:0;padding:18px;max-width:720px}
+h1{color:#e53935;font-size:1.5em}h2{color:#ef5350;font-size:1.15em;margin-top:1.4em}b{color:#fff}.box{background:#1c1c1c;border-left:4px solid #e53935;padding:10px 14px;margin:10px 0}li{margin:4px 0}</style></head><body>
+<h1>Utah: crash data for CrashIQ</h1><p>Hermes, 8 Nov 2026. Status: <b>ready to use</b> (active), with one catch.</p>
+<h2>What Utah has</h2><ul>
+<li>UDOT publishes every reported crash since 2019 on a public map service, no login, updated every night. About 50,000 to 65,000 crashes a year.</li>
+<li>Every crash has a GPS point. Example: crash 825937130 at 6844 S Highland Dr sits at 40.6268, -111.8340.</li>
+<li>Severity is the standard K/A/B/C/O scale, with the number of people at each level.</li>
+<li>Pedestrian, bicycle, motorcycle and truck crashes are flagged yes/no. There are no driver or vehicle records, so road-user movements and collision diagrams are empty.</li></ul>
+<h2>Catch: the licence</h2><div class="box">UDOT says the data is "for informational purposes only and must be field verified prior to being used on a project" and is protected under 23 USC 407. It neither grants nor forbids paid use, so the licence is <b>unclear</b>.</div>
+<h2>Test run: State Street, South Salt Lake (2100 S to 3300 S, 1.5 mi, 2020-2024)</h2><ul>
+<li>396 crashes counted: K 1, A 13, B 57, C 75, no-injury 250.</li>
+<li>Crash cost $95,123,826 at UDOT's 2026 costs. UDOT says to price fatal and serious-injury crashes at one blended cost ($3.9M) when working from crash history, so that's what CrashIQ does.</li>
+<li>187 crashes on I-80 where it crosses State Street were left out as freeway crashes, as they should be.</li>
+<li>9 findings; PDF and Excel exports both work (75 KB and 40 KB).</li></ul>
+<h2>Street names</h2><p>About a third of crashes name a cross street ("I-15, 249 ft south of 700 South") and two thirds give a house address. GPS does the placing, so this only matters for checking.</p>
+<h2>What you need to do</h2><ol><li>Email UDOT Traffic &amp; Safety (Chris Whipple, chriswhipple@utah.gov) for written permission to use the crash layer in CrashIQ.</li></ol>
+<h2>What we didn't check</h2><ul><li>Address points for the house-address crashes.</li><li>The 2015-2019 state open-data set.</li><li>Statewide average crash rates (UDOT doesn't publish them by road type) and Utah traffic counts.</li></ul></body></html>
