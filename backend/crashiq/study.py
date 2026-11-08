@@ -201,10 +201,10 @@ router = APIRouter()
 
 @router.get("/studies/meta")
 def meta(state: str | None = None) -> dict:
-    """Setup's choices for one state (#19): the first ready state when none is asked for."""
+    """Setup's choices for one state (#19): California when none is asked for (a new study's default)."""
     states = packs.states()
     try:
-        pack = ready_pack(state or states[0]["code"])
+        pack = ready_pack(state or "CA")              # the DB default and the home state, not the first alphabetically
     except ValueError as e:
         raise HTTPException(400, str(e)) from e
     fy, ty = default_window(pack=pack)

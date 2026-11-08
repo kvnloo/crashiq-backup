@@ -56,7 +56,7 @@ def test_unverified_or_missing_values_are_never_used():
 def test_setup_lists_ready_states_first():
     s = packs.states()
     ready = [x for x in s if x["ready"]]
-    assert s[:len(ready)] == ready and s[0] == {"code": "CA", "name": "California", "ready": True}
+    assert s[:len(ready)] == ready and {"code": "CA", "name": "California", "ready": True} in ready   # alphabetical: AR sorts first
     for part in (ready, s[len(ready):]):
         assert [x["name"] for x in part] == sorted(x["name"] for x in part)
     assert not set(packs.COMING) & {x["code"] for x in ready}           # a built state is never also "coming"
