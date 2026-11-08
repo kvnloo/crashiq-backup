@@ -1,0 +1,89 @@
+{
+ "state": "CT",
+ "bucket": "A*",
+ "bucket_note": "Open, record-level, statewide, a point on every crash, crash and person KABCO, crash/person/vehicle linked by CrashID. Catch: no reuse licence (CTCDR: 'for research and informational purposes').",
+ "sources": [
+  {
+   "name": "Connecticut Crash Data Repository public MapServer (UConn CTSRC for CTDOT): Crash 0, Person 1, Vehicle 2",
+   "url": "https://gis.cti.uconn.edu/arcgis/rest/services/Crash_Dashboards/ConnecticutCrash/MapServer",
+   "access": "open (ArcGIS REST, no login; the CTCDR web tool shows 'User: not logged in' and needs no account to query)",
+   "licence_paid_use": "unclear",
+   "licence_text": "This data repository enables users to query, analyze and print/export the data for research and informational purposes. ... This web site is exempt from discovery or admission under 23 U.S.C. 409.",
+   "licence_urls": [
+    "https://www.ctcrash.uconn.edu/"
+   ],
+   "years": "2015-2026 (latest CrashDate 2026-11-06 when queried 2026-11-08)",
+   "rows_per_year": {
+    "2015": 111169,
+    "2016": 115935,
+    "2017": 115648,
+    "2018": 114156,
+    "2019": 112611,
+    "2020": 83791,
+    "2021": 101159,
+    "2022": 102802,
+    "2023": 100437,
+    "2024": 104258,
+    "2025": 103457,
+    "2026_to_2026-11-06": 57920
+   },
+   "gps_share": 1.0,
+   "gps_note": "Hartford 2024: 6,107 of 6,107 inside the state box",
+   "street_names_share": 0.251,
+   "street_names_note": "NameOfRoadway on every crash; NameOfIntersectingRoadway on 25.1% (Hartford 2024)",
+   "kabco": "yes: MostSevereInjury per crash ('Suspected Serious Injury (A)'), InjuryStatus per person; 15 of 6,107 Hartford 2024 crashes have no MostSevereInjury (all PDO) and take their people's level",
+   "keys_linkable": true
+  }
+ ],
+ "placement_sample": {
+  "area": "Hartford (town, Capitol Planning Region 09110), 2024",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.1975,
+  "auto_share": 0.0,
+  "auto_share_if_tiger_only_auto": 0.196,
+  "within_250ft": 0.977,
+  "within_250ft_low": 0.9569,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "every crash has a point, so the locator only checks GPS here. 23.6% name an intersecting road; of those 83.7% place by name on a TIGER-only network (exact), 97.7% within 250 ft of the hidden point (Wilson low 95.7%). The default Gate auto-places 0 because the sample network is TIGER-only (tiger_only_auto false); the app's network is OSM + TIGER."
+ },
+ "end_to_end": {
+  "corridor": "Farmington Avenue, Hartford",
+  "length_mi": 1.19,
+  "window": [
+   2021,
+   2025
+  ],
+  "port": 8104,
+  "rows_read": 1765,
+  "contract_errors": 0,
+  "pulled": 864,
+  "counted": 498,
+  "excluded": 366,
+  "severity": {
+   "K": 2,
+   "A": 6,
+   "B": 76,
+   "C": 65,
+   "U": 0,
+   "O": 349
+  },
+  "crash_cost": 32683409,
+  "findings_shown": 10,
+  "pdf_bytes": 74658,
+  "xlsx_bytes": 39755
+ },
+ "status": "active",
+ "importer_built": true,
+ "blockers": [
+  "no reuse licence for a paid product (CTCDR: 'research and informational purposes')",
+  "no vehicle movements or primary collision factor mapped; road-user movements and collision diagrams are empty",
+  "no statewide average crash rates published; CrashIQ has no Connecticut traffic counts"
+ ],
+ "user_actions": [
+  "Ask CTDOT (Highway Safety Office) / UConn CTSRC in writing whether a paid tool may load the CTCDR public crash layers, and what notice it must show",
+  "Decide whether the CTDOT HSIP FY2027 EPDO crash costs (Table A-2, no dollar year stated) may be printed as Connecticut's costs (now: printed, cited)"
+ ],
+ "cities": []
+}
