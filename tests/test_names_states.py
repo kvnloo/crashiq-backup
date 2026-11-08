@@ -30,3 +30,7 @@ def test_route_numbers_read_state_prefixes_but_not_words():
 def test_california_spellings_are_unchanged():
     assert street_key("CA 1").core == "SR 1" and street_key("SR-1").core == "SR 1" and street_key("I-405 S/B").core == "I 405"
     assert street_key("PACIFIC COAST HWY").core == "PACIFIC COAST"
+
+
+def test_nashville_pke_is_pike():
+    assert street_key("NOLENSVILLE PKE") == street_key("Nolensville Pike")

@@ -31,7 +31,7 @@ SUFFIX = {
     "ROUTE": "RTE", "RTE": "RTE", "RT": "RTE",
 }
 # Words CHP shortens anywhere in a name (alias batch A): MARTIN LUTHER KING JR WY = Martin Luther King Junior Way
-WORDS = {"JR": "JUNIOR", "CYN": "CANYON", "MTN": "MOUNTAIN", "HTS": "HEIGHTS"}
+WORDS = {"JR": "JUNIOR", "CYN": "CANYON", "MTN": "MOUNTAIN", "HTS": "HEIGHTS", "PKE": "PIKE"}   # PKE: Nashville (#19)
 # A route tag after the name ("PACIFIC COAST HWY - SR1", "BEACH BL - SR39"): the route is read from the raw text
 # (route_numbers), the name is what's left
 ROUTE_TAIL = re.compile(r"\s+-\s*(?:SR|RT|RTE|HWY|US|I|CA)[\s-]*\d+\s*$")

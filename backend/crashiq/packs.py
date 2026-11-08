@@ -187,7 +187,7 @@ PACKS["NY"] = StatePack(
                 "factors or DMV's codes yet."))
 
 # researched, no pack yet: listed greyed out on Setup (docs/state-pack-design.md § State picker)
-COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois"}
+COMING = {"TX": "Texas", "FL": "Florida"}         # IL: a plug-in since #464
 
 
 def _load_plugins() -> None:
