@@ -76,3 +76,22 @@ def test_hours_and_dates():
     assert _row(CRASH_HR_LONG_DESC="Unknown Time")["hour"] is None
     assert _row()["date"] == "2024-03-09"
     assert _row(LAT_DD="0", LONGTD_DD="0")["bad_coords"] and _row(UNLOCT_FLG="True")["lat"] is None
+
+
+def test_contract_rows_pass_the_pack_checker(tmp_path):
+    # #19: the OR pack reads the public layer: box OR (unlocated in the corridor's counties), years 2019-2024
+    import json
+    from crashiq import packs
+    rec = json.loads((D / "layer.json").read_text())["calls"]
+    asked = []
+
+    def get(url, params):
+        asked.append(params)
+        return rec[0]["body"] if params.get("returnIdsOnly") else rec[1]["body"]
+    boxes = json.loads((packs.REF / "county_boxes_or.json").read_text())["counties"]
+    got = or_odot.fetch_contract((45.4, -122.8, 45.6, -122.3), ["41051"], [2018, 2024], tmp_path, boxes, get)
+    assert "CRASH_YR_NO IN ('2024')" in asked[0]["where"] and "CNTY_NM IN ('Multnomah')" in asked[0]["where"]
+    assert got["years_missing"] == [2018] and got["crashes"]
+    assert all(packs.check_crash(c, packs.get("OR")) == [] for c in got["crashes"])
+    assert got["cleaning"]["unlocated"] >= 1 and all(c["county_fips"] == "41051" for c in got["crashes"])
+    assert "BROADSIDE" in {c["collision_type"] for c in got["crashes"]}

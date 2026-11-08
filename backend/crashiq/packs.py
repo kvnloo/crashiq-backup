@@ -121,9 +121,31 @@ PACKS["WA"] = StatePack(
                 "(SR 99 Aurora Ave) loses them: check such corridors by hand.",
                 "Primary collision factor, DUI and speed rows are blank: WSDOT's portal has no violation codes."))
 
+def _or_fetch(box, county_fips, years, cache_dir):
+    from .sources import or_odot
+    boxes = json.loads((REF / "county_boxes_or.json").read_text())["counties"]
+    return or_odot.fetch_contract(box, county_fips, years, cache_dir, boxes)
+
+
+PACKS["OR"] = StatePack(
+    code="OR", name="Oregon", fips="41", status="active",
+    source="Crash data: ODOT Crash Data System, through ODOT's public ArcGIS crash layer (2019-2024; no published "
+           "reuse licence).",
+    source_short="ODOT Crash Data System", bounds=(41.9, -124.8, 46.3, -116.4), first_year=2019,
+    methods=REF / "methods_or.json", fetch=_or_fetch, county_boxes=REF / "county_boxes_or.json",
+    # ODOT's Crash Data Disclaimers (rev. 4-2026), quoted (research_notes/or-2026-11-07/or-import.md)
+    legal=("ODOT: \"The ODOT CAR Unit releases crash data to local and federal governments, private consultants, "
+           "engineering firms, universities, law enforcement agencies, and the public. As a result of this data sharing, "
+           "ODOT makes no guarantee, and expressly disclaims liability, regarding the content, usage, and interpretation "
+           "of crash data re-released by our customers.\""),
+    data_notes=("CrashIQ reads Oregon from ODOT's public crash layer, which covers 2019-2024 only; earlier years are "
+                "in ODOT's yearly Access files, not read yet. The layer has no driver or vehicle records: road-user "
+                "movements and collision diagrams are empty.",
+                "Primary collision factor, DUI and speed rows are blank: CrashIQ doesn't read ODOT's cause codes yet."))
+
 # researched, no pack yet: listed greyed out on Setup (docs/state-pack-design.md § State picker)
 COMING = {"TX": "Texas", "FL": "Florida", "IL": "Illinois",
-          "OR": "Oregon", "DC": "District of Columbia", "NY": "New York"}
+          "DC": "District of Columbia", "NY": "New York"}
 
 
 def get(code: str) -> StatePack:

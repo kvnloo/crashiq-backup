@@ -8,7 +8,7 @@ Two readers of the same CDS CRASH columns:
 - `fetch_layer(where)`: ODOT's public ArcGIS layer behind the Oregon Transportation Safety Data Explorer, 2019-2024,
   crash level only (no participant table), with ODOT's own crash KABCO.
 Field meanings: ODOT "Motor Vehicle Traffic Crash Analysis & Code Manual",
-https://www.oregon.gov/odot/Data/documents/CDS_Code_Manual.pdf. Not wired into the app (state-pack seam, #19).
+https://www.oregon.gov/odot/Data/documents/CDS_Code_Manual.pdf. The OR state pack (packs.py, #19) reads the ArcGIS layer through `fetch_contract`.
 """
 
 from __future__ import annotations
@@ -163,4 +163,73 @@ def fetch_layer(where: str, get=None, page: int = 2000) -> list[dict]:
             c["persons"] = []
             c["severity"] = severity(c, [])
             out.append(c)
+    return out
+
+
+# -- state-pack contract (#19): the public ArcGIS layer, 2019-2024 (the yearly Access .mdb files need mdbtools) -----
+LAYER_YEARS = range(2019, 2025)
+CCRS_TYPE = {"REAR-END": "REAR END", "ANGLE": "BROADSIDE", "HEAD-ON": "HEAD-ON", "SIDESWIPE - MEETING": "SIDE SWIPE",
+             "SIDESWIPE - OVERTAKING": "SIDE SWIPE", "PEDESTRIAN": "VEHICLE/PEDESTRIAN",
+             "FIXED OBJECT OR OTHER OBJECT": "HIT OBJECT"}
+CCRS_LIGHT = {"DARKNESS - WITH STREET LIGHTS": "DARK - STREET LIGHTS", "DARKNESS - NO STREET LIGHTS": "DARK - NO STREET LIGHTS"}
+
+
+def contract_record(c: dict, a: dict, fips_by_county: dict[str, str]) -> dict:
+    """One crash_record() (with its layer attributes `a`) -> the shared crash dict (packs.check_crash)."""
+    import datetime as _dt
+    up = lambda v: str(v).upper() if v else None
+    d = _dt.date.fromisoformat(c["date"]) if c["date"] else None
+    return {"crash_id": c["crash_id"], "report_version": 0, "deleted": False, "preliminary": False,
+            "date": c["date"], "year": c["year"], "hour": c["hour"], "day_of_week": d.strftime("%A") if d else None,
+            "lat": c["lat"], "lon": c["lon"], "bad_coords": c["bad_coords"], "primary_road": c["primary_road"],
+            "secondary_road": c["secondary_road"], "offset_ft": c["offset_ft"] or None, "offset_dir": c["offset_dir"],
+            "city": up(c["city"]), "county_code": c["county"],
+            "county_fips": fips_by_county.get((c["county"] or "").upper()), "state": "OR",
+            "is_freeway": c["is_freeway"], "killed": c["killed"], "injured": c["injured"], "severity": c["severity"],
+            "ped": str(a.get("Ped_Pres_Flg")) == "1", "bike": str(a.get("Bike_Pres_Flg")) == "1", "ebike": False,
+            "escooter": False, "motorcycle": str(a.get("MTCL_Flg")) == "1", "heavy_truck": bool(a.get("HeavyTruck")),
+            "parties": [], "collision_type": CCRS_TYPE.get(up(c["collision_type"]) or "", up(c["collision_type"])),
+            "lighting": CCRS_LIGHT.get(up(c["lighting"]) or "", up(c["lighting"])), "weather": up(c["weather"]),
+            "surface": up(c["surface"]), "route": c["route"], "milepoint": c["milepoint"]}
+
+
+def fetch_contract(box, county_fips: list[str], years: list[int], cache_dir: Path, boxes: dict, get=None) -> dict:
+    """Crashes on the layer with a point in the box, plus the unlocated ones (ODOT's default point, dropped) in the
+    corridor's counties; years outside 2019-2024 are missing (the layer has no others)."""
+    import hashlib
+    import json
+    s, w, n, e = box
+    names = {f: v["name"].removesuffix(" County") for f, v in boxes.items()}
+    fips_by_county = {v.upper(): k for k, v in names.items()}
+    yrs = [y for y in years if y in LAYER_YEARS]
+    if not yrs:
+        return {"crashes": [], "years_missing": list(years), "cleaning": {}}
+    area = ", ".join(f"'{names[f]}'" for f in county_fips if f in names) or "''"
+    where = (f"CRASH_YR_NO IN ({', '.join(repr(str(y)) for y in yrs)}) AND ((LAT_DD >= {s:.6f} AND LAT_DD <= {n:.6f} "
+             f"AND LONGTD_DD >= {w:.6f} AND LONGTD_DD <= {e:.6f}) OR (UNLOCT_FLG = 1 AND CNTY_NM IN ({area})))")
+    cache = cache_dir / f"or_odot_{hashlib.sha1(where.encode()).hexdigest()[:10]}.json"
+    if cache.exists():
+        rows = json.loads(cache.read_text())
+    else:
+        rows = _attributes(where, get or _post)
+        cache_dir.mkdir(parents=True, exist_ok=True)
+        cache.write_text(json.dumps(rows))
+    out = []
+    for a in rows:
+        c = crash_record(a)
+        c["severity"] = severity(c, [])
+        out.append(contract_record(c, a, fips_by_county))
+    have = {c["year"] for c in out}
+    return {"crashes": [c for c in out if c["county_fips"]], "years_missing": [y for y in years if y not in have],
+            "cleaning": {"source_rows": len(rows), "unlocated": sum(1 for c in out if c["lat"] is None),
+                         "layer_years": f"{LAYER_YEARS.start}-{LAYER_YEARS.stop - 1}"}}
+
+
+def _attributes(where: str, get, page: int = 2000) -> list[dict]:
+    ids = sorted(get(LAYER + "/query", {"where": where, "returnIdsOnly": "true", "f": "json"})["objectIds"] or [])
+    out = []
+    for i in range(0, len(ids), page):
+        body = get(LAYER + "/query", {"objectIds": ",".join(map(str, ids[i:i + page])), "outFields": "*",
+                                      "returnGeometry": "false", "f": "json"})
+        out += [f["attributes"] for f in body["features"]]
     return out
