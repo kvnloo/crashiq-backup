@@ -1,0 +1,57 @@
+{
+ "state": "CO",
+ "manuals": {
+  "co_hsip_2025": {
+   "title": "Colorado Highway Safety Improvement Program 2025 Annual Report",
+   "publisher": "Colorado Department of Transportation (report to FHWA)",
+   "jurisdiction": "CO",
+   "edition": "2025 annual report (posted 2026-09)",
+   "url": "https://highways.dot.gov/sites/fhwa.dot.gov/files/2026-09/COLORADO_HSIP%20REPORT_2025_508.pdf",
+   "downloaded": "not downloaded: highways.dot.gov answers 403 (Akamai) to scripted downloads; read through a text extractor 2026-11-08",
+   "note": "research_notes/co-2026-11-08/co-methods.md"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 1952000,
+   "A": 1112000,
+   "B": 242000,
+   "C": 132000,
+   "O": 18000,
+   "dollar_year": 2025,
+   "manual": "co_hsip_2025",
+   "page": "Program Methodology, 'CDOT 2025 Crash Costs', p. 11 of 42 (after the p. 10 footer)",
+   "verified": false,
+   "rules": [
+    "CDOT gives K, A, B and C per person and O per crash; CrashIQ would price each crash once at its own level, which undercounts crashes with several people hurt",
+    "not used until checked against a downloaded copy of the report (no sha256 yet)",
+    "U (injury, level not reported) unpriced"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "CDOT screens with its own safety performance functions (Level of Service of Safety) by facility type and ADT, not average rates; CrashIQ has neither CDOT's SPFs nor Colorado traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "CDOT identifies sites by Level of Service of Safety (SPFs with EB adjustment) and crash-pattern diagnostics, then ranks by benefit/cost (Colorado HSIP 2025 report, pp. 9-10 of 42)"
+  },
+  "min_years": {
+   "missing": "CDOT's documents read here set no minimum; its crash-data page asks requesters for up to five years"
+  },
+  "spf_calibration": {
+   "missing": "CDOT's SPFs aren't published as calibration factors in the documents read here"
+  }
+ }
+}

@@ -1,0 +1,134 @@
+{
+ "area": "Denver County (08031), 2024, random 2,000 (seed 2026)",
+ "n": 2000,
+ "county_rows_2024": 15501,
+ "years": {
+  "2021": {
+   "rows": 97788,
+   "gps_share": 0.7583,
+   "street_pair_share": 0.8409,
+   "severity": {
+    "O": 71479,
+    "B": 8460,
+    "A": 2995,
+    "C": 14216,
+    "K": 638
+   },
+   "no_county": 0
+  },
+  "2022": {
+   "rows": 95380,
+   "gps_share": 0.8411,
+   "street_pair_share": 0.8371,
+   "severity": {
+    "O": 69898,
+    "B": 9392,
+    "A": 2990,
+    "C": 12401,
+    "K": 699
+   },
+   "no_county": 0
+  },
+  "2023": {
+   "rows": 102768,
+   "gps_share": 0.9248,
+   "street_pair_share": 0.8278,
+   "severity": {
+    "O": 75273,
+    "B": 10559,
+    "C": 12865,
+    "K": 666,
+    "A": 3405
+   },
+   "no_county": 0
+  },
+  "2024": {
+   "rows": 100680,
+   "gps_share": 0.978,
+   "street_pair_share": 0.8203,
+   "severity": {
+    "O": 73866,
+    "B": 10815,
+    "A": 3343,
+    "C": 12014,
+    "K": 642
+   },
+   "no_county": 0
+  }
+ },
+ "gps_share": 0.985,
+ "street_pair_share": 0.993,
+ "house_address_share": 0.0,
+ "tiers": {
+  "review": 327,
+  "unique_pair": 724,
+  "exact": 882,
+  "verified_typo": 36,
+  "relaxed": 11,
+  "near": 4,
+  "fuzzy": 2
+ },
+ "name_placed_share": 0.8295,
+ "name_placed_share_of_pairs": 0.8353,
+ "auto_share": 0.795,
+ "gate": "Gate(tiger_only_auto=True) on a TIGER-only network",
+ "within_250ft": 0.8931,
+ "within_250ft_low": 0.8769,
+ "within_250ft_all_placed": 0.8813,
+ "within_250ft_all_placed_low": 0.8648,
+ "denver_no_gps": 364,
+ "denver_no_gps_with_street_pair": 361,
+ "not_placed": {
+  "no intersection of the two named streets": 251,
+  "relaxed: streets meet in more than one place": 35,
+  "exact: streets meet in more than one place": 25,
+  "missing street name": 15,
+  "no cross street in source": 14,
+  "fuzzy: streets meet in more than one place": 1
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "PENA BLVD & E GVR BLVD",
+   "I-25 & E EVANS AVE SB OFF RAMP EXT",
+   "S GRANT ST & E TENNESSEE AVE",
+   "PENA BLVD NB OFF RAMP & E GVR BLVD",
+   "I-70 WB ON RAMP & N CHAMBERS RD",
+   "N COLORADO BLVD & E 45TH AVE S"
+  ],
+  "placed >250 ft off": [
+   "2946 ARAPAHOE ST & 29TH ST [exact] 344 ft",
+   "N MARION ST & E BRUCE RANDOLPH AVE [unique_pair] 459 ft",
+   "S YOSEMITE ST & E MANSFIELD AVE [exact] 100000 ft",
+   "N COLORADO BLVD & E 11TH AVE [unique_pair] 261 ft",
+   "N PEORIA ST & I-70 EB RAMPS [unique_pair] 297 ft",
+   "100 BLOCK S QUITMAN ST & W BAYAUD AVE [exact] 411 ft"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "I-70 & N HOLLY ST",
+   "I-70 & N WASHINGTON ST",
+   "I-70 & N WASHINGTON ST",
+   "I70 HWY_EB & N WASHINGTON ST",
+   "N FEDERAL BLVD & I-70 HWY EB",
+   "N FEDERAL BLVD & I-70 EB RAMPS"
+  ],
+  "exact: streets meet in more than one place": [
+   "4000 BLK S TAMARAC DR & E PRINCETON AVE",
+   "S SANTA FE DR & I-25",
+   "I-70 WB OFF RAMP & I-25 NB/SB RAMP SPLIT",
+   "S KALAMATH ST & I-25 NB UNDERPASS",
+   "DTC BLVD & E UNION AVE",
+   "S SANTA FE DR & S PLATTE RIVER DR"
+  ],
+  "missing street name": [
+   "PENA BLVD OUTBOUND & 8300 BLK",
+   "PENA BLVD & 8400 BLK",
+   "WELTON ST & 1400 BLK",
+   "WYNKOOP ST & 1700 BLK",
+   "S SHERMAN ST & 500 BLK",
+   "E 78TH AVE & 24000 BLK"
+  ],
+  "fuzzy: streets meet in more than one place": [
+   "DENARGO ST & DELGANEY ST"
+  ]
+ }
+}
