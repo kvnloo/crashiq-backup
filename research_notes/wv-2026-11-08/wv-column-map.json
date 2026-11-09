@@ -1,0 +1,45 @@
+{
+ "state": "WV",
+ "export": "WVDOT Crash Database extract (ReportBeam reports), as delivered on an email request to WVDOT Traffic Accident Data",
+ "spec": "West Virginia Uniform Traffic Crash Report DMV-17-F (ReportBeam sample, https://www.reportbeam.com/reportbeam/pdfs/Report/Samples/WestVirginiaSample.pdf, saved ~/.hermes/state-manuals/wv/, pp. 1-3) and WVDOT 'Accident Records Database Coding and Data Entry Procedures' (NHTSA copy, read via web_extract; it 403s scripted downloads)",
+ "layout_seen_live": "MMUCC-coded columns in a consultant copy of WVDOT data, https://services2.arcgis.com/jCPZmQjF0kIPAohC/arcgis/rest/services/WV_Pedestrian_Crashes_2019_2023/FeatureServer/0 (checked 2026-11-08). Evidence of layout only, not a source.",
+ "unit": "one row per crash in the layout seen; vehicle/person tables not seen",
+ "map": {
+  "collision_id": "C - Crash Record Number (e.g. 'R201900191')",
+  "datetime": "C01 Date of Crash ('2019-01-02') + C02 Time of Crash ('12:15:00')",
+  "lat_lon": "C - Latitude / C - Longitude (288 of 297 rows = 97.0% in the consultant copy)",
+  "county_code": "C06 Location Name starts with the county ('Kanawha WV 061/00'); also the first 2 digits of C08",
+  "road_number": "C08 County Based Route ID: CC S RRRR SS PP, zero-padded to 11 digits. CC county, S sign system (1 Interstate, 2 US, 3 WV, 4 County/HARP), RRRR route, SS sub-route, PP supplemental: 20300610000 = Kanawha WV 61; 6200600007 -> 06200600007 = Cabell US 60 (07 suffix, 'West'). Read the numeric C08a, not C08 (text in Excel E-notation '2.03006E+12'). Write routes in OSM ref form ('WV 61', 'US 60', 'I-64'); put them in road_number, not primary_road (Ohio NLFID rule)",
+  "milepost": "C09 Milepost (county milepost on the route; joins to Roads_And_Highways/Publication_LRS)",
+  "primary_road": "form: ROUTE 1 / STREET 1 ('Crash occurred on'); not in the consultant copy, so city-street crashes may come with lat/lon only",
+  "secondary_road": "form: ROUTE 2 / STREET 2 ('at intersection with')",
+  "sec_distance": "form: 'If not at intersection: ___ feet/miles'",
+  "sec_direction": "form: N/S/E/W 'of'",
+  "is_freeway": "C05 Sign System = 'Interstate' or form 'If on controlled access highway' (main road / interchange / ramp)",
+  "severity": "C03 Crash Severity: 'Fatal Crash' -> K, 'Serious Injury Crash' -> A; the other values (minor, possible, PDO) aren't in the fatal/serious-only copy: expect MMUCC 'Minor Injury Crash' -> B, 'Possible Injury Crash' -> C, 'Property Damage Only' -> O, else U. Person level: form Injury Classification K/A/B/C",
+  "collision_type": "C14 Manner of Collision ('Single Vehicle Crash' ...)",
+  "lighting": "C15 Lighting Condition",
+  "surface": "C16 Roadway Surface Condition",
+  "weather": "not in the copy; the form has weather",
+  "location_type": "C18 Location of First Harmful Event ('On Roadway')",
+  "first_harmful_event": "C19 First Harmful Event",
+  "agency": "C26 Reporting Agency Type ('Municipal PD' ...)",
+  "work_zone": "C25 Work Zone Related",
+  "school_bus": "C23",
+  "school_zone": "C24",
+  "pedestrian": "CF Involving Non-Motorist flags (consultant columns)"
+ },
+ "values_seen_consultant_copy": {
+  "C03___Crash_Severity": {
+   "Fatal Crash": 108,
+   "Serious Injury Crash": 189
+  },
+  "C05___Sign_System": {
+   "County/HARP": 59,
+   "Interstate": 15,
+   "US": 111,
+   "WV": 112
+  }
+ },
+ "verified_against_real_export": false
+}
