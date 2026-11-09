@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Maryland crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state research · 8 Nov 2026 · written by Hermes</p>
+<h1>Maryland: the open statewide data is gone</h1>
+<div class="card"><b>In one line:</b> Maryland's open statewide crash table now asks for a login. The State Police still show every crash on a public dashboard you can download from by hand, but there's no way for CrashIQ to pull it by itself. So no Maryland pack yet.</div>
+
+<h2>1. What changed</h2>
+<div class="card">On 2 Nov the open table (opendata.maryland.gov, "Maryland Statewide Vehicle Crashes") was listed as open. Today every request answers <code>You must be logged in to access this resource</code>.</div>
+
+<h2>2. What still works</h2>
+<table>
+<tr><th>Source</th><th>What you get</th></tr>
+<tr><td>State Police dashboard (2019–now)</td><td>Every crash, by hand: pick a date range, click the map, Download → Data, five tabs. No login. No licence found.</td></tr>
+<tr><td>Same dashboard, scripted</td><td class="warn">Only report number + map point (110,474 crashes): no date, injury or road.</td></tr>
+<tr><td>Montgomery County</td><td class="ok">Open, public domain, ~10,000 crashes a year with road, cross street and map point. One county only.</td></tr>
+<tr><td>SHA fatal crashes</td><td>269 fatal crashes on state roads. Fatal only.</td></tr>
+</table>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Download one county-year from the State Police dashboard (for example Baltimore City, 2024), all five tabs, so we can build the reader against real files.</li>
+<li>Ask the State Police or SHA's Office of Traffic &amp; Safety whether there's a bulk file or API, and whether a paid tool may use it.</li>
+<li>Decide whether Montgomery County alone should go in as a Maryland county pack meanwhile.</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul><li>Placement and a live corridor test (no file to test).</li><li>Maryland's crash costs and rates.</li><li>The State Police's terms of use.</li></ul>
+<p class="dim">Details: <code>research_notes/md-2026-11-08/md-import.md</code>, <code>md-summary.json</code>.</p>
+</main></body></html>
