@@ -176,6 +176,7 @@ RUN10, FWY = False, None       # run 10: #251 GPS repair for every agency + lost
 # run 11 (#387): the app's placement step as on main: true connectors held (#261), FARS before an approximate spot
 # (#280), an approximate spot only for crashes with no usable GPS (PM 2026-10-25), house addresses at NAD (#283)
 RUN11, NAD = False, None
+RUN12, AUTO_SOURCES, apc = False, set(), None   # run 12: app's house-address parser, county points by placement
 AUTO_TIERS = ("exact", "unique_pair")          # the tiers the app auto-places (config/placement.json since #222)
 
 NO_CROSS = "no cross street (blank, NOT STATED, UNKNOWN, PRIVATE PROPERTY)"
@@ -291,9 +292,16 @@ def outcome(c: dict, city: City | None, outside: Outside, dms: set[int], fars_db
         p = fars.point(fars_db, row) if status == "linked" else None
         if p is not None and fits(p[0], p[1], c):
             return "placed_fars", None
-    if RUN11 and (ha := locate._house_address(c)):
-        # shortcut: the locator's house-address reading, not crashes.house_address (that one needs a corridor)
+    # run 12: the app's own D5 reading (crashes.house_address, PR #392 comment) and only auto sources place (#399)
+    if RUN11 and (ha := (apc.house_address(c.get("primary_road"), c.get("secondary_road")) if RUN12
+                         else locate._house_address(c))):
         p = NAD.lookup(c.get("county_code"), c.get("city"), ha[1], ha[0])
+        if p and RUN12:
+            pp = "private:" if "PRIVATE PROP" in f"{c.get('primary_road')} {c.get('secondary_road')}".upper() else ""
+            if p["source"] not in AUTO_SOURCES:
+                c["_approx"], p = f"suggest:{pp}{p['source']}", None     # review-list suggestion only
+            elif not gps_note:
+                c["_approx"] = f"address:{pp}{p['source']}"
         if p:
             if not gps_note:
                 return "placed_address_nad", None
@@ -622,14 +630,20 @@ if __name__ == "__main__":
     ap.add_argument("--run10", action="store_true", help="#251 GPS repair (every agency, lost minus) and #258 "
                     "approximate freeway placement")
     ap.add_argument("--run11", action="store_true", help="--run10 + the app's placement step on main (#387)")
+    ap.add_argument("--run12", action="store_true", help="--run11 + house addresses read by crashes.house_address, "
+                    "county address points placing only from auto sources (#393, #397)")
     a = ap.parse_args()
-    RUN10 = a.run10 or a.run11
-    RUN11 = a.run11
+    RUN12 = a.run12
+    RUN10 = a.run10 or a.run11 or RUN12
+    RUN11 = a.run11 or RUN12
     if RUN11:
         from crashiq import nad
+        import address_points_check as apc
+        AUTO_SOURCES = nad.auto_sources()
         from crashiq.placement import FWY_AUTO_KINDS
         NAD = nad.NadIndex(ROOT / "data" / "cache" / "nad" / "nad_ca.sqlite", ROOT / "data" / "cache" / "nad" / "nad_ca_r24.csv")
         assert NAD._built(), "NAD index missing: it would be built inside data/cache"
+        print("address sources:", [p.name for p in NAD.sources()], "auto:", sorted(AUTO_SOURCES), flush=True)
     NETWORK = a.network
     GATE_TIERS = [x for x in a.gate_tiers.split(",") if x]
     ALIASES, RULE2 = a.aliases, a.rule2
