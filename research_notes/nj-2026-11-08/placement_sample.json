@@ -1,0 +1,140 @@
+{
+ "Essex (Newark)": {
+  "area": "Essex (Newark) (34013), 2023",
+  "county_crashes": 23810,
+  "gps_share": 0.3975,
+  "street_pair_share": 0.82,
+  "no_gps_with_pair": 13406,
+  "no_gps": 14346,
+  "n": 2000,
+  "tiers": {
+   "exact": 1142,
+   "review": 756,
+   "near": 30,
+   "unique_pair": 42,
+   "relaxed": 14,
+   "verified_typo": 15,
+   "fuzzy": 1
+  },
+  "name_placed_share": 0.622,
+  "auto_share": 0.0,
+  "within_250ft_auto": null,
+  "within_250ft_auto_low": 0.0,
+  "auto_share_tiger_only_auto": 0.592,
+  "within_250ft_tiger_only_auto": 0.8193,
+  "within_250ft_tiger_only_auto_low": 0.7963,
+  "within_250ft_all_placed": 0.8063,
+  "within_250ft_all_placed_low": 0.7834,
+  "not_placed": {
+   "no intersection of the two named streets": 698,
+   "exact: streets meet in more than one place": 55,
+   "relaxed: streets meet in more than one place": 3
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "CO RD 669 & GRANADA AVE",
+    "CO RD 611 & MOUNTAIN AVE",
+    "James Street & Kennedy Drive",
+    "CO RD 649 & W. HARRISON PL",
+    "E PARK ST & SPRINGDALE AVE",
+    "CO RD 510 & CO RD 649"
+   ],
+   "placed >250 ft off": [
+    "CO RD 510 & BROOKSIDE DR [exact] 675 ft",
+    "JOHN F KENNEDY DR & DODD ST [exact] 256 ft",
+    "CO RD 509 & CENTRAL AVE [exact] 521 ft",
+    "CO RD 508 & COLONY DR E [exact] 11221 ft",
+    "CO RD 577 & WOODLAND AVE [exact] 847 ft",
+    "N 15TH ST & WILLIAM ST [exact] 510 ft",
+    "John F Kennedy Parkway & STATE RTE 124 [exact] 1058 ft",
+    "I-78 & US 1 [exact] 954 ft"
+   ],
+   "exact: streets meet in more than one place": [
+    "ROONEY CIRCLE & PROSPECT AVENUE",
+    "HANSEN ROAD & POOL DRIVE",
+    "ROONEY CIRCLE & PROSPECT AVENUE",
+    "CO RD 577 & MT PLEASANT AVE",
+    "WILLIAM ST & PROSPECT ST",
+    "WHITNEY RD & HAWTHORNE RD"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "STATE RTE 23 & BRADFORD AVE",
+    "CO RD 506 & MAPLE PLAZA",
+    "CO RD 506 & MAPLE PLZ"
+   ]
+  }
+ },
+ "Middlesex (New Brunswick)": {
+  "area": "Middlesex (New Brunswick) (34023), 2023",
+  "county_crashes": 27592,
+  "gps_share": 0.4248,
+  "street_pair_share": 0.79,
+  "no_gps_with_pair": 14622,
+  "no_gps": 15871,
+  "n": 2000,
+  "tiers": {
+   "exact": 1371,
+   "review": 521,
+   "verified_typo": 43,
+   "relaxed": 25,
+   "fuzzy": 9,
+   "unique_pair": 13,
+   "near": 18
+  },
+  "name_placed_share": 0.7395,
+  "auto_share": 0.0,
+  "within_250ft_auto": null,
+  "within_250ft_auto_low": 0.0,
+  "auto_share_tiger_only_auto": 0.692,
+  "within_250ft_tiger_only_auto": 0.8866,
+  "within_250ft_tiger_only_auto_low": 0.8688,
+  "within_250ft_all_placed": 0.8851,
+  "within_250ft_all_placed_low": 0.8678,
+  "not_placed": {
+   "no intersection of the two named streets": 442,
+   "exact: streets meet in more than one place": 71,
+   "relaxed: streets meet in more than one place": 6,
+   "fuzzy: streets meet in more than one place": 2
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "Tower Center Boulevard & Edgebr0ok Road",
+    "South Clinton Avenue & LEIGH AV",
+    "High Street & High Street",
+    "OSAGE RD & N MOHAWK PL",
+    "CO RD 622 & FACTORY LN",
+    "CO RD 501 & GIESI CT"
+   ],
+   "placed >250 ft off": [
+    "Burnett Street & Tower Center Boulevard [verified_typo] 1792 ft",
+    "CO RD 616 & RYAN ST [exact] 8750 ft",
+    "Garden State Parkway & New Dover Road [exact] 921 ft",
+    "STATE RTE 35 & BENTLEY AVE [exact] 316 ft",
+    "US 1 & MAPLETON RD [exact] 820 ft",
+    "ELM ST & MARKET ST [exact] 608 ft",
+    "CEDAR AVE & BAEKELAND AVENUE [exact] 675 ft",
+    "CO RD 615 & CO RD 614 [exact] 254 ft"
+   ],
+   "exact: streets meet in more than one place": [
+    "Garden State Parkway & US 9",
+    "CO RD 615 & STEVENS AVE",
+    "STATE RTE 35 & Amboy Avenue",
+    "CO RD 535 & DOCKS CORNER RD",
+    "High Street & Lake Avenue",
+    "CO RD 614 & SCUDDERS MILL RD"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "US 130 & RENAISSANCE RD",
+    "US 1 & South Main Street",
+    "US 1 & South Main Street",
+    "US 1 & South Main Street",
+    "US 1 & South Main Street",
+    "South Main Street & US 1"
+   ],
+   "fuzzy: streets meet in more than one place": [
+    "CO RD 658 & MARKET ST",
+    "RENAISSANE BLVD & TIMBER RIDGE RD"
+   ]
+  }
+ }
+}

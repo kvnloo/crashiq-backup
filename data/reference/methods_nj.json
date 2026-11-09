@@ -1,0 +1,69 @@
+{
+ "state": "NJ",
+ "manuals": {
+  "nj_hsip_2016": {
+   "title": "New Jersey Highway Safety Improvement Program Manual",
+   "publisher": "NJDOT Bureau of Transportation Data and Safety",
+   "jurisdiction": "NJ",
+   "edition": "2016",
+   "url": "https://www.nj.gov/transportation/about/safety/pdf/2016hsipmanual.pdf",
+   "sha256": "2a7eb930be546a4e59032cc8081d3122a1a033e2be391a425b47729065d2f75e",
+   "downloaded": "2026-11-08"
+  },
+  "njtr1_manual_2023": {
+   "title": "New Jersey NJTR-1 Crash Report Manual",
+   "publisher": "NJDOT",
+   "jurisdiction": "NJ",
+   "edition": "2023",
+   "url": "https://www.nj.gov/transportation/refdata/accident/pdf/NJTR-1CrashReportManual2023.pdf",
+   "sha256": "8ba8bf70533acb30bfa85432d7497509003e04553f777389d701f0c0ef9b8f06",
+   "downloaded": "2026-11-08",
+   "note": "severity codes (Box 86 physical condition 01-05 = K A B C O); not a methods value"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 4008900,
+   "A": 216000,
+   "B": 79000,
+   "C": 44900,
+   "O": 7400,
+   "dollar_year": 2001,
+   "manual": "nj_hsip_2016",
+   "page": "PDF p. 14 (printed p. 9), Table 4A-1 'Crash Cost Estimates by Crash Severity', comprehensive costs (HSM 2001 values, FHWA-HRT-05-051); same table PDF p. 15",
+   "verified": false,
+   "rules": [
+    "the manual says these 2001 values 'should [be] adjusted to current year values' but names no index: not printed until the user picks one",
+    "U (injury, level not reported) unpriced"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "NJDOT has a 'Crash Rates' page (refdata/accident/crash_rates.shtm) that was empty when read 2026-11-08; CrashIQ has no New Jersey traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "NJDOT Safety Management System network screening (Plan4Safety, Rutgers CAIT) ranked by severity-weighted crash costs, with HSM predictive analysis for projects over $250,000 (NJ HSIP Manual 2016)"
+  },
+  "min_years": {
+   "years": 3,
+   "manual": "nj_hsip_2016",
+   "page": "PDF p. 11 (printed p. 6): 'the most recent three (3) years of crash reporting. In the case of the pedestrian focused project, five (5) years'",
+   "verified": true
+  },
+  "spf_calibration": {
+   "missing": "no New Jersey SPF calibration factors found (2026-11-08); no SPF engine"
+  }
+ }
+}
