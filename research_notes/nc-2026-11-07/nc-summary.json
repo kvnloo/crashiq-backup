@@ -1,0 +1,332 @@
+{
+ "state": "NC",
+ "bucket": "D (statewide all-crash: TEAAS gated) with A* open pieces (NCDOT KA + non-motorist layers, Raleigh, Durham)",
+ "sources": [
+  {
+   "name": "NCDOT TEAAS",
+   "url": "https://connect.ncdot.gov/resources/safety/Pages/TEAAS-Crash-Data-System.aspx",
+   "access": "gated (government, municipalities, law enforcement, planning organizations, research entities; training + account)",
+   "licence_paid_use": "no",
+   "years": "1990-present",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured",
+   "street_names_share": "not measured",
+   "kabco": true,
+   "keys_linkable": true
+  },
+  {
+   "name": "NCDOT NC Fatal and Serious Injury Crashes",
+   "url": "https://www.arcgis.com/home/item.html?id=a9125212cca34f2eb321de3bb0f1b7f2",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2016-2025",
+   "rows_per_year": {
+    "total_2016_2025": 53917,
+    "K": 14846,
+    "A": 39071
+   },
+   "gps_share": 0.9942,
+   "street_names_share": 1.0,
+   "kabco": "K and A only",
+   "keys_linkable": "Crash_ID (TEAAS); no person table"
+  },
+  {
+   "name": "NCDOT Non-Motorist Crashes",
+   "url": "https://www.arcgis.com/home/item.html?id=11309c4876f844a593868e742143eca4",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2007-2025",
+   "rows_per_year": {
+    "2007": 2974,
+    "2008": 2815,
+    "2009": 2535,
+    "2010": 2845,
+    "2011": 2932,
+    "2012": 3284,
+    "2013": 3037,
+    "2014": 3096,
+    "2015": 3197,
+    "2016": 3198,
+    "2017": 3209,
+    "2018": 3289,
+    "2019": 3181,
+    "2020": 2818,
+    "2021": 2856,
+    "2022": 3038,
+    "2023": 3136,
+    "2024": 3430,
+    "2025": 3458
+   },
+   "gps_share": 0.9999,
+   "street_names_share": 0.0,
+   "kabco": true,
+   "keys_linkable": "one row per crash with non-motorist + driver injury"
+  },
+  {
+   "name": "NCDOT Statewide Crash Table (dashboard)",
+   "url": "https://services.arcgis.com/NuWFvHYDMVmmxMeM/arcgis/rest/services/StatewideCrashTable/FeatureServer/3",
+   "access": "open, undocumented",
+   "licence_paid_use": "unclear",
+   "years": "2021-2026",
+   "rows_per_year": {
+    "2021": 307122,
+    "2022": 302196,
+    "2023": 311111,
+    "2024": 310162,
+    "2025": 304599,
+    "2026_to_date": 212353
+   },
+   "gps_share": 0.0,
+   "street_names_share": 0.0,
+   "kabco": "KABCO + U",
+   "keys_linkable": "Crash_ID"
+  },
+  {
+   "name": "Raleigh Reported Crash Locations + Persons",
+   "url": "https://data.raleighnc.gov/datasets/ral::reported-crash-locations",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2015-2026",
+   "rows_per_year": {
+    "2015": 24482,
+    "2016": 25727,
+    "2017": 25186,
+    "2018": 25314,
+    "2019": 26566,
+    "2020": 17937,
+    "2021": 20947,
+    "2022": 21497,
+    "2023": 21995,
+    "2024": 22306,
+    "2025": 21591,
+    "2026_to_date": 18218
+   },
+   "gps_share": 0.9989,
+   "street_names_share": 0.9987,
+   "kabco": "crash-level from counts (K/A/B/C/U/O); person injury blank since 2025",
+   "keys_linkable": "key_crash"
+  },
+  {
+   "name": "Durham All Durham Crashes",
+   "url": "https://www.arcgis.com/home/item.html?id=cce39a051d34496498857046fde17f23",
+   "access": "open, undocumented (dashboard layer)",
+   "licence_paid_use": "unclear",
+   "years": "2016-2025",
+   "rows_per_year": {
+    "2016": 7991,
+    "2017": 8129,
+    "2018": 8527,
+    "2019": 8429,
+    "2020": 5902,
+    "2021": 9152,
+    "2022": 7227,
+    "2023": 7004,
+    "2024": 6932,
+    "2025": 6716
+   },
+   "gps_share": 1.0,
+   "street_names_share": 1.0,
+   "kabco": true,
+   "keys_linkable": "Crash_ID; person rows"
+  },
+  {
+   "name": "Charlotte CDOT TCLS Crashes",
+   "url": "https://gis.charlottenc.gov/arcgis/rest/services/CDOT/TCLS_Crashes/MapServer/0",
+   "access": "open",
+   "licence_paid_use": "no",
+   "years": "2010-2026",
+   "rows_per_year": {
+    "total": 553976
+   },
+   "gps_share": 0.9998,
+   "street_names_share": 0.0,
+   "kabco": "5 levels (K/A/B/C/O)",
+   "keys_linkable": false
+  },
+  {
+   "name": "Greensboro Crashes (MPO)",
+   "url": "https://www.arcgis.com/home/item.html?id=861d3576a5624c55b03910240092a43e",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2017-2023",
+   "rows_per_year": {
+    "2017": 11572,
+    "2018": 11489,
+    "2019": 11405,
+    "2020": 9799,
+    "2021": 11280,
+    "2022": 10886,
+    "2023": 10273
+   },
+   "gps_share": "not measured (point layer)",
+   "street_names_share": 0.0,
+   "kabco": "4 levels, B and C merged",
+   "keys_linkable": false
+  },
+  {
+   "name": "Cary Crash Data",
+   "url": "https://data.townofcary.org/explore/dataset/cpd-crash-incidents/",
+   "access": "open",
+   "licence_paid_use": "ok",
+   "years": "2021-2025",
+   "rows_per_year": {
+    "2021": 3999,
+    "2022": 4307,
+    "2023": 4403,
+    "2024": 4424,
+    "2025": 3233
+   },
+   "gps_share": 0.0,
+   "street_names_share": "text description only",
+   "kabco": false,
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": "Raleigh 2025, Wake County TIGER/Line 2024 (37183)",
+  "n": 2000,
+  "gps_share": 0.9989,
+  "name_placed_share": 0.644,
+  "auto_share": 0.5945,
+  "within_250ft": 0.6224,
+  "within_250ft_low": 0.5945,
+  "with_nc_presplits": {
+   "name_placed_share": 0.7725,
+   "auto_share": 0.718,
+   "within_250ft": 0.555,
+   "within_250ft_low": 0.5292
+  },
+  "exact_at_intersection_within_250ft": 0.8347,
+  "exact_at_intersection_within_250ft_low": 0.7821,
+  "house_address_share": 0.0645,
+  "address_points_source": "Wake County MAR (CC BY 4.0); AddressNC statewide (NC OneMap, free and unrestricted use)",
+  "no_gps_added": "~0: Raleigh publishes only crashes with a point in the city (24 of 21,591 fail the in-state check)"
+ },
+ "importer_built": true,
+ "blockers": [
+  "TEAAS (the only statewide all-crash source with locations) is for agencies, planning organizations and researchers only",
+  "No crash source has an explicit licence for paid use; Charlotte's is CC BY-NC-SA",
+  "Raleigh stopped filling person injury, weather and road fields in Oct 2024",
+  "Officer-typed GPS in Raleigh makes the 250-ft accuracy test a lower bound"
+ ],
+ "user_actions": [
+  "Ask a client agency/MPO with TEAAS for one crash export (one county, one year) to build the TEAAS upload reader",
+  "Ask Open Raleigh and NCDOT Traffic Safety (and Durham Vision Zero) whether a paid tool may display their crash data",
+  "Decide whether NC's U (injury unknown) is priced like PDO (NCDOT practice) or like C (CrashIQ's CA rule)"
+ ],
+ "cities": [
+  {
+   "city": "Raleigh",
+   "source": "Reported Crash Locations + Persons (RPD)",
+   "url": "https://data.raleighnc.gov/datasets/ral::reported-crash-locations",
+   "gps_share": 0.9989,
+   "years": "2015-2026",
+   "licence": "Open Raleigh Data Policy + RPD terms: unclear"
+  },
+  {
+   "city": "Durham",
+   "source": "All Durham Crashes (Vision Zero)",
+   "url": "https://www.arcgis.com/home/item.html?id=cce39a051d34496498857046fde17f23",
+   "gps_share": 1.0,
+   "years": "2016-2025",
+   "licence": "none stated: unclear"
+  },
+  {
+   "city": "Charlotte",
+   "source": "CDOT TCLS Crashes",
+   "url": "https://gis.charlottenc.gov/arcgis/rest/services/CDOT/TCLS_Crashes/MapServer/0",
+   "gps_share": 0.9998,
+   "years": "2010-2026",
+   "licence": "CC BY-NC-SA 4.0: no"
+  },
+  {
+   "city": "Greensboro",
+   "source": "Greensboro Crashes (MPO)",
+   "url": "https://www.arcgis.com/home/item.html?id=861d3576a5624c55b03910240092a43e",
+   "gps_share": "not measured",
+   "years": "2017-2023",
+   "licence": "disclaimer only: unclear"
+  },
+  {
+   "city": "Cary",
+   "source": "Crash Data (CPD)",
+   "url": "https://data.townofcary.org/explore/dataset/cpd-crash-incidents/",
+   "gps_share": 0.0,
+   "years": "2021-2025",
+   "licence": "CC0 1.0"
+  },
+  {
+   "city": "Winston-Salem",
+   "source": "none found (eCrash report search only)",
+   "url": "https://www.cityofws.org/2043/Accident-Reports",
+   "gps_share": null,
+   "years": null,
+   "licence": null
+  }
+ ],
+ "methods": {
+  "manuals": [
+   {
+    "title": "2021 ~ 2025 Five Year Crash Rates",
+    "url": "https://connect.ncdot.gov/resources/safety/Documents/Crash%20Data%20and%20Information/2025%20Crash%20Rates.pdf",
+    "date": "2026-04"
+   },
+   {
+    "title": "2025 Standardized Crash Cost Estimates for North Carolina",
+    "url": "https://connect.ncdot.gov/resources/safety/Documents/Crash%20Data%20and%20Information/Crash%20Costs%202025.pdf",
+    "date": "2026-04"
+   },
+   {
+    "title": "2026 HSIP Overview (safety warrants, analysis rules)",
+    "url": "https://connect.ncdot.gov/resources/safety/HSIP%20Library/2026%20HSIP-Overview.pdf",
+    "date": "2026-03"
+   },
+   {
+    "title": "2024 HSIP Warrants",
+    "url": "https://connect.ncdot.gov/resources/safety/HSIP%20Library/2024%20HSIP%20Warrants.pdf",
+    "date": "2024-05"
+   },
+   {
+    "title": "TEAAS Chapter 15 Analysis Techniques (crash rate, critical rate, severity index)",
+    "url": "https://connect.ncdot.gov/resources/safety/Documents/TEAAS/Chapter%2015%20Analysis%20Techniques.pdf",
+    "date": "2012-11-27"
+   },
+   {
+    "title": "NC Project Development Crash Reduction Factor (CRF) Information",
+    "url": "https://connect.ncdot.gov/resources/safety/TrafficSafetyResources/NCDOT%20CRF%20Update.pdf",
+    "date": "2025-06-06"
+   },
+   {
+    "title": "Updated Statewide and Regional Calibration Factors for HSM Crash Prediction Models (2020-2023), RP 2025-06",
+    "url": "https://connect.ncdot.gov/projects/research/RNAProjDocs/RP2025-06_Final%20Report.pdf",
+    "date": "2026-03"
+   },
+   {
+    "title": "Collision Diagrams (TEAAS instructions)",
+    "url": "https://connect.ncdot.gov/resources/safety/Crash%20Data%20and%20TEAAS%20System/TEAAS/Collision%20Diagram%20Instructions.pdf",
+    "date": "2013-01-18"
+   }
+  ],
+  "rates_available": true,
+  "rates_unit": "crashes per 100 million vehicle miles (sections only; no intersection MEV rate found)",
+  "crash_costs": {
+   "K": 13565000,
+   "A": 788000,
+   "B": 263000,
+   "C": 153000,
+   "O": 15100,
+   "year": 2025
+  },
+  "screening_method": "HSIP safety warrants (pattern + recency + severity index thresholds; 5-yr urban / 10-yr rural), then weighting by frequency, target share and severity; critical rate (K=1.645) as a study check",
+  "differences_from_ca": [
+   "Rates per 100 MVMT for sections only by system/urban-rural/cross-section; no per-MEV intersection rate (LRSM uses both)",
+   "Screening by pattern warrants with recency tests, not observed-crash frequency (Caltrans HSIP)",
+   "Severity index weights 76.8 (K+A), 8.4 (B+C), 1 (PDO, U)",
+   "Urban intersections 5 years, rural intersections 10 years, intersection Y-line 150 ft",
+   "Crash costs per severity K/A/B/C/O (2025 $, K $13,565,000) and per crash type, vs LRSM KA combined by location type",
+   "NCDOT CRF list with committee approval for other CRFs",
+   "NC-specific HSM calibration factors (2020-2023), e.g. UrbArt-4SG 3.435",
+   "Crash severity U = injury unknown"
+  ]
+ }
+}
