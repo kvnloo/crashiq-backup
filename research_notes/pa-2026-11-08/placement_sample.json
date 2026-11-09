@@ -1,0 +1,149 @@
+{
+ "Philadelphia": {
+  "area": "Philadelphia (42101), 2025",
+  "county_crashes": 7014,
+  "gps_share": 0.9946,
+  "street_pair_share": 0.4812,
+  "no_gps_with_pair": 5,
+  "no_gps": 38,
+  "n": 2000,
+  "tiers": {
+   "exact": 599,
+   "unique_pair": 1230,
+   "review": 146,
+   "relaxed": 19,
+   "near": 4,
+   "verified_typo": 2
+  },
+  "name_placed_share": 0.927,
+  "auto_share": 0.0,
+  "within_250ft_auto": null,
+  "within_250ft_auto_low": 0.0,
+  "auto_share_tiger_only_auto": 0.9145,
+  "within_250ft_tiger_only_auto": 0.9913,
+  "within_250ft_tiger_only_auto_low": 0.9858,
+  "within_250ft_all_placed": 0.9903,
+  "within_250ft_all_placed_low": 0.9847,
+  "not_placed": {
+   "no intersection of the two named streets": 131,
+   "exact: streets meet in more than one place": 9,
+   "relaxed: streets meet in more than one place": 5,
+   "fuzzy: streets meet in more than one place": 1
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "33RD ST & CONVENTION AV",
+    "SCHUYLKILL EX & RAMP A RD",
+    "COBBS CREEK PY & WHITBY AV",
+    "WOODHAVEN RD/THORNTON RD & RAMP U RD",
+    "BRIDGE ST & ARAMINGO AV",
+    "RAMP A RD & MONTGOMERY DR"
+   ],
+   "placed >250 ft off": [
+    "54TH ST & JEFFERSON ST [unique_pair] 606 ft",
+    "ISLAND AV & COBBS CREEK PY [exact] 556 ft",
+    "SCHUYLKILL EX & 34TH ST [unique_pair] 1609 ft",
+    "VINE ST & 8TH ST [unique_pair] 270 ft",
+    "CHRISTOPHER COLUMBUS BL & FRONT ST [unique_pair] 19561 ft",
+    "59TH ST & COBBS CREEK PY [exact] 1418 ft",
+    "BROAD ST & ZINKOFF BL [exact] 324 ft",
+    "FRANKFORD AV & LEVICK ST [exact] 675 ft"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "RIDGE AV & COLLEGE AV",
+    "UNIVERSITY AV & 38TH ST",
+    "COLLEGE AV & THOMPSON ST",
+    "KESWICK RD & MORRELL AV",
+    "COBBS CREEK PY & 58TH ST"
+   ],
+   "exact: streets meet in more than one place": [
+    "LANGDON ST & SUMMERDALE AV",
+    "PENROSE AV & PATTISON AV",
+    "ROOSEVELT BL & ADAMS AV",
+    "ACADEMY RD & RED LION RD",
+    "HARBISON AV & JACKSON ST",
+    "ACADEMY RD & RED LION RD"
+   ],
+   "fuzzy: streets meet in more than one place": [
+    "ART MUSEUM CIR & SPRING GARDEN TN"
+   ]
+  }
+ },
+ "Allegheny (Pittsburgh)": {
+  "area": "Allegheny (Pittsburgh) (42003), 2025",
+  "county_crashes": 10528,
+  "gps_share": 0.9756,
+  "street_pair_share": 0.4182,
+  "no_gps_with_pair": 71,
+  "no_gps": 257,
+  "n": 2000,
+  "tiers": {
+   "exact": 1190,
+   "review": 559,
+   "unique_pair": 160,
+   "fuzzy": 13,
+   "verified_typo": 24,
+   "relaxed": 30,
+   "near": 24
+  },
+  "name_placed_share": 0.7205,
+  "auto_share": 0.0,
+  "within_250ft_auto": null,
+  "within_250ft_auto_low": 0.0,
+  "auto_share_tiger_only_auto": 0.675,
+  "within_250ft_tiger_only_auto": 0.9726,
+  "within_250ft_tiger_only_auto_low": 0.9625,
+  "within_250ft_all_placed": 0.9715,
+  "within_250ft_all_placed_low": 0.9616,
+  "not_placed": {
+   "no intersection of the two named streets": 460,
+   "exact: streets meet in more than one place": 83,
+   "fuzzy: streets meet in more than one place": 9,
+   "relaxed: streets meet in more than one place": 7
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "THORN RUN RD & TORY RD",
+    "BEULAH RD & PENN AV",
+    "VANADIUM RD & GRAY ST",
+    "WEXFORD BAYNE RD & RAMP A RD",
+    "SAW MILL RUN BL & RAMP B RD",
+    "BROWN AV & KINGSDALE DR"
+   ],
+   "exact: streets meet in more than one place": [
+    "CLAIRTON RD & LEBANON CHURCH RD",
+    "GRANT ST & 7TH AV",
+    "7TH AV & GRANT ST",
+    "MCFARLAND RD & BANKSVILLE RD",
+    "5TH AV & PENN AV",
+    "CLAIRTON RD & LEBANON CHURCH RD"
+   ],
+   "placed >250 ft off": [
+    "BRIDGE ST & BUTLER ST [exact] 489 ft",
+    "EVERGREEN RD & VENTURE ST [exact] 383 ft",
+    "PERRY HW & RICHARD RD [exact] 2767 ft",
+    "VENANGO TR & WAHKEENA RD [verified_typo] 507 ft",
+    "PERRY HW & WALLACE RD [exact] 2003 ft",
+    "MOSSIDE BL & DAUGHERTY DR [exact] 5690 ft",
+    "CENTRE AV & SCHENLEY FARMS TER [exact] 686 ft",
+    "HAYDEN BL & ROBERTS HOLLOW RD [exact] 426 ft"
+   ],
+   "fuzzy: streets meet in more than one place": [
+    "WILLIAM FLINN HW & CRAIGHEAD RD",
+    "WILLIAM FLINN HW & HECKERT RD",
+    "WILLIAM FLINN HW & HECKERT RD",
+    "WILLIAM FLINN HW & SPENCER LN",
+    "WILLIAM FLINN HW & CRAIGHEAD RD",
+    "WILLIAM FLINN HW & PIONEER RD"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "CORAOPOLIS BL & NORTH FOREST GROVE RD",
+    "9TH AV & WEST ST",
+    "STEUBEN ST & STEUBENVILLE PIKE",
+    "MARGERY DR & FOX CHAPEL RD",
+    "9TH AV & WEST ST",
+    "AGNEW AV & AGNEW RD"
+   ]
+  }
+ }
+}

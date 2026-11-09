@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pennsylvania crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state pack · 8 Nov 2026 · written by Hermes</p>
+<h1>Pennsylvania: every reportable crash, 2006–2025</h1>
+
+<div class="card"><b>In one line:</b> PennDOT publishes every reportable crash, one zip per county and year, no login: a map point on 99.5% of them, street names on 99.9%, and the crash's worst injury (K A B C O). It hides the day of the month, and there is no licence that says a paid tool may use it.</div>
+<h2>1. What Pennsylvania has</h2>
+<table>
+<tr><th>What</th><th>Example</th></tr>
+<tr><td>Map point</td><td class="ok">99.5–99.9% each year (2025: 109,698 crashes).</td></tr>
+<tr><td>Street names</td><td class="ok">Every road in the crash, in order: <code>BROAD ST</code> then <code>GIRARD AV</code>.</td></tr>
+<tr><td>Injury level</td><td><code>MAX_SEVERITY_LEVEL</code> 1–4 = K A B C. About 11% say "injury, unknown severity" or "unknown if injured": counted as injury, level not reported (U), as PennDOT's own Crash Facts does.</td></tr>
+<tr><td>Missing</td><td class="warn">The day of the month (month, weekday and hour only). People and vehicle tables exist but CrashIQ doesn't read them yet.</td></tr>
+</table>
+<h2>2. Does it place without GPS? Yes</h2>
+<div class="card"><div class="big">99.1%</div>of Philadelphia crashes CrashIQ placed from the two street names alone (GPS hidden) landed within 250 ft of PennDOT's point (Pittsburgh's county: 97.3%). Example: <code>SIXTYTHIRD ST</code> is now read as 63rd St, which took Philadelphia from 68% to 93% placed.</div>
+<p class="dim">Since PennDOT already has a point for 97.6–99.5% of crashes, this adds only the few without one (38 of 7,014 in Philadelphia 2025).</p>
+<h2>3. A real corridor</h2>
+<div class="card">North Broad Street, Girard to Susquehanna, Philadelphia, 1.03 mi, 2021–2025: <b>375 crashes</b>: 6 fatal, 29 serious, 103 minor, 50 possible, 102 injury-level-unknown, 85 property damage. Crash cost <b>$155.3 million</b> (PennDOT's 2025 costs). PDF and Excel exports work.</div>
+<h2>What you need to do</h2>
+<ol>
+<li>Ask PennDOT in writing if a paid tool may load its public crash data, and what notice to show.</li>
+<li>Decide: price "injury, unknown severity" at the possible-injury cost, as PennDOT's Pub 638 does? (now: not priced)</li>
+<li>Decide: may street-name placements on the Census map auto-place?</li>
+</ol>
+<h2>What we didn't check</h2>
+<p>The people and vehicle tables, DUI/speed flags, street formats in other cities, years before 2021.</p>
+</main></body></html>

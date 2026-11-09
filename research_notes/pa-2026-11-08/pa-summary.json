@@ -1,0 +1,130 @@
+{
+ "state": "PA",
+ "bucket": "A",
+ "bucket_note": "Open, record-level, statewide CSV zips by county and year (2006-2025), PennDOT GPS on 99.5-99.9%, street names on 99.5-99.96%, crash-level KABCO plus person/vehicle tables. Catches: no published reuse licence; the day of the month is withheld.",
+ "sources": [
+  {
+   "name": "PennDOT public crash data (PennDOT GIS Open Data, Crash Data Download map)",
+   "url": "https://gis.penndot.pa.gov/gishub/crashZip/County/<COUNTY>/<COUNTY>_<YEAR>.zip",
+   "access": "open (direct zip download, no login)",
+   "licence_paid_use": "unclear",
+   "licence_text": "No licence published. PennDOT Open Data: 'all of our published GIS data that you can map, style, chart, download or share'. Data dictionary: 'Data that is protected due to containing Personally Identifiable Information, or that could be used to infer information about persons involved in a crash are not included in the public dataset.' DVRPC's catalog copy: 'License: No License Provided'.",
+   "licence_urls": [
+    "https://data-pennshare.opendata.arcgis.com/",
+    "https://gis.penndot.pa.gov/gishub/crashZip/Crash_Data_Dictionary_2026.pdf",
+    "https://catalog.dvrpc.org/dataset/pennsylvania-crash-data-2019-2024-points"
+   ],
+   "years": "2006-2025 (2005 is 404; 2025 posted 2026-06-05)",
+   "rows_per_year": {
+    "2021": 118095,
+    "2022": 116145,
+    "2023": 110736,
+    "2024": 110934,
+    "2025": 109698
+   },
+   "gps_share": {
+    "2021": 0.9971,
+    "2022": 0.9975,
+    "2023": 0.9981,
+    "2024": 0.9985,
+    "2025": 0.9954
+   },
+   "street_names_share": {
+    "2021": 0.9949,
+    "2022": 0.9987,
+    "2023": 0.9996,
+    "2024": 0.9992,
+    "2025": 0.997
+   },
+   "two_street_names_share": {
+    "2021": 0.3707,
+    "2022": 0.3748,
+    "2023": 0.3807,
+    "2024": 0.3735,
+    "2025": 0.3666
+   },
+   "kabco": "yes: crash MAX_SEVERITY_LEVEL 1-4 = K/A/B/C, 0 = O; 8 (injury, unknown severity) and 9 (unknown if injured) -> U; person-level injury in PERSON (not read yet)",
+   "keys_linkable": true
+  }
+ ],
+ "placement_sample": {
+  "area": "Philadelphia (42101) and Allegheny (42003), 2025",
+  "n": 4000,
+  "gps_share": {
+   "Philadelphia": 0.9946,
+   "Allegheny": 0.9756
+  },
+  "street_pair_share": {
+   "Philadelphia": 0.4812,
+   "Allegheny": 0.4182
+  },
+  "name_placed_share": {
+   "Philadelphia": 0.927,
+   "Allegheny": 0.7205
+  },
+  "auto_share": {
+   "Philadelphia": 0.0,
+   "Allegheny": 0.0
+  },
+  "auto_share_note": "0 under the default Gate: every placement on a TIGER-only network is a suggestion unless config sets tiger_only_auto. With tiger_only_auto: Philadelphia 91.5%, Allegheny 67.5%",
+  "within_250ft": {
+   "Philadelphia": 0.9913,
+   "Allegheny": 0.9726
+  },
+  "within_250ft_low": {
+   "Philadelphia": 0.9858,
+   "Allegheny": 0.9625
+  },
+  "no_gps_crashes": {
+   "Philadelphia": 38,
+   "Allegheny": 257
+  },
+  "no_gps_with_street_pair": {
+   "Philadelphia": 5,
+   "Allegheny": 71
+  },
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "accuracy = auto-placeable (exact/unique_pair) with tiger_only_auto, against PennDOT's hidden GPS; the reader's spelled-ordinal fix (SIXTYTHIRD ST -> 63RD ST) raised Philadelphia's name-placed share from 67.8% to 92.7%. PennDOT gives no house numbers."
+ },
+ "end_to_end": {
+  "corridor": "North Broad Street, Girard Ave to Susquehanna Ave, Philadelphia",
+  "length_mi": 1.03,
+  "window": [
+   2021,
+   2025
+  ],
+  "port": 8103,
+  "pulled": 554,
+  "contract_errors": 0,
+  "counted": 375,
+  "excluded": 175,
+  "unplaced": 4,
+  "severity": {
+   "K": 6,
+   "A": 29,
+   "B": 103,
+   "C": 50,
+   "U": 102,
+   "O": 85
+  },
+  "crash_cost": 155251853,
+  "crash_cost_note": "K/A/B/C/O at PennDOT Crash Facts 2025 costs; the 102 U crashes unpriced",
+  "findings_shown": 14,
+  "pdf_bytes": 59260,
+  "xlsx_bytes": 37784
+ },
+ "status": "active",
+ "importer_built": true,
+ "blockers": [
+  "no published reuse licence for a paid product",
+  "the public files have no day of the month (month, weekday and hour only)",
+  "statewide average crash rates are given by PennDOT HSTOD on request only"
+ ],
+ "user_actions": [
+  "Ask PennDOT (Bureau of Operations / crash data, or the Open Data portal contact) in writing whether a paid tool may load the public crash data, and what notice it must show",
+  "Decide: price U (PennDOT 'injury, unknown severity' and 'unknown if injured') at the C cost as Pub 638 Table 4-3 does (needs the shared fix, shared-fixes.md item 1), or leave unpriced (now)",
+  "Decide whether TIGER-only placements may auto-place (tiger_only_auto) for states placed on TIGER"
+ ],
+ "cities": []
+}
