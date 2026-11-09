@@ -1,0 +1,30 @@
+{
+ "state": "NV",
+ "export": "NDOT Traffic Safety Engineering crash data (NCATSDW), as delivered on a Crash Data Request (Survey123) or public-records request",
+ "spec": "Nevada TRCC Data Dictionary, Jan 2021, section 2.1 'Crash Data Columns', pp. 4-6 (https://zerofatalitiesnv.com/app/uploads/2021/04/2021-01-NV-TRCC-Data-Dictionary.pdf, saved ~/.hermes/state-manuals/nv/)",
+ "layout_seen_live": "The same columns (shapefile-truncated to 10 chars) are published by the City of Las Vegas, https://services1.arcgis.com/F1v0ufATbBQScMtY/arcgis/rest/services/Traffic_Crashes/FeatureServer/0 (2015-2020), checked 2026-11-08",
+ "unit": "one row per crash; vehicle 1 and 2 fields are flattened onto the crash row (V1_*, V2_*); no person table in the documented layout",
+ "map": {
+  "collision_id": "Accident Rec Num (CLV: Accident_R, e.g. '3044968.0': strip the '.0')",
+  "datetime": "Crash Date + Crash Time",
+  "county_code": "County",
+  "primary_road": "Primary Street. NDOT writes routes run together with a direction: IR15N -> I-15, US95S -> US 95, SR159 -> NV 159, CC215S -> CC 215. 'X TO Y INTnn' is a ramp (CLV 2020: 112 rows 'IR15N TO SR589 INT40')",
+  "secondary_road": "Secondary Street",
+  "sec_distance": "Distance (feet, e.g. '170.0')",
+  "sec_direction": "Dir (N/S/E/W; 'AT INT' = at the intersection, distance 0)",
+  "milepost": "Mile Marker, Adj. Mile Marker (in the dictionary; not in the CLV copy)",
+  "killed": "Fatalities",
+  "injured": "Injured",
+  "severity": "Crash Severity + Injury Type: FATAL CRASH/FATAL ACCIDENT -> K; INJURY CRASH/INJURY ACCIDENT with Injury Type A/B/C -> A/B/C; injury with Injury Type U/N/blank -> U; PROPERTY DAMAGE ONLY -> O. Dictionary 2.1.1 p.7 lists K, A, B, C, O, U (unknown), N (not reported)",
+  "collision_type": "Crash Type (Angle, Rear-End, Head-On, Non-Collision, Sideswipe, Backing ...)",
+  "weather": "Weather",
+  "lighting": "Lighting",
+  "surface": "Factors Roadway (dictionary: Dry, Ice/Snow, Wet ...)",
+  "agency": "Agency (LVMPD, NHP ...)",
+  "is_freeway": "derived: Primary Street starts IR, or is CC215 / a ramp ('INTnn')",
+  "pedestrian": "Pedestrian (flag)", "bicycle": "Pedalcyclist (flag)", "motorcycle": "Motorcyclist (flag)",
+  "lat_lon": "NOT in the documented column list. NDOT's own open layer (gis.dot.nv.gov TrafficSafety/CrashData_OpenData_2019_2023, now stopped) and consultants' copies of NDOT data are point layers, so the request may come with X/Y: ask for it. Without it every crash is placed from Primary/Secondary/Distance/Dir, the California way"
+ },
+ "values_seen_clv_all_years": {"Crash_Seve x Injury_Typ": {"PROPERTY DAMAGE ONLY|null": 29397, "INJURY CRASH|C": 14357, "INJURY ACCIDENT|C": 7507, "PROPERTY DAMAGE ONLY|O": 7318, "INJURY CRASH|B": 4384, "INJURY CRASH|null": 3827, "INJURY ACCIDENT|B": 1908, "INJURY CRASH|A": 764, "INJURY CRASH|U": 676, "FATAL CRASH|K": 224, "INJURY ACCIDENT|A": 191, "PROPERTY DAMAGE ONLY|U": 153, "FATAL ACCIDENT|K": 92, "PROPERTY DAMAGE ONLY|N": 61, "INJURY ACCIDENT|null": 28, "INJURY CRASH|O": 1}},
+ "verified_against_real_export": false
+}

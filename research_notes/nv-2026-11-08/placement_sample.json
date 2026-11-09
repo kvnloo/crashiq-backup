@@ -1,0 +1,59 @@
+{
+ "area": "City of Las Vegas (Clark 32003), 2020",
+ "n": 2000,
+ "gps_share": 0.0,
+ "street_pair_share": 0.9005,
+ "tiers": {
+  "unique_pair": 624,
+  "exact": 686,
+  "review": 482,
+  "fuzzy": 5,
+  "relaxed": 3,
+  "near": 1
+ },
+ "name_placed_share": 0.6595,
+ "name_placed_share_of_pairs": 0.7324,
+ "auto_share": 0.0,
+ "auto_share_if_tiger_only_auto": 0.655,
+ "route_form_retry_used": 0,
+ "scored_against_gps": 0,
+ "within_250ft_all_placed": "not measured (no GPS in source)",
+ "within_250ft_all_placed_low": null,
+ "within_250ft_auto_if_tiger_only_auto": null,
+ "within_250ft_auto_if_tiger_only_auto_low": null,
+ "within_250ft_offset_le_250ft": null,
+ "within_250ft_offset_le_250ft_low": null,
+ "offset_le_250ft_n": 0,
+ "not_placed": {
+  "no intersection of the two named streets": 438,
+  "ramp text": 199,
+  "exact: streets meet in more than one place": 30,
+  "relaxed: streets meet in more than one place": 14
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "US95S & LAS VEGAS BLVD TO US95S INT75",
+   "DURANGO DR & CABIN DR",
+   "VALLEY VIEW BLVD & VALLEY VIEW BLVD TO US95N INT78",
+   "US95N & US95N TO VALLEY VIEW BLVD INT78",
+   "US95S & N LAS VEGAS BLVD TO IR515S INT75",
+   "IR15N & IR15N TO US95N HOV RAMP"
+  ],
+  "exact: streets meet in more than one place": [
+   "US95S & SR599 TO US95S INT77",
+   "SR599N & N DECATUR BLVD",
+   "US95S & SR574 WB TO US95S INT83",
+   "US95S & SR574 TO US95S INT83",
+   "US95N & SR574 TO US95N INT83",
+   "N DURANGO DR & W DEER SPRINGS WAY"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "DECATUR BLVD & US95S TO DECATUR BLVD NB INT79",
+   "SR599N & DECATUR BLVD",
+   "LAKE MEAD BLVD & US95N TO W LAKE MEAD BLVD INT82A",
+   "SR599S & DECATUR BLVD",
+   "SAHARA AVE & SR589 TO IR15S INT40",
+   "ELKHORN RD & DURANGO DR"
+  ]
+ }
+}
