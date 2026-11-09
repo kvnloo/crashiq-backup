@@ -1,0 +1,111 @@
+{
+ "state": "LA",
+ "bucket": "D",
+ "status": "gated",
+ "sources": [
+  {
+   "name": "LADOTD crash database (managed by LSU CARTS; Louisiana Crash Tool / CAT-Scan)",
+   "url": "https://dotd.louisiana.gov/about/office-of-project-delivery/planning/highway-safety/safety-data-analysis",
+   "access": "gated (access request to DOTDCrashData@LA.gov; DOTD Highway Safety Section grants access)",
+   "licence_paid_use": "unclear",
+   "years": "statewide; a year is preliminary until DOTD closes it, about 8 months after year end",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured (DOTD map-spots crashes: dotd_latit/dotd_longi in the file)",
+   "street_names_share": "not measured",
+   "kabco": true,
+   "keys_linkable": "crash / vehicle / pedestrian / DOTD tables by crash number (LTRC FR 721)"
+  },
+  {
+   "name": "CARTS Louisiana Crash Data Reports",
+   "url": "https://carts.lsu.edu/datareports/",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "current",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": "aggregate dashboards only"
+  },
+  {
+   "name": "City of New Orleans 'Traffic Incidents 2019_2024' (the city's Traffic Safety Dashboard layer)",
+   "url": "https://services.arcgis.com/VhMjCzR3cIjEkh7L/arcgis/rest/services/Traffic_Incidents_2019_2024/FeatureServer/0",
+   "access": "open (ArcGIS REST)",
+   "licence_paid_use": "unclear",
+   "years": "2019-2024",
+   "rows_per_year": {
+    "2019": 19468,
+    "2020": 14386,
+    "2021": 17755,
+    "2022": 16089,
+    "2023": 15510,
+    "2024": 17285
+   },
+   "gps_share": "point geometry on every row (lat/lon not checked for plausibility)",
+   "street_names_share": 0.0,
+   "kabco": true,
+   "keys_linkable": "crash-level only, no crash number"
+  },
+  {
+   "name": "Baton Rouge Traffic Crash Incidents (Socrata 7wah-qncc)",
+   "url": "https://data.brla.gov/Public-Safety/Baton-Rouge-Traffic-Crash-Incidents/7wah-qncc",
+   "access": "open",
+   "licence_paid_use": "ok",
+   "years": "2022-2026 (2022 from mid-year; 2026 partial)",
+   "rows_per_year": {
+    "2022": 5310,
+    "2023": 14758,
+    "2024": 15350,
+    "2025": 15581,
+    "2026": 13387
+   },
+   "gps_share": "not measured (latitude/longitude columns)",
+   "street_names_share": "not measured (street_name, first_street_highway)",
+   "kabco": false,
+   "keys_linkable": "crash-level only (incident_number); has_injury / has_fatality flags, no KABCO"
+  }
+ ],
+ "placement_sample": {
+  "area": "Orleans Parish (22071), 2019, LADOTD file layout (consultant's public copy of the DOTD file, measurement only)",
+  "n": 2000,
+  "gps_share": 0.985,
+  "name_placed_share": 0.76,
+  "auto_share": 0.0,
+  "auto_share_if_tiger_only_auto": 0.727,
+  "within_250ft": 0.8562,
+  "within_250ft_low": 0.8376,
+  "within_250ft_offset_le_250ft": 0.8866,
+  "within_250ft_offset_le_250ft_low": 0.8691,
+  "house_address_share": "not measured (the DOTD layout has no house-number field)",
+  "address_points_source": null
+ },
+ "importer_built": false,
+ "blockers": [
+  "LADOTD crash records need an access grant from the DOTD Highway Safety Section (DOTDCrashData@LA.gov)",
+  "DOTD marks every crash product 'exempt from discovery or admission under 23 U.S.C. 407'; no reuse terms published",
+  "no published export column list; la-column-map.json is built from the field names seen in consultants' public copies"
+ ],
+ "user_actions": [
+  "Email DOTDCrashData@LA.gov asking for Louisiana Crash Tool access, or a statewide crash / vehicle / person extract 2020-2024 (CSV, with dotd_latit/dotd_longi, primary road, intersecting road, distance, unit and direction)",
+  "Ask DOTD in writing whether the extract may be used inside a paid tool",
+  "Send Engineering one extract (one parish, one year) with its data dictionary to confirm la-column-map.json"
+ ],
+ "cities": [
+  {
+   "city": "New Orleans",
+   "source": "Traffic Incidents 2019_2024",
+   "url": "https://services.arcgis.com/VhMjCzR3cIjEkh7L/arcgis/rest/services/Traffic_Incidents_2019_2024/FeatureServer/0",
+   "gps_share": "points on every row",
+   "years": "2019-2024",
+   "licence": "disclaimer only: 'provided for general informational purposes only'"
+  },
+  {
+   "city": "Baton Rouge",
+   "source": "Baton Rouge Traffic Crash Incidents",
+   "url": "https://data.brla.gov/Public-Safety/Baton-Rouge-Traffic-Crash-Incidents/7wah-qncc",
+   "gps_share": "not measured",
+   "years": "2022-2026",
+   "licence": "Public Domain"
+  }
+ ]
+}

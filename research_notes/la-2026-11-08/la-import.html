@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Louisiana crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1313;border-left:4px solid #e33;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em;margin-left:.4em}code{background:#2a2a2a;padding:1px 4px;border-radius:3px;color:#ffb3b3}
+a{color:#ff8a8a}li{margin:.35em 0}.no{color:#ff5c5c}
+</style></head><body>
+<h1>Louisiana: crash data for CrashIQ</h1>
+<p class="ex">Hermes, 8 Nov 2026. Checked live today. Full notes: <code>la-import.md</code>, column map: <code>la-column-map.json</code>.</p>
+<p class="big"><b>Short answer:</b> Louisiana is <span class="no">locked</span>. DOTD's crash records need an access grant from its Highway Safety Section. We built no pack. A copy of DOTD's file shows its format places well: <b>86%</b> of placed crashes land within 250 ft of DOTD's own point.</p>
+<h2>1. What Louisiana has</h2><ul>
+<li><b>DOTD crash database</b> (run by LSU CARTS): every crash in the state, with DOTD's map point, the street, the cross street and the distance. You ask DOTDCrashData@LA.gov for access.</li>
+<li><b>New Orleans</b>: the city's safety dashboard layer is open, 100,493 crashes 2019-2024 with K/A/B/C/O, but <b>no street names</b>.<span class="ex">Example: 2024 has 17,285 crashes.</span></li>
+<li><b>Baton Rouge</b>: open, public domain, about 15,000 crashes a year since 2023, but only "injury yes/no", not K/A/B/C.</li>
+<li>Two consultants posted copies of DOTD's file online. We used one only to test the format; it isn't ours to use.</li></ul>
+<h2>2. Would CrashIQ place the crashes?</h2><ul>
+<li>On 2,000 New Orleans crashes from 2019, we hid DOTD's point and placed them from the street names: <b>76%</b> placed.</li>
+<li>Within 250 ft of DOTD's point: <b>86%</b>.<span class="ex">Misses are mostly freeway ramps and the I-10 service road ("I-10 SRVRD").</span></li>
+<li>Watch the distance unit: 18% of distances are in miles, not feet.</li></ul>
+<h2>3. What you need to do</h2><ol>
+<li>Email <b>DOTDCrashData@LA.gov</b>: ask for Louisiana Crash Tool access, or a statewide 2020-2024 crash, vehicle and person file with coordinates.</li>
+<li>Ask them in writing if the data may be used inside a paid tool.</li>
+<li>Send us one file (one parish, one year) with its data dictionary, and we build the reader.</li></ol>
+<h2>4. What we didn't check</h2><ul>
+<li>How many Baton Rouge crashes have coordinates.</li>
+<li>Lafayette, Shreveport, Jefferson Parish: no open crash tables found.</li>
+<li>DOTD's public-records route instead of the Safety Section.</li></ul>
+</body></html>
