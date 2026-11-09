@@ -1,0 +1,63 @@
+{
+ "area": "Douglas County (31055), 2024",
+ "n": 2000,
+ "gps_share": 1.0,
+ "street_pair_share": 0.952,
+ "tiers": {
+  "unique_pair": 1464,
+  "relaxed": 5,
+  "review": 208,
+  "exact": 217,
+  "verified_typo": 7,
+  "near": 3
+ },
+ "name_placed_share": 0.848,
+ "name_placed_share_of_pairs": 0.8908,
+ "auto_share": 0.8405,
+ "auto_share_of_pairs": 0.8829,
+ "gate": "Gate() tiers with tiger_only_auto=True (TIGER-only network; plain Gate() auto-places 0 here)",
+ "within_250ft": 0.8263,
+ "within_250ft_low": 0.8074,
+ "within_250ft_all_placed": 0.8219,
+ "within_250ft_all_placed_low": 0.803,
+ "not_placed": {
+  "no intersection of the two named streets": 166,
+  "no cross street in source": 96,
+  "exact: streets meet in more than one place": 23,
+  "relaxed: streets meet in more than one place": 19
+ },
+ "examples": {
+  "placed >250 ft off": [
+   "W DODGE EXPRESSWAY & 114TH STREET [relaxed] 599 ft",
+   "33RD STREET & GRANT STREET [unique_pair] 318 ft",
+   "I-80 & 72ND STREET [unique_pair] 2325 ft",
+   "L STREET & 132ND STREET [unique_pair] 521 ft",
+   "166TH STREET & READ STREET [unique_pair] 281 ft",
+   "204TH STREET & W DODGE ROAD [unique_pair] 270 ft"
+  ],
+  "no intersection of the two named streets": [
+   "W MAPLE ROAD & 208TH STREET",
+   "HAMILTON STREET & CREIGHTON BOULEVARD",
+   "NORTH FREEWAY & DODGE STREET",
+   "SADDLE CREEK ROAD & CUTOFF FROM DODGE STREET",
+   "I-480 & ED CREIGHTON AVENUE",
+   "W DODGE ROAD & WB RAMP TO 168TH STREET"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "I STREET & 120TH STREET",
+   "US-75 & 48TH STREET",
+   "120TH STREET & I STREET",
+   "169TH STREET & 168TH AVENUE",
+   "Q STREET & 136TH STREET",
+   "120TH STREET & I STREET"
+  ],
+  "exact: streets meet in more than one place": [
+   "NORTH FREEWAY & I-480",
+   "I-480 & NORTH FREEWAY",
+   "MAPLE STREET & NORTHWEST RADIAL HIGHWAY",
+   "NORTH FREEWAY & I-480",
+   "Q STREET & DEAUVILLE DRIVE",
+   "CURTIS AVENUE & SORENSEN PARKWAY"
+  ]
+ }
+}
