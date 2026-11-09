@@ -1,0 +1,28 @@
+{
+ "state": "HI",
+ "export": "HDOT SHACA (State of Hawaii Advanced Crash Analysis) crash export, by request to HDOT Highways Division, Traffic Safety Section",
+ "spec": "No public column list found (searched hidot.hawaii.gov and HDOT's ArcGIS/Socrata orgs, 2026-11-08). Field names below are the open HDOT_Crash_Layer's (https://services.arcgis.com/HQ0xoN0EzDPBOEci/arcgis/rest/services/HDOT_Crash/FeatureServer/0) where it has the field; the rest are what CrashIQ needs and must be confirmed on one sample export.",
+ "unit": "one row per crash (the open layer); person/vehicle tables not documented",
+ "map": {
+  "collision_id": "report number: NOT in the open layer; required in the export",
+  "datetime": "crash date and time: NOT in the open layer (crash_year only); required",
+  "year": "crash_year",
+  "lat": "gps_latitude (0,0 and the county default point 21.480852,-157.923130 for HON mean no point)",
+  "lon": "gps_longitude",
+  "primary_road": "route / road name: NOT in the open layer; the fatal entry layer has Route, RoadName",
+  "secondary_road": "cross street: not in any open layer",
+  "milepost": "milepost: fatal entry layer only (milepost, RteOffset, dirn, measunit)",
+  "county_code": "county: HON=15003, HAW=15001, MAU=15009 (incl. Kalawao 15005 by location), KAU=15007",
+  "jurisdiction": "prim_jurisdict: S=state, C=county, then functional-class digit and U/R (urban/rural); S1x = interstate (is_freeway)",
+  "severity": "NOT in the open layer as KABCO; crashseveritymajorinjury is one flag (1 = major injury, meaning undocumented). Export must give the most severe injury per crash (K/A/B/C/O)",
+  "killed": "not in the open layer (FatalCrash.Total_Fatalities for fatal crashes)",
+  "injured": "not in the open layer",
+  "ped": "pedinvolved",
+  "bike": "bcinvolved",
+  "motorcycle": "mcinvolved (mopinvolved = moped)",
+  "alcohol": "alcoholinvolved / alcoholsuspected",
+  "speed": "involvedspeed",
+  "collision_type": "not in the open layer (crashactions holds numeric action codes, list not published)"
+ },
+ "checked": "2026-11-08"
+}
