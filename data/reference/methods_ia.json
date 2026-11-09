@@ -1,0 +1,72 @@
+{
+ "state": "IA",
+ "manuals": {
+  "ia_tsip_bc": {
+   "title": "Traffic Safety Improvement Program (TSIP) Benefit Cost Ratio Worksheet (tsipB-C.xlsm)",
+   "publisher": "Iowa DOT Office of Traffic and Safety",
+   "jurisdiction": "IA",
+   "edition": "workbook saved 2022-05-20; crash cost data year 2018 (sheet 'Reference Lists' C2)",
+   "url": "https://ia.iowadot.gov/traffic/tsip/tsipB-C.xlsm",
+   "sha256": "38c0b204728ac6d0127cddcb5dcf96f0657ee0896d8fe7b44b00feed9d903250",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/ia-2026-11-08/ia-methods.md §1"
+  },
+  "ia_dds": {
+   "title": "Iowa DOT Data Driven Safety Guidance",
+   "publisher": "Iowa DOT",
+   "jurisdiction": "IA",
+   "edition": "Version 1.0, October 18, 2017",
+   "url": "https://iowadot.gov/media/3747/download?inline",
+   "sha256": "c2ab2abafdfe176575c8ed1bba4ca66a0753259aa441eca247df6967ebcad2ec",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/ia-2026-11-08/ia-methods.md §2-3"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 3253349,
+   "A": 3253349,
+   "B": 217607,
+   "C": 102564,
+   "O": 12656,
+   "dollar_year": 2018,
+   "manual": "ia_tsip_bc",
+   "page": "sheet 'Reference Lists' D7:D11 (Crash Costs), C2 (Year of Crash Cost Data 2018)",
+   "verified": true,
+   "rules": [
+    "K and A priced the same (Iowa's combined fatal and serious injury cost), one cost per level for every location type",
+    "Iowa's C cost is 'Possible/Unknown Injury'; CrashIQ leaves U unpriced (shared rule) and counts it",
+    "the worksheet escalates these at 4% a year (sheet 'Benefit Cost Worksheet' D6); CrashIQ prints the 2018 values unescalated"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "Iowa DOT's statewide crash averages are a web page (Data Driven Safety Guidance §4.1.4, printed p. 21 (PDF p. 25), link www.iowadot.gov/crashanalysis/comparablesprofilesmain.htm, HTTP 404 on 2026-11-08), and CrashIQ has no Iowa traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "Iowa DOT's SPF-based Potential for Crash Reduction (PCR) tool (Iowa HSIP 2025 report; not read into CrashIQ)"
+  },
+  "min_years": {
+   "value": 5,
+   "minimum": 3,
+   "manual": "ia_dds",
+   "page": "§2.2.1, printed p. 6 (PDF p. 10): 'the Iowa DOT recommends the analysis use the most recent five years… a minimum of three years'",
+   "verified": true
+  },
+  "spf_calibration": {
+   "missing": "Data Driven Safety Guidance Tables 3-1 and 3-2 (printed p. 13, PDF p. 17) publish Iowa freeway and rural two-lane calibration factors; not loaded (no SPF engine)"
+  }
+ }
+}

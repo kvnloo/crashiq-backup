@@ -1,0 +1,72 @@
+{
+ "state": "IA",
+ "bucket": "A",
+ "status": "active",
+ "bucket_note": "open, record-level, GPS 100%, KABCO from per-crash injury counts, CC BY 4.0",
+ "sources": [
+  {
+   "name": "Iowa DOT Traffic_Safety Crash_Data (+ Crash_Person_Data, Crash_Vehicle_Data)",
+   "url": "https://gis.iowadot.gov/agshost/rest/services/Traffic_Safety/Crash_Data/FeatureServer/0",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "ok_with_attribution",
+   "licence_quote": "These licenses allow you to copy, share, adapt, transform, and build upon the Data for any purpose, including commercial use, provided that you give appropriate credit to the Data source (Iowa DOT GIS Data Terms of Use; CC BY 4.0)",
+   "years": "2015-present (prior 10 years + current; latest 2026-11-05)",
+   "rows_per_year": {
+    "2020": 47894,
+    "2021": 54624,
+    "2022": 53706,
+    "2023": 52870,
+    "2024": 53342,
+    "2025": 52717,
+    "2026": 42979
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.7695,
+   "street_names_note": "LITERAL: street pair 57.6% + house/block address 19.4% (Polk 2024 sample)",
+   "kabco": true,
+   "keys_linkable": "CRASH_KEY joins persons and vehicles"
+  }
+ ],
+ "placement_sample": {
+  "area": "Polk County (19153), 2024",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.389,
+  "auto_share": 0.383,
+  "within_250ft": 0.9621,
+  "within_250ft_low": 0.9462,
+  "house_address_share": 0.1935,
+  "address_points_source": null,
+  "note": "TIGER-only network; auto = Gate() tiers with tiger_only_auto=True. NAD returned HTTP 400 on 2026-11-08: address placement not measured. Every Iowa crash has a point; this is what the corridor-street name check sees."
+ },
+ "end_to_end": {
+  "corridor": "Merle Hay Road, Des Moines/Urbandale (1.0 mi)",
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 443,
+  "counted": 346,
+  "severity": {
+   "K": 0,
+   "A": 3,
+   "B": 23,
+   "C": 55,
+   "U": 30,
+   "O": 235
+  },
+  "crash_cost_total": 23380188,
+  "pdf_bytes": 51151,
+  "xlsx_bytes": 36977,
+  "seconds": 123
+ },
+ "importer_built": true,
+ "blockers": [
+  "no statewide average rates (Iowa's page is a 404) and no Iowa AADT in CrashIQ"
+ ],
+ "user_actions": [
+  "None needed to use the data (credit Iowa DOT, done in the pack's legal line)",
+  "Optional: ask Iowa DOT for the statewide comparable-profile crash averages (page 404)"
+ ],
+ "cities": []
+}
