@@ -1,0 +1,88 @@
+{
+ "area": "Hartford (town, Capitol Planning Region 09110), 2024",
+ "n": 2000,
+ "town_year_rows": 6107,
+ "severity_town_year": {
+  "O": 4545,
+  "B": 781,
+  "C": 707,
+  "A": 58,
+  "K": 16
+ },
+ "gps_share": 1.0,
+ "street_pair_share": 0.236,
+ "tiers": {
+  "review": 77,
+  "exact": 391,
+  "near": 3,
+  "unique_pair": 1
+ },
+ "name_placed_share": 0.1975,
+ "name_placed_share_of_pairs": 0.8369,
+ "auto_share": 0.0,
+ "auto_share_of_pairs": 0.0,
+ "tiger_route_retry_used": 14,
+ "auto_share_if_tiger_only_auto": 0.196,
+ "auto_share_of_pairs_if_tiger_only_auto": 0.8305,
+ "within_250ft_auto_if_tiger_only_auto": 0.977,
+ "within_250ft_auto_if_tiger_only_auto_low": 0.9569,
+ "within_250ft_auto": null,
+ "within_250ft_auto_low": 0.0,
+ "within_250ft_all_placed": 0.9772,
+ "within_250ft_all_placed_low": 0.9573,
+ "street_key_examples": {
+  "CT 187": [
+   "CT 187",
+   null
+  ],
+  "STATE RTE 187": [
+   "SR 187",
+   null
+  ],
+  "I 84": [
+   "I 84",
+   null
+  ],
+  "US 44": [
+   "US 44",
+   null
+  ],
+  "MAIN ST": [
+   "MAIN",
+   "ST"
+  ]
+ },
+ "not_placed": {
+  "no intersecting road in source": 1528,
+  "no intersection of the two named streets": 61,
+  "exact: streets meet in more than one place": 16
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "COLUMBUS BLVD | COLUMBUS BLVD & GROVE STREET",
+   "VINE ST | VINE ST & OVERHILL RD",
+   "2-E | CT 2 & COLUMBUS BLVD",
+   "598-W-6 | 598-W-6 & COLUMBUS BLVD",
+   "ASYLUM ST | ASYLUM ST & 84-W-191A (ENTRANCE RAMP)",
+   "COLUMBUS BLVD | COLUMBUS BLVD & COLUMBUS BLVD"
+  ],
+  "exact: streets meet in more than one place": [
+   "91-N | I 91 & RT 15",
+   "MAIN ST NO 2 | MAIN ST & US 44",
+   "WASHINGTON ST | WASHINGTON ST & LAFAYETTE ST",
+   "PARK ST | PARK ST & JOHN ST",
+   "44-E | US 44 & MAIN ST",
+   "BROAD ST | BROAD ST & PARK ST"
+  ],
+  "placed >250 ft off": [
+   "TRUMBULL ST & CHAPEL ST NORTH [exact] 253 ft",
+   "CT 530 & BRAINARD RD [exact] 358 ft",
+   "CHAPEL ST NORTH & PLEASANT ST [exact] 86153 ft",
+   "MAIN ST & WYLLYS ST [exact] 353 ft",
+   "JENNINGS ROAD & I-91 N EXIT 33 (91-N-161) [exact] 277 ft",
+   "WESTLAND ST & VINE ST [exact] 489 ft",
+   "LEDYARD ST & EAST ELLIOTT ST [unique_pair] 260 ft",
+   "MAIN ST & MORGAN ST S [exact] 289 ft"
+  ]
+ }
+}

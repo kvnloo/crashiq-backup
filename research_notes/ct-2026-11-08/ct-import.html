@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Connecticut crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state pack · 8 Nov 2026 · written by Hermes</p>
+<h1>Connecticut: every crash in the state, on the map, 2015–2026</h1>
+
+<div class="card"><b>In one line:</b> UConn's Connecticut Crash Data Repository publishes every crash since 2015 (about 100,000 a year) with a map point, the worst injury (K A B C O), the road and its people and vehicles. No login, no sign-up. It has no licence that says a paid tool may use it.</div>
+
+<h2>1. What Connecticut has</h2>
+<table>
+<tr><th>What</th><th>Example</th></tr>
+<tr><td>Map point</td><td class="ok">100% of Hartford's 6,107 crashes in 2024.</td></tr>
+<tr><td>Injury level</td><td>Per crash and per person: <code>Suspected Serious Injury (A)</code> = A.</td></tr>
+<tr><td>Road</td><td>Every crash. State roads come as <code>84-W</code> or <code>187-N</code>; CrashIQ reads them as I 84 and CT 187. A cross street on 1 crash in 4.</td></tr>
+<tr><td>People, vehicles</td><td>Linked by crash number: pedestrians, cyclists, motorcycles, heavy trucks all found.</td></tr>
+<tr><td>Missing</td><td class="warn">Vehicle movements (so no collision diagrams), primary collision factor.</td></tr>
+</table>
+
+<h2>2. Does it place? Yes, by its own point</h2>
+<div class="card"><div class="big">98%</div>When we hid the point and placed Hartford crashes from the two road names alone, 98% landed within 250 ft of the real spot (84% of crashes that name a cross street placed). Since every crash already has a point, this is a cross-check, not a gap-filler.</div>
+
+<h2>3. Live test: Farmington Avenue, Hartford (1.19 miles, 2021–2025)</h2>
+<div class="card"><div class="big">498 crashes</div>2 fatal, 6 serious (A), 76 minor (B), 65 possible (C), 349 property damage. Crash cost $32.7 million at CTDOT's own costs. 10 findings. PDF and Excel built (74 KB, 39 KB).</div>
+
+<h2>4. How Connecticut does safety studies</h2>
+<ul>
+<li><b>Crash costs:</b> CTDOT's safety plan (FY2027, Table A-2): fatal $6,415,389, serious $338,576, minor $123,646, possible $69,541, property damage $11,186. CrashIQ prints them, cited.</li>
+<li><b>No crash-rate tables:</b> CTDOT compares with a statewide average inside its own software but doesn't publish it.</li>
+<li>CrashIQ uses the national method (Highway Safety Manual critical rate) for now.</li>
+</ul>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Ask CTDOT / UConn in writing whether a paid tool may load the repository's public crash layers, and what notice to show. (Their words: "for research and informational purposes".)</li>
+<li>OK the CTDOT crash costs as printed (the plan gives no dollar year).</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>Towns other than Hartford for placement.</li>
+<li>The contributing-circumstance codes (not mapped yet).</li>
+<li>data.ct.gov's copy of the same data.</li>
+</ul>
+<p class="dim">Details: <code>research_notes/ct-2026-11-08/ct-import.md</code>, <code>ct-methods.md</code>, <code>ct-summary.json</code>.</p>
+</main></body></html>
