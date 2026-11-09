@@ -1,0 +1,59 @@
+{
+ "state": "UT",
+ "manuals": {
+  "udot_crash_costs_2026": {
+   "title": "Utah's Crash Costs for Calendar Year 2026 (UDOT Traffic and Safety Division memo to FHWA Utah Division)",
+   "publisher": "Utah Department of Transportation, Traffic and Safety Division",
+   "jurisdiction": "UT",
+   "edition": "March 16, 2026 (2025 dollars)",
+   "url": "https://drive.google.com/file/d/1Chs8bZvRdta3RGueCymdeehnrJEIdbvP/view",
+   "linked_from": "https://sites.google.com/utah.gov/udot-safety-standards/training-tools-and-resources/crash-costs",
+   "sha256": "1da9527f77a6bad749b90ac75a9659bda10b3628a1c72200a2265d8ac97a05f0",
+   "downloaded": "2026-11-08",
+   "note": "~/.hermes/state-manuals/ut/UDOT_crash_costs_2026.pdf; research_notes/ut-2026-11-08/ut-methods.md"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 3904059,
+   "A": 3904059,
+   "B": 373500,
+   "C": 198700,
+   "O": 17100,
+   "dollar_year": 2025,
+   "manual": "udot_crash_costs_2026",
+   "page": "Table 1 'Utah's Crash Costs for Calendar Year 2026 (2025 Dollars)', p. 1; rule 'Application of Severity Distributions and Crash Cost Values' 2, pp. 3-4",
+   "verified": true,
+   "rules": [
+    "UDOT: 'Apply weighted crash costs when working with observed crash severities', so K and A crashes are each priced at the weighted KA (Severe) cost, $3,904,059, not at K $15,593,700 and A $1,661,800",
+    "UDOT's costs are per crash and already account for multiple people hurt in one crash (memo p. 2)",
+    "U (injury, level not reported) unpriced; Utah's layer has no U rows"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "UDOT's crash-cost memo and HSIP manual (June 2025) give no statewide average crash rates by facility type, and CrashIQ has no Utah traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "UDOT ranks HSIP projects by benefit-to-cost ratio from crash history, statewide crash models of the state system and usRAP (UDOT HSIP Manual, June 2025, Sec. 5.1.2.1 and 5.1.3, pp. 14-15)"
+  },
+  "min_years": {
+   "missing": "UDOT's documents read here set no minimum study period for a corridor study"
+  },
+  "spf_calibration": {
+   "missing": "no Utah calibration factors found in the documents read here"
+  }
+ }
+}

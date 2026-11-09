@@ -1,0 +1,109 @@
+{
+ "state": "UT",
+ "bucket": "A",
+ "bucket_note": "open ArcGIS layer, record-level, GPS on every row, crash-level KABCO with per-level people counts, nightly; no person/vehicle tables; no reuse licence",
+ "status": "active",
+ "sources": [
+  {
+   "name": "UDOT Utah Crash Locations FeatureServer (UPlan)",
+   "url": "https://services.arcgis.com/pA2nEVnB6tquxgOW/arcgis/rest/services/Utah_Crash_Locations/FeatureServer",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "All data presented here is for informational purposes only and must be field verified prior to being used on a project. ... This data is protected under 23 USC 407.",
+   "years": "2019-2026 (2025 and 2026 preliminary)",
+   "rows_per_year": {
+    "2019": 64544,
+    "2020": 50409,
+    "2021": 61141,
+    "2022": 58806,
+    "2023": 59882,
+    "2024": 59316,
+    "2025": 59860,
+    "2026": 48416
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.9255,
+   "kabco": true,
+   "keys_linkable": "crash_id only; no person or vehicle layers"
+  },
+  {
+   "name": "UDOT Numetric / AASHTOWare Safety",
+   "url": "https://udot.numetric.net",
+   "access": "login",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "crash, vehicle, person (per Numetric's UDOT field list)",
+   "note": "not used"
+  },
+  {
+   "name": "State of Utah Crash Data 2015-2019 (Socrata 7ihm-46s4)",
+   "url": "https://opendata.utah.gov/Public-Safety/State-of-Utah-Crash-Data-2015-2019/7ihm-46s4",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2015-2019",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null,
+   "note": "not read"
+  }
+ ],
+ "placement_sample": {
+  "area": "Salt Lake County (49035), 2024, random 2,000 (seed 2026)",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.063,
+  "auto_share": 0.058,
+  "within_250ft": 0.4052,
+  "within_250ft_low": 0.3203,
+  "house_address_share": 0.6435,
+  "address_points_source": null,
+  "street_pair_share": 0.282,
+  "note": "every row has GPS; the locator test is on the 28% of rows with a cross street, mostly freeway + cross street pairs"
+ },
+ "end_to_end": {
+  "corridor": "State Street, 2100 South to 3300 South, South Salt Lake (1.5 mi)",
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 755,
+  "counted": 396,
+  "severity": {
+   "K": 1,
+   "A": 13,
+   "B": 57,
+   "C": 75,
+   "U": 0,
+   "O": 250
+  },
+  "crash_cost_total": 95123826,
+  "findings_shown": 9,
+  "pdf_bytes": 75568,
+  "xlsx_bytes": 40994,
+  "seconds": 74
+ },
+ "importer_built": true,
+ "blockers": [
+  "no published licence for a paid product (informational use, field-verify, 23 USC 407)",
+  "no driver/vehicle/person records: movements and collision diagrams empty"
+ ],
+ "user_actions": [
+  "Ask UDOT Traffic & Safety (Chris Whipple, chriswhipple@utah.gov) for written permission to use the Utah Crash Locations layer in a paid product"
+ ],
+ "cities": [
+  {
+   "city": "Salt Lake City",
+   "source": "SLCPD SLC_Crash_Data (snapshot 2023-03-13)",
+   "url": "https://maps.slc.gov/server/rest/services/Hosted/SLC_Crash_Data/FeatureServer",
+   "gps_share": null,
+   "years": null,
+   "licence": "not checked"
+  }
+ ]
+}

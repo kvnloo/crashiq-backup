@@ -1,0 +1,82 @@
+{
+ "area": "Salt Lake County (49035), 2024, random 2,000 (seed 2026)",
+ "n": 2000,
+ "county_rows_2024": 22871,
+ "rows_per_year": {
+  "2019": 64544,
+  "2020": 50409,
+  "2021": 61141,
+  "2022": 58806,
+  "2023": 59882,
+  "2024": 59316,
+  "2025": 59860,
+  "2026": 48416
+ },
+ "rows_2024_with_point_in_utah": 59316,
+ "gps_share": 1.0,
+ "street_pair_share": 0.282,
+ "house_address_share": 0.6435,
+ "tiers": {
+  "review": 438,
+  "exact": 97,
+  "unique_pair": 19,
+  "relaxed": 7,
+  "near": 3
+ },
+ "name_placed_share": 0.063,
+ "name_placed_share_of_pairs": 0.2234,
+ "auto_share": 0.058,
+ "gate": "Gate(tiger_only_auto=True) on a TIGER-only network",
+ "within_250ft": 0.4052,
+ "within_250ft_low": 0.3203,
+ "within_250ft_all_placed": 0.4127,
+ "within_250ft_all_placed_low": 0.3306,
+ "severity": {
+  "C": 4075,
+  "O": 15195,
+  "A": 419,
+  "B": 3113,
+  "K": 69
+ },
+ "freeway_share": 0.2441,
+ "not_placed": {
+  "no intersection of the two named streets": 369,
+  "no cross street in source": 149,
+  "exact: streets meet in more than one place": 66,
+  "missing street name": 2,
+  "relaxed: streets meet in more than one place": 1
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "I-80 & EAST CANYON",
+   "I-15 & MARION VISTA DR",
+   "I-15 (Northbound) & 14600 South",
+   "I-15 & 2100 South",
+   "I-15 & 5000 South",
+   "I-15 & 600 NORTH"
+  ],
+  "placed >250 ft off": [
+   "412 W 9000 S & I-15 NB [exact] 515 ft",
+   "I-15 & Warm Springs Rd [exact] 2252 ft",
+   "I-80 & BANGERTER HIGHWAY [exact] 792 ft",
+   "I-80 & SR 202 [exact] 12045 ft",
+   "I-80 WEST OFF-RAMP TO REDWOOD RD & REDWOOD ROAD [exact] 410 ft",
+   "I-215 (Westbound) & 700 W [exact] 6632 ft"
+  ],
+  "exact: streets meet in more than one place": [
+   "I-15 & 1900 S",
+   "I-15 & 6830 S",
+   "I-80 & I-15",
+   "I-15 (NORTHBOUND) & I-80",
+   "I-15 & 5300 S",
+   "I-15 & 12300 S"
+  ],
+  "missing street name": [
+   "I-80 & 134 ON-RAMP",
+   "I-15 & 14600 Of Ramp"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "1-15 & 2100 S"
+  ]
+ }
+}
