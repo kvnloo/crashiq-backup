@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Montana crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state pack · 8 Nov 2026 · written by Hermes</p>
+<h1>Montana: every crash in the state, on the map, 2016–2025</h1>
+
+<div class="card"><b>In one line:</b> MDT publishes all 219,418 crashes from 2016 to 2025 with a map point and the crash's worst injury (K A B C O). No login. It has no street names, no time of day and no people, and no licence that says a paid tool may use it.</div>
+
+<h2>1. What Montana has</h2>
+<table>
+<tr><th>What</th><th>Example</th></tr>
+<tr><td>Map point</td><td class="ok">100% (all but 2 junk rows). MDT puts each crash at its route reference point, so crashes at one intersection share one dot.</td></tr>
+<tr><td>Injury level</td><td>Per crash: <code>Suspected Serious Injury</code> = A. 4% say <code>Unknown</code>: counted as "injury, level not reported".</td></tr>
+<tr><td>Crash details</td><td>Collision type (<code>Wild Animal</code> is 14%), weather, road surface, light, city, county.</td></tr>
+<tr><td>Missing</td><td class="warn">Street names, time of day, report number, drivers, vehicles, people killed/injured counts.</td></tr>
+</table>
+
+<h2>2. Does it place? Yes, by MDT's own point</h2>
+<div class="card"><div class="big">3,291 of 3,291</div>Yellowstone County crashes in 2025 (Billings, Laurel) have a point inside the county. There are no street names, so CrashIQ's street-name locator has nothing to add.</div>
+
+<h2>3. Live test: Grand Avenue, Billings (1.0 mile, 2020–2024)</h2>
+<div class="card"><div class="big">131 crashes</div>1 fatal, 1 serious (A), 11 minor (B), 44 possible (C), 13 unknown-level, 61 property damage. 4 findings. PDF and Excel both built (42 KB, 36 KB).</div>
+
+<h2>4. How Montana does safety studies</h2>
+<ul>
+<li><b>Crash costs:</b> a software vendor's help page lists MDT's defaults (fatal $6,168,300, serious $326,400, minor $119,200, possible $67,100, property damage $10,800), with no year. CrashIQ doesn't print them until MDT confirms.</li>
+<li><b>No crash-rate tables</b> were found. MDT screens with its own models; its safety manual is internal.</li>
+<li>CrashIQ uses the national method (Highway Safety Manual critical rate) for now.</li>
+</ul>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Ask MDT in writing whether a paid tool may load its public crash layer, and what notice it must show. (MDT's text: "provided as-is … for planning purposes only".)</li>
+<li>Ask MDT for its crash costs per injury level and their dollar year.</li>
+<li>Decide: should MDT's "Unknown" severity count as injured (now: "level not reported")?</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>How close MDT's reference-point dot is to where the crash really happened.</li>
+<li>Adding street names by joining MDT's route layer (possible, not built).</li>
+<li>Fuller crash records MDT gives on a public-information request.</li>
+</ul>
+<p class="dim">Details: <code>research_notes/mt-2026-11-08/mt-import.md</code>, <code>mt-methods.md</code>, <code>mt-summary.json</code>.</p>
+</main></body></html>
