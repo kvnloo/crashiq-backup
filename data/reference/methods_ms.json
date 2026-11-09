@@ -1,0 +1,52 @@
+{
+ "state": "MS",
+ "manuals": {
+  "ms_hsip_2025": {
+   "title": "Mississippi Highway Safety Improvement Program 2025 Annual Report",
+   "publisher": "MDOT Highway Safety Division (posted by FHWA)",
+   "jurisdiction": "MS",
+   "edition": "2025",
+   "url": "https://highways.dot.gov/sites/fhwa.dot.gov/files/2026-09/MISSISSIPPI_HSIP%20REPORT_2025_508.pdf",
+   "note": "FHWA's server refuses scripted downloads; read through a text extract (~/.hermes/state-manuals/ms/MS_HSIP_Report_2025.txt), no page breaks, no sha256"
+  },
+  "mdot_spf_2020": {
+   "title": "Safety Performance Function Calibration for Mississippi (FHWA/MDOT-RD-2021-278)",
+   "publisher": "MDOT (HDR Engineering with Texas A&M Transportation Institute)",
+   "jurisdiction": "MS",
+   "edition": "October 2020",
+   "url": "https://mdot.ms.gov/documents/Research/Reports/Interim%20&%20Final/MDOT_SPFCalibration_FinalReport_FINAL.pdf",
+   "sha256": "2aed7ee058490aad10cb0b0ecfaf5d5724db0a48e24341779c5f9dddb71db9a9",
+   "downloaded": "2026-11-08"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "MDOT publishes no crash-cost table: its HSIP report says projects are ranked by benefit/cost from Safety Countermeasure Alternative Reports, but the unit costs aren't published (HSIP 2025, 'Program Methodology')"
+  },
+  "statewide_rates": {
+   "missing": "MDOT publishes no statewide average crash-rate table, and CrashIQ has no Mississippi traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "MDOT HSIP project identification: crash frequency, crash rate, excess proportions of specific crash types, relative severity index (HSIP 2025 report, 'Program Methodology'; text extract, page not recorded)"
+  },
+  "min_years": {
+   "missing": "MDOT states no minimum years for a corridor study; its HSIP evaluates projects on a five-year before-and-after crash analysis (HSIP 2025 report, 'Program Evaluation'), which is an evaluation window, not a study minimum"
+  },
+  "spf_calibration": {
+   "missing": "MDOT's 2020 SPF calibration report (mdot_spf_2020) publishes Mississippi calibration factors for HSM SPFs on US and state highways; not loaded (no SPF engine, no Mississippi traffic counts)"
+  }
+ }
+}
