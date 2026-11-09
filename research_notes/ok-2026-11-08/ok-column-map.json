@@ -1,0 +1,44 @@
+{
+ "state": "OK",
+ "export": "ODOT SAFE-T 'Export Collisions' (CSV/Excel, one row per collision, fields picked by check box), or an OCERS extract from OHSO",
+ "spec": "No public column list. SAFE-T Training (ODOT, Aug 2018, https://www.odot.org/traffic/files/safe-t-training.pdf, saved in ~/.hermes/state-manuals/ok/): 'Most exports are in the form of a table with one line for every crash report and one column for every data field selected' (p. 103); 'Download User Data Dictionary can be useful for determining the meaning of codes' (p. 109); 'Each collision has a unique Collision ID ... Each Unit and Person has a unique ID' (pp. 112-113).",
+ "layout_seen_live": "SAFE-T-derived public layers show the field names to expect: ODOT AllCollisions_2012_2021 and INCOG Crashes2017_2023 (County, City, Control, Int_ID, Milepoint, Hwy_Name, Hwy_Class, Int_Rel, Num_Killed, Type_of_Collision, Severity, Date, Latitude_Derived, Longitude_Derived, Collision_ID, On_Street, At_Street ...), OKC VZAP (ON_STREET, AT_STREET, SEVERITY_C 1-5, LATITUDE, LONGITUDE) and, for OCERS, OHSO SORTPO_OCERS (CrashID, Street, IntersectingStreetName, CrashSeverity '(K) Fatal Injury' ... '(O) Property Damage-Only', Latitude, Longitude). Checked 2026-11-08; real export headers must be confirmed on one sample.",
+ "unit": "COLLISION (one row per crash), UNIT, PERSON, linked by Collision ID",
+ "map": {
+  "collision_id": "Collision_ID (SAFE-T) / CrashID (OCERS); DOC_ID in OHSO's layers",
+  "datetime": "Date + Collision_Time",
+  "primary_road": "On_Street (city streets); Hwy_Name for state highways ('I-35', 'US-169', 'SH-11'), with Control section + Milepoint",
+  "secondary_road": "At_Street / IntersectingStreetName",
+  "sec_distance": "none seen in any public copy (not measured whether SAFE-T exports one)",
+  "sec_direction": "none seen",
+  "junction": "Int_Rel (intersection relation), Int_ID",
+  "killed": "Num_Killed",
+  "injured": "Num_Vis_Injured / Num_Incapacitated_Injured + Num_Non_Incapacitated_Injured + Num_Possibly_Injured",
+  "severity": "SAFE-T Severity 1-5: 5/K Fatality, 4/A Incapacitating, 3/B Non-Incapacitating, 2/C Possible, 1/O Property Damage Only (SAFE-T Training p. 18). OCERS gives KABCO words directly; 'Unknown' -> U. OHSO's KAB layers label A Fatal / B Serious / C Minor: those letters are sort keys, not KABCO (Fatal = K, Serious = A, Minor = B)",
+  "collision_type": "Type_of_Collision / Manner_of_Collision",
+  "lighting": "Light_Conditions",
+  "weather": "Weather",
+  "surface": "not seen in public copies (OCERS: RD_SURFACE_COND)",
+  "lat_lon": "Latitude_Derived / Longitude_Derived (SAFE-T 'Not all crashes found are mappable', Training p. 102); 100% present on OHSO's 2021 Tulsa County rows",
+  "county_code": "County (ODOT county number 1-77, alphabetical: Oklahoma = 55, Tulsa = 72, as in ODOT's Safety_Grid layer names)",
+  "is_freeway": "Hwy_Class (codes; decode from the User Data Dictionary)"
+ },
+ "values_seen": {
+  "OKC_VZAP_2017_2021_Severity": {
+   "No Injury": 33633,
+   "Possible": 10307,
+   "Non-incapacitating": 4093,
+   "Incapacitating": 993,
+   "Fatal": 223
+  },
+  "SORTPO_OCERS_CrashSeverity": {
+   "(O) Property Damage-Only": 5210,
+   "(B) Suspected Minor Injury": 1084,
+   "(C) Possible Injury": 615,
+   "(A) Suspected Serious Injury": 390,
+   "(K) Fatal Injury**": 128,
+   "Unknown": 61
+  }
+ },
+ "verified_against_real_export": false
+}

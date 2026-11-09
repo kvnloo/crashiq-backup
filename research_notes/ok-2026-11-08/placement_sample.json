@@ -1,0 +1,74 @@
+{
+ "area": "Tulsa County (40143), 2021, OHSO KAB layer",
+ "n": 2000,
+ "gps_share": 1.0,
+ "street_pair_share": 0.7945,
+ "tiers": {
+  "review": 613,
+  "unique_pair": 173,
+  "exact": 775,
+  "fuzzy": 12,
+  "near": 9,
+  "verified_typo": 6,
+  "relaxed": 1
+ },
+ "name_placed_share": 0.488,
+ "name_placed_share_of_pairs": 0.6142,
+ "auto_share": 0.0,
+ "auto_share_if_tiger_only_auto": 0.474,
+ "route_form_retry_used": 35,
+ "scored_against_gps": 976,
+ "within_250ft_all_placed": 0.6322,
+ "within_250ft_all_placed_low": 0.6015,
+ "within_250ft_auto_if_tiger_only_auto": 0.634,
+ "within_250ft_auto_if_tiger_only_auto_low": 0.6028,
+ "within_250ft_offset_le_250ft": 0.6322,
+ "within_250ft_offset_le_250ft_low": 0.6015,
+ "offset_le_250ft_n": 976,
+ "not_placed": {
+  "no intersection of the two named streets": 435,
+  "no cross street": 411,
+  "exact: streets meet in more than one place": 125,
+  "relaxed: streets meet in more than one place": 32,
+  "missing street name": 19,
+  "fuzzy: streets meet in more than one place": 2
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "SH-11 & North Yale Avenue",
+   "SH-20 E/B & US-75 N/B EXIT RAMP",
+   "US-64 & COUNTY ROAD (161ST W AVE)",
+   "E 34TH ST & S 116TH EA",
+   "SH-51 & MAPLE DR",
+   "INTERSTATE 244 & WEST 7TH STREET"
+  ],
+  "exact: streets meet in more than one place": [
+   "US 75 S/B OFF RAMP & I-244",
+   "S. PEORIA AVE & E 66TH PL.",
+   "SOUTH LEWIS AVENUE & EAST 1st STREET",
+   "US 75 & W 201ST ST. S",
+   "S. SHERIDAN RD. & E. 41ST ST.",
+   "E. 31ST ST. & S. GARNETT RD."
+  ],
+  "relaxed: streets meet in more than one place": [
+   "I-244 WESTBOUND & PEORIA AVENUE",
+   "GARNETT RD & 36TH ST",
+   "PEORIA AVE & 62 ST. S.",
+   "CHEYENNE AVE. & 8 ST. S.",
+   "RIVERSIDE DRIVE & 21ST ST. SOUTH",
+   "81 ST. S. & PITTSBURG AVE."
+  ],
+  "missing street name": [
+   "US HIGHWAY 169 (NORTHBOUND) & COUNTY ROAD 156TH STREET NORTH",
+   "HWY 64 (EASTBOUND) & WILSON AVENUE",
+   "I-244 (EASTBOUND) & LEWIS AVE",
+   "US HIGHWAY 64 (WESTBOUND) & COUNTY ROAD 65TH WEST AVENUE",
+   "US HIGHWAY 64 (EASTBOUND) & COUNTY ROAD 81ST WEST AVENUE",
+   "US-412 (WESTBOUND) & S 81ST WEST AVE"
+  ],
+  "fuzzy: streets meet in more than one place": [
+   "S. 129 E. Ave. & E. 41 St.",
+   "E. 21S ST. & S. MEMORIAL DR."
+  ]
+ }
+}
