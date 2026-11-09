@@ -1,0 +1,103 @@
+{
+ "area": "Chicago box (41.85, -87.75, 41.95, -87.62), 2025 layer, every row",
+ "n": 37696,
+ "gps_share": 1.0,
+ "primary_share": 1.0,
+ "street_pair_share": 0.0053,
+ "house_number_share": 0.8464,
+ "offset_share": 0.1475,
+ "severity": {
+  "O": 31088,
+  "B": 3608,
+  "A": 538,
+  "C": 2424,
+  "K": 38
+ },
+ "county": {
+  "17031": 37696
+ },
+ "freeway_share": 0.1365,
+ "contract_errors": 0,
+ "placement": {
+  "area": "Cook County (17031) inside the Chicago box, 2025, random 2,000 with GPS (seed 2026)",
+  "n": 2000,
+  "street_pair_share": 0.005,
+  "tiers": {
+   "unique_pair": 8,
+   "review": 2
+  },
+  "name_placed_share": 0.004,
+  "auto_share": 0.004,
+  "gate": "Gate(tiger_only_auto=True) on a TIGER-only network",
+  "within_250ft": 1.0,
+  "within_250ft_low": 0.6756,
+  "within_250ft_all_placed": 1.0,
+  "not_placed": {
+   "no cross street in source": 1990,
+   "no intersection of the two named streets": 2
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "Cermak Rd & Ramp To I-94 S/B",
+    "Chinatown Ramp & W Cermak Rd"
+   ]
+  }
+ },
+ "placement_dupage": {
+  "area": "DuPage County (17043) box (41.75, -88.2, 41.95, -87.92), 2025, random 2,000 with GPS (seed 2026)",
+  "n": 2000,
+  "street_pair_share": 0.3955,
+  "tiers": {
+   "exact": 417,
+   "review": 142,
+   "unique_pair": 222,
+   "relaxed": 2,
+   "verified_typo": 5,
+   "fuzzy": 1,
+   "near": 2
+  },
+  "name_placed_share": 0.3245,
+  "auto_share": 0.3195,
+  "gate": "Gate(tiger_only_auto=True) on a TIGER-only network",
+  "within_250ft": 0.9249,
+  "within_250ft_low": 0.9018,
+  "within_250ft_all_placed": 0.926,
+  "not_placed": {
+   "no cross street in source": 1209,
+   "no intersection of the two named streets": 119,
+   "exact: streets meet in more than one place": 17,
+   "relaxed: streets meet in more than one place": 5,
+   "fuzzy: streets meet in more than one place": 1
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "W Army Trail Blvd & Swift Rd",
+    "Army Trail Rd & Army Trail/Sandpiper",
+    "North Ave / Il-64 & Bloomingdale Road",
+    "Il Route 59 & Washington",
+    "E Il-38 & S Highland Ave",
+    "N Addison Ave & W Vermont St"
+   ],
+   "exact: streets meet in more than one place": [
+    "N Washington St & W Ogden Ave",
+    "E Diehl Rd & Centre Point Cir",
+    "S Main St & E Roosevelt Rd",
+    "Naperville Rd & Warrenville Rd",
+    "Il-53 & N Columbine Ave",
+    "S/B Naperville Rd & Warrenville Rd"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "W Saint Charles Rd & S Berkley Ave",
+    "S Lambert Rd & College Rd",
+    "N County Farm Rd & Jefferson St",
+    "Main St & Chicago Ave",
+    "Main St & Chicago Ave"
+   ],
+   "fuzzy: streets meet in more than one place": [
+    "S S Highland Ave & E Yorktown Mall Dr"
+   ]
+  },
+  "source_rows": 13192,
+  "house_number_share": 0.0738
+ }
+}

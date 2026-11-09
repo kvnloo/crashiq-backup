@@ -1,0 +1,94 @@
+{
+ "state": "AZ",
+ "bucket": "D",
+ "status": "gated",
+ "sources": [
+  {
+   "name": "ADOT ACIS",
+   "url": "https://adotdw.dot.state.az/ACIS",
+   "access": "gated (IGA with ADOT + NDA + AUA)",
+   "licence_paid_use": "unclear",
+   "years": "statewide, current",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured (geo-coded to ATIS routes per ADOT)",
+   "street_names_share": "not measured",
+   "kabco": true,
+   "keys_linkable": "INCIDENT/UNIT/PERSON tables by incident id (per ADOT training)"
+  },
+  {
+   "name": "ADOT Public Record Center",
+   "url": "https://azdot.govqa.us/WEBAPP/_rs/supporthome.aspx",
+   "access": "records request (account)",
+   "licence_paid_use": "unclear",
+   "years": "per request",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null
+  },
+  {
+   "name": "City of Tempe 1.08 Crash Data Report (detail)",
+   "url": "https://services.arcgis.com/lQySeXwbBg53XWDi/arcgis/rest/services/CrashDataReportforGISstory/FeatureServer/0",
+   "access": "open (ArcGIS REST)",
+   "licence_paid_use": "ok_with_attribution",
+   "years": "2012-2026 (2026 partial)",
+   "rows_per_year": {
+    "2012": 4258,
+    "2013": 4316,
+    "2014": 4372,
+    "2015": 4612,
+    "2016": 4768,
+    "2017": 4896,
+    "2018": 5049,
+    "2019": 5366,
+    "2020": 2280,
+    "2021": 2805,
+    "2022": 3745,
+    "2023": 4544,
+    "2024": 3980,
+    "2025": 3261,
+    "2026": 842
+   },
+   "gps_share": 0.9995,
+   "street_names_share": 0.9305,
+   "kabco": true,
+   "keys_linkable": "crash-level only (Incidentid); two units flattened"
+  }
+ ],
+ "placement_sample": {
+  "area": "City of Tempe (Maricopa 04013), 2025",
+  "n": 2000,
+  "gps_share": 0.9995,
+  "name_placed_share": 0.8595,
+  "auto_share": 0.0,
+  "auto_share_if_tiger_only_auto": 0.857,
+  "within_250ft": 0.7266,
+  "within_250ft_low": 0.705,
+  "within_250ft_offset_le_250ft": 0.9108,
+  "within_250ft_offset_le_250ft_low": 0.8945,
+  "house_address_share": "not measured (no house-number field)",
+  "address_points_source": null
+ },
+ "importer_built": false,
+ "blockers": [
+  "ACIS needs an IGA with ADOT plus signed NDA/AUA; otherwise a public-records request",
+  "no published ACIS export column list",
+  "NDA/AUA and HSIP manuals not read (azdot.gov blocks scripted downloads)"
+ ],
+ "user_actions": [
+  "Get ACIS access (IGA via JPABranch@azdot.gov, then the ACIS access form with NDA + AUA) or file an ADOT public-records request for statewide 2020-2024 incident/unit/person CSVs with lat/lon, offset and direction",
+  "Read the AUA for use in a paid tool",
+  "Send one ACIS Data Export (one county, one year) to confirm az-column-map.json"
+ ],
+ "cities": [
+  {
+   "city": "Tempe",
+   "source": "1.08 Crash Data Report (detail)",
+   "url": "https://services.arcgis.com/lQySeXwbBg53XWDi/arcgis/rest/services/CrashDataReportforGISstory/FeatureServer/0",
+   "gps_share": 0.9995,
+   "years": "2012-2026",
+   "licence": "CC BY 4.0"
+  }
+ ]
+}

@@ -164,3 +164,30 @@ def test_switched_off_the_network_is_osm_only_and_nothing_downloads(client, tmp_
     assert tc.opener.urls == []                                                       # nothing downloaded
     client.app.state.ckan, client.app.state.tiger = None, None
     assert crashes.tiger_for(client.app.state) is None
+
+
+def test_another_states_county_downloads_by_its_5_digit_fips(tmp_path):
+    # #19: a non-CA pack's counties are state + county ("36081" Queens), so they never share CA's cache files
+    from crashiq import packs
+    import dataclasses
+    tc = _cache(tmp_path)
+    assert tc.ready("36081") and tc.path("36081").name == "36081.sqlite"
+    assert tc.opener.urls[0].endswith("/EDGES/tl_2026_36081_edges.zip")
+    ny = dataclasses.replace(packs.get("CA"), code="NY", fips="36", county_boxes=packs.REF / "county_boxes_ny.json")
+    assert "36081" in tiger_files.counties_for([(40.7357, -73.8743)], ny)        # Queens Blvd at Woodhaven (boxes padded)
+    assert tiger_files.counties_for([(33.9, -118.33)]) == ["037"]                    # California unchanged
+
+
+def test_tiger_elements_shape_points_are_unique_across_counties_and_tagged(tmp_path):
+    # #19: shape-point ids used to restart at -1 per county, so a 5-borough network joined unrelated streets
+    from crashiq import tiger
+    seg = lambda tlid: [(tlid, 1, 2, "S1400", "Main St", [(40.70, -73.90), (40.701, -73.899), (40.702, -73.898)])]
+    a, b = tmp_path / "a", tmp_path / "b"
+    for d, tlid in ((a, 11), (b, 22)):
+        d.mkdir()
+        (d / "e.zip").write_bytes(_edges(seg(tlid)))
+        (d / "f.zip").write_bytes(_featnames([]))
+    ea, eb = (tiger.elements(d / "e.zip", d / "f.zip") for d in (a, b))
+    shape = lambda els: {n for e in els["elements"] if e["type"] == "way" for n in e["nodes"] if n < 0}
+    assert shape(ea) and not shape(ea) & shape(eb)
+    assert all(e["tags"]["crashiq:source"] == "tiger" for e in ea["elements"] if e["type"] == "way")

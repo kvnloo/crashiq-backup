@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nebraska crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+</style></head><body><main>
+<p class="dim">CrashIQ · state pack · 8 Nov 2026 · written by Hermes</p>
+<h1>Nebraska: statewide crashes, 2021 - now</h1>
+<div class="card"><b>In one line:</b> Open web-map query, record-level, statewide, 100% GPS, KABCO per crash, 2021-now. Catches: a CONFIDENTIAL notice forbidding further distribution, no people/vehicles, undocumented endpoint.</div>
+<h2>1. Where it comes from</h2>
+<div class="card">NTIP crash map (NDOT), open (POST /NTIP2021/Map/Crashes, no login).<br><span class="dim">https://ntip2021.nebraska.gov/NTIP2021/Map</span></div>
+<h2>2. Can we sell it?</h2>
+<div class="card"><b>no</b>. &#x27;... has not authorized further distribution of this document or its contents to anyone other than the original recipient.&#x27;</div>
+<h2>3. Does it place?</h2>
+<div class="card"><span class="big">100%</span> of 2,000 crashes in Douglas County (31055), 2024 have a map point.
+Hiding the point and placing by the two street names lands 83% within 250 ft (at least 81%).</div>
+<h2>4. One real corridor</h2>
+<div class="card">Dodge Street, 0.89 mi, 2021–2025:
+<b>362</b> crashes counted (K 0 · A 13 · B 51 · C 68 · U 0 · O 230). Crash cost: not priced (no state cost table).
+PDF 52 KB, Excel 32 KB.</div>
+<h2>Status: reader_only</h2>
+<h2>What you need to do</h2><ul><li>Ask NDOT for written permission to use NTIP crash data in a paid product (or a bulk extract with reuse terms); then flip the pack to active</li></ul>
+<h2>What we didn't check</h2><ul><li>NTIP&#x27;s CONFIDENTIAL notice: NDOT has not authorized further distribution</li><li>Pedestrian and bicycle filters look incomplete (Omaha 2024: 21 and 3 crashes)</li><li>House-address placement (not needed: every crash has a point).</li></ul>
+</main></body></html>

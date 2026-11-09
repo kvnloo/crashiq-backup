@@ -1,0 +1,276 @@
+{
+ "source": "https://services5.arcgis.com/79IoFXBn9ZeqmVlC/arcgis/rest/services/pal_crash_event/FeatureServer/0",
+ "area": "Palm Beach County, FL (12099)",
+ "year": 2024,
+ "seed": 20261107,
+ "n": 2000,
+ "gps_plausible": 2000,
+ "two_streets": 1643,
+ "house_address": 318,
+ "named_any": 1961,
+ "tiers_raw_names": {
+  "review": 876,
+  "exact": 934,
+  "unique_pair": 140,
+  "fuzzy": 23,
+  "relaxed": 12,
+  "near": 7,
+  "verified_typo": 8
+ },
+ "tiers": {
+  "exact": 1131,
+  "review": 467,
+  "address": 188,
+  "unique_pair": 178,
+  "fuzzy": 9,
+  "relaxed": 12,
+  "near": 7,
+  "verified_typo": 8
+ },
+ "placed": 1533,
+ "auto": 1309,
+ "auto_by_tier": {
+  "exact": 1131,
+  "unique_pair": 178
+ },
+ "accuracy_placed": {
+  "n": 1533,
+  "within_250ft": 1160,
+  "share": 0.7567,
+  "low": 0.7346
+ },
+ "accuracy_auto": {
+  "n": 1309,
+  "within_250ft": 999,
+  "share": 0.7632,
+  "low": 0.7394
+ },
+ "accuracy_auto_not_freeway": {
+  "n": 1084,
+  "within_250ft": 990,
+  "share": 0.9133,
+  "low": 0.895
+ },
+ "accuracy_auto_freeway": {
+  "n": 225,
+  "within_250ft": 9,
+  "share": 0.04,
+  "low": 0.0212
+ },
+ "accuracy_auto_no_freeway_names": {
+  "n": 1057,
+  "within_250ft": 984,
+  "share": 0.9309,
+  "low": 0.914
+ },
+ "accuracy_auto_by_offset": {
+  "none": {
+   "n": 499,
+   "within_250ft": 431,
+   "share": 0.8637,
+   "low": 0.8308
+  },
+  "<=250": {
+   "n": 423,
+   "within_250ft": 380,
+   "share": 0.8983,
+   "low": 0.8659
+  },
+  "250-1000": {
+   "n": 247,
+   "within_250ft": 169,
+   "share": 0.6842,
+   "low": 0.6238
+  },
+  ">1000": {
+   "n": 140,
+   "within_250ft": 19,
+   "share": 0.1357,
+   "low": 0.0886
+  }
+ },
+ "accuracy_auto_intersection_node": {
+  "n": 1309,
+  "within_250ft": 834,
+  "share": 0.6371,
+  "low": 0.6107
+ },
+ "accuracy_address": {
+  "n": 188,
+  "within_250ft": 135,
+  "share": 0.7181,
+  "low": 0.6499
+ },
+ "median_ft": 50,
+ "review_notes": {
+  "no intersection of the two named streets": 234,
+  "exact": 40,
+  "address not found": 119,
+  "missing street name": 59,
+  "relaxed": 14,
+  "fuzzy": 1
+ },
+ "far_auto_examples": [
+  {
+   "on": "SR 91 FLORIDAS TPKE SB MM 75",
+   "from": "STATE ROAD 808 GLADES ROAD",
+   "road_system": "Turnpike/Toll",
+   "offset_ft": 313.0,
+   "tier": "exact",
+   "ft": 2536
+  },
+  {
+   "on": "INTERSTATE 95 (STATE ROAD 9)",
+   "from": "STATE ROAD 804 (BOYNTON BEACH BLVD)",
+   "road_system": "Interstate",
+   "offset_ft": 529.0,
+   "tier": "exact",
+   "ft": 1744
+  },
+  {
+   "on": "S/B INTERSTATE 95 (STATE ROAD 9)",
+   "from": "STATE ROAD 806 (ATLANTIC AVE)",
+   "road_system": "Interstate",
+   "offset_ft": null,
+   "tier": "exact",
+   "ft": 1943
+  },
+  {
+   "on": "LYONS RD",
+   "from": "STRIBLING WAY",
+   "road_system": "County",
+   "offset_ft": 1077.0,
+   "tier": "exact",
+   "ft": 1091
+  },
+  {
+   "on": "I-95 NB",
+   "from": "SR-706 (INDIANTOWN RD)",
+   "road_system": "Interstate",
+   "offset_ft": 3614.0,
+   "tier": "exact",
+   "ft": 1574
+  },
+  {
+   "on": "SB  INTERSTATE-95",
+   "from": "WOOLBRIGHT  RD",
+   "road_system": "Interstate",
+   "offset_ft": 1067.0,
+   "tier": "unique_pair",
+   "ft": 1970
+  },
+  {
+   "on": "INTERSTATE 95 (STATE ROAD) NORTHBOUND",
+   "from": "STATE ROAD 80 (SOUTHERN BLVD)",
+   "road_system": "Interstate",
+   "offset_ft": null,
+   "tier": "exact",
+   "ft": 42083
+  },
+  {
+   "on": "N/B INTERSTATE 95 (SR-9) EXIT RAMP",
+   "from": "STATE ROAD 804 (BOYNTON BEACH BLVD)",
+   "road_system": "Interstate",
+   "offset_ft": null,
+   "tier": "exact",
+   "ft": 1805
+  },
+  {
+   "on": "SB INTERSTATE 95",
+   "from": "DONALD ROSS ROAD",
+   "road_system": "Interstate",
+   "offset_ft": 797.0,
+   "tier": "exact",
+   "ft": 3060
+  },
+  {
+   "on": "SR 806 (E ATLANTIC AVE)",
+   "from": "NE 4TH AVE",
+   "road_system": "State",
+   "offset_ft": null,
+   "tier": "exact",
+   "ft": 2644
+  },
+  {
+   "on": "INTERSTATE 95 (STATE ROAD 9)",
+   "from": "STATE ROAD 808 (GLADES ROAD)",
+   "road_system": "Interstate",
+   "offset_ft": 1340.0,
+   "tier": "exact",
+   "ft": 1881
+  },
+  {
+   "on": "SR 91 FLORIDAS TPKE NB EXIT 97",
+   "from": "STATE ROAD 80 SOUTHERN BLVD",
+   "road_system": "Turnpike/Toll",
+   "offset_ft": 298.0,
+   "tier": "exact",
+   "ft": 650
+  },
+  {
+   "on": "NB INTERSTATE 95 (SR-9) ENTR RAMP",
+   "from": "STATE ROAD 80 (SOUTHERN BLVD)",
+   "road_system": "Interstate",
+   "offset_ft": null,
+   "tier": "exact",
+   "ft": 78321
+  },
+  {
+   "on": "I-95 (SR-9)",
+   "from": "DONALD ROSS RD",
+   "road_system": "Interstate",
+   "offset_ft": 3163.0,
+   "tier": "exact",
+   "ft": 2699
+  },
+  {
+   "on": "INTERSTATE 95 (SR9) SOUTHBOUND",
+   "from": "FOREST HILL BLVD (SR882)",
+   "road_system": "Interstate",
+   "offset_ft": 1773.0,
+   "tier": "exact",
+   "ft": 11805
+  },
+  {
+   "on": "SB INTERSTATE 95",
+   "from": "GLADES ROAD",
+   "road_system": "Interstate",
+   "offset_ft": 1868.0,
+   "tier": "exact",
+   "ft": 1879
+  },
+  {
+   "on": "INTERSTATE 95 (STATE ROAD 9)",
+   "from": "BELVEDERE ROAD",
+   "road_system": "Interstate",
+   "offset_ft": 1056.0,
+   "tier": "exact",
+   "ft": 4529
+  },
+  {
+   "on": "SB INTERSTATE 95 (STATE ROAD 9)",
+   "from": "STATE ROAD 786 (PGA BLVD)",
+   "road_system": "Interstate",
+   "offset_ft": 1315.0,
+   "tier": "exact",
+   "ft": 2083
+  },
+  {
+   "on": "NB INTERSTATE 95 (STATE ROAD 9)",
+   "from": "STATE ROAD 706 (INDIANTOWN ROAD)",
+   "road_system": "Interstate",
+   "offset_ft": 496.0,
+   "tier": "exact",
+   "ft": 3096
+  },
+  {
+   "on": "SB INTERSTATE 95 (SR-9)",
+   "from": "STATE ROAD 706 (INDIANTOWN ROAD)",
+   "road_system": "Interstate",
+   "offset_ft": 368.0,
+   "tier": "exact",
+   "ft": 2945
+  }
+ ],
+ "situs_points_fetched": 114823
+}

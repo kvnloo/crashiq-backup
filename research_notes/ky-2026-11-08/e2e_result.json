@@ -1,0 +1,73 @@
+{
+ "state": "KY",
+ "study": "b5120fbfda01",
+ "corridor": "Bardstown Road",
+ "length_mi": 0.84,
+ "window": [
+  2020,
+  2024
+ ],
+ "pulled": 391,
+ "counted": 294,
+ "ksi": 0,
+ "fatal": 0,
+ "injury": 58,
+ "pdo": 236,
+ "unplaced": 0,
+ "excluded": 97,
+ "severity_T3": {
+  "K": 0,
+  "A": 0,
+  "B": 0,
+  "C": 0,
+  "U": 58,
+  "O": 236
+ },
+ "crash_cost_total": null,
+ "cost_column": false,
+ "caveats": [
+  "covid",
+  "no_injury_levels",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_crash_costs",
+  "no_statewide_rates",
+  "rates_not_computed",
+  "gps_far_from_stated"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": false,
+   "text": "not available for Kentucky: KYTC prices crashes with the National Safety Council's comprehensive costs (KYTC HSIP reports 2023-2025, benefit/cost lines) and publishes no table of its own; and the public data has no A/B/C level, so only K and O could be priced and a cost total would be misleading"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for Kentucky: KTC publishes statewide average and critical crash rates per 100 MVM by highway type (Analysis of Traffic Crash Data in Kentucky 2020-2024, rate tables after p. ix), but CrashIQ has no Kentucky traffic counts to apply them"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Highway Safety Manual (AASHTO, 1st, 2010), Ch. 4, Sec. 4.2.3. Kentucky's own method, KYTC ranks HSIP sites by the cost of excess expected crashes (KTC SPFs + Empirical Bayes, KA/B/C/O); KTC's high-crash-location critical rate uses K = 2.576 (p = 0.995), Cc = Ca + K*sqrt(Ca/M) + 1/(2M) (KTC 2020-2024, p. ix, PDF p. 11), isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": false,
+   "text": "not available for Kentucky: KTC's analysis and KYTC's screening use five years of crashes (KTC 2020-2024, Table 1, PDF p. 20) but set no minimum study period for a corridor study"
+  }
+ ],
+ "findings_shown": 8,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 41972,
+ "pdf_bytes": 67287,
+ "seconds": 165
+}

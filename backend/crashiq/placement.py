@@ -270,8 +270,43 @@ def outside_corners(net: dict, cands: list[dict], raw: dict, gate: locate.Gate |
     return {"tried": len(cands), "kept": kept}
 
 
+BLOCK_MAX_M = 1200          # a block's two corners further apart than this: not one block, so no midpoint
+
+
+def _block(onet, c: dict, gate, pl):
+    """A block crash ('A BETWEEN B AND C', Seattle; `block_end_road` = C): placed mid-block, halfway between the corners
+    A & B and A & C, when both auto-place one block apart. Otherwise it isn't auto-placed (the corner A & B is only a
+    suggestion): the locator alone would put a block crash on the corner (#19, wa-import.md)."""
+    if not c.get("block_end_road") or not gate.auto(pl):
+        return pl
+    p2 = locate.place(onet, {**c, "secondary_road": c["block_end_road"]})
+    if gate.auto(p2) and osm.metres((pl.lat, pl.lon), (p2.lat, p2.lon)) < BLOCK_MAX_M:
+        return locate.Placement(pl.tier, (pl.lat + p2.lat) / 2, (pl.lon + p2.lon) / 2,
+                                note=f"mid-block between {c['secondary_road']} and {c['block_end_road']}",
+                                tiger=pl.tiger or p2.tiger, tiger_road=pl.tiger_road or p2.tiger_road)
+    return locate.Placement("review", pl.lat, pl.lon, note="block crash: the block's far corner wasn't placed")
+
+
+def with_driveways(raw: dict, net: dict) -> dict:
+    """The locator's street network plus the named signalized driveways that are study intersections (#421). The street
+    query has no `service` ways, so "PACIFIC COAST HWY / DOHENY PARK PLZ" found no Doheny Park Plaza and stayed
+    unmatched. Each one is a short way by its name from its corridor nodes; no other driveway reaches the locator.
+    The caller's network isn't changed."""
+    have = {el["id"] for el in raw.get("elements", []) if el.get("type") == "node"}
+    extra, nid = [], -1
+    for i in net.get("intersections", []):
+        if not i.get("driveway") or i.get("name") in ("Driveway (signal)", "Unnamed road", None):
+            continue
+        for n in i.get("osm_node_ids", []):
+            if n in have:
+                extra += [{"type": "node", "id": nid, "lat": i["lat"], "lon": i["lon"]},
+                          {"type": "way", "id": nid, "nodes": [n, nid], "tags": {"highway": "service", "name": i["name"]}}]
+                nid -= 1
+    return {**raw, "elements": raw.get("elements", []) + extra} if extra else raw
+
+
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
-                    raw: dict | None = None, tiger=None, postmiles=None, addresses=None) -> dict:
+                    raw: dict | None = None, tiger=None, postmiles=None, addresses=None, fars: bool = True) -> dict:
     gate = gate or locate.Gate()
     result["cleaning"]["mile_markers"] = place_mile_markers(net, result, gate, postmiles)
     result["cleaning"]["crossings"] = place_crossings(db, net, result, gate, overpass)
@@ -296,11 +331,11 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
     if (todo or offset_cands) and net.get("line"):
         if raw is None:                   # OSM only (the caller passes the OSM + TIGER network when it has one, #229)
             raw = network_mod.fetch_overpass(db, network_mod.overpass_query([tuple(p) for p in net["line"]]))
-        onet = osm.Network(raw)
+        onet = osm.Network(with_driveways(raw, net))
     result["cleaning"]["gps_offset_applied"] = gps_rules.apply_offsets(onet, net, offset_cands) if onet else 0
     if todo and onet is not None:
         for c in todo:
-            pl = locate.place(onet, c)
+            pl = _block(onet, c, gate, locate.place(onet, c))
             # the street-name locator first: a freeway crash it places today keeps that placement (PM review of #252);
             # the report's freeway description is tried only when the locator doesn't auto-place
             sp = freeway.place(raw, c) if fwy and c.get("is_freeway") and not gate.auto(pl) else None
@@ -326,7 +361,8 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
                 counts["suggested"] += 1
             counts["still_unplaced"] += 1
     # FARS only after the locator: a fatal crash it placed exactly has a usable location (#191)
-    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass, tiger)
+    # (fars=False: the FARS store holds California rows only, #19)
+    result["cleaning"]["fars"] = place_fatal_from_fars(db, net, result, overpass, tiger) if fars else None
     replaced = [c["approximate_replaced"]["method"] for c in result["crashes"] if c.get("approximate_replaced")]
     if replaced:                          # approximate spots FARS replaced (#280) are counted as FARS
         for m in replaced:

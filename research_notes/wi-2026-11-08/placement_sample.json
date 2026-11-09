@@ -1,0 +1,64 @@
+{
+ "area": "Milwaukee County (55079), 2022",
+ "n": 2000,
+ "gps_share": 0.9965,
+ "street_pair_share": 1.0,
+ "offset_given_share_of_pairs": 0.8355,
+ "house_address_share": 0.187,
+ "tiers": {
+  "exact": 1379,
+  "review": 491,
+  "unique_pair": 101,
+  "fuzzy": 11,
+  "near": 12,
+  "relaxed": 4,
+  "verified_typo": 2
+ },
+ "name_placed_share": 0.7545,
+ "name_placed_share_of_pairs": 0.7545,
+ "auto_share": 0.738,
+ "auto_share_of_pairs": 0.738,
+ "gate": "Gate() tiers with tiger_only_auto=True (TIGER-only network; plain Gate() auto-places 0 here)",
+ "within_250ft": 0.9749,
+ "within_250ft_low": 0.9656,
+ "within_250ft_all_placed": 0.9682,
+ "within_250ft_all_placed_low": 0.9581,
+ "not_placed": {
+  "no intersection of the two named streets": 369,
+  "exact: streets meet in more than one place": 117,
+  "relaxed: streets meet in more than one place": 5
+ },
+ "examples": {
+  "exact: streets meet in more than one place": [
+   "W CAPITOL DR & STATE HWY 57",
+   "W CAPITOL DR & STATE HWY 190",
+   "STATE HWY 32 & E WELLS ST",
+   "US HWY 18 & W KILBOURN AVE",
+   "N 76TH ST & STATE HWY 181",
+   "STATE HWY 38 & S HOWELL AVE"
+  ],
+  "no intersection of the two named streets": [
+   "STATE HWY 175 & STATE HWY NEC",
+   "PORT WASHINGTON RD N & PUBLIC/PRIVATE PROPERTY",
+   "I-41 & I-41",
+   "PARKING LOT & S 27TH ST",
+   "MILLER PARK WAY & W LINCOLN AVE",
+   "STATE HWY 190 & STATE HWY 190"
+  ],
+  "placed >250 ft off": [
+   "STATE HWY 794 & E EDGERTON AVE +1162 ft W [exact] 290 ft",
+   "S 35TH ST & N 35TH ST +67 ft S [exact] 410 ft",
+   "N 46TH ST & STATE HWY 175 +11 ft N [exact] 7512 ft",
+   "W VIRGINIA ST & S 6TH ST +72 ft W [exact] 373 ft",
+   "STATE HWY 145 & W SILVER SPRING DR +410 ft N [exact] 552 ft",
+   "I-94 & W CANAL ST +1426 ft W [exact] 9268 ft"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "GREEN BAY RD & STATE HWY 57",
+   "LAYTON BLVD & STATE HWY 57",
+   "RYAN RD & STATE HWY 100",
+   "GREEN BAY RD & N DEERWOOD DR",
+   "STATE HWY 57 & LAYTON BLVD"
+  ]
+ }
+}

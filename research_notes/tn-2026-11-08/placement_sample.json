@@ -1,0 +1,55 @@
+{
+ "tdot_2024_davidson": {
+  "n": 25690,
+  "gps_share": 1.0,
+  "severity": {
+   "C": 2247,
+   "O": 17536,
+   "B": 5317,
+   "A": 484,
+   "K": 106
+  },
+  "route_share": 0.6297,
+  "freeway_share": 0.2484,
+  "collision_type": {
+   "REAR END": 7871,
+   "BROADSIDE": 7221,
+   "NO COLLISION W/ VEHICLE": 4018,
+   "SIDE SWIPE": 4014,
+   "null": 1246,
+   "HEAD-ON": 695
+  }
+ },
+ "tdoshs_2024_davidson_rows": 8591,
+ "tdoshs_2024_davidson_severity": {
+  "B": 5623,
+  "C": 2369,
+  "A": 493,
+  "K": 106
+ },
+ "tdoshs_2025": {
+  "rows_in_box": 10914,
+  "davidson": 8733,
+  "gps_share": 1.0,
+  "severity": {
+   "B": 5641,
+   "C": 2562,
+   "K": 103,
+   "A": 427
+  },
+  "flags": {
+   "ped": 380,
+   "bike": 97,
+   "motorcycle": 244,
+   "heavy_truck": 511
+  }
+ },
+ "nashville_2025_no_injury": {
+  "n": 18488,
+  "gps_share": 1.0,
+  "street_share": 0.9904,
+  "cross_street_share": 0.7224,
+  "matching_a_state_crash_100m_1h": 103,
+  "overlap_share": 0.0056
+ }
+}

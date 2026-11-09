@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arkansas crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1313;border-left:4px solid #e33;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em}code{background:#2a2a2a;padding:1px 4px;border-radius:3px;color:#ffb3b3}
+table{border-collapse:collapse;width:100%;font-size:.92em}td,th{border-bottom:1px solid #333;padding:5px 4px;text-align:left}th{color:#ff8080}
+li{margin:.35em 0}
+</style></head><body>
+<h1>Arkansas: crash data for CrashIQ</h1>
+<p class="ex">Hermes, 8 Nov 2026. Measured live today. Full notes: <code>ar-import.md</code>, methods: <code>ar-methods.md</code>.</p>
+
+<p class="big"><b>Short answer:</b> Arkansas works. The state DOT (ARDOT) puts every police crash report from 2021 to
+2025 online, free, no login, with a map point on 99.6% of them and KABCO severity. A Little Rock corridor study ran
+end to end today. The catch is the <b>licence</b>: ARDOT gives none, and calls the data "not an official record".</p>
+
+<h2>1. What Arkansas has</h2>
+<ul>
+<li><b>401,279 crashes</b>, about 80,000 a year, 2021-2025. Only the newest five years are kept.<br>
+<span class="ex">Example: a December 2024 angle crash on N Rodney Parham Rd, Little Rock, "No Apparent Injury (O)", with its GPS point.</span></li>
+<li><b>Map point on 99.6%.</b> The 1,467 without one can't be placed: they have no road either.</li>
+<li><b>Severity is KABCO</b> per crash. People counts are only "killed" and "seriously injured", so injured totals are a floor.</li>
+<li><b>No driver, vehicle or person records</b>, and no weather.</li>
+<li><b>Street names are squashed</b>: the road is stored as <code>NRODNEYPARHAMRD</code>. CrashIQ can't read that yet, so it places
+every crash by its GPS point. A crash in a parking lot next to the corridor can't be told apart.</li>
+</ul>
+
+<h2>2. The test corridor</h2>
+<table>
+<tr><th>Corridor</th><td>S University Ave, W 12th St to Asher Ave, Little Rock (1.55 mi)</td></tr>
+<tr><th>Years</th><td>2021-2025</td></tr>
+<tr><th>Crashes counted</th><td>263 (fatal 0, serious 3, minor 24, possible 36, property damage 200)</td></tr>
+<tr><th>Crash cost</th><td>$8.64 million (ARDOT's own costs, 2020 dollars)</td></tr>
+<tr><th>Report</th><td>PDF 37 KB, Excel 34 KB, 6 findings</td></tr>
+</table>
+
+<h2>3. Arkansas's own methods</h2>
+<ul>
+<li><b>Crash costs</b> from ARDOT's HSIP Process (Dec 2022), Appendix E: fatal $6.34M, serious $335k, minor $123k, possible $69k, property damage $11k.</li>
+<li><b>Screening</b>: ARDOT uses a critical fatal-and-serious crash rate. CrashIQ uses the national critical rate for now.</li>
+<li><b>Statewide average rates</b>: ARDOT computes them but doesn't publish them, so CrashIQ shows no rate comparison.</li>
+</ul>
+
+<h2>What you need to do</h2>
+<ul>
+<li>Decide whether to ask ARDOT's Traffic Safety Section for written permission to show this data in a paid tool.</li>
+<li>Optional: ask them for the statewide average crash rates.</li>
+</ul>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>Whether 2025 is complete (78,000 crashes against about 81,000 in other years).</li>
+<li>How accurate ARDOT's map points are (nothing independent to compare with).</li>
+<li>Whether Little Rock publishes its own crash feed.</li>
+</ul>
+</body></html>

@@ -1,0 +1,103 @@
+{
+ "state": "RI",
+ "bucket": "D",
+ "status": "gated",
+ "bucket_note": "RIDOT's statewide crash repository became a public record in June 2026 (RIGL 38-2-17, 2026-H 7576 / S 2480, effective on passage), but there is still no portal, open layer or download: records come by APRA request (or, for RIDOT projects, from the RIDOT Office of Safety). Verified live 2026-11-08.",
+ "bucket_2026_11_02": "D (confirmed; the 2026 law changed the right to the data, not the access)",
+ "sources": [
+  {
+   "name": "RIDOT Office of Safety statewide crash data repository",
+   "url": "https://www.dot.ri.gov/business/publicrecordsrequest.php",
+   "access": "records request (RIDOT APRA portal); RIDOT projects: request from the RIDOT Office of Safety (Traffic Design Manual 2025, 7.1.1, p. 7-1)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "RIGL 38-2-17: records ... under 23 U.S.C. 407 ... shall nonetheless be deemed public records; provided, however, the records may not be used for purposes prohibited by that federal statute. (H 7576, lines 3-9)",
+   "years": "not stated (Crash Facts PDFs cover 2023, 2025, 2026 Jan-Sep)",
+   "rows_per_year": {
+    "2025": 36850,
+    "2026 (Jan-Sep)": 29776
+   },
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "kabco_evidence": "Crash Facts 2025 severity split: fatal 0.1%, suspected serious 0.6%, suspected minor 2.5%, possible 15.7%, no injury 75.6%, unknown 5.5%. TDM 2025 p. 7-2 requires KABCO per crash.",
+   "keys_linkable": "not checked (form has Report Number on every page and Unit ID on the person page)"
+  },
+  {
+   "name": "Rhode Island Crash Facts (PDF summaries)",
+   "url": "https://www.dot.ri.gov/safety/",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2023, 2025, 2026 Jan-Sep",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "aggregate only"
+  },
+  {
+   "name": "RIDOT ArcGIS Online org (owner DOT_AGOL.Admin, services5.arcgis.com/JfTJE9T2RFfUZzVx)",
+   "url": "https://services5.arcgis.com/JfTJE9T2RFfUZzVx/arcgis/rest/services",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": false,
+   "keys_linkable": "no crash layer among its 44 services (sweeping, litter, bridges, Wrong_Way_Driver_System)"
+  },
+  {
+   "name": "RIGIS hosting server (risegis.ri.gov/hosting)",
+   "url": "https://risegis.ri.gov/hosting/rest/services",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": false,
+   "keys_linkable": "86 services, no crash layer"
+  }
+ ],
+ "placement_sample": {
+  "area": null,
+  "n": 0,
+  "gps_share": null,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "not measured: no open record-level RI crash data exists"
+ },
+ "importer_built": false,
+ "blockers": [
+  "no RIDOT portal or open layer yet, even after the June 2026 law",
+  "export column layout unknown (only the 2006 Uniform Crash Report form is published); GPS in the repository not confirmed",
+  "paid-use terms not stated; the law only bars 23 U.S.C. 407 uses"
+ ],
+ "user_actions": [
+  "File a request on RIDOT's APRA portal (https://www.dot.ri.gov/business/publicrecordsrequest.php) for the statewide crash repository 2021-2025 plus 2026 to date: crash, vehicle/unit and person tables, the field dictionary/code tables, and latitude/longitude. Ask for CSV.",
+  "In the same request, ask whether RIDOT will publish the data online (open portal) and whether use in a paid engineering tool is allowed beyond the 23 U.S.C. 407 limit.",
+  "Send one delivered file (or one town, one year) so the column map can be checked and a reader built."
+ ],
+ "cities": [
+  {
+   "city": "Providence",
+   "source": "PVD Crash Map (Providence Streets Coalition, Tableau Public, from Providence PD records)",
+   "url": "https://pvdstreets.org/crash-map/",
+   "gps_share": null,
+   "years": "not checked",
+   "licence": "community project, no licence; not an agency publication"
+  },
+  {
+   "city": "statewide (fatal only)",
+   "source": "roadway.report (FARS map)",
+   "url": "https://roadway.report/rhode-island-embeddable",
+   "gps_share": null,
+   "years": "2001-2024",
+   "licence": "FARS-derived; use FARS directly"
+  }
+ ]
+}

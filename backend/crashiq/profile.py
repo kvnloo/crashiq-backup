@@ -20,6 +20,7 @@ from fastapi import APIRouter, HTTPException, Request
 from . import pcf, assign as assign_mod
 from . import study as study_mod
 from . import crash_cost
+from . import packs
 from .geo import Polyline
 
 SEVERITY_LABELS = {"K": "Fatal (K)", "A": "Suspected serious injury (A)", "B": "Suspected minor injury (B)",
@@ -364,6 +365,18 @@ def approximate_text(n: int) -> str:
             f"tables and collision diagrams leave {'it' if one else 'them'} out.")
 
 
+def driveway_caveat(net: dict) -> dict | None:
+    """#413: when the signalized-driveway query wasn't answered (or the corridor was drawn before the check), say so:
+    the same corridor would otherwise show fewer intersections with nothing to tell the engineer why."""
+    if "driveways_checked" not in net or net["driveways_checked"]:
+        return None
+    why = ("map query unavailable" if net["driveways_checked"] is False
+           else "the corridor was drawn before this check; draw it again to check")
+    return {"key": "driveways_not_checked",
+            "text": f"Signalized driveways weren't checked ({why}): a driveway or access road meeting the corridor at a "
+                    "traffic signal would be a study intersection, and any here count on the segment instead."}
+
+
 def address_sources(placed: list[dict]) -> dict[str, int]:
     """The address list each house-address placement came from (#408), as {source line: crashes}, NAD first. The
     source line is the registry's own wording (SanGIS's prescribed one for San Diego, docs/03 #393); a placement stored
@@ -642,8 +655,25 @@ def _ramp_years(used: dict) -> str:
     return text.lstrip("; ")
 
 
+def state_costs(pack) -> dict | None:
+    """A non-California pack's cited cost per KABCO level, or None (missing or unverified: no cost column)."""
+    return None if pack.caltrans else packs.value(pack, "crash_costs")
+
+
+def _cost(pack, costs, cs, kind, control) -> dict:
+    """California: the LRSM table and its rules (#273). Elsewhere: the pack's cost per level; U is left unpriced (the
+    state gives no rule for it) and the location counts how many it left out."""
+    if pack.caltrans:
+        return crash_cost.location_cost(cs, kind, control)
+    return {"crash_cost": sum(costs[c["severity"]] for c in cs if c.get("severity") in "KABCO"),
+            "cost_unpriced": sum(c.get("severity") == "U" for c in cs)}
+
+
 def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str] | None = None) -> dict:
     exclude = exclude or set()
+    pack = packs.for_study(study)
+    costs = state_costs(pack)
+    no_levels = pack.severity_note           # the source has no A/B/C (NY): KSI = fatal only, said everywhere
     by_id = {c["crash_id"]: c for c in pull["crashes"]}
     placed, unmatched, excluded_n, excluded_prov, gps_far = [], [], 0, 0, 0
     ramp_out = []         # named-ramp crashes the freeway rules exclude (rule "ramp"): still rated in T25 (#314)
@@ -673,7 +703,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     summary_rows = [
         _row("crashes", "Crashes", value=tot["crashes"]),
         _row("crashes_per_year", "Crashes per year", value=r2(tot["crashes"] / years) if years else None),
-        _row("ksi_crashes", "KSI crashes (fatal + suspected serious injury)", value=tot["ksi_crashes"]),
+        _row("ksi_crashes", "KSI crashes (fatal only: this source reports no injury levels, so no serious "
+             "injuries)" if no_levels else "KSI crashes (fatal + suspected serious injury)", value=tot["ksi_crashes"]),
         _row("fatal_crashes", "Fatal crashes", value=tot["fatal_crashes"]),
         _row("injury_crashes", "Injury crashes (any level)", value=tot["injury_crashes"]),
         _row("pdo_crashes", "Property-damage-only crashes", value=tot["pdo_crashes"]),
@@ -779,7 +810,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             seg_aadt = daily(s.get("aadt"))
             rate = segment_rate(k["crashes"], years, seg_aadt, s["length_mi"])
             expo[lid] = (kind, k["crashes"], exposure(kind, years, seg_aadt, s["length_mi"]), rate)
-            vals.update(**crash_cost.location_cost(cs, "segment", None))         # LRSM crash cost (#273)
+            if pack.caltrans or costs:
+                vals.update(**_cost(pack, costs, cs, "segment", None))           # LRSM / state crash cost (#273)
             vals.update(length_mi=round(s["length_mi"], 3),
                         crashes_per_mi_yr=r2(k["crashes"] / s["length_mi"] / years) if years and s["length_mi"] else None,
                         aadt=round(seg_aadt) if seg_aadt is not None else None, rate=r2(rate),
@@ -791,10 +823,12 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
             rate = intersection_rate(k["crashes"], years, maj, mnr, it.get("legs"))
             tev = entering_volume(maj, mnr, it.get("legs"))
             expo[lid] = (kind, k["crashes"], exposure(kind, years, tev), rate)
-            vals.update(**crash_cost.location_cost(cs, "intersection", it["control"]))
+            if pack.caltrans or costs:
+                vals.update(**_cost(pack, costs, cs, "intersection", it["control"]))
             vals.update(length_mi=None, crashes_per_mi_yr=None, control=it["control"], rate=r2(rate),
                         rate_unit="per MEV" if rate is not None else None)
-            statewide_any |= _statewide(vals, it.get("rate_group"), tev, "rate")
+            if pack.caltrans:                     # Caltrans rate groups: California only (#19)
+                statewide_any |= _statewide(vals, it.get("rate_group"), tev, "rate")
             label = it["name"]
         rates_any |= rate is not None
         loc_rows.append(_row(lid, label, **vals))
@@ -822,11 +856,18 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         ("length_mi", "Length (mi)"), ("crashes_per_mi_yr", "Per mile per year"), ("rate", "Rate"),
         ("reference_rate", "Average rate, similar sites"), ("critical_rate", "Critical rate (95%)"),
         ("over_critical", "Over critical rate?"), ("rate_to_critical", "Rate ÷ critical rate"),
-        ("sev_k", "Fatal (K)"), ("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"), ("sev_c", "Possible (C)"),
-        ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)"),
-        ("crash_cost", "Crash cost ($, Caltrans LRSM 2026)"), ("cost_control_unknown", "Cost: intersection control unknown")],
+        ("sev_k", "Fatal (K)")] + ([] if no_levels else [("sev_a", "Serious (A)"), ("sev_b", "Minor (B)"),
+                                                         ("sev_c", "Possible (C)")]) + [
+        ("sev_u", "Injury, level not stated"), ("sev_o", "Property damage (O)")]
+        + ([("crash_cost", "Crash cost ($, Caltrans LRSM 2026)"), ("cost_control_unknown", "Cost: intersection control unknown")]
+           if pack.caltrans else [("crash_cost", f"Crash cost ($, {pack.name}, {costs['dollar_year']})"),
+                                  ("cost_unpriced", "Injury crashes not priced (level not reported)")] if costs else []),
         loc_rows, placed))
-    tables[-1]["source_note"] = crash_cost.SOURCE                     # the crash-cost basis (#273)
+    if pack.caltrans:
+        tables[-1]["source_note"] = crash_cost.SOURCE                 # the crash-cost basis (#273)
+    elif costs:
+        tables[-1]["source_note"] = (f"{packs.cite(pack, 'crash_costs')}; dollar year: {costs['dollar_year']}; one cost "
+                                     "per KABCO level; injury crashes with no reported level (U) are not priced.")
     if statewide_any:                         # intersections with a Caltrans rate group (per million entering)
         _statewide_note(tables[-1], [c for c in STATEWIDE_COLS if c[0] != "statewide_rate_fatal"])
         for r in loc_rows:
@@ -857,7 +898,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     prelim = sum(c.get("preliminary", False) for c in placed)
     if prelim:
         caveats.append({"key": "preliminary", "count": prelim,
-                        "text": f"{prelim} crash report{'s are' if prelim != 1 else ' is'} still preliminary (CHP may revise them)."})
+                        "text": f"{prelim} crash report{'s are' if prelim != 1 else ' is'} still preliminary "
+                                f"({'CHP' if pack.caltrans else pack.source_short} may revise them)."})
     if study.get("covid_years_in_window"):
         caveats.append({"key": "covid", "text": "The window includes 2020 or 2021, when COVID-19 changed travel and crash "
                                                 "patterns; compare those years with care."})
@@ -877,6 +919,8 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
     if by_nad:                             # #283: the same for address points, credited to their lists (#408)
         srcs = address_sources(placed)
         caveats.append({"key": "address_nad", "count": by_nad, "sources": srcs, "text": address_nad_text(by_nad, srcs)})
+    if (dc := driveway_caveat(net)):        # #413
+        caveats.append(dc)
     oc = sum(isinstance(c.get("outside_corner"), dict) for c in placed)
     if oc:                                    # #70: brought back onto the stretch by their reported distance
         one = oc == 1
@@ -886,7 +930,9 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                                 f"street the map names differently). The reported distance puts {'it' if one else 'them'} "
                                 "on the corridor: placed from that corner and counted by the usual rules."})
     u = sum(c["severity"] == "U" for c in placed)
-    if u:
+    if no_levels:
+        caveats.append({"key": "no_injury_levels", "count": u, "limitation": True, "text": no_levels})
+    elif u:
         caveats.append({"key": "injury_level_unknown", "count": u,
                         "text": f"{u} injury crash{'es have' if u != 1 else ' has'} no reported injury level, so KSI may be undercounted."})
     notes = missing_notes(missing_detail(pull, placed + unmatched))
@@ -894,9 +940,19 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
         if k in notes:
             caveats.append({"key": f"{k}_missing", "text": notes[k], "limitation": True})
     annotate(tables, notes)
+    if no_levels:                             # every table that shows KSI or severity carries it (#19)
+        for t in tables:
+            t["note"] = " ".join(x for x in (t.get("note"), no_levels) if x)
     if years_missing:
         caveats.append({"key": "years_missing", "years": years_missing,
-                        "text": f"CCRS has no queryable data for {', '.join(map(str, years_missing))}; those years are not in the profile."})
+                        "text": f"{pack.source_short} has no queryable data for {', '.join(map(str, years_missing))}; "
+                                "those years are not in the profile."})
+    for note in pack.data_notes:              # what this state's source doesn't carry (#19)
+        caveats.append({"key": "state_data", "text": note})
+    for note in (pull["cleaning"].get("reader") or {}).get("notes") or []:     # the reader's own, e.g. Boston (#19)
+        caveats.append({"key": "reader_note", "text": note, "limitation": True})
+    if not pack.caltrans:
+        caveats += state_method_caveats(pack, costs, sum(r["values"].get("cost_unpriced", 0) for r in loc_rows))
     from .shs import corridor_routes
     if shs_tables:
         tids = ", ".join(t["id"] for t in shs_tables)
@@ -908,7 +964,10 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                         + (f"the comparison with Caltrans' statewide averages ({', '.join(compared)}) is approximate."
                            if compared else "they are compared with Caltrans' statewide averages only where the "
                            "engineer enters a rate group, and then only approximately.")})
-    if not rates_any and not shs_tables:
+    if not rates_any and not shs_tables and not pack.caltrans:
+        caveats.append({"key": "rates_not_computed", "text": f"Crash rates were not computed (no AADT entered). "
+                        f"CrashIQ has no {pack.name} traffic counts yet, so rates need AADT entered for each location."})
+    elif not rates_any and not shs_tables:
         routes = sorted(corridor_routes(net))
         vols = net.get("shs_volumes") or {}
         off_pm = bool(vols) and all(v.get("pm_coverage", 1.0) == 0 for v in vols.values())
@@ -959,11 +1018,41 @@ def build(study: dict, net: dict, pull: dict, assignment: dict, exclude: set[str
                      "injury_crashes": "T1/injury_crashes/value", "crashes_per_mi_yr": "T1/crashes_per_mi_yr/value"},
             "tables": tables, "signals": scr["signals"], "screen_tests": scr["tests_run"], "caveats": caveats, "location_provenance": dict(sorted(prov.items())),
             "source": pull["source"], "pulled_at": pull["pulled_at"], "excluded_provenance": sorted(exclude),
+            "state": pack.code, "state_name": pack.name, "source_short": pack.source_short, "severity_note": no_levels,
+            "legal": pack.legal, "methods": None if pack.caltrans else state_methods(pack),
             # where approximate placements are counted (#255 freeway, #283 NAD): the findings say so
             "approximate_locations": sorted({c["location_id"] for c in placed
                                              if c.get("location_provenance") == "approximate" and c.get("location_id")}),
             "address_nad_locations": sorted({c["location_id"] for c in placed
                                              if c.get("location_provenance") == "address_nad" and c.get("location_id")})}
+
+
+def state_methods(pack) -> list[dict]:
+    """The "State methods and sources" block (#19): per value, what was used and its cite, or why it isn't there."""
+    out = []
+    for key, what in (("crash_costs", "Crash costs"), ("statewide_rates", "Statewide average crash rates"),
+                      ("screening", "Screening"), ("min_years", "Minimum years of crash data")):
+        v = packs.value(pack, key)
+        out.append({"key": key, "what": what, "used": bool(v),
+                    "text": (packs.cite(pack, key) + (f". {pack.name}'s own method, {v['state_method']}, isn't built: "
+                                                      "this report uses the HSM critical rate against the corridor's own "
+                                                      "sites (national method)" if v.get("state_method") else ""))
+                    if v else f"not available for {pack.name}: {packs.why_missing(pack, key)}"})
+    return out
+
+
+def state_method_caveats(pack, costs, unpriced: int) -> list[dict]:
+    out = []
+    if not costs:
+        out.append({"key": "no_crash_costs", "text": f"No {pack.name} crash costs in CrashIQ yet "
+                    f"({packs.why_missing(pack, 'crash_costs')}), so there is no cost column or ranking by cost."})
+    elif unpriced:
+        out.append({"key": "cost_unpriced", "count": unpriced, "text": f"{unpriced} injury crash"
+                    f"{'es have' if unpriced != 1 else ' has'} no reported injury level, so "
+                    f"{'they are' if unpriced != 1 else 'it is'} not priced: crash costs are a lower bound."})
+    out.append({"key": "no_statewide_rates", "text": f"No {pack.name} statewide average rates in CrashIQ "
+                f"({packs.why_missing(pack, 'statewide_rates')}); rates are compared with this corridor's own sites only."})
+    return out
 
 
 # Tables built from CCRS Parties (road users, trucks, movement, the diagram) or InjuredWitnessPassengers (injury level):
@@ -1030,7 +1119,8 @@ router = APIRouter()
 def get_profile(sid: str, request: Request, exclude: str = "") -> dict:
     study, net, pull, a = assign_mod.for_study(request.app.state.db, sid)
     from .crashes import aadt_for, postmile_for
-    net = with_shs(net, pull, postmile_for(request.app.state), aadt_for(request.app.state))
+    if packs.for_study(study).caltrans:       # Caltrans postmiles + AADT: California only (#19)
+        net = with_shs(net, pull, postmile_for(request.app.state), aadt_for(request.app.state))
     return build(study, net, pull, a, {e for e in exclude.split(",") if e})
 
 
@@ -1077,7 +1167,7 @@ def get_location_profile(sid: str, lid: str, request: Request) -> dict:
         tables.append(diagram_table(lid, diagram, placed))
     annotate(tables, missing_notes(missing_detail(pull, placed)))
     from .crashes import postmile_for
-    pm = postmile_for(request.app.state)
+    pm = postmile_for(request.app.state) if packs.for_study(study).caltrans else None
     return {"location_id": lid, "min_share_n": MIN_SHARE_N, "tables": tables, "diagram": diagram,
             "crashes": [{**{k: c.get(k) for k in ("crash_id", "date", "hour", "day_of_week", "collision_type", "severity",
                                                   "lighting", "pcf", "primary_road", "secondary_road", "lat", "lon",

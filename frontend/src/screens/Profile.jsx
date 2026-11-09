@@ -11,6 +11,7 @@ import { shortName } from '../lib/strip'
 import { vruHeadline } from '../lib/vru'
 import { cell, fmt, table, titleCase } from '../lib/tables'
 import '../styles/profile.css'
+import { useStudy } from '../study'
 
 const PROV_LABEL = { gps: 'GPS from the report', gps_dms_corrected: 'GPS from the report, converted from degrees-minutes-seconds',
   gps_sign_corrected: "GPS from the report, the longitude's missing minus sign restored",
@@ -30,7 +31,7 @@ const provLabel = (k) => PROV_LABEL[k] || (k.startsWith('jev') ? `Jev suggestion
 function Src({ tid, n, p }) {
   const note = p?.tables?.find((t) => t.id === tid)?.note
   return <span className={`src${note ? ' src-note' : ''}`} tabIndex={0} role="note" aria-label={`Source: table ${tid}${note ? `. ${note}` : ''}`}
-    title={`Table ${tid} · computed from ${fmt(n)} CCRS crash records${note ? `\n${note}` : ''}`}>ⓘ</span>
+    title={`Table ${tid} · computed from ${fmt(n)} ${p?.source_short || 'CCRS'} crash records${note ? `\n${note}` : ''}`}>ⓘ</span>
 }
 
 function Kpis({ p }) {
@@ -39,7 +40,7 @@ function Kpis({ p }) {
   const fatal = cell(p, 'T1/fatal_crashes/value')
   const items = [
     ['Crashes', cell(p, p.kpis.crashes), `${cell(p, 'T1/years/value')} yr`],
-    ['KSI', cell(p, p.kpis.ksi_crashes), 'fatal + serious'],
+    ['KSI', cell(p, p.kpis.ksi_crashes), p.severity_note ? 'fatal only: no injury levels' : 'fatal + serious'],
     ...(fatal ? [['Fatal', fatal, null]] : []),
     ['Per mile · year', cell(p, p.kpis.crashes_per_mi_yr), null],
   ]
@@ -357,11 +358,11 @@ function Ranking({ p, onOpen, sort, setSort }) {
           <li key={r.key}>
             <button type="button" className="rowlink" onClick={() => onOpen(r)}>{r.label}</button>
             <span className="mono n" title="Crashes">{fmt(r.values.crashes)}</span>
-            <span className="mono n ksi" title="KSI crashes (fatal + serious)">{fmt(r.values.ksi_crashes)} KSI</span>
+            <span className="mono n ksi" title={p.severity_note ? `KSI = fatal only. ${p.severity_note}` : 'KSI crashes (fatal + serious)'}>{fmt(r.values.ksi_crashes)} KSI</span>
             <span className={`mono vrun${r.values.vru_crashes ? '' : ' zero'}`} data-testid="rank-vru"
               title="Crashes with a pedestrian or bicyclist (KSI among them)">◯ {fmt(r.values.vru_crashes || 0)} ped/bike{r.values.vru_ksi_crashes ? ` · ${fmt(r.values.vru_ksi_crashes)} KSI` : ''}</span>
             {sort === 'cost' ? <span className="mono n cost" data-testid="rank-cost"
-              title={`Crash cost $${fmt(r.values.crash_cost)} (Caltrans LRSM 2026)${r.values.sev_u ? `; ${r.values.sev_u} injury crash${r.values.sev_u === 1 ? '' : 'es'} with the level not stated, priced as possible injury` : ''}${r.values.cost_control_unknown ? '; intersection control unknown, signalized price' : ''}`}>
+              title={p.state && p.state !== 'CA' ? `Crash cost $${fmt(r.values.crash_cost)} (${t.source_note || ''})` : `Crash cost $${fmt(r.values.crash_cost)} (Caltrans LRSM 2026)${r.values.sev_u ? `; ${r.values.sev_u} injury crash${r.values.sev_u === 1 ? '' : 'es'} with the level not stated, priced as possible injury` : ''}${r.values.cost_control_unknown ? '; intersection control unknown, signalized price' : ''}`}>
               {money(r.values.crash_cost)}{r.values.sev_u ? <small> · {fmt(r.values.sev_u)} U</small> : null}{r.values.cost_control_unknown ? <small> · control ?</small> : null}</span> : null}
             <SevBar v={r.values} max={max} />
             {hasCrit && r.values.critical_rate != null ? <RateBar v={r.values} max={maxBy[r.values.kind] || 1} /> : null}
@@ -570,7 +571,9 @@ function Severity({ p }) {
   return (
     <section aria-label="Severity">
       <div className="sect-h"><h2 className="h3">How bad, not just how many?</h2><Src tid="T3" n={cell(p, 'T1/crashes/value')} p={p} /></div>
-      <p className="ksi-call"><b className="mono">{fmt(cell(p, 'T1/ksi_crashes/value'))}</b> crashes killed or seriously injured someone (KSI).</p>
+      {p.severity_note
+        ? <p className="ksi-call"><b className="mono">{fmt(cell(p, 'T1/ksi_crashes/value'))}</b> crashes killed someone (KSI = fatal only). {p.severity_note}</p>
+        : <p className="ksi-call"><b className="mono">{fmt(cell(p, 'T1/ksi_crashes/value'))}</b> crashes killed or seriously injured someone (KSI).</p>}
       {small ? <CountList rows={rows} n={total} min={minN(p)} /> : (
         <div className="bars sevsum">
           {rows.map((r) => (
@@ -776,7 +779,7 @@ function Vru({ p, onMap, mapMode }) {
   const t19 = table(p, 'T19'), t2 = table(p, 'T2'), t15 = table(p, 'T15'), t20 = table(p, 'T20')
   const v = (k) => t19.rows.find((r) => r.key === k)?.values || {}
   const m = minN(p)
-  const h = vruHeadline(t19, m)
+  const h = vruHeadline(t19, m, !!p.severity_note)
   const rows = DANGER.map(([k, label]) => ({ k, label, ...v(k) })).filter((r) => r.crashes)
   const n = cell(p, 'T1/crashes/value')
   const peds = v('ped').crashes || 0
@@ -786,7 +789,7 @@ function Vru({ p, onMap, mapMode }) {
       <p className="vru-head" data-testid="vru-headline">{h.lead}{h.pct != null ? <b className="mono">{fmt(h.pct)}%</b> : null}{h.rest}</p>
       {rows.length > 1 ? (
         <>
-          <h3 className="h4">How dangerous is it? <span className="muted">share of each group&apos;s crashes that killed or seriously injured someone (bars on a 0–100% scale)</span></h3>
+          <h3 className="h4">How dangerous is it? <span className="muted">share of each group&apos;s crashes that {p.severity_note ? 'killed someone' : 'killed or seriously injured someone'} (bars on a 0–100% scale)</span></h3>
           <div className="danger" data-testid="danger">
             {rows.map((r) => (
               <div className={`dg${r.k === 'other' ? ' ref' : ''}${r.crashes < m ? ' few' : ''}`} key={r.k} data-testid={`danger-${r.k}`}>
@@ -871,7 +874,7 @@ function DataSources({ p, pull, onRefresh, busy }) {
               <span>No GPS, filed in a city the corridor doesn&apos;t enter, left out</span><span className="mono">{fmt(cl.no_coords_other_city)}</span></li>
           ) : null}
         </ul>
-        <button type="button" className="sf-btn" onClick={onRefresh} disabled={busy}>Pull fresh data from CCRS</button>
+        <button type="button" className="sf-btn" onClick={onRefresh} disabled={busy}>Pull fresh data from {p.source_short || 'CCRS'}</button>
       </div>
     </details>
   )
@@ -955,6 +958,7 @@ async function pullCrashes(studyId, refresh, onStep, poll = 1000) {
 // Step 3: crash profile dashboard. Every number shown comes from the C6 API response.
 export default function Profile() {
   const { studyId } = useParams()
+  const { study } = useStudy()
   const navigate = useNavigate()
   const [state, setState] = useState({ phase: 'loading' })
   const [drill, setDrill] = useState(null)       // { row, data }
@@ -1055,7 +1059,7 @@ export default function Profile() {
         )}
         {(state.phase === 'loading' || state.phase === 'pulling') && (
           <div className="empty" role="status"><span className="sf-sig sf-sig--anim"><i /><i /><i /></span>
-            <p>{state.phase === 'pulling' ? 'Pulling crashes from CCRS (data.ca.gov). The first pull for a corridor can take a minute.' : 'Loading…'}</p>
+            <p>{state.phase === 'pulling' ? (study?.state || 'CA') === 'CA' ? 'Pulling crashes from CCRS (data.ca.gov). The first pull for a corridor can take a minute.' : 'Pulling crashes from the state crash data. The first pull for a corridor can take a minute.' : 'Loading…'}</p>
             {state.phase === 'pulling' && state.job?.step && state.job.step !== 'Starting' ? (
               <p className="muted mono">{state.job.step}{state.job.total ? ` · ${state.job.done + 1} of ${state.job.total}` : ''}</p>
             ) : null}</div>

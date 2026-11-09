@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Arizona crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1313;border-left:4px solid #e33;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em;margin-left:.4em}code{background:#2a2a2a;padding:1px 4px;border-radius:3px;color:#ffb3b3}
+table{border-collapse:collapse;width:100%;font-size:.92em}td,th{border-bottom:1px solid #333;padding:5px 4px;text-align:left}th{color:#ff8080}
+a{color:#ff8a8a}li{margin:.35em 0}.ok{color:#7fd67f}.warn{color:#ffb84d}.no{color:#ff5c5c}
+</style></head><body>
+<h1>Arizona: crash data for CrashIQ</h1>
+<p class="ex">Hermes, 8 Nov 2026. Checked live today. Full notes: <code>az-import.md</code>, column map: <code>az-column-map.json</code>.</p>
+<p class="big"><b>Short answer:</b> Arizona is <span class="no">locked</span>. ADOT's crash records need an ACIS account (an agreement with ADOT plus a signed NDA) or a public-records request. We built no pack. Tempe's open data shows ADOT's format places well: <b>91%</b> within 250 ft near intersections.</p>
+<h2>1. What Arizona has</h2><ul><li><b>ADOT ACIS</b>: every crash in the state, mapped, KABCO, exports as CSV. Needs an inter-governmental agreement with ADOT, an NDA and a use agreement.</li><li><b>ADOT public records</b>: you can ask for the same data with an account at azdot.govqa.us.</li><li><b>ADOT's open files</b> are yearly PDF reports and dashboards (totals, not crashes), plus fatal/serious maps that stop in 2016.</li><li><b>Tempe</b> (one city): 59,094 crashes 2012-2026, GPS on almost all, free with credit (<span class="ok">CC BY 4.0</span>). <span class="ex">Example: "McClintock Dr, 333 ft from Broadway Rd, suspected minor injury".</span></li></ul>
+<h2>2. Would CrashIQ place the crashes?</h2><ul><li>On 2,000 Tempe crashes from 2025, we hid the GPS and placed them from the street names: <b>86%</b> placed.</li><li>Within 250 ft of the true spot: <b>73%</b> overall, <b>91%</b> for crashes within 250 ft of the intersection. Tempe's copy gives the distance but not which way, so far-off crashes land at the corner.</li><li>What fails: landmark "streets" like "Tempe Marketplace".</li></ul>
+<h2>3. What you need to do</h2><ol><li>Choose: get an <b>ACIS account</b> (ask ADOT at JPABranch@azdot.gov for an agreement, then the ACIS form with NDA and use agreement), or file a <b>public-records request</b> for statewide 2020-2024 crash, vehicle and person files with coordinates.</li><li>Read the use agreement: can the data be used inside a paid tool?</li><li>Send us one ACIS export (one county, one year) so we can confirm the column map and build the upload.</li></ol>
+<h2>4. What we didn't check</h2><ul><li>ADOT's NDA/use-agreement text and HSIP manual (azdot.gov blocks automated downloads).</li><li>Phoenix, Mesa, Chandler, Tucson: no open crash tables found.</li></ul>
+</body></html>

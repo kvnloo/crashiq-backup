@@ -1,0 +1,87 @@
+{
+ "source": "Census cb_2024_us_county_500k (public domain), county bounding box + 5 km",
+ "box": "[min lat, min lon, max lat, max lon]",
+ "counties": {
+  "09110": {
+   "name": "Capitol Planning Region",
+   "box": [
+    41.4997,
+    -72.9987,
+    42.0828,
+    -72.1113
+   ]
+  },
+  "09120": {
+   "name": "Greater Bridgeport Planning Region",
+   "box": [
+    41.0731,
+    -73.4139,
+    41.4368,
+    -73.0417
+   ]
+  },
+  "09130": {
+   "name": "Lower Connecticut River Valley Planning Region",
+   "box": [
+    41.2098,
+    -72.798,
+    41.692,
+    -72.2038
+   ]
+  },
+  "09140": {
+   "name": "Naugatuck Valley Planning Region",
+   "box": [
+    41.2096,
+    -73.3721,
+    41.7682,
+    -72.8013
+   ]
+  },
+  "09150": {
+   "name": "Northeastern Connecticut Planning Region",
+   "box": [
+    41.4607,
+    -72.2799,
+    42.0761,
+    -71.7419
+   ]
+  },
+  "09160": {
+   "name": "Northwest Hills Planning Region",
+   "box": [
+    41.4594,
+    -73.5633,
+    42.0956,
+    -72.8186
+   ]
+  },
+  "09170": {
+   "name": "South Central Connecticut Planning Region",
+   "box": [
+    41.1237,
+    -73.1675,
+    41.6239,
+    -72.4913
+   ]
+  },
+  "09180": {
+   "name": "Southeastern Connecticut Planning Region",
+   "box": [
+    41.2408,
+    -72.5118,
+    41.8012,
+    -71.7485
+   ]
+  },
+  "09190": {
+   "name": "Western Connecticut Planning Region",
+   "box": [
+    40.9351,
+    -73.7728,
+    41.7284,
+    -73.1382
+   ]
+  }
+ }
+}

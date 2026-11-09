@@ -1,0 +1,50 @@
+{
+ "state": "LA",
+ "export": "LADOTD / LSU CARTS crash extract (Louisiana Crash Tool export, or a DOTD Highway Safety Section data request)",
+ "spec": "No public column list found. DOTD Crash Data Analysis Guidelines (Sept 2025, p. 11: 'Contact DOTD Highway Safety Section to gain access'; https://dotd.louisiana.gov/media/cz2nqota/crash-data-analysis-guide-20250903.pdf) and LTRC FR 721 (2026, crash / DOTD / vehicle / pedestrian tables matched on crash number, https://www.ltrc.la.gov/pdf/2026/FR_721.pdf). Saved in ~/.hermes/state-manuals/la/.",
+ "layout_seen_live": "Two consultants' public copies of the DOTD file show the field names (shapefile-truncated to 10 characters): Toole Design 'new_orleans_crashes' 2015-2019 (https://services6.arcgis.com/bom7L4u7y1k0qkF1/arcgis/rest/services/new_orleans_crashes/FeatureServer/0) and 'DOTD_crash_data' (https://services6.arcgis.com/1fGAZVgZnPx4zcNH/arcgis/rest/services/DOTD_crash_data/FeatureServer/0), checked 2026-11-08. Real export headers are probably the untruncated names (PRI_ROAD_NAME, INTER_ROAD, ...); confirm on one sample.",
+ "unit": "one row per crash; vehicle, pedestrian and DOTD (roadway) tables join on crash_num",
+ "map": {
+  "collision_id": "crash_num (e.g. '150101164909999-')",
+  "datetime": "crash_date + crash_time ('04:30'); crash_hour also given",
+  "primary_road": "pri_road_n (raw, e.g. 'APRICOT') with its type in pri_road_d; consultants' cleaned copy r_pri_road ('APRICOT ST'). State routes: hwy_type_c + pri_hwy_nu, LRS route lrs_id + lrs_logmil",
+  "secondary_road": "inter_road ('DUBLIN ST')",
+  "sec_distance": "pri_dist (number) with unit pri_measur 'FT' or 'MI' (blank with a distance = feet in the sample)",
+  "sec_direction": "pri_dir (N/S/E/W)",
+  "junction": "intersecti (0/1), location_t",
+  "killed": "num_tot_ki",
+  "injured": "num_tot_in",
+  "severity": "severity_c. Files up to about 2020 use letters A-E: A Fatal -> K, B Severe -> A, C Moderate -> B, D Complaint -> C, E No injury/PDO -> O (2023 guide p. 5: injury SPF uses crashes 'where Severity is not \"E\" (Property Damage Only)'; category names from LTRC FR 721 tables). The 2025 guide uses KABCO letters directly (p. 5: 'is not \"O\"'): check which coding the export uses before reading it",
+  "collision_type": "man_coll_c (code letter; decode from the export's data dictionary)",
+  "lighting": "lighting_c",
+  "weather": "weather_cd",
+  "surface": "surf_cond_",
+  "lat_lon": "dotd_latit / dotd_longi (DOTD's map-spotted point, on 98.5% of the Orleans 2019 sample); officer GPS orig_latit / orig_longi (0 on most 2019 rows)",
+  "county_code": "parish_cd (DOTD parish number, Orleans = 36), city_cd",
+  "is_freeway": "hwy_type_c / road_type_ (codes; Interstate rows carry pri_road_n 'I-10')"
+ },
+ "values_seen_orleans_2015_2019": {
+  "severity_c": {
+   "A": 222,
+   "B": 1119,
+   "C": 7191,
+   "D": 24623,
+   "E": 70022
+  },
+  "pri_measur_with_distance": {
+   "FT": 6207,
+   "MI": 1424,
+   "blank": 180,
+   "note": "2019 rows with a non-zero pri_dist (7,811 of 19,963)"
+  }
+ },
+ "crash_costs_dotd": {
+  "source": "DOTD Crash Data Analysis Guidelines, Sept 2025, Appendix-A Crash Cost, p. 19 (2023 cost)",
+  "K": 2133496,
+  "A": 239929,
+  "B": 92154,
+  "C": 68698,
+  "O": 35793
+ },
+ "verified_against_real_export": false
+}

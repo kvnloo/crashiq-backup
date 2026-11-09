@@ -1,0 +1,36 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wyoming crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state pack · 8 Nov 2026 · written by Hermes</p>
+<h1>Wyoming: crash data is by request</h1>
+
+<div class="card"><b>In one line:</b> WYDOT doesn't post crash records; you ask for them (about 10 business days). Only Cheyenne has an open map layer, with no licence. No Wyoming pack yet.</div>
+<h2>1. What Wyoming has</h2>
+<table>
+<tr><th>What</th><th>Example</th></tr>
+<tr><td>Statewide</td><td class="warn">WYDOT crash data request form. Public: county counts, fatal crash app, a yearly report.</td></tr>
+<tr><td>WYDOT map server</td><td class="warn">Roads, mileposts, traffic counts, roadkill. No crashes.</td></tr>
+<tr><td>Cheyenne</td><td class="ok">8,440 crashes 2020–2024, every one with a point and K A B C O U. Street names like <code>E 20TH ST</code> &amp; <code>LOGAN AVE</code>.</td></tr>
+<tr><td>Licence</td><td class="warn">None stated, for WYDOT or for Cheyenne.</td></tr>
+</table>
+<h2>2. If you get WYDOT's file</h2>
+<div class="card">The crash report form records a GPS point, the street and the cross street, and each person's injury level, so a WYDOT export would place like South Dakota's. The notes list the columns to ask for (crash ID, date, time, GPS, street 1, street 2, county, KABCO, killed, injured).</div>
+<h2>What you need to do</h2>
+<ol>
+<li>Send WYDOT's crash data request (dot.state.wy.us, Highway Safety → Crash Data; leave the drop-down as it is) for a crash-level export of the counties and years you need, and ask if a paid tool may use it.</li>
+<li>If Cheyenne matters to you: ask the Cheyenne and Laramie County GIS Cooperative if their crash layer may be used.</li>
+<li>Ask WYDOT for crash costs per injury level.</li>
+</ol>
+<h2>What we didn't check</h2>
+<p>A real WYDOT export, street-name placement on Cheyenne's layer, the Casper layer (it's on a private network).</p>
+</main></body></html>

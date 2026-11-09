@@ -1,0 +1,93 @@
+{
+ "state": "KY",
+ "bucket": "A*",
+ "bucket_note": "open, record-level, GPS on every sampled crash, street names; catch: no KABCO (K/U/O only), undocumented site calls, no licence",
+ "status": "active",
+ "sources": [
+  {
+   "name": "KSP Collision Analysis for the Public (KyOPS)",
+   "url": "http://crashinformationky.org/",
+   "access": "open (site search calls, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "no warranty, either expressed or implied, is given to the accuracy, completeness, reliability, or suitability for any particular purpose of the information contained in this website.",
+   "years": "2015-current (daily)",
+   "rows_per_year": {
+    "2020": 119962,
+    "2021": 131752,
+    "2022": 130347,
+    "2023": 139268,
+    "2024": 139662
+   },
+   "rows_per_year_note": "KTC 2020-2024 Table 1 (state totals), not counted from the site",
+   "gps_share": 1.0,
+   "street_names_share": 0.5066,
+   "kabco": false,
+   "keys_linkable": "no person/vehicle rows public; xIncidentID unique per crash"
+  },
+  {
+   "name": "KTC Crash Data Analysis Tool (CDAT)",
+   "url": "https://crashtool.uky.edu/",
+   "access": "gated (signed MOU with KYTC)",
+   "licence_paid_use": "no",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "yes (inside CDAT)"
+  }
+ ],
+ "placement_sample": {
+  "area": "Jefferson County (21111), 2025-01..02, random 2,000 with GPS (seed 2026)",
+  "n": 1970,
+  "gps_share": 1.0,
+  "name_placed_share": 0.4416,
+  "auto_share": 0.4371,
+  "within_250ft": 0.8688,
+  "within_250ft_low": 0.8446,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "Gate(tiger_only_auto=True) on TIGER 2024; house addresses not measured (GPS on every crash)"
+ },
+ "end_to_end": {
+  "corridor": "Bardstown Rd, Louisville (0.84 mi)",
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 391,
+  "counted": 294,
+  "severity": {
+   "K": 0,
+   "A": 0,
+   "B": 0,
+   "C": 0,
+   "U": 58,
+   "O": 236
+  },
+  "crash_cost_total": null,
+  "pdf_bytes": 67287,
+  "xlsx_bytes": 41972,
+  "seconds": 165
+ },
+ "importer_built": true,
+ "blockers": [
+  "no injury levels in the public data (K/U/O): KSI = fatal only, no crash costs",
+  "no published licence for a paid product",
+  "reader uses the site's own undocumented search calls; they can change without notice"
+ ],
+ "user_actions": [
+  "Ask KSP (Records / KyOPS) for written permission to use the public collision search in a paid product",
+  "Optional, for KABCO: ask KYTC for a CDAT MOU or a KABCO extract (the Advanced Search per-person injury severity errors on every query we tried)"
+ ],
+ "cities": [
+  {
+   "city": "Louisville",
+   "source": "LOJIC High Injury Network",
+   "url": "https://gis.lojic.org/maps/rest/services/LojicSolutions/OpenDataTransportation/MapServer/14",
+   "gps_share": null,
+   "years": "2018-2022",
+   "licence": "not crash points; not needed (state data covers it)"
+  }
+ ]
+}

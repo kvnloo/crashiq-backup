@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Georgia crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state check · 8 Nov 2026 · written by Hermes</p>
+<h1>Georgia: locked. No state pack yet.</h1>
+
+<div class="card"><b>In one line:</b> GDOT keeps every crash in GEARS, and only approved users can get in. Its public dashboard shows charts, with no download. The Atlanta Regional Commission shares 1,074,688 metro crashes openly, but only with the year, not the date.</div>
+
+<h2>1. What Georgia has</h2>
+<table>
+<tr><th>Source</th><th>Can CrashIQ use it?</th></tr>
+<tr><td>GEARS (all crash reports)</td><td class="warn">Login only. GDOT's request form says the data "is not to be sold to anyone".</td></tr>
+<tr><td>GDOT Crash Data Dashboard</td><td class="warn">Charts and a map, last 5 years. No download.</td></tr>
+<tr><td>ARC "Crashes 2020-2024" (19 metro counties)</td><td>Open, with a map point and K A B C O. But only the year (2024, not 6 Mar 2024), no time and no licence.</td></tr>
+</table>
+
+<h2>2. Would the street names place? Mostly</h2>
+<div class="card"><div class="big">62 of 100</div>Fulton County 2024 crashes (2,000 sampled) that CrashIQ places from the two street names alone. 74 of 100 of those land within 250 ft of the point in the data.<br><span class="dim">Example that fails: <code>400 &amp; 285</code> (GA 400 at I-285): the route type is missing.</span></div>
+
+<h2>3. Live test</h2>
+<div class="card">Not run: there is no open statewide data to load.</div>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Ask GDOT (Crash Reporting Unit, GEARS line 866-495-4206) for a statewide crash export, with crashes, vehicles and people, and written permission to use it in a paid tool.</li>
+<li>Or ask the Atlanta Regional Commission to license its open crash layer and add the crash date and time.</li>
+<li>When an export arrives, the column map is ready: <code>ga-column-map.json</code>.</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>The dashboard vendor's hidden data feed (we didn't use it).</li>
+<li>How close the data's own point is to the officer's GPS.</li>
+<li>GDOT crash costs and rate method.</li>
+</ul>
+<p class="dim">Details: <code>research_notes/ga-2026-11-08/ga-import.md</code>, <code>ga-summary.json</code>, <code>placement_sample.json</code>.</p>
+</main></body></html>

@@ -1,0 +1,42 @@
+{
+ "state": "WI",
+ "study": "80c3700498bb",
+ "corridor": "West Capitol Drive",
+ "length_mi": 1.01,
+ "window": [
+  2018,
+  2022
+ ],
+ "pulled": 1404,
+ "counted": 1015,
+ "ksi": 20,
+ "fatal": 3,
+ "injury": 309,
+ "pdo": 706,
+ "unplaced": 0,
+ "excluded": 389,
+ "severity_T3": {
+  "K": 3,
+  "A": 17,
+  "B": 114,
+  "C": 175,
+  "U": 0,
+  "O": 706
+ },
+ "crash_cost_total": 131133181,
+ "cost_column": true,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_statewide_rates",
+  "rates_not_computed"
+ ],
+ "findings_shown": 11,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 40590,
+ "pdf_bytes": 108442,
+ "seconds": 80
+}

@@ -1,0 +1,84 @@
+{
+ "per_year": {
+  "2022": {
+   "n": 122434,
+   "gps": 122431,
+   "road": 122424,
+   "sec": 55395,
+   "pair": 55395
+  },
+  "2023": {
+   "n": 127596,
+   "gps": 127595,
+   "road": 127585,
+   "sec": 59925,
+   "pair": 59925
+  },
+  "2024": {
+   "n": 129204,
+   "gps": 129203,
+   "road": 129194,
+   "sec": 61393,
+   "pair": 61393
+  }
+ },
+ "values": {
+  "CrashType": {
+   "Property Damage Crash": 259290,
+   "Injury Crash": 117285,
+   "Fatal Crash": 2659
+  },
+  "AtIntersection": {
+   "Not at Intersection": 202558,
+   "At Intersection": 176645,
+   "": 31
+  },
+  "Jurisdiction": {
+   "Fairfax County": 36730,
+   "Prince William County": 18621,
+   "Chesterfield County": 17468,
+   "Richmond City": 16859,
+   "Henrico County": 16370,
+   "Va. Beach City": 15783,
+   "Loudoun County": 14282,
+   "Norfolk City": 13001,
+   "Hampton City": 10365,
+   "Newport News City": 10344,
+   "Chesapeake City": 7631,
+   "Spotsylvania County": 6983,
+   "Stafford County": 6261,
+   "Roanoke City": 6250,
+   "Albemarle County": 6248,
+   "Arlington County": 6152,
+   "Hanover County": 5687,
+   "Montgomery County": 5183,
+   "Suffolk City": 5153,
+   "Fauquier County": 4483,
+   "Augusta County": 4242,
+   "Roanoke County": 4223,
+   "Frederick County": 3973,
+   "Portsmouth City": 3801,
+   "Rockingham County": 3674,
+   "Alexandria City": 3378,
+   "Lynchburg City": 3349,
+   "Harrisonburg City": 3344,
+   "Danville City": 3087,
+   "York County": 2919,
+   "Washington County": 2903,
+   "Fredericksburg City": 2765,
+   "Petersburg City": 2698,
+   "Bedford County": 2658,
+   "Culpeper County": 2600,
+   "James City County": 2569,
+   "Franklin County": 2528,
+   "Campbell County": 2481,
+   "Rockbridge County": 2359,
+   "Wythe County": 2312
+  },
+  "LocationTypeName": {
+   "Urban": 281514,
+   "Rural": 97689,
+   "Not Provided": 31
+  }
+ }
+}

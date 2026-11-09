@@ -1,0 +1,86 @@
+{
+ "state": "WV",
+ "bucket": "D",
+ "status": "gated",
+ "bucket_note": "WVDOT's crash database (ReportBeam reports) is by email request only; no agency open layer or download. Verified live 2026-11-08 incl. WVDOT's ArcGIS Online org and its ArcGIS server.",
+ "bucket_2026_11_02": "D (confirmed)",
+ "sources": [
+  {
+   "name": "WVDOT Crash Database (ReportBeam electronic crash reports)",
+   "url": "https://transportation.wv.gov/traffic-accident-data",
+   "access": "records request by email (Marsha.K.Mays@wv.gov, 1900 Kanawha Blvd E, Building 5, Charleston)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "no terms published; WV Code 17C-4-14 has DOH tabulate reports and publish statistics",
+   "years": "not stated",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "kabco_evidence": "WV Uniform Traffic Crash Report injury classification K/A/B/C (ReportBeam sample DMV-17-F); consultant copy of the export has Crash Severity 'Fatal Crash' / 'Serious Injury Crash'",
+   "keys_linkable": "Crash Record Number (e.g. R201900191) in the export layout; vehicle/person tables not seen"
+  },
+  {
+   "name": "WVDOT ArcGIS Online org (WVDOT_Publisher, services2.arcgis.com/xLpB90lOmCXYDAWo) and Open Data Portal",
+   "url": "https://data-wvdot.opendata.arcgis.com/",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "2009-2021 (aggregates)",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": false,
+   "keys_linkable": "aggregate only: WV_SafetyData_2021 (220 rows of county 5-year averages/targets), WV_SafetyCountiesDistricts_2020 (55 county polygons with yearly F/SI counts); 326 services, no crash points"
+  },
+  {
+   "name": "WVDOT ArcGIS server gis.transportation.wv.gov",
+   "url": "https://gis.transportation.wv.gov/arcgis/rest/services",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": false,
+   "keys_linkable": "112 services, no crash layer; has Roads_And_Highways/Publication_LRS (the county-based route IDs the export uses), AADT"
+  },
+  {
+   "name": "Consultant re-host: WV Pedestrian Crashes 2019_2023 (Burgess & Niple staff, WV VRU Systemic Analysis)",
+   "url": "https://services2.arcgis.com/jCPZmQjF0kIPAohC/arcgis/rest/services/WV_Pedestrian_Crashes_2019_2023/FeatureServer/0",
+   "access": "public URL, not an agency publication",
+   "licence_paid_use": "no",
+   "licence_quote": "no licence; item text 'West Virginia Pedestrian Crashes downloaded 8/1/2025, data is 2019-2023'",
+   "years": "2019-2023",
+   "rows_per_year": {
+    "2019-2023 total (fatal + serious ped only)": 297
+   },
+   "gps_share": 0.97,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "layout evidence only: C___Crash_Record_Number, MMUCC C-codes, county-based route ID + milepost, lat/lon"
+  }
+ ],
+ "placement_sample": {
+  "area": null,
+  "n": 0,
+  "gps_share": null,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "not measured: no open record-level WVDOT data; the consultant layer (297 fatal/serious pedestrian crashes, 288 = 97.0% with lat/lon) is not a source and too narrow to stand for all crashes"
+ },
+ "importer_built": false,
+ "blockers": [
+  "WVDOT crash data by email request only",
+  "no published paid-use terms",
+  "no published data dictionary for the extract (layout inferred from a consultant copy)"
+ ],
+ "user_actions": [
+  "Email Marsha.K.Mays@wv.gov (WVDOT Traffic Accident Data) for a statewide 2021-2025 crash extract with vehicle and person tables, the data dictionary, latitude/longitude and the county-based route ID + milepost; ask for CSV.",
+  "Ask in the same email whether the extract may be used in a paid engineering tool, and whether WVDOT will publish an open crash layer.",
+  "Send one delivered file (one county, one year is enough) so the column map can be checked and a reader built."
+ ],
+ "cities": []
+}

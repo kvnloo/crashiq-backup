@@ -1,0 +1,15 @@
+{
+ "source": "Census cb_2024_us_county_500k (public domain), county bounding box + 5 km",
+ "box": "[min lat, min lon, max lat, max lon]",
+ "counties": {
+  "11001": {
+   "name": "District of Columbia",
+   "box": [
+    38.7466,
+    -77.1648,
+    39.0402,
+    -76.8643
+   ]
+  }
+ }
+}

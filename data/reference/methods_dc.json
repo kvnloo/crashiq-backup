@@ -1,0 +1,42 @@
+{
+ "state": "DC",
+ "manuals": {
+  "dc_tss": {
+   "title": "Traffic Safety Statistics Report for the District of Columbia (2015-2017), draft (HUTRC for DDOT)",
+   "publisher": "DDOT",
+   "jurisdiction": "DC",
+   "edition": "2018 draft",
+   "url": "https://ddot.dc.gov/sites/default/files/dc/sites/ddot/publication/attachments/Crash%20Statistics%20Report%202015-2017_final%20draft.pdf"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "DDOT prints no crash costs; it cites FHWA's published national costs (TSS 2015-2017 p. 5). National costs aren't used for DC without the user's decision"
+  },
+  "statewide_rates": {
+   "missing": "DDOT publishes no average rates by facility type (research 2026-11-07), and CrashIQ has no DC traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "ranked lists by frequency, rate, severity cost and trend combined in a Composite Crash Index (TSS 2015-2017; research 2026-11-07)"
+  },
+  "min_years": {
+   "missing": "not recorded in the research notes (2026-11-07)"
+  },
+  "spf_calibration": {
+   "missing": "no DC calibration found (research 2026-11-07)"
+  }
+ }
+}

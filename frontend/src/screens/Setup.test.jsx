@@ -10,7 +10,27 @@ describe('Setup', () => {
     await waitFor(() => expect(select.querySelectorAll('option')).toHaveLength(2))
     expect(Array.from(select.options).map((o) => o.textContent)).toEqual([
       'Crash profile / corridor screening', 'Traffic-study safety section'])
-    expect(screen.queryByText(/coming/i)).toBeNull()
+    expect(Array.from(select.options).some((o) => /coming/i.test(o.textContent))).toBe(false)
+  })
+
+  it('asks for the state first: California selected, coming states greyed out (#19)', async () => {
+    mockApi({ 'GET /studies/meta': META })
+    renderAt('/')
+    const state = await screen.findByLabelText('State')
+    expect(document.querySelector('.startbar select')).toBe(state)          // the first field
+    expect(state.value).toBe('CA')
+    const tx = Array.from(state.options).find((o) => o.value === 'TX')
+    expect(tx.textContent).toBe('Texas (coming)')
+    expect(tx.disabled).toBe(true)
+  })
+
+  it("keeps an existing study's state, disabled", async () => {
+    mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': { id: 's1', name: 'Old', mode: 'profile', from_year: 2021, to_year: 2025 } })
+    renderAt('/s/s1/setup')
+    const state = await screen.findByLabelText('State')
+    expect(state.value).toBe('CA')
+    expect(state.disabled).toBe(true)
+    expect(screen.getByText(/A study.s state is fixed/)).toBeInTheDocument()
   })
 
   it('defaults to the last 5 complete years and has a custom range option', async () => {
@@ -46,7 +66,7 @@ describe('Setup', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Draw the corridor →' }))
     await waitFor(() => expect(calls.some((c) => c.method === 'POST')).toBe(true))
     const post = calls.find((c) => c.method === 'POST')
-    expect(post.body).toEqual({ name: 'Crenshaw', mode: 'tis', from_year: 2021, to_year: 2025 })
+    expect(post.body).toEqual({ name: 'Crenshaw', mode: 'tis', from_year: 2021, to_year: 2025, state: 'CA' })
   })
 
   it('warns when the window is under 3 years', async () => {

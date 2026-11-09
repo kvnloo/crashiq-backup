@@ -1,0 +1,68 @@
+{
+ "state": "MS",
+ "bucket": "A",
+ "bucket_note": "Open yearly Excel workbooks, record-level, statewide, 100% GPS, KABCO per person. Catches: whole-year downloads (~100 MB), no manner of collision, no reuse licence.",
+ "sources": [
+  {
+   "name": "eCrash public data (Mississippi DPS)",
+   "url": "https://publicdata.dps.ms.gov/Public-CrashData/eCrash/",
+   "access": "open (yearly .xlsx, no login)",
+   "licence_paid_use": "unclear",
+   "licence_text": "No licence. 'These data sets are typically used to respond to public records requests and made available to the public free of charge.'",
+   "licence_urls": [
+    "https://publicdata.dps.ms.gov/"
+   ],
+   "years": "2019 (partial) - 2025 (DRAFT)",
+   "rows_per_year": {
+    "2024": 74968
+   },
+   "gps_share": 1.0,
+   "street_names_share": 1.0,
+   "street_pair_share_2024": 0.2488,
+   "kabco": "yes (per person; crash = worst person)",
+   "keys_linkable": true
+  }
+ ],
+ "placement_sample": {
+  "area": "Hinds County (28049), 2024",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.186,
+  "auto_share": 0.167,
+  "within_250ft": 0.7365,
+  "within_250ft_low": 0.6868,
+  "house_address_share": null,
+  "address_points_source": "not needed (100% GPS); not measured"
+ },
+ "importer_built": true,
+ "status": "active",
+ "end_to_end": {
+  "corridor": "Lakeland Drive",
+  "length_mi": 0.97,
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 581,
+  "counted": 304,
+  "severity_T3": {
+   "K": 1,
+   "A": 2,
+   "B": 16,
+   "C": 42,
+   "U": 0,
+   "O": 243
+  },
+  "crash_cost_total": null,
+  "xlsx_bytes": 34202,
+  "pdf_bytes": 45505,
+  "seconds": 133
+ },
+ "blockers": [
+  "No published reuse licence"
+ ],
+ "user_actions": [
+  "Ask DPS (PublicRecords@dps.ms.gov) whether eCrash public data may be used in a paid product, with attribution"
+ ],
+ "cities": []
+}

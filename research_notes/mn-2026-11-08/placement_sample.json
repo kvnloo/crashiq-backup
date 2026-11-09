@@ -1,0 +1,66 @@
+{
+ "area": "Hennepin County (27053), 2024",
+ "n": 2000,
+ "gps_share": 1.0,
+ "street_pair_share": 0.506,
+ "near_share_of_pairs": 0.1789,
+ "house_address_share": 0.0,
+ "tiers": {
+  "review": 397,
+  "unique_pair": 83,
+  "exact": 518,
+  "verified_typo": 7,
+  "relaxed": 2,
+  "fuzzy": 2,
+  "near": 3
+ },
+ "name_placed_share": 0.3075,
+ "name_placed_share_of_pairs": 0.6077,
+ "auto_share": 0.3005,
+ "auto_share_of_pairs": 0.5939,
+ "gate": "Gate() tiers with tiger_only_auto=True (TIGER-only network; plain Gate() auto-places 0 here)",
+ "within_250ft": 0.7055,
+ "within_250ft_low": 0.6678,
+ "within_250ft_all_placed": 0.7008,
+ "within_250ft_all_placed_low": 0.6635,
+ "not_placed": {
+  "no cross street in source": 988,
+  "no intersection of the two named streets": 356,
+  "exact: streets meet in more than one place": 38,
+  "relaxed: streets meet in more than one place": 2,
+  "missing street name": 1
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "TOWN CENTER PL  at FLYING CLOUD DR",
+   "EB 62 AT PENN",
+   "LOUISIANA AVE WESTBOUND RAMP TO ISTH 394  near LOUISIANA AVENUE",
+   "EB 94 AT RIVERSIDE",
+   "95TH AVE N  at MAPLE GROVE PARKWAY",
+   "WB 94 @ HWY 280"
+  ],
+  "placed >250 ft off": [
+   "E OLD SHAKOPEE RD  near OLD SHAKOPEE RD [unique_pair] 13587 ft",
+   "MANITOU RD  near TONKA BAY RD [exact] 558 ft",
+   "WB ISTH 394 @ LOUISIANA [exact] 1428 ft",
+   "I-35W NB @ LYNDALE AVE S [exact] 10390 ft",
+   "WB ISTH 394 @ ISTH 94 [exact] 1490 ft",
+   "ISTH 94  near BROOKLYN BLVD [exact] 862 ft"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "SB ISTH 94 AT BROADWAY AVE",
+   "EB ISTH 494 @ BUSH LAKE ROAD"
+  ],
+  "exact: streets meet in more than one place": [
+   "UNIVERSITY AVE NE  at 27TH AVE NE",
+   "WB MNTH 55 @ LYNDALE AVENUE",
+   "XENIUM LN  at NORTHWEST BLVD",
+   "W 78TH ST  at NICOLLET AVE",
+   "ISTH 94  near I-694",
+   "W 78TH ST  at PRAIRIE CENTER DR"
+  ],
+  "missing street name": [
+   "MINNETONKA BLVD  at RAMP"
+  ]
+ }
+}

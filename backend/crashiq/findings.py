@@ -228,9 +228,21 @@ def select_records(crashes: list[dict], f: RecordFilter) -> list[dict]:
 _TEXT_FIELDS = ("pcf", "collision_type", "primary_road", "secondary_road", "lighting", "weather", "surface", "pcf_category")
 
 
-def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: tuple[int, int]) -> list[str]:
-    """Reasons to reject; empty list = valid. `crashes` = placed crashes with location_id."""
+# A claim about an injury level (#19): rejected for a source that reports none (NYC, NY DMV: injured or killed only)
+_LEVEL_WORDS = re.compile(r"\b(?:KSI|serious(?:ly)?|severe(?:ly)?|minor injur\w*|possible injur\w*|suspected|"
+                          r"incapacitat\w*|KABCO)\b", re.I)
+
+
+def validate(finding: Finding, tables: list[dict], crashes: list[dict], window: tuple[int, int],
+             no_levels: bool = False) -> list[str]:
+    """Reasons to reject; empty list = valid. `crashes` = placed crashes with location_id. `no_levels`: the study's
+    source has no A/B/C injury level, so a finding may not claim one."""
     reasons = []
+    if no_levels:
+        if (m := _LEVEL_WORDS.search(f"{finding.title or ''} {finding.text}")):
+            reasons.append(f"'{m.group(0)}' claims an injury level, but this state's crash data reports none")
+        if set(finding.evidence_refs.records.severity or ()) & set("ABC"):
+            reasons.append("evidence filters on A, B or C, but this state's crash data reports no injury levels")
     by_id = {t["id"]: t for t in tables}
     cited = {n.table_id for n in finding.numbers} | set(finding.evidence_refs.tables)
     if not cited:
@@ -321,7 +333,7 @@ def submit(db, sid: str, findings: list[Finding]) -> dict:
     window = (prof["window"]["from_year"], prof["window"]["to_year"])
     shown, rejected = [], []
     for f in findings:
-        reasons = validate(f, tables, placed, window)
+        reasons = validate(f, tables, placed, window, bool(prof.get("severity_note")))
         if reasons:
             db.execute("INSERT INTO finding_rejected (study_id, finding_id, body, reasons) VALUES (?,?,?,?)",
                        (sid, f.id, f.model_dump_json(), json.dumps(reasons)))
@@ -490,7 +502,7 @@ def check_stored(db, sid: str) -> list[dict]:
     for r in rows:
         f = json.loads(r["body"])
         model = Finding(**f)
-        reasons = validate(model, tables, placed, window)
+        reasons = validate(model, tables, placed, window, bool(prof.get("severity_note")))
         recs = select_records(placed, model.evidence_refs.records)
         out.append({**f, "stale": bool(reasons), "stale_reasons": reasons,
                     # #267: the location by its current name (T2), never an id; and what the list is ordered by
@@ -595,7 +607,8 @@ def set_status(sid: str, fid: str, request: Request, status: Literal["accepted",
     body = json.loads(r["body"])
     if status == "accepted":
         prof, tables, placed = context(db, sid)
-        reasons = validate(Finding(**body), tables, placed, (prof["window"]["from_year"], prof["window"]["to_year"]))
+        reasons = validate(Finding(**body), tables, placed, (prof["window"]["from_year"], prof["window"]["to_year"]),
+                           bool(prof.get("severity_note")))
         if reasons:
             raise HTTPException(409, "This finding no longer matches the data (the study changed). Re-run the screen.")
     meta = {**(body.get("meta") or {}), "decided_status": status,

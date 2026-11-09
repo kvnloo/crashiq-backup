@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Virginia crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1313;border-left:4px solid #e33;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em;margin-left:.4em}code{background:#2a2a2a;padding:1px 4px;border-radius:3px;color:#ffb3b3}
+table{border-collapse:collapse;width:100%;font-size:.92em}td,th{border-bottom:1px solid #333;padding:5px 4px;text-align:left}th{color:#ff8080}
+a{color:#ff8a8a}li{margin:.35em 0}.ok{color:#7fd67f}.warn{color:#ffb84d}.no{color:#ff5c5c}
+</style></head><body>
+<h1>Virginia: crash data for CrashIQ</h1>
+<p class="ex">Hermes, 7 Nov 2026. Measured live today. Full notes: <code>va-import.md</code>, methods: <code>va-methods.md</code> (<a href="va-methods.md">link</a>).</p>
+
+<p class="big"><b>Short answer:</b> Virginia is the easiest state so far on the data. VDOT puts every reported crash
+online, free, no login, with a map point on almost all of them and KABCO severity. The only question is the
+<b>licence</b> for a paid tool.</p>
+
+<h2>1. What Virginia has</h2>
+<ul>
+<li><b>VDOT "Full Crash"</b>: 1,175,583 crashes, 2017 to August 2026. <span class="ex">Example: 2024 has 129,244 crashes — exactly the number in DMV's official 2024 Crash Facts, so nothing is missing.</span></li>
+<li><b>Map point on 99.995%</b>. Only 61 crashes in ten years have no point. <span class="ex">Example: one of them only says "RT 7".</span></li>
+<li><b>KABCO severity</b> on every crash, plus how many K, A, B and C people. <span class="ex">Example: a crash with 1 A person and 2 C people is an A crash; VDOT's own label matched our count on all 17,527 crashes we checked.</span></li>
+<li><b>Only one street box.</b> The officer writes the location in one line, no separate cross street. <span class="ex">Example: "FAIRFAX COUNTY PKWY NB / NOMES CT FRFX", or a house address "4300 COMMERCE ROAD".</span></li>
+<li><b>People and vehicles:</b> only the first driver, passenger and pedestrian of each crash are public.</li>
+<li><b>House addresses:</b> Virginia's statewide address points (3.9 million) are free under CC0, so fine for paid use.</li>
+</ul>
+
+<h2>2. Cities</h2>
+<table><tr><th>City</th><th>What's there</th><th>Map point</th></tr>
+<tr><td>Virginia Beach</td><td>Police crash list 2023–2026, two street names, no severity</td><td class="no">none</td></tr>
+<tr><td>Norfolk</td><td>Copy of VDOT's data, 2016–2026</td><td class="ok">100%</td></tr>
+<tr><td>Arlington</td><td>Copy of VDOT's data, 2013–2026</td><td class="ok">99.8%</td></tr>
+<tr><td>Richmond, Fairfax, Alexandria</td><td>Dashboards only, no download</td><td>—</td></tr></table>
+<p class="ex">None beats VDOT, so CrashIQ only needs the VDOT reader.</p>
+
+<h2>3. Our street-name placement, tested</h2>
+<p>We hid the map point on 2,000 crashes in Richmond and 2,000 in Fairfax County (2024) and let CrashIQ find them from the street names alone.</p>
+<table><tr><th></th><th>Richmond</th><th>Fairfax</th></tr>
+<tr><td>Had two street names</td><td>63%</td><td>45%</td></tr>
+<tr><td>Placed automatically</td><td>57%</td><td>34%</td></tr>
+<tr><td>Within 250 ft of the real point</td><td class="warn">97.5%</td><td class="warn">95.9%</td></tr></table>
+<p class="ex">Close to California's 98% bar but under it. Most misses are ramps: "I-95 RAMP &amp; COMMERCE RD" was put 1.7 miles off (only as a suggestion, not auto-placed).
+Virginia spellings the code doesn't know yet: "TPIKE", "HWAY", "PKWAY", "US-60E".</p>
+<p>House addresses on the state's address points: 81% found, 64% within 250 ft, 79% within 400 ft (Richmond). <span class="ex">Many say "3700 BLK", a block, not a house.</span></p>
+<p class="big">What it adds for Virginia: <b>almost nothing</b> — at most 6 crashes in ten years lack a point. VDOT already did the placing.</p>
+
+<h2>4. Virginia's own rules (manuals)</h2>
+<ul>
+<li><b>Crash costs 2026</b> (VDOT memo, Sept 2026): K $17,009,543 · A $998,777 · B $329,990 · C $190,773 · O $17,344. <span class="ex">California's LRSM prices K and A together at $2.4–3.8M, so Virginia's fatal crash costs 4.5–7× more in a study.</span></li>
+<li><b>Benefit/cost form</b>: 3% discount rate, 5 years of crashes; B/C of 1 or more to score.</li>
+<li><b>Ranking</b>: VDOT ranks by "Potential for Safety Improvement" from its own prediction models, and lists the top 100.</li>
+<li><b>Statewide average rates</b>: <span class="warn">not published as a table</span> (only inside VDOT's Power BI tool). <span class="ex">A VDOT study quotes 111.5 crashes per 100 million vehicle-miles for rural primary roads, 2017–2024.</span></li>
+<li><b>Calibration factors</b> for intersections (VTRC, March 2026). <span class="ex">Example: urban 4-leg signal 1.59.</span></li>
+<li>Details with page numbers: <a href="va-methods.md">va-methods.md</a>.</li>
+</ul>
+
+<h2>5. What we built</h2>
+<p>A Virginia reader that downloads VDOT's crashes and turns them into CrashIQ's crash format, with 7 offline tests. It is <b>not switched on</b> in the app yet (that waits for the state-pack design).</p>
+
+<h2>What you need to do</h2>
+<ul>
+<li><b>Ask VDOT</b> (Traffic Operations, Highway Safety) or DMV's Highway Safety Office: may a paid engineering tool use the Virginia Roads crash data? <span class="ex">Their page says the files are "for use in performing the official business of the Commonwealth" and users must follow privacy law (DPPA).</span></li>
+<li>Decide: in Virginia studies, use Virginia's 2026 crash costs instead of Caltrans'.</li>
+</ul>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>VDOT's Power BI statewide rate tables; segment and freeway prediction models.</li>
+<li>Arlington's and Virginia Beach's own terms of use.</li>
+<li>Why 2025 has fewer crashes than 2024 (115,858 vs 129,244).</li>
+<li>Placement on years other than 2024.</li>
+</ul>
+</body></html>

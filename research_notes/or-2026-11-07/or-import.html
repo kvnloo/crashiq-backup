@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Oregon crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:16px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;border-bottom:1px solid #522;padding-bottom:4px;margin-top:1.6em}
+.big{font-size:1.1em;background:#2a0f0f;border-left:4px solid #ff4d4d;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em;border-left:2px solid #633;padding-left:8px;margin:4px 0 10px}
+table{border-collapse:collapse;width:100%;font-size:.92em}td,th{border:1px solid #333;padding:5px 6px;text-align:left}th{background:#221}
+a{color:#ff8a8a}code{background:#222;padding:1px 4px;border-radius:3px}li{margin:4px 0}
+</style></head><body>
+<h1>Oregon: can CrashIQ use it?</h1>
+<p class="big"><b>Yes, the data is open and very good.</b> Every Oregon crash (city streets, county roads, state highways),
+2015-2024, downloads with no login. 98.8% already have a map point, injuries are KABCO for every person, and the crash,
+vehicle and person tables link. <b>The catch: Oregon gives no licence for a paid product.</b> We need ODOT's written OK.</p>
+
+<h2>1. Where the data is</h2>
+<ul>
+<li><b>ODOT's yearly crash database</b> (one 20 MB file per year), from the
+<a href="https://www.oregon.gov/odot/Data/Pages/CrashDataProducts.aspx">Crash Data Products page</a>. 48,414 crashes in 2024.
+<div class="ex">Example: crash 2058819, 20 Dec 2024, 8 pm, NE Broadway St at NE 15th Ave, Portland: a pedestrian killed, hit and run. Every person in it has a K/A/B/C/O injury level.</div></li>
+<li><b>ODOT's online crash map layer</b>, 2019-2024, one row per crash, with ODOT's own K/A/B/C/O.
+<div class="ex">We checked: the person-by-person severity from the yearly file matches ODOT's crash severity on all 8,874 Multnomah County crashes of 2024.</div></li>
+<li><b>Cities</b> (Portland, Salem, Eugene, Bend) don't publish their own crash lists. Portland's transportation bureau
+says ODOT keeps the official record. So Portland = ODOT's data: 7,182 crashes in 2024, 98% on the map.</li>
+<li><b>Address points</b>: Oregon has a free statewide list (1.9 million addresses, public domain). Not needed: Oregon
+crash reports never give a house number.</li>
+</ul>
+
+<h2>2. How many crashes CrashIQ itself can place (Portland test)</h2>
+<p>2,000 random Multnomah County crashes from 2024. We hid ODOT's map point and let CrashIQ place each crash from its two
+street names, on the Census street map.</p>
+<table>
+<tr><th></th><th>City streets &amp; roads</th><th>Freeways</th></tr>
+<tr><td>Crashes tested</td><td>1,492</td><td>449</td></tr>
+<tr><td>Placed automatically</td><td>1,170 (78%)</td><td>3 (1%)</td></tr>
+<tr><td>Of those, within 250 ft of ODOT's point</td><td>1,130 (96.6%; at least 95.4%)</td><td>3 of 3</td></tr>
+</table>
+<ul>
+<li><b>City streets work.</b> <div class="ex">A 2024 fatal crash at "SE Woodstock Blvd" and "SE 82nd Ave" is placed on that corner, under 1 ft from ODOT's point.</div></li>
+<li><b>Accuracy is a bit below our California bar</b> (98% needed to auto-place); 96.6% here. Not yet explained.</li>
+<li><b>Freeways don't work from names</b>: ODOT writes its own short highway and ramp names.
+<div class="ex">A 2024 I-84 crash reads "BANFIELD FY" at "WB EF 181ST AVE C3": a westbound ramp code at 181st Ave, not a street on any map.</div>
+But every highway crash also has a highway number and milepoint, like Caltrans postmiles. That would be the fix.</li>
+<li><b>Crashes with no map point: names add nothing.</b> Only 156 in the county all year (1.8%), and 151 of them name just one road.</li>
+</ul>
+
+<h2>3. What we built</h2>
+<p>A reader for both ODOT products, with tests that run without internet on 40 real Portland crashes. It is not
+switched on in the app yet (that waits for the state-pack design).</p>
+
+<h2>4. Oregon's own rules (manuals)</h2>
+<ul>
+<li><b>Rates</b>: intersections per million entering vehicles, with a statewide table; an intersection over the
+"90th percentile" rate is flagged. <div class="ex">Urban 4-way signal: average 0.477, flag above 0.860 crashes per million entering vehicles.</div>
+State-highway segments per million vehicle-miles (Table II). <div class="ex">Urban interstate 2024: 0.54.</div></li>
+<li><b>Crash costs</b>: fatal and serious injury are priced together, and so are minor and possible injury.
+<div class="ex">Urban city street: fatal or serious crash $1,110,000; minor injury crash $81,300; damage only $21,800 (2019 values).</div></li>
+<li><b>Screening</b>: ODOT's own SPIS list (0.1-mile pieces, 3 years) plus the usual critical-rate test.</li>
+<li>Full details, page numbers and the differences from California: <a href="or-methods.md">or-methods.md</a>.</li>
+</ul>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Email ODOT's crash unit (<a href="mailto:ODOTTDSCrashRequestGroup@odot.oregon.gov">ODOTTDSCrashRequestGroup@odot.oregon.gov</a>)
+and ask for written permission to use Oregon crash data inside a paid tool. Their disclaimer expects consultants to
+re-release the data, but doesn't say "commercial use is OK".</li>
+<li>Pick one: the yearly files (every person, 2015-2024) or the online layer (crash only, 2019-2024). We suggest the yearly files.</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>Any county other than Multnomah; the app's combined OSM + Census map (we used the Census map only).</li>
+<li>Why accuracy is 96.6% and not 98%.</li>
+<li>How many freeway crashes a milepoint method would place (ODOT's milepoint layer wasn't tested).</li>
+<li>The national address list (NAD) for Oregon (its server refused the query).</li>
+<li>Which cost table ODOT's current benefit-cost workbook uses (2012 or 2019 values).</li>
+</ul>
+<p style="color:#777;font-size:.85em">Written by Hermes, 2026-11-07. Numbers: or-import.md, or-summary.json.</p>
+</body></html>

@@ -1,0 +1,70 @@
+{
+ "state": "NM",
+ "manuals": {
+  "nmdot_aashtoware_costs": {
+   "title": "NMDOT - Crash Injury Severity (KABCO) Costs (NMDOT default crash costs in AASHTOWare Safety)",
+   "publisher": "Numetric Help Center, for the New Mexico Department of Transportation",
+   "jurisdiction": "NM",
+   "edition": "article dated 2026-04-30",
+   "url": "https://support.numetric.com/en/articles/10698140-nmdot-crash-injury-severity-kabco-costs",
+   "local_copy": "~/.hermes/state-manuals/nm/numetric-nmdot-kabco-costs.html",
+   "note": "a vendor's help page, not an NMDOT document; no dollar year given. research_notes/nm-2026-11-08/nm-methods.md"
+  },
+  "unm_crash_dictionary": {
+   "title": "Crash-level Data Dictionary and User Guide",
+   "publisher": "UNM Geospatial and Population Studies, Traffic Research Unit, for NMDOT",
+   "jurisdiction": "NM",
+   "edition": "Feb. 2026",
+   "url": "https://gps.unm.edu/assets/documents/tru-documents/data-dictionary-crash-level.pdf",
+   "sha256": "aaab02f45b0c687ffbe96b396dcfa2c5b713db1217f79a976e77057769ae4cc5",
+   "downloaded": "2026-11-08",
+   "local_copy": "~/.hermes/state-manuals/nm/unm-crash-level-data-dictionary-2026-02.pdf"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 6649927,
+   "A": 350487,
+   "B": 127985,
+   "C": 71930,
+   "O": 11552,
+   "manual": "nmdot_aashtoware_costs",
+   "page": "the article's single table (Cost Category column)",
+   "verified": false,
+   "rules": [
+    "research figure: no NMDOT document with per-level crash costs was found (HSIP page, SHSP 2021, VRU assessment 2023; 2026-11-08); not printed until NMDOT confirms the values and their dollar year",
+    "U (injury, level not reported) unpriced"
+   ]
+  },
+  "severity_rule": {
+   "rule": "crash severity is the most severe injury code reported; Killed, ClassA, ClassB, ClassC count people by level; no injury reported = property damage only",
+   "manual": "unm_crash_dictionary",
+   "page": "pp. 7-8 (1. Classification - Crash Severity)"
+  },
+  "statewide_rates": {
+   "missing": "NMDOT publishes no statewide average crash-rate table by facility type that was found (2026-11-08), and CrashIQ has no New Mexico traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "NMDOT HSIP network screening (Non-Interstate 2019 and Interstate 2021 technical memos on nmdot.maps.arcgis.com); not loaded"
+  },
+  "min_years": {
+   "missing": "not found in an NMDOT document read 2026-11-08 (the network screening memos were not read)"
+  },
+  "spf_calibration": {
+   "missing": "no New Mexico SPF calibration factors found; no SPF engine"
+  }
+ }
+}

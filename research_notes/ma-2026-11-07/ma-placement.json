@@ -1,0 +1,135 @@
+{
+ "area": "Middlesex County MA (25017), IMPACT 2025, random 2,000 (seed 20251107)",
+ "n": 2000,
+ "gps": 1970,
+ "gps_share": 0.985,
+ "kinds": {
+  "address": 819,
+  "pair": 947,
+  "none": 234
+ },
+ "name_placeable_share": 0.883,
+ "tiers_gps_pairs": {
+  "exact": 693,
+  "review": 227,
+  "near": 13,
+  "verified_typo": 5,
+  "fuzzy": 3,
+  "relaxed": 4,
+  "unique_pair": 1
+ },
+ "pairs_on_gps": {
+  "n": 946,
+  "auto": 694,
+  "auto_share": 0.7336,
+  "scored": 694,
+  "within_250ft": 0.9597,
+  "within_250ft_low": 0.9423
+ },
+ "address_on_gps": {
+  "n": 817,
+  "auto": 781,
+  "auto_share": 0.9559,
+  "scored": 781,
+  "within_250ft": 0.8259,
+  "within_250ft_low": 0.7977
+ },
+ "all_named_on_gps": {
+  "n": 1763,
+  "auto": 1475,
+  "auto_share": 0.8366,
+  "scored": 1475,
+  "within_250ft": 0.8888,
+  "within_250ft_low": 0.8717
+ },
+ "by_method": {
+  "At Address": {
+   "n": 842,
+   "auto": 799,
+   "auto_share": 0.9489,
+   "scored": 799,
+   "within_250ft": 0.8285,
+   "within_250ft_low": 0.8008
+  },
+  "At Intersection": {
+   "n": 607,
+   "auto": 530,
+   "auto_share": 0.8731,
+   "scored": 530,
+   "within_250ft": 0.9849,
+   "within_250ft_low": 0.9705
+  },
+  "Exit Number": {
+   "n": 2,
+   "auto": 1,
+   "auto_share": 0.5,
+   "scored": 1,
+   "within_250ft": 0.0,
+   "within_250ft_low": 0.0
+  },
+  "Mile Marker": {
+   "n": 0,
+   "auto": 0,
+   "auto_share": null,
+   "scored": 0,
+   "within_250ft": null,
+   "within_250ft_low": null
+  },
+  "Off Intersection": {
+   "n": 41,
+   "auto": 28,
+   "auto_share": 0.6829,
+   "scored": 28,
+   "within_250ft": 0.9643,
+   "within_250ft_low": 0.8229
+  },
+  "Operator Designated": {
+   "n": 269,
+   "auto": 117,
+   "auto_share": 0.4349,
+   "scored": 117,
+   "within_250ft": 0.8547,
+   "within_250ft_low": 0.7796
+  },
+  "Rotary": {
+   "n": 2,
+   "auto": 0,
+   "auto_share": 0.0,
+   "scored": 0,
+   "within_250ft": null,
+   "within_250ft_low": null
+  }
+ },
+ "no_gps": {
+  "n": 30,
+  "auto": 1,
+  "kinds": {
+   "none": 27,
+   "address": 2,
+   "pair": 1
+  }
+ },
+ "review_notes_pairs": [
+  [
+   "no intersection of the two named streets",
+   205
+  ],
+  [
+   "exact: streets meet in more than one place",
+   18
+  ],
+  [
+   "town not in county",
+   3
+  ],
+  [
+   "missing street name",
+   1
+  ]
+ ],
+ "networks": 54,
+ "mad_points": 138576,
+ "name_placed_share": 0.7505,
+ "auto_share_all": 0.738,
+ "house_address_share": 0.4095
+}

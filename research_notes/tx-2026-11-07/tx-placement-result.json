@@ -1,0 +1,125 @@
+{
+ "source": "https://services3.arcgis.com/zqe2kwz79KUqUvxC/arcgis/rest/services/2025_traffic_accidents_no_duplicates/FeatureServer/0",
+ "crashes": 47628,
+ "gps": 44066,
+ "gps_share": 0.9252120601326951,
+ "street_pair": 18192,
+ "street_pair_share": 0.381960191484001,
+ "no_gps": 3562,
+ "no_gps_road_class": {
+  "NON TRAFFICWAY": 3007,
+  "INTERSTATE": 286,
+  "US & STATE HIGHWAYS": 134,
+  "CITY STREET": 68,
+  "TOLLWAY": 63,
+  "COUNTY ROAD": 4
+ },
+ "no_gps_street_pair": 122,
+ "sample": {
+  "n": 2000,
+  "tiers": {
+   "exact": 1508,
+   "review": 412,
+   "unique_pair": 59,
+   "relaxed": 11,
+   "verified_typo": 4,
+   "near": 3,
+   "fuzzy": 3
+  },
+  "placed": 1588,
+  "placed_share": 0.794,
+  "auto": 1567,
+  "auto_share": 0.7835,
+  "auto_within_250ft": 1377,
+  "auto_within_250ft_share": 0.8787492022973835,
+  "auto_within_250ft_wilson_low": 0.8616541209626857,
+  "placed_within_250ft_share": 0.8803526448362721,
+  "review_reasons": {
+   "exact": 140,
+   "no intersection of the two named streets": 268,
+   "relaxed": 4
+  }
+ },
+ "sample_by_road_class": {
+  "CITY STREET": {
+   "n": 1375,
+   "tiers": {
+    "exact": 1103,
+    "review": 206,
+    "relaxed": 11,
+    "verified_typo": 4,
+    "unique_pair": 47,
+    "fuzzy": 3,
+    "near": 1
+   },
+   "placed": 1169,
+   "placed_share": 0.8501818181818181,
+   "auto": 1150,
+   "auto_share": 0.8363636363636363,
+   "auto_within_250ft": 1095,
+   "auto_within_250ft_share": 0.9521739130434783,
+   "auto_within_250ft_wilson_low": 0.9382634807169128,
+   "placed_within_250ft_share": 0.9529512403763901
+  },
+  "INTERSTATE": {
+   "n": 276,
+   "tiers": {
+    "exact": 166,
+    "review": 105,
+    "unique_pair": 4,
+    "near": 1
+   },
+   "placed": 171,
+   "placed_share": 0.6195652173913043,
+   "auto": 170,
+   "auto_share": 0.6159420289855072,
+   "auto_within_250ft": 98,
+   "auto_within_250ft_share": 0.5764705882352941,
+   "auto_within_250ft_wilson_low": 0.5013082766233525,
+   "placed_within_250ft_share": 0.5789473684210527
+  },
+  "US & STATE HIGHWAYS": {
+   "n": 330,
+   "tiers": {
+    "exact": 237,
+    "unique_pair": 8,
+    "review": 85
+   },
+   "placed": 245,
+   "placed_share": 0.7424242424242424,
+   "auto": 245,
+   "auto_share": 0.7424242424242424,
+   "auto_within_250ft": 183,
+   "auto_within_250ft_share": 0.746938775510204,
+   "auto_within_250ft_wilson_low": 0.6889727853913336,
+   "placed_within_250ft_share": 0.746938775510204
+  },
+  "TOLLWAY": {
+   "n": 2,
+   "tiers": {
+    "exact": 1,
+    "review": 1
+   },
+   "placed": 1,
+   "placed_share": 0.5,
+   "auto": 1,
+   "auto_share": 0.5,
+   "auto_within_250ft": 0,
+   "auto_within_250ft_share": 0.0,
+   "auto_within_250ft_wilson_low": 0.0,
+   "placed_within_250ft_share": 0.0
+  }
+ },
+ "no_gps_pair_run": {
+  "n": 122,
+  "tiers": {
+   "review": 81,
+   "exact": 32,
+   "unique_pair": 8,
+   "near": 1
+  },
+  "placed": 41,
+  "auto": 40
+ },
+ "no_gps_added_share_of_all": 0.0008398421096833795
+}

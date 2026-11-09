@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Washington DC crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:720px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin:1.4em 0 .4em;border-bottom:1px solid #4a1a1a}
+.tag{display:inline-block;background:#7a1010;color:#fff;border-radius:6px;padding:2px 10px;font-weight:600}
+.big{font-size:1.6em;color:#ff4d4d;font-weight:700}.ex{color:#bbb;font-style:italic}
+table{border-collapse:collapse;width:100%;margin:.4em 0}td{border-bottom:1px solid #333;padding:5px 4px;vertical-align:top}
+td:first-child{color:#aaa;width:48%}a{color:#ff8080}li{margin:.3em 0}.warn{color:#ffb3b3}
+</style></head><body>
+<h1>Washington DC: crash data for CrashIQ</h1>
+<p><span class="tag">Ready, with one catch</span> &nbsp;Checked 7 Nov 2026</p>
+
+<h2>1. The data</h2>
+<p>DC's transport department (DDOT) publishes every police crash report online, updated every night: <b>356,985 crashes</b> since 2008, plus a table of every person in them (906,895 rows). No login needed.</p>
+<table>
+<tr><td>Crashes per year</td><td>about 18,000–27,000 (2025: 18,175)</td></tr>
+<tr><td>Crashes with a map point</td><td class="big">100%</td></tr>
+<tr><td>Can we use it in a paid product?</td><td><b>Yes, if we credit DDOT</b> (licence CC BY 4.0)</td></tr>
+<tr><td>Newest crash</td><td>5 Nov 2026</td></tr>
+</table>
+<p class="ex">Example: "1201 U STREET NW", 1 June 2025, 4 am, one pedestrian with a minor injury, police GPS 38.9172, −77.0283.</p>
+
+<h2>2. The catch: injury levels</h2>
+<p>Deaths and serious injuries are exact. But DC lumps the two lighter levels (B "visible injury" and C "complained of pain") into one "minor" group. CrashIQ can't split them.</p>
+<p class="ex">2025: 22 fatal crashes, 284 serious-injury crashes, 4,304 "minor", 13,565 no injury.</p>
+<p>The data also has no crash type (rear-end, broadside…), no lighting, no weather and no road surface. Those tables would stay empty for DC.</p>
+
+<h2>3. Can CrashIQ place crashes from the street names?</h2>
+<p>We hid the GPS on 2,000 crashes from 2025 and let CrashIQ place them from the address alone.</p>
+<table>
+<tr><td>Placed from the words</td><td class="big">88.6%</td></tr>
+<tr><td>Within 250 ft of police GPS</td><td>98.7%</td></tr>
+<tr><td>Placed automatically today</td><td>2.8% (only street-pair crashes; house addresses wait for your OK)</td></tr>
+</table>
+<p class="warn">The 98.7% sounds good, but it doesn't prove much. DC police get their "GPS" from the address they type, so we're matching the same address twice.</p>
+<p class="ex">Example: of 1,709 house-address crashes, 1,548 (9 in 10) sit within 5 ft of the DC address-list point for that house number.</p>
+<p>It doesn't matter much in DC: every crash already has a point, so placement adds <b>0</b> crashes.</p>
+<p>Two fixes for the shared street-name code: DC's "NW / NE / SW / SE" at the end of a name, and streets called just "N", "E", "S" or "W".</p>
+
+<h2>4. DC's own rules (manuals)</h2>
+<ul>
+<li><b>No published average crash rates</b> by road type. California has these (TASAS); DC doesn't. You can only compare locations inside DC.</li>
+<li>DC ranks hot spots by a mix: 25% how many crashes, 25% the crash rate, 50% how bad they were. It also uses HSM safety models at intersections.</li>
+<li>Intersection rate is crashes per million entering vehicles, the same as California.</li>
+<li>Crash costs: DC uses FHWA's national costs (2024 dollars: fatal $15,988,000, serious $1,705,100, minor $384,000, possible $204,600, no injury $18,100).</li>
+<li>DC uses <b>3 years</b> of crashes, not California's 5.</li>
+<li>Developers' traffic studies haven't needed a crash analysis since 2022.</li>
+</ul>
+<p>Full details with page numbers: <code>research_notes/dc-2026-11-07/dc-methods.md</code>.</p>
+
+<h2>5. What's built</h2>
+<p>A DC reader that downloads the crashes and people and turns them into CrashIQ's crash format, with 7 offline tests on 95 real crashes. It isn't connected to the app yet.</p>
+
+<h2>What you need to do</h2>
+<ul>
+<li>Decide what "minor injury" counts as: <b>B</b> (simple), or a new "B or C" group.</li>
+<li>OK the credit line "District Department of Transportation / Open Data DC" on maps and exports.</li>
+<li>Optional: ask DDOT's Traffic Safety Division to publish the full injury code and crash type.</li>
+</ul>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>Crashes on federal land (Park Police: Rock Creek Pkwy, Suitland Pkwy, parts of the Mall) aren't in this data. We didn't count how many are missing.</li>
+<li>How many crashes DDOT leaves out because it couldn't map them.</li>
+<li>DC's national address-database coverage (the server refused our query). We used DC's own address list instead.</li>
+<li>A comparison with the federal fatal-crash file (FARS).</li>
+<li>DC's current safety plan PDF and its design manual's safety chapter.</li>
+</ul>
+</body></html>

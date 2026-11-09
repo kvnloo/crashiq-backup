@@ -1,0 +1,105 @@
+{
+ "state": "HI",
+ "bucket": "D",
+ "status": "gated",
+ "bucket_note": "Open record-level points exist (HDOT_Crash_Layer, no login), so the 2026-11-02 screen undercounted; but they carry the year only, no KABCO, no streets/route/milepost, no report number, and state roads only before 2023. Not enough for a pack without inventing dates and severity. Full data (SHACA) is by request.",
+ "sources": [
+  {
+   "name": "HDOT_Crash_Layer (+ HDOT_Crash_Layer_2024)",
+   "url": "https://services.arcgis.com/HQ0xoN0EzDPBOEci/arcgis/rest/services/HDOT_Crash/FeatureServer/0",
+   "access": "open (ArcGIS REST, Socrata kktn-udgf)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "\"This data is provided for highway safety and educational purposes only. Use of this website constitutes agreement with this policy.\" (HDOT crash pages, 23 USC 407)",
+   "years": "2015-2024 (year only)",
+   "rows_per_year": {
+    "2015": 3921,
+    "2016": 4087,
+    "2017": 3442,
+    "2018": 3637,
+    "2019": 3472,
+    "2020": 2400,
+    "2021": 2720,
+    "2022": 2322,
+    "2023": 5643,
+    "2024": 5671
+   },
+   "gps_share": 0.9993,
+   "street_names_share": 0.0,
+   "kabco": false,
+   "keys_linkable": "no report number, no person/vehicle tables"
+  },
+  {
+   "name": "FatalCrash_2012-2025",
+   "url": "https://services.arcgis.com/HQ0xoN0EzDPBOEci/arcgis/rest/services/FatalCrash/FeatureServer/0",
+   "access": "open (ArcGIS REST)",
+   "licence_paid_use": "ok",
+   "licence_quote": "\"State of Hawaii Terms of Use. The contents of this web page are public domain...\" (item 8aa60d9c408b41449b248e3e7623d77d)",
+   "years": "2012-2025",
+   "rows_per_year": {
+    "2012": 114,
+    "2013": 93,
+    "2014": 94,
+    "2015": 93,
+    "2016": 119,
+    "2017": 96,
+    "2018": 109,
+    "2019": 102,
+    "2020": 81,
+    "2021": 94,
+    "2022": 111,
+    "2023": 90,
+    "2024": 97,
+    "2025": 123
+   },
+   "gps_share": "not measured (x/y on every row read)",
+   "street_names_share": 0.0,
+   "kabco": "K only",
+   "keys_linkable": "CrashId from 2019"
+  },
+  {
+   "name": "HDOT SHACA export",
+   "url": "https://hidot.hawaii.gov/highways/files/2025/10/Shaca-Presentation.pdf",
+   "access": "records request / agency only",
+   "licence_paid_use": "unclear",
+   "years": "2015-2024 per HDOT",
+   "rows_per_year": "not measured",
+   "gps_share": "not measured",
+   "street_names_share": "not measured",
+   "kabco": "not confirmed",
+   "keys_linkable": "not confirmed"
+  }
+ ],
+ "placement_sample": {
+  "area": "Honolulu (15003), 2024, HDOT_Crash_Layer_2024",
+  "n": 4025,
+  "gps_share": 0.9978,
+  "name_placed_share": "not measurable (no street names)",
+  "auto_share": "not measured",
+  "within_250ft": "not measurable (GPS is the only location)",
+  "within_250ft_low": null,
+  "house_address_share": 0.0,
+  "address_points_source": null
+ },
+ "importer_built": false,
+ "blockers": [
+  "open layers give the year only, no date",
+  "no KABCO severity (one undocumented 'major injury' flag)",
+  "state roads only 2015-2022; county roads from 2023",
+  "no street names, route or milepost; no report number",
+  "use limited to 'highway safety and educational purposes' (no paid-use grant)"
+ ],
+ "user_actions": [
+  "Ask HDOT Traffic Safety (SHACA) for a statewide 2019-2024 export with crash date, KABCO per crash, route+milepost or street names, report number, and written permission for paid use",
+  "Or ask HDOT to add date and KABCO severity to the open HDOT_Crash_Layer (it already has GPS on 99.9%)"
+ ],
+ "cities": [
+  {
+   "city": "Honolulu",
+   "source": "data.honolulu.gov",
+   "url": "https://data.honolulu.gov/",
+   "gps_share": null,
+   "years": "none (no crash dataset; 'Traffic Incidents' ykb6-n5th is a 24 h dispatch feed)",
+   "licence": "n/a"
+  }
+ ]
+}

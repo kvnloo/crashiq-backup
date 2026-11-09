@@ -1,0 +1,62 @@
+{
+ "state": "AR",
+ "bucket": "A*",
+ "bucket_note": "open, record-level, GPS 99.6%, KABCO; catch: undocumented 'NotForOfficialUse' dashboard service with no licence, crash level only, no street text the locator can read",
+ "status": "active",
+ "sources": [
+  {
+   "name": "ARDOT Arkansas Crash Analytics Tool (ACAT) layer (ASP eCrash, cleaned by ARDOT)",
+   "url": "https://gis.ardot.gov/referenced/rest/services/TPP_TrafficSafety/NotForOfficialUse/FeatureServer/20",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "The data contained in the web-based dashboard is not an official record for crash statistics … Users are advised that their use of any ARDOT GIS Data is at their own risk. … (see 23 USC, Section 409).",
+   "years": "2021-2025 (rolling five years)",
+   "rows_per_year": {"2021": 81037, "2022": 79220, "2023": 81907, "2024": 81032, "2025": 78083},
+   "gps_share": 0.9963,
+   "street_names_share": 0.402,
+   "street_names_note": "cross street only (IntersectingStreetName), ~19% of those written without spaces; the primary road only inside AH_RoadID without spaces",
+   "kabco": true,
+   "keys_linkable": "no person/vehicle tables; StateCaseNumber unique per crash"
+  },
+  {
+   "name": "Arkansas State Police crash reports",
+   "url": "https://crashreports.ark.org/",
+   "access": "paid per report ($10/$25)",
+   "licence_paid_use": "no",
+   "years": null, "rows_per_year": null, "gps_share": null, "street_names_share": null, "kabco": null,
+   "keys_linkable": null,
+   "note": "no record-level open data"
+  }
+ ],
+ "placement_sample": {
+  "area": "Pulaski County (Little Rock), 2025, all 15,030 crashes",
+  "n": 15030,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": 1.0,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "hidden-GPS locator test not run: no primary street text to place from; the 1,467 no-GPS crashes statewide (0.37%) have no road id either"
+ },
+ "end_to_end": {
+  "corridor": "S University Ave, W 12th St to Asher Ave, Little Rock (1.55 mi)",
+  "window": [2021, 2025],
+  "pulled": 1174, "counted": 263,
+  "severity": {"K": 0, "A": 3, "B": 24, "C": 36, "U": 0, "O": 200},
+  "crash_cost_total": 8641000,
+  "pdf_bytes": 36568, "xlsx_bytes": 34499, "seconds": 102
+ },
+ "importer_built": true,
+ "blockers": [
+  "no published licence for a paid product",
+  "street names unusable by the shared locator (spaces removed): GPS-only placement, no not-on-corridor-street check (shared-fixes.md)",
+  "tests/test_packs.py::test_setup_lists_ready_states_first assumes California sorts first (shared-fixes.md #3)"
+ ],
+ "user_actions": [
+  "Ask ARDOT Traffic Safety Section for written permission to show ACAT crash data in a paid product",
+  "Optional: ask ARDOT for its statewide average crash rates by roadway type"
+ ],
+ "cities": []
+}

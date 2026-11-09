@@ -1,0 +1,30 @@
+{
+ "area": "Yellowstone County (Billings), 2025",
+ "n": 3291,
+ "gps_plausible": 3291,
+ "in_county_box": 3291,
+ "distinct_points": 2192,
+ "sharing_a_point": 1459,
+ "severity": {
+  "No apparent Injury (property damage only crash)": 2263,
+  "Suspected Minor Injury": 244,
+  "Suspected Serious Injury": 49,
+  "Possible injury crash": 546,
+  "Fatal crash": 21,
+  "Unknown": 168
+ },
+ "city": [
+  [
+   "Billings",
+   2384
+  ],
+  [
+   "(rural)",
+   833
+  ],
+  [
+   "Laurel",
+   74
+  ]
+ ]
+}

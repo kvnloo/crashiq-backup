@@ -320,7 +320,7 @@ def union(osm_raw: dict, tiger_edges: list[dict], line: list[tuple[float, float]
 
 
 # -- the study's network: OSM (Overpass, cached) + the TIGER segments of the counties the line is in --------------------
-def corridor_network(db, net: dict, tiger) -> tuple[dict, dict]:
+def corridor_network(db, net: dict, tiger, pack=None) -> tuple[dict, dict]:
     """(elements, info) for the locator and the name checks. `tiger`: a TigerCache, or None (OSM only)."""
     from . import network as network_mod
     from .sources import tiger_files
@@ -334,7 +334,7 @@ def corridor_network(db, net: dict, tiger) -> tuple[dict, dict]:
     s, n = min(p[0] for p in line) - pad, max(p[0] for p in line) + pad
     w, e = min(p[1] for p in line) - pad * 1.25, max(p[1] for p in line) + pad * 1.25
     edges = []
-    for fips in tiger_files.counties_for(line):
+    for fips in tiger_files.counties_for(line, pack):
         if tiger.ready(fips):
             edges += tiger.edges_in(fips, (s, w, n, e))
             info["tiger_counties"].append(fips)

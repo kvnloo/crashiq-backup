@@ -1,0 +1,115 @@
+{
+ "state": "DE",
+ "bucket": "A",
+ "bucket_note": "Open, record-level, statewide, 100% GPS, monthly. Catches: severity is crash class only (K/U/O, no A/B/C), no street names, no people, no reuse licence.",
+ "sources": [
+  {
+   "name": "Public Crash Data (DSHS), data.delaware.gov 827n-m6xc",
+   "url": "https://data.delaware.gov/Transportation/Public-Crash-Data/827n-m6xc",
+   "access": "open (Socrata API, no login)",
+   "licence_paid_use": "unclear",
+   "licence_text": "Licence field empty. 'represents the best available information at DSHS and is not an official record ... does not contain personal information ... allows any member of the public to engage in interactive analysis and data exploration for the purpose of identifying, evaluating or planning the safety enhancement of potential crash sites'",
+   "licence_urls": [
+    "https://data.delaware.gov/api/views/827n-m6xc.json"
+   ],
+   "years": "2009-2026 (to ~6 months ago)",
+   "rows_per_year": {
+    "2009": 19115,
+    "2010": 31272,
+    "2011": 31066,
+    "2012": 31232,
+    "2013": 32450,
+    "2014": 32739,
+    "2015": 35015,
+    "2016": 36955,
+    "2017": 37145,
+    "2018": 37496,
+    "2019": 37441,
+    "2020": 31665,
+    "2021": 37766,
+    "2022": 37445,
+    "2023": 37270,
+    "2024": 37184,
+    "2025": 36868,
+    "2026": 11095
+   },
+   "reportable_rows_per_year": {
+    "2009": 18919,
+    "2010": 18981,
+    "2011": 19585,
+    "2012": 19980,
+    "2013": 21295,
+    "2014": 22924,
+    "2015": 24083,
+    "2016": 26455,
+    "2017": 28067,
+    "2018": 28855,
+    "2019": 29117,
+    "2020": 24173,
+    "2021": 28473,
+    "2022": 27803,
+    "2023": 27464,
+    "2024": 27590,
+    "2025": 27581,
+    "2026": 8128
+   },
+   "gps_share": 0.999998,
+   "street_names_share": 0.0,
+   "kabco": "no: crash class Fatality (K) / Personal Injury (U) / PDO (O) / Non-Reportable (left out)",
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": "New Castle County (Wilmington), 2025",
+  "n": 15753,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "no street names or addresses: the locator test doesn't apply; every reportable crash has a point inside the county"
+ },
+ "end_to_end": {
+  "corridor": "Kirkwood Highway (DE 2), Prices Corner",
+  "length_mi": 0.91,
+  "window": [
+   2021,
+   2025
+  ],
+  "port": 8103,
+  "source_rows": 1327,
+  "non_reportable_left_out": 282,
+  "contract_errors": 0,
+  "pulled": 778,
+  "counted": 470,
+  "excluded": 308,
+  "severity": {
+   "K": 0,
+   "A": 0,
+   "B": 0,
+   "C": 0,
+   "U": 57,
+   "O": 413
+  },
+  "crash_cost": null,
+  "findings_shown": 6,
+  "pdf_bytes": 49487,
+  "xlsx_bytes": 38897
+ },
+ "status": "active",
+ "importer_built": true,
+ "blockers": [
+  "no reuse licence for a paid product",
+  "no injury levels (A/B/C): KSI is fatal only",
+  "no crash costs published by DelDOT (in development)",
+  "no street names, road class, people or vehicles"
+ ],
+ "user_actions": [
+  "Ask DSHS / data.delaware.gov in writing whether a paid tool may load Public Crash Data, and what notice it must show",
+  "Decide: leave non-reportable crashes out (now) or count them as PDO",
+  "Ask DelDOT (HSIP manager) for the Delaware crash costs due in 2026"
+ ],
+ "cities": []
+}

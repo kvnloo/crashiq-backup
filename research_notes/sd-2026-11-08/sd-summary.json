@@ -1,0 +1,131 @@
+{
+ "state": "SD",
+ "bucket": "A",
+ "bucket_note": "Open yearly files (2011-2025), record-level, GPS on every crash, person KABCO, linked tables. Catch: no reuse licence.",
+ "sources": [
+  {
+   "name": "SD DPS Office of Accident Records, Raw Crash Data (SDARS files)",
+   "url": "https://www.safesd.gov/ (Download Crash Data > Raw Crash Data); https://www.safesd.gov/downloads/raw-data/SDARSFiles<year>.zip",
+   "access": "open (zip per year, no login; 'Data updated April 15 annually')",
+   "licence_paid_use": "unclear",
+   "licence_text": "safesd.gov: 'Vehicle crash reports are covered by South Dakota open records statute'; footer 'Copyright \u00a92022 South Dakota Department of Public Safety. All Rights Reserved.' No reuse licence for the raw data.",
+   "licence_urls": [
+    "https://www.safesd.gov/"
+   ],
+   "years": "2011-2025 (2011, 2015, 2019, 2025 zips checked 2026-11-08)",
+   "rows_per_year": {
+    "2020": 17583,
+    "2021": 19461,
+    "2022": 18598,
+    "2023": 18771,
+    "2024": 18689,
+    "2025": 18974
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.9777,
+   "kabco": "yes: Person.InjuryStatusDesc (Fatal injury / Incapacitating / Non-incapacitating / Possible / No injury); crash Severity Fatal/Injury/PDO",
+   "keys_linkable": true
+  }
+ ],
+ "severity_by_year": {
+  "2020": {
+   "C": 1598,
+   "O": 14137,
+   "B": 1297,
+   "A": 419,
+   "K": 132
+  },
+  "2021": {
+   "O": 15714,
+   "C": 1706,
+   "B": 1415,
+   "A": 495,
+   "K": 131
+  },
+  "2022": {
+   "O": 14885,
+   "C": 1683,
+   "B": 1402,
+   "A": 507,
+   "K": 121
+  },
+  "2023": {
+   "O": 15073,
+   "B": 1490,
+   "C": 1629,
+   "A": 450,
+   "K": 129
+  },
+  "2024": {
+   "O": 15068,
+   "B": 1511,
+   "C": 1499,
+   "A": 477,
+   "K": 134
+  },
+  "2025": {
+   "O": 15332,
+   "B": 1621,
+   "C": 1404,
+   "A": 507,
+   "K": 110
+  }
+ },
+ "placement_sample": {
+  "area": "Minnehaha County (Sioux Falls), 2025",
+  "n": 2000,
+  "county_crashes": 5836,
+  "gps_share": 1.0,
+  "street_pair_share": 0.9702,
+  "name_placed_share": 0.7565,
+  "auto_share": 0.0,
+  "auto_share_tiger_only_auto": 0.744,
+  "within_250ft": 0.914,
+  "within_250ft_low": 0.8986,
+  "within_250ft_all_placed": 0.9055,
+  "no_gps": 0,
+  "no_gps_with_pair": 0,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "auto_share is 0 under the default Gate() because the network is TIGER-only; within_250ft is scored under Gate(tiger_only_auto=True), against the hidden GPS. House addresses not measured."
+ },
+ "end_to_end": {
+  "corridor": "S Minnesota Ave, W 41st St to W 57th St, Sioux Falls",
+  "length_mi": 0.97,
+  "window": [
+   2020,
+   2024
+  ],
+  "port": 8105,
+  "pulled": 513,
+  "counted": 340,
+  "unplaced": 0,
+  "excluded": 173,
+  "severity": {
+   "K": 0,
+   "A": 2,
+   "B": 17,
+   "C": 53,
+   "U": 0,
+   "O": 268
+  },
+  "crash_cost": null,
+  "findings_shown": 6,
+  "contract_errors": 0,
+  "pdf_bytes": 56707,
+  "xlsx_bytes": 37226,
+  "seconds": 96
+ },
+ "status": "active",
+ "importer_built": true,
+ "blockers": [
+  "no reuse licence for a paid product",
+  "no SDDOT crash costs per KABCO level",
+  "no statewide average crash rates"
+ ],
+ "user_actions": [
+  "Ask SD DPS Office of Accident Records (arinfo@state.sd.us) in writing whether a paid tool may load the raw crash data, and what notice to show",
+  "Decide on crash costs: SDDOT publishes none per level (its SD2019-02 report uses one US DOT value for all fatal+injury crashes)"
+ ],
+ "cities": []
+}

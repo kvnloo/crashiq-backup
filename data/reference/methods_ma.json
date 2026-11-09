@@ -1,0 +1,58 @@
+{
+ "state": "MA",
+ "manuals": {
+  "ma_costs": {
+   "title": "Crash Costs for Highway Safety Analysis (web page)",
+   "publisher": "MassDOT",
+   "jurisdiction": "MA",
+   "edition": "2024 costs",
+   "url": "https://www.mass.gov/info-details/crash-costs-for-highway-safety-analysis",
+   "note": "research_notes/ma-2026-11-07/ma-methods.md; the page answered 'Not allowed' to a scripted download on 2026-11-08, so no sha256"
+  },
+  "ma_rates": {
+   "title": "Intersection and roadway crash rate data for analysis",
+   "publisher": "MassDOT",
+   "jurisdiction": "MA",
+   "edition": "intersection 2018-06-26; functional class 2023-06-01",
+   "url": "https://www.mass.gov/info-details/intersection-and-roadway-crash-rate-data-for-analysis"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 19435000,
+   "A": 1112900,
+   "B": 354100,
+   "C": 208000,
+   "O": 20900,
+   "dollar_year": 2024,
+   "manual": "ma_costs",
+   "page": "web page table (2024 comprehensive crash unit costs)",
+   "verified": false
+  },
+  "statewide_rates": {
+   "missing": "MassDOT publishes statewide averages (intersections 0.78 signalized / 0.57 unsignalized per MEV; segments per MVMT by functional class, mass.gov, research 2026-11-07), but CrashIQ has no Massachusetts traffic counts loaded and doesn't compare with them yet"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "comparison with MassDOT district and statewide average rates, EPDO (fatal and injury 21, PDO 1) and excess expected crashes (research 2026-11-07)"
+  },
+  "min_years": {
+   "missing": "not recorded in the research notes (2026-11-07)"
+  },
+  "spf_calibration": {
+   "missing": "MassDOT calibration reports exist (2016, 2024); not loaded (no SPF engine)"
+  }
+ }
+}

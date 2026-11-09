@@ -1,0 +1,70 @@
+{
+ "state": "WA",
+ "manuals": {
+  "wa_hsip": {
+   "title": "WSDOT's Highway Safety Improvement Program Implementation Plan 2024 (Getting to Zero)",
+   "publisher": "WSDOT",
+   "jurisdiction": "WA",
+   "edition": "2024",
+   "url": "https://wsdot.wa.gov/about/data/Multimodal-mobility-dashboard/doc/TargetZero-ImplementationPlan-HSIP2024.pdf",
+   "sha256": "38861421c0fcbdefebe192082d9f357ac9a2c8c56b8185ea2aeb998a6ae4fd32",
+   "downloaded": "2026-11-07",
+   "note": "research_notes/wa-2026-11-07/wa-methods.md \u00a72"
+  },
+  "wa_sag": {
+   "title": "Safety Analysis Guide for Design Projects",
+   "publisher": "WSDOT",
+   "jurisdiction": "WA",
+   "edition": "August 2024",
+   "url": "https://wsdot.wa.gov/publications/fulltext/design/ASDE/Safety-Analysis-Guide.pdf",
+   "sha256": "2b22f893ffec65399e96a7e2549eee529dbe2d7d50284bf28b90c1e8a65a69eb",
+   "downloaded": "2026-11-07",
+   "note": "research_notes/wa-2026-11-07/wa-methods.md \u00a71"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 4308200,
+   "A": 4308200,
+   "B": 304200,
+   "C": 180600,
+   "O": 19300,
+   "dollar_year": "not stated (WSDOT societal costs applied to 2023 crashes)",
+   "manual": "wa_hsip",
+   "page": "Exhibit 6 note 3, PDF p. 18 (printed p. 11)",
+   "verified": true,
+   "rules": [
+    "K and A priced the same, one cost per level for every location type",
+    "U (WSDOT 'Unknown') unpriced"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "WSDOT publishes none: it 'no longer uses crash rates for decision-making' (Safety Analysis Guide, Aug 2024, PDF p. 24, printed p. 19)"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "HSM safety performance functions with Empirical Bayes, expected fatal and serious crashes (Safety Analysis Guide, Aug 2024, PDF p. 11; HSIP Implementation Plan 2024, PDF p. 50)"
+  },
+  "min_years": {
+   "value": 5,
+   "manual": "wa_sag",
+   "page": "\u00a76.4, PDF p. 18-19 (printed p. 13-14): five full calendar years",
+   "verified": false
+  },
+  "spf_calibration": {
+   "missing": "WSDOT uses the HSM default calibration factor 1.00 (Safety Analysis Guide PDF p. 20); no SPF engine in CrashIQ"
+  }
+ }
+}

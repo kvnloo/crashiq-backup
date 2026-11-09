@@ -13,21 +13,25 @@ export default function Setup() {
   const { study } = useStudy()
   const [meta, setMeta] = useState(null)
   const [metaErr, setMetaErr] = useState('')
+  // #19: the state comes first; an existing study keeps its own (old studies are California)
+  const [state, setState] = useState('')
+  const asked = study ? (study.state || 'CA') : state
 
   useEffect(() => {
-    api('/studies/meta').then(setMeta).catch((e) => setMetaErr(errorText(e)))
-  }, [])
+    api(asked ? `/studies/meta?state=${encodeURIComponent(asked)}` : '/studies/meta')
+      .then(setMeta).catch((e) => setMetaErr(errorText(e)))
+  }, [asked])
 
   const waitingForStudy = Boolean(studyId) && !study
   return (
     <section className="setup" aria-label="Setup">
       <div className="intro">
         <h1 className="h1">Where are crashes concentrating on this corridor?</h1>
-        <p className="muted">Draw a corridor. CrashIQ pulls the police-reported crashes on it (CCRS), places each one, and shows the patterns, every number traced back to the records.</p>
+        <p className="muted">Draw a corridor. CrashIQ pulls the police-reported crashes on it ({meta?.source_short || 'state crash records'}), places each one, and shows the patterns, every number traced back to the records.</p>
       </div>
       <SignalFlowHero />
       {meta && !waitingForStudy
-        ? <SetupForm key={study?.id || 'new'} meta={meta} study={study} />
+        ? <SetupForm key={`${study?.id || 'new'}-${meta.state}`} meta={meta} study={study} onState={setState} />
         : <div className="muted">{metaErr || 'Loading…'}</div>}
     </section>
   )
@@ -41,7 +45,7 @@ function initialWindow(meta, study) {
     : { win: CUSTOM, custom: { from: String(study.from_year), to: String(study.to_year) } }
 }
 
-function SetupForm({ meta, study }) {
+function SetupForm({ meta, study, onState }) {
   const navigate = useNavigate()
   const { setStudy } = useStudy()
   const init = initialWindow(meta, study)
@@ -79,7 +83,7 @@ function SetupForm({ meta, study }) {
       const body = { name: name.trim(), mode, from_year: chosen.from_year, to_year: chosen.to_year }
       const s = study
         ? await api(`/studies/${study.id}`, { method: 'PATCH', body })
-        : await api('/studies', { method: 'POST', body })
+        : await api('/studies', { method: 'POST', body: { ...body, state: meta.state } })
       setStudy(s)
       navigate(`/s/${s.id}/corridor`)
     } catch (ex) {
@@ -92,6 +96,13 @@ function SetupForm({ meta, study }) {
   return (
     <>
       <form className="startbar" onSubmit={submit}>
+        <div className="field">
+          <label htmlFor="state">State</label>
+          <select id="state" className="input" value={meta.state} onChange={(e) => onState(e.target.value)} disabled={!!study}>
+            {(meta.states || []).map((s) => <option key={s.code} value={s.code} disabled={!s.ready}>
+              {s.ready ? s.name : `${s.name} (coming)`}</option>)}
+          </select>
+        </div>
         <div className="field">
           <label htmlFor="mode">Study</label>
           <select id="mode" className="input" value={mode} onChange={(e) => setMode(e.target.value)} disabled={!meta}>
@@ -133,7 +144,9 @@ function SetupForm({ meta, study }) {
         )}
       </form>
       {chosen?.covid ? <div className="note">Includes 2020 or 2021 (COVID years). The report will flag it.</div> : null}
-      {chosen?.short ? <div className="note">Under 3 years of crashes. Caltrans recommends at least 3, preferably 5.</div> : null}
+      {chosen?.short && meta.short_window_note ? <div className="note">{meta.short_window_note}</div> : null}
+      {study ? <div className="muted small-note">A study&apos;s state is fixed. Start a new study for another state.</div> : null}
+      {meta.severity_note ? <div className="note">{meta.severity_note}</div> : null}
       {err ? <div className="err" role="alert">{err}</div> : null}
     </>
   )

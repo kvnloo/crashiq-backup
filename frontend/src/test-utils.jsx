@@ -35,6 +35,9 @@ export function renderAt(path) {
 }
 
 export const META = {
+  states: [{ code: 'CA', name: 'California', ready: true }, { code: 'TX', name: 'Texas', ready: false }],
+  state: 'CA', state_name: 'California', source_short: 'CCRS', severity_note: null,
+  short_window_note: 'Under 3 years of crashes. Caltrans recommends at least 3, preferably 5.',
   modes: [
     { id: 'profile', label: 'Crash profile / corridor screening' },
     { id: 'tis', label: 'Traffic-study safety section' },

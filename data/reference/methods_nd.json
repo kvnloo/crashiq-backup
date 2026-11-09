@@ -1,0 +1,56 @@
+{
+ "state": "ND",
+ "manuals": {
+  "nd_tom_2026": {
+   "title": "NDDOT Traffic Operations Manual",
+   "publisher": "North Dakota Department of Transportation",
+   "jurisdiction": "ND",
+   "edition": "January 2026",
+   "url": "https://www.dot.nd.gov/sites/www/files/documents/construction-and-planning/Traffic-Operations-Manual.pdf",
+   "sha256": "2f1031f6e488419e3f2ff1c239ac70e847a20de0270972a16d643f288c82ef85",
+   "downloaded": "2026-11-08"
+  },
+  "nd_crash_summary_2024": {
+   "title": "NDDOT Crash Summary 2024",
+   "publisher": "NDDOT Highway Safety Division",
+   "jurisdiction": "ND",
+   "edition": "2024",
+   "url": "https://www.visionzero.nd.gov/sites/default/files/documents/statistics/NDDOT-Crash-Summary-2024.pdf",
+   "sha256": "ce6cd27cf619ab457afb25fa9fc2c7bd6acd1d04edf1e90ef0212a7cd3e1a69f",
+   "downloaded": "2026-11-08"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "NDDOT publishes no crash cost per KABCO level: none in the Traffic Operations Manual (Jan 2026), the Crash Summary 2024, the Vision Zero Plan (SHSP 2024-2028) or the 2023 HSIP report (checked 2026-11-08)"
+  },
+  "statewide_rates": {
+   "missing": "no statewide average crash rate by facility type found (2026-11-08); the Crash Summary 2024 (p. 6) gives one all-roads crash rate per MVMT per county, and the Traffic Operations Manual (p. 19) points to NDDOT's high-crash lists and its segment crash map (weighted crashes per mile), which aren't published as tables"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "NDDOT's rural and urban intersection high-crash lists and its state-highway segment crash map of weighted crashes per mile (Traffic Operations Manual, Jan 2026, p. 19)"
+  },
+  "min_years": {
+   "value": 3,
+   "manual": "nd_tom_2026",
+   "page": "p. 19, Crash Analysis ('Use 5 years for rural locations and a minimum of 3 years for urban locations')",
+   "verified": true
+  },
+  "spf_calibration": {
+   "missing": "NDDOT publishes no SPF calibration factors (the Traffic Operations Manual, p. 19, makes the HSM expected-crash estimate optional); no SPF engine"
+  }
+ }
+}

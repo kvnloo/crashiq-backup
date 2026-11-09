@@ -1,0 +1,20 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Colorado crash data for CrashIQ</title><style>body{background:#111;color:#eee;font:16px/1.5 system-ui,sans-serif;margin:0;padding:18px;max-width:720px}
+h1{color:#e53935;font-size:1.5em}h2{color:#ef5350;font-size:1.15em;margin-top:1.4em}b{color:#fff}.box{background:#1c1c1c;border-left:4px solid #e53935;padding:10px 14px;margin:10px 0}li{margin:4px 0}</style></head><body>
+<h1>Colorado: crash data for CrashIQ</h1><p>Hermes, 8 Nov 2026. Status: <b>ready to use</b> (active), with two catches.</p>
+<h2>What Colorado has</h2><ul>
+<li>CDOT posts one spreadsheet of every reported crash per year, 2007 to 2026, free, no login. About 95,000 to 103,000 crashes a year.</li>
+<li>Most crashes have a GPS point: 76% in 2021, 98% in 2024, nearly all in 2025. Most also name the street and cross street, like "W 38TH AVE at KIPLING ST".</li>
+<li>Severity is K/A/B/C/O, with the number of people at each level.</li>
+<li>CrashIQ reads 2021 on. Older years use a different spreadsheet layout and aren't read yet.</li></ul>
+<h2>Street names work the California way</h2><div class="box">On 2,000 Denver crashes from 2024, with the GPS hidden, CrashIQ placed 83% from the street names alone, and 89% of those landed within 250 ft of the real GPS point. So the crashes with no GPS (a quarter of 2021) can still be placed.</div>
+<h2>Catch 1: the download site</h2><div class="box">CDOT's files sit on a document system (OnBase). It let CrashIQ download three years this morning, then started showing a sign-in page to CrashIQ while a normal browser still got the file. If that happens, CrashIQ reports the year as missing rather than counting part of it.</div>
+<h2>Catch 2: crash costs are off for now</h2><div class="box">CDOT's 2025 costs (fatal $1.95M per person, serious injury $1.11M per person, no injury $18,000 per crash) are in its safety report to FHWA, but FHWA's site blocks automatic downloads, so we couldn't save and check the file. Costs stay off until it's saved.</div>
+<h2>Test run: E Colfax Ave, Denver (Colorado Blvd to Holly St, 1 mi, 2021-2025)</h2><ul>
+<li>290 crashes counted: K 4, A 11, B 38, C 32, no-injury 205.</li>
+<li>12 findings; PDF and Excel exports both work (75 KB and 41 KB).</li></ul>
+<h2>Licence</h2><p>CDOT says only that its crash listings "are protected under 23 U.S.C. Section 407". It neither grants nor forbids paid use, so the licence is <b>unclear</b>.</p>
+<h2>What you need to do</h2><ol>
+<li>Email CDOT (David Swenka, david.swenka@state.co.us, or Aaron Moss, aaron.moss@state.co.us) for written permission to use the crash listings in CrashIQ, and ask for a plain download link for the yearly files.</li>
+<li>Open the Colorado HSIP 2025 report on highways.dot.gov in your browser and save the PDF to ~/.hermes/state-manuals/co/, so the crash costs can be checked and turned on.</li></ol>
+<h2>What we didn't check</h2><ul><li>Why the download site refuses CrashIQ.</li><li>2007-2020.</li><li>CDOT's own safety curves (LOSS) and Colorado traffic counts.</li></ul></body></html>

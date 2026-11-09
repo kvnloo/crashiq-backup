@@ -33,7 +33,7 @@ from ..settings import ROOT
 CONFIG = json.loads((Path(__file__).resolve().parents[1] / "config" / "tiger.json").read_text())
 BOXES = ROOT / "data" / "reference" / "ca_county_boxes.json"
 RETRY_MINUTES = 60
-URL = "https://www2.census.gov/geo/tiger/TIGER{v}/{kind}/tl_{v}_06{fips}_{low}.zip"
+URL = "https://www2.census.gov/geo/tiger/TIGER{v}/{kind}/tl_{v}_{fips}_{low}.zip"    # fips: state + county
 
 
 def http_opener(url: str):
@@ -41,16 +41,18 @@ def http_opener(url: str):
     return urllib.request.urlopen(req, timeout=600)
 
 
-@lru_cache(maxsize=1)
-def _boxes() -> dict[str, list[float]]:
-    return {f: c["box"] for f, c in json.loads(BOXES.read_text())["counties"].items()}
+@lru_cache(maxsize=None)
+def _boxes(path: Path = BOXES) -> dict[str, list[float]]:
+    return {f: c["box"] for f, c in json.loads(path.read_text())["counties"].items()}
 
 
-def counties_for(points) -> list[str]:
-    """County FIPS (3 digits) whose padded box holds any of these (lat, lon) points."""
+def counties_for(points, pack=None) -> list[str]:
+    """County FIPS whose padded box holds any of these (lat, lon) points: 3 digits for California (its own file), 5
+    (state + county) for another state's pack (#19), so the two never share a cache file."""
+    boxes = _boxes(pack.county_boxes) if pack is not None and pack.county_boxes else _boxes()
     out = set()
     for la, lo in points:
-        out |= {f for f, (s, w, n, e) in _boxes().items() if s <= la <= n and w <= lo <= e}
+        out |= {f for f, (s, w, n, e) in boxes.items() if s <= la <= n and w <= lo <= e}
     return sorted(out)
 
 
@@ -113,7 +115,7 @@ class TigerCache:
                 self._running.discard(fips)
 
     def _fetch(self, kind: str, fips: str) -> bytes:
-        url = URL.format(v=self.vintage, kind=kind, fips=fips, low=kind.lower())
+        url = URL.format(v=self.vintage, kind=kind, fips=fips if len(fips) == 5 else "06" + fips, low=kind.lower())
         buf = io.BytesIO()
         with self.opener(url) as r:
             shutil.copyfileobj(r, buf, 1 << 20)

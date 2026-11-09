@@ -1,0 +1,22 @@
+{
+ "state": "AZ",
+ "export": "ADOT ACIS (Arizona Crash Information System, https://adotdw.dot.state.az/ACIS) 'Data Export' or 'Standard Detail Report'",
+ "spec": "No public column list found. ADOT 'ACIS Features and Reports' (Training Video 1, Apr 2023, https://azdot.gov/sites/default/files/2023-05/ACIS-Features-Training-Video-03212023.pdf): 'Data Export Output: crash data tables (INCIDENT, UNIT and PERSON) with all the crash fields that are entered from the crash report ... CSV or XML'; 'Incident Level Report: incident id, date, on road, crossing features, offset, severity, first harmful event, weather, collision manner, junction relation'; crashes 'geo-coded to ATIS Routes'. Field list = the Arizona Crash Report form (Traffic Crash Report Forms Instruction Manual, 13th ed., Aug 2023, https://apps.azdot.gov/files/highway%20safety%20improvement%20program/arizona-crash-forms-instruction-manual.pdf; azdot hosts block scripted download, not saved)",
+ "layout_seen_live": "City of Tempe's open table is built from the same ADOT incident data and shows the field names and values to expect: https://services.arcgis.com/lQySeXwbBg53XWDi/arcgis/rest/services/CrashDataReportforGISstory/FeatureServer/0 (checked 2026-11-08). The names below are Tempe's; the real ACIS export headers must be confirmed on one sample",
+ "unit": "INCIDENT (one row per crash), UNIT (vehicles), PERSON, linked by the incident id",
+ "map": {
+  "collision_id": "Incident id (Tempe: Incidentid, e.g. 4266152)",
+  "datetime": "Incident date/time (Tempe: DateTime)",
+  "primary_road": "On road (Tempe: StreetName, e.g. 'McClintock Dr'); state highways come geo-coded to an ATIS route + milepost",
+  "secondary_road": "Crossing feature (Tempe: CrossStreet)",
+  "sec_distance": "Offset (Tempe: Distance, feet; no direction column in Tempe's copy)",
+  "junction": "Junction relation (Tempe: JunctionRelation, e.g. 'Intersection 4 Way 202', 'Not Junction Related')",
+  "killed": "Total fatalities", "injured": "Total injuries",
+  "severity": "Injury severity of the incident (Tempe: Injuryseverity): Fatal -> K; Suspected Serious Injury / Incapacitating Injury (older form) -> A; Suspected Minor Injury / Non Incapacitating Injury -> B; Possible Injury -> C; No Injury -> O; Unknown/blank -> U. Person-level KABCO from the PERSON table",
+  "collision_type": "Collision manner (Tempe: Collisionmanner)",
+  "lighting": "Light condition", "weather": "Weather", "surface": "Surface condition",
+  "lat_lon": "Latitude/Longitude (Tempe has them on 100% of 2025 rows; ACIS geocodes every crash)"
+ },
+ "values_seen_tempe_2012_2026": {"Injuryseverity": {"No Injury": 39894, "Possible Injury": 9003, "Suspected Minor Injury": 4439, "Non Incapacitating Injury": 4411, "Incapacitating Injury": 559, "Suspected Serious Injury": 476, "Fatal": 181, "Unknown": 130, "null": 1}},
+ "verified_against_real_export": false
+}

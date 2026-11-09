@@ -31,6 +31,16 @@ describe('Crash profile screen', () => {
     expect(within(kpis).queryByText(/Injury crashes/)).toBeNull()
   })
 
+  it('a source with no injury levels says KSI is fatal only (#19)', async () => {
+    const note = 'NYPD reports injured or killed only: KSI = fatal only, and there is no A/B/C split.'
+    mockApi({ ...routes, 'GET /studies/:id/profile': { ...profile, state: 'NY', severity_note: note, source_short: 'NYC Open Data' } })
+    renderAt('/s/s1/profile')
+    const kpis = await screen.findByLabelText('Key numbers')
+    expect(within(kpis).getByText('fatal only: no injury levels')).toBeInTheDocument()
+    expect(screen.getByText(/crashes killed someone \(KSI = fatal only\)/)).toHaveTextContent(note)
+    expect(screen.queryByText(/killed or seriously injured/)).toBeNull()
+  })
+
   it('a fatal crash gets its own KPI; none, no Fatal box (#269)', async () => {
     const t1 = (n) => ({ ...profile, tables: profile.tables.map((t) => (t.id !== 'T1' ? t : { ...t, rows: t.rows.map((r) => (
       r.key === 'fatal_crashes' ? { ...r, values: { ...r.values, value: n } } : r)) })) })

@@ -1,0 +1,71 @@
+{
+ "area": "Polk County (19153), 2024",
+ "n": 2000,
+ "gps_share": 1.0,
+ "street_pair_share": 0.5755,
+ "house_address_share": 0.1935,
+ "tiers": {
+  "review": 373,
+  "exact": 749,
+  "unique_pair": 17,
+  "relaxed": 3,
+  "verified_typo": 7,
+  "fuzzy": 1,
+  "near": 1
+ },
+ "name_placed_share": 0.389,
+ "name_placed_share_of_pairs": 0.6759,
+ "auto_share": 0.383,
+ "auto_share_of_pairs": 0.6655,
+ "route_prefix_retry_used": 4,
+ "gate": "Gate() tiers with tiger_only_auto=True (TIGER-only network; plain Gate() auto-places 0 here)",
+ "within_250ft": 0.9621,
+ "within_250ft_low": 0.9462,
+ "within_250ft_all_placed": 0.9627,
+ "within_250ft_all_placed_low": 0.947,
+ "not_placed": {
+  "no cross street in source": 462,
+  "no intersection of the two named streets": 299,
+  "exact: streets meet in more than one place": 66,
+  "missing street name": 6,
+  "relaxed: streets meet in more than one place": 2
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "HICKMAN RD & MLK JR PARKWAY",
+   "IA 163 E & IOWA STATE FAIRGROUNDS AND EAST 33RD ST",
+   "ARLINGTON AVE & HICKMAN RD AND 6TH AVE",
+   "NE 64TH ST & NE 78TH AVE, BONDURANT, IA 50035",
+   "NW 100TH ST & 70TH AVE",
+   "7000-B & I 80 W"
+  ],
+  "exact: streets meet in more than one place": [
+   "UNIVERSITY AVE & 42ND ST",
+   "16TH ST & GRAND AVE",
+   "GRAND AVE & 8TH ST",
+   "EAST GRAND AVE & US 69 S",
+   "US 6 E & MERLE HAY RD",
+   "DES MOINES ST & US 69 S"
+  ],
+  "placed >250 ft off": [
+   "SE DELAWARE AVE & SE ORALABOR RD [exact] 462 ft",
+   "US 6 E & EAST 26TH ST [exact] 377 ft",
+   "HUBBELL & I80 INTERSECTION [exact] 466 ft",
+   "I80 EB OFF RAMP & NW 2ND ST [exact] 295 ft",
+   "I 35 NB EXIT & SE ORALABOR RD [exact] 435 ft",
+   "BEAVER AVE & HICKMAN ROAD [exact] 1343 ft"
+  ],
+  "missing street name": [
+   "4300 I80 & 35 WB",
+   "2300 BLK I80 & 35 EB",
+   "MEREDITH DR EAST OF I80 EB & NB EXIT RAMP",
+   "I 80 E TO I 80 & 35 EB",
+   "10700 BLK OF I 80 & 35 WB",
+   "2700 BLOCK & SE DELAWARE AVE"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "EAST 13TH ST & UNIVERSITY AVE",
+   "E 14TH & UNIVERSITY AVE"
+  ]
+ }
+}

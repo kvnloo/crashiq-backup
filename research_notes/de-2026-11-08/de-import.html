@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Delaware crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state pack · 8 Nov 2026 · written by Hermes</p>
+<h1>Delaware: every reported crash on the map, 2009–2026</h1>
+
+<div class="card"><b>In one line:</b> Delaware's Department of Safety and Homeland Security publishes every crash since 2009 with a map point, no login. It gives only fatal / injury / property damage (no A B C), no street names and no people, and no licence for a paid tool.</div>
+<h2>1. What Delaware has</h2>
+<table>
+<tr><th>What</th><th>Example</th></tr>
+<tr><td>Map point</td><td class="ok">591,221 of 591,222 crashes (2026-11-08).</td></tr>
+<tr><td>Injury level</td><td class="warn">Crash class only: <code>Fatality Crash</code> (K), <code>Personal Injury Crash</code> (counted as injury, level not reported), <code>Property Damage Only</code>. KSI = fatal only.</td></tr>
+<tr><td>Crash details</td><td>Manner of impact (<code>Angle</code>, <code>Front to rear</code>), light, weather, surface, pedestrian/bike/motorcycle, alcohol, drugs, work zone, contributing circumstance.</td></tr>
+<tr><td>Left out</td><td>"Non-reportable" crashes (about 1 in 4): parking lots and private property, or damage under $2,000. DelDOT's safety program counts fatal, injury and property-damage crashes only.</td></tr>
+<tr><td>Missing</td><td class="warn">Street names, road type, report number, drivers, vehicles, people killed/injured.</td></tr>
+</table>
+<h2>2. Does it place? Yes, by its own point</h2>
+<div class="card"><div class="big">15,753 of 15,753</div>reportable New Castle County crashes in 2025 have a point inside the county. With no street names, CrashIQ's street-name locator has nothing to add.</div>
+<h2>3. A real corridor</h2>
+<div class="card">Kirkwood Highway at Prices Corner, 0.91 mi, 2021–2025: <b>470 crashes</b>: 0 fatal, 57 injury, 413 property damage. No dollar cost: DelDOT hasn't published crash costs yet. PDF and Excel exports work.</div>
+<h2>What you need to do</h2>
+<ol>
+<li>Ask DSHS (or the data.delaware.gov team) in writing if a paid tool may load Public Crash Data, and what notice to show.</li>
+<li>Decide: keep leaving out non-reportable crashes (now), or count them as property damage?</li>
+<li>Ask DelDOT for the Delaware crash costs it is finishing in 2026.</li>
+</ol>
+<h2>What we didn't check</h2>
+<p>FHWA's copy of DelDOT's HSIP report (its server refused the download), whether row ids stay the same from month to month, and any Wilmington city crash data (not looked for).</p>
+</main></body></html>

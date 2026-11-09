@@ -18,6 +18,7 @@ from __future__ import annotations
 import hashlib
 import json
 import math
+import os
 import time
 import urllib.error
 import urllib.parse
@@ -35,6 +36,13 @@ from .geo import FT_PER_MI, Polyline, angle_diff, buffer_ring
 from .names import street_key
 
 OVERPASS_URL = "https://overpass-api.de/api/interpreter"
+
+
+def overpass_urls() -> list[str]:
+    """Overpass servers to ask, in order: CRASHIQ_OVERPASS_URL (comma-separated; our own server first, #395), then the
+    public one. Each retry moves to the next, so a full public server doesn't stop a corridor when ours answers."""
+    own = [u.strip() for u in os.getenv("CRASHIQ_OVERPASS_URL", "").split(",") if u.strip()]
+    return list(dict.fromkeys(own + [OVERPASS_URL]))
 ROAD_CLASSES = ("motorway|trunk|primary|secondary|tertiary|unclassified|residential|living_street|road|"
                 "motorway_link|trunk_link|primary_link|secondary_link|tertiary_link")
 QUERY_RADIUS_M = 40       # ways this close to the drawn line are fetched
@@ -169,6 +177,26 @@ def _http_post(url: str, data: bytes, timeout: float) -> bytes:
 Transport = Callable[[str, bytes, float], bytes]
 
 
+def driveway_query(line: list[tuple[float, float]]) -> str:
+    """Driveways and access roads (OSM `service`) near the traffic signals along the line (#413). Its own small query:
+    the street query (overpass_query) leaves `service` out, and the street names it feeds must not see driveways."""
+    coords = ",".join(f"{lat:.6f},{lon:.6f}" for lat, lon in line)
+    return (f'[out:json][timeout:60];'
+            f'node(around:{QUERY_RADIUS_M},{coords})["highway"="traffic_signals"]->.s;'
+            f'way(around.s:{round(CONTROL_FT * 0.3048)})["highway"="service"];'
+            f'out body;>;out body qt;')
+
+
+def fetch_driveways(db: Database, line: list[tuple[float, float]], transport: Transport | None = None,
+                    retries: int = 1) -> dict | None:
+    """The driveway answer, or None when Overpass can't give it: the corridor then records that signalized driveways
+    weren't checked, and the profile says so (#413), instead of quietly detecting fewer intersections."""
+    try:
+        return fetch_overpass(db, driveway_query(line), transport=transport, retries=retries, allow_empty=True)
+    except NetworkError:
+        return None
+
+
 def _cached_overpass(db: Database, query: str) -> dict | None:
     hit = db.one("SELECT body FROM http_cache WHERE key = ?", ("overpass:" + hashlib.sha1(query.encode()).hexdigest(),))
     return json.loads(hit["body"]) if hit else None
@@ -190,11 +218,12 @@ def fetch_overpass(db: Database, query: str, transport: Transport | None = None,
         return old
     transport = transport or _http_post
     payload = urllib.parse.urlencode({"data": query}).encode()
+    urls = overpass_urls()
     last = "no response"
     for attempt in range(retries + 1):
         wait = backoff_s * 2 ** attempt
         try:
-            data = json.loads(transport(OVERPASS_URL, payload, 120))
+            data = json.loads(transport(urls[attempt % len(urls)], payload, 120))
             if not isinstance(data.get("elements"), list):
                 raise ValueError("response has no elements")
             if not data["elements"] and not allow_empty:
@@ -239,8 +268,9 @@ def _core(name: str) -> str | None:
     return k.core.replace(" ", "") if k else None
 
 
-def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
-    """Intersections along the drawn line, in order from its start (A) to its end (B)."""
+def detect(osm: dict, line_ll: list[tuple[float, float]], driveways: dict | None = None) -> dict:
+    """Intersections along the drawn line, in order from its start (A) to its end (B). `driveways` is the
+    driveway_query answer (#413): a driveway meeting the corridor at a traffic signal is an intersection too."""
     line = Polyline(line_ll)
     nodes: dict[int, dict] = {}
     ways: list[dict] = []
@@ -249,6 +279,12 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
             nodes[el["id"]] = el
         elif el.get("type") == "way":
             ways.append(el)
+    drive_ways: list[dict] = []        # kept apart: a driveway is never corridor, a crossing road or a grade separation
+    for el in (driveways or {}).get("elements", []):
+        if el.get("type") == "node" and "lat" in el:
+            nodes.setdefault(el["id"], el)
+        elif el.get("type") == "way" and el.get("tags", {}).get("highway") == "service":
+            drive_ways.append(el)
     proj = {nid: line.project(n["lat"], n["lon"]) for nid, n in nodes.items()}
 
     # 2. corridor ways: enough of the way runs along the line
@@ -338,13 +374,44 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
             group.append(n)
         is_candidate.update(group)
 
+    # #413 (user 2026-11-07, "Signalized ones only"): a driveway or access road meeting the corridor at a traffic
+    # signal (one within CONTROL_FT, as for an intersection's control) is a study intersection; one without stays part
+    # of the segment. Added after the terminus rule above, so it never changes which corridor pieces end the study.
+    signal_nodes = [n for n in nodes.values() if n.get("tags", {}).get("highway") == "traffic_signals"]
+    street_nodes = set(is_candidate)
+    driveway_nodes: set[int] = set()
+    drive_sides: dict[int, set[int]] = defaultdict(set)   # kept apart from cross_sides: "Don't count it" (below)
+    for w in drive_ways:
+        names = [n for n in _names(w.get("tags", {})) if _core(n) not in corridor_cores]
+        wn = w.get("nodes", [])
+        for k, nid in enumerate(wn):
+            if nid not in corridor_nodes or nid not in proj:
+                continue
+            p = proj[nid]
+            if not (p.offset_ft <= ALONG_FT and -END_TOL_FT <= p.station_ft <= line.length_ft + END_TOL_FT):
+                continue
+            if not _any_within(line, signal_nodes, *line.proj.to_xy(nodes[nid]["lat"], nodes[nid]["lon"]), CONTROL_FT):
+                continue
+            is_candidate.add(nid)
+            driveway_nodes.add(nid)
+            for nm in names:
+                if nm not in cross_names[nid]:
+                    cross_names[nid].append(nm)
+            for step in (-1, 1):
+                side = _leaving_side(line, nodes, proj, corridor_nodes, wn, k, step)
+                if side:
+                    drive_sides[nid].add(side)
+
     # 4. cluster along the line
     cands = sorted(is_candidate, key=lambda n: proj[n].station_ft)
     clusters: list[list[int]] = []
     for nid in cands:
         if clusters:
             last = clusters[-1]
-            near = proj[nid].station_ft - proj[last[-1]].station_ft <= CLUSTER_FT
+            # a driveway node joins a cluster but never reaches past it: unnamed, it would chain the streets on both
+            # sides into one intersection (#422: Hayward's signal into Jefferson St, Buena Park's 7th St lost)
+            reach = next((m for m in reversed(last) if m not in driveway_nodes), last[-1])
+            near = proj[nid].station_ft - proj[reach].station_ft <= CLUSTER_FT
             a = {_core(x) for x in cross_names[nid]}
             b = {_core(x) for m in last for x in cross_names[m]}
             same_street = not a or not b or bool(a & b)
@@ -352,6 +419,11 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
                 last.append(nid)
                 continue
         clusters.append([nid])
+    # user 2026-11-07 on #420, "No, streets only": a driveway is never the study's A or B. A driveway intersection
+    # before the first or after the last street intersection is left out, so the study limits stay where the streets
+    # put them (Glendora and Arcadia at A, Victorville and Alhambra at B).
+    on_street = [k for k, c in enumerate(clusters) if set(c) & street_nodes]
+    clusters = clusters[on_street[0]:on_street[-1] + 1] if on_street else []
 
     # 5. intersections with control from tags
     tagged = [(n, n.get("tags", {}).get("highway")) for n in nodes.values()]
@@ -375,9 +447,15 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
         names: Counter = Counter()
         for n in c:
             names.update(cross_names[n])
-        name = " / ".join(n for n, _ in names.most_common()) or "Unnamed road"
+        name = (" / ".join(n for n, _ in names.most_common())
+                or ("Driveway (signal)" if set(c) & driveway_nodes else "Unnamed road"))
+        # a driveway alone, no street: the locator's street network has no driveways, so placement adds this one (#421)
+        driveway = not set(c) & street_nodes
 
-        sides = set().union(*(cross_sides[n] for n in c))
+        # user 2026-11-07 on #420, "Don't count it": a driveway leg doesn't change a street intersection's leg count,
+        # so a T with a driveway opposite stays a T for entering volume (half the minor AADT). An intersection that is
+        # a driveway alone gets its legs from the driveway.
+        sides = set().union(*((drive_sides if driveway else cross_sides)[n] for n in c))
         legs = 2 + len(sides) if sides else None     # 3 = T (cross street on one side), 4 = through cross street
         control = ("signal" if _any_within(line, signals, cx, cy, CONTROL_FT)
                    else "roundabout" if set(c) & ring_ids or _any_within(line, rings, cx, cy, RING_FT)
@@ -385,7 +463,7 @@ def detect(osm: dict, line_ll: list[tuple[float, float]]) -> dict:
         out.append({
             "id": f"osm-{min(c)}", "name": name, "station_ft": round(max(0.0, min(line.length_ft, st)), 1),
             "lat": round(lat, 7), "lon": round(lon, 7), "osm_node_ids": sorted(c), "control": control,
-            "is_study": True, "provenance": "auto", "name_source": "osm", "legs": legs,
+            "is_study": True, "provenance": "auto", "name_source": "osm", "legs": legs, "driveway": driveway,
         })
     return {"corridor_name": corridor_name, "length_ft": round(line.length_ft, 1), "intersections": out,
             "corridor_highway": corridor_highway, "corridor_names": [n for n, _ in along_len.most_common()],
@@ -526,7 +604,8 @@ def _load(db: Database, sid: str) -> dict | None:
     if not c:
         return None
     rows = db.query("SELECT * FROM intersection WHERE study_id = ? ORDER BY station_ft", (sid,))
-    ints = [{**r, "is_study": bool(r["is_study"]), "osm_node_ids": json.loads(r["osm_node_ids"])} for r in rows]
+    ints = [{**r, "is_study": bool(r["is_study"]), "osm_node_ids": json.loads(r["osm_node_ids"]),
+             "driveway": bool(r.get("driveway"))} for r in rows]
     for i in ints:
         i.pop("study_id", None)
     aadt = {r["segment_id"]: r["aadt"] for r in db.query("SELECT * FROM segment_aadt WHERE study_id = ?", (sid,))}
@@ -553,6 +632,7 @@ def _load(db: Database, sid: str) -> dict | None:
             "grade_separations": json.loads(gs) if gs else [],
             "corridor_names": json.loads(cn) if cn else ([c["corridor_name"]] if c["corridor_name"] else []),
             "intersections": ints, "segments": segs, "detected_at": c["detected_at"],
+            "driveways_checked": None if c.get("driveways_checked") is None else bool(c["driveways_checked"]),
             "ramp_rate_groups": {ref: g for (k, ref), g in groups.items() if k == "ramp"}}
 
 
@@ -567,21 +647,26 @@ def network(db: Database, sid: str) -> dict:
     return {**base, **net, "buffer_ring": ring}
 
 
-def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: dict) -> dict:
-    found = detect(osm, line)
+def save_corridor(db: Database, sid: str, line: list[tuple[float, float]], osm: dict,
+                  driveways: dict | None = None) -> dict:
+    """Detect and store the corridor. `driveways` None means the driveway query wasn't answered (#413): recorded, so the
+    profile can say signalized driveways weren't checked."""
+    found = detect(osm, line, driveways)
     with db.transaction() as conn:
         conn.execute("DELETE FROM intersection WHERE study_id = ?", (sid,))
         conn.execute("DELETE FROM segment_aadt WHERE study_id = ?", (sid,))
         conn.execute("DELETE FROM rate_group WHERE study_id = ? AND kind IN ('segment', 'intersection')", (sid,))
         conn.execute("INSERT OR REPLACE INTO corridor (study_id, line_json, length_ft, corridor_name, detected_at, "
-                     "corridor_highway, grade_separations_json, corridor_names_json) VALUES (?, ?, ?, ?, datetime('now'), ?, ?, ?)",
+                     "corridor_highway, grade_separations_json, corridor_names_json, driveways_checked) "
+                     "VALUES (?, ?, ?, ?, datetime('now'), ?, ?, ?, ?)",
                      (sid, json.dumps([list(p) for p in line]), found["length_ft"], found["corridor_name"],
-                      found["corridor_highway"], json.dumps(found["grade_separations"]), json.dumps(found["corridor_names"])))
+                      found["corridor_highway"], json.dumps(found["grade_separations"]), json.dumps(found["corridor_names"]),
+                      int(driveways is not None)))
         for i in found["intersections"]:
             conn.execute("INSERT INTO intersection (study_id, id, name, station_ft, lat, lon, osm_node_ids, control, "
-                         "is_study, provenance, name_source, legs) VALUES (?,?,?,?,?,?,?,?,?,?,?,?)",
+                         "is_study, provenance, name_source, legs, driveway) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)",
                          (sid, i["id"], i["name"], i["station_ft"], i["lat"], i["lon"], json.dumps(i["osm_node_ids"]),
-                          i["control"], 1, "auto", "osm", i.get("legs")))
+                          i["control"], 1, "auto", "osm", i.get("legs"), int(i["driveway"])))
     return network(db, sid)
 
 
@@ -723,18 +808,24 @@ def get_network(sid: str, request: Request) -> dict:
 
 @router.put("/studies/{sid}/corridor")
 def put_corridor(sid: str, body: CorridorIn, request: Request) -> dict:
+    from . import packs
     db = _db(request)
-    study_mod.require(db, sid)
+    pack = packs.for_study(study_mod.require(db, sid))
     for lat, lon in body.line:
         if not (-90 <= lat <= 90 and -180 <= lon <= 180):
             raise ValueError("Line points must be (lat, lon) in degrees.")
+    # #19 check 1, offline: a line with no point in the state's box is clearly elsewhere (no Overpass call, no pull)
+    if not any(packs.in_bounds(pack, lat, lon) for lat, lon in body.line):
+        raise HTTPException(400, f"This line isn't in {pack.name}. Start a new study and pick the state it's in.")
     try:
         st = request.app.state
         osm = fetch_overpass(db, overpass_query(body.line), transport=getattr(st, "overpass", None),
                              retries=getattr(st, "overpass_retries", 3))
     except NetworkError as e:
         raise HTTPException(502, str(e)) from e
-    return save_corridor(db, sid, body.line, osm)
+    drive = fetch_driveways(db, body.line, transport=getattr(st, "overpass", None),
+                            retries=min(1, getattr(st, "overpass_retries", 1)))
+    return save_corridor(db, sid, body.line, osm, drive)
 
 
 @router.delete("/studies/{sid}/corridor")

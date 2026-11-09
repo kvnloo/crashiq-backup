@@ -1,0 +1,61 @@
+{
+ "area": "Ada County (Boise), 2022, every row",
+ "n": 6682,
+ "gps_share": 1.0,
+ "gps_inside_ada_box": 0.9997,
+ "serial_unique": true,
+ "county_fips_16001": 6682,
+ "severity": {
+  "O": 4378,
+  "B": 884,
+  "C": 1185,
+  "A": 216,
+  "K": 19
+ },
+ "route_system": {
+  "OH": 4620,
+  "US": 454,
+  "IN": 788,
+  "SH": 763,
+  "PO": 57
+ },
+ "intersection_related_share": 0.5476,
+ "crashes_with_units": 6671,
+ "ped": 68,
+ "bike": 101,
+ "collision_type_top": [
+  [
+   "REAR END",
+   2263
+  ],
+  [
+   "BROADSIDE",
+   1384
+  ],
+  [
+   "SIDE SWIPE",
+   713
+  ],
+  [
+   "HEAD-ON",
+   569
+  ],
+  [
+   "PARKED CAR",
+   243
+  ],
+  [
+   "SAME DIRECTION TURNING",
+   202
+  ],
+  [
+   "CONCRETE TRAFFIC BARRIER",
+   154
+  ],
+  [
+   "OVERTURNED",
+   152
+  ]
+ ],
+ "street_text": "none in the layer (no locator test possible)"
+}

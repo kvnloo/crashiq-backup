@@ -1,0 +1,91 @@
+{
+ "state": "MD",
+ "bucket": "D",
+ "bucket_note": "Corrected from the 2026-11-02 screen (A). The statewide open copy on opendata.maryland.gov now answers 'You must be logged in to access this resource' (verified 2026-11-08). The only statewide record-level route is the Maryland State Police public Tableau dashboard's manual 'Download > Data' export (guest, no login, no API). Treated as 'bring your export'.",
+ "sources": [
+  {
+   "name": "Maryland Statewide Vehicle Crashes (Socrata: crash 65du-s3qu, person py4c-dicf, vehicle mhft-5t5y)",
+   "url": "https://opendata.maryland.gov/d/65du-s3qu",
+   "access": "gone: API answers 'You must be logged in to access this resource'; the catalog lists no crash dataset any more (only story ggbs-m2rv 'Maryland Crash Data Resources')",
+   "licence_paid_use": "unclear",
+   "years": "was 2015 - May 2023 (screen 2026-11-02)",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": "not measured",
+   "keys_linkable": null
+  },
+  {
+   "name": "MSP public crash dashboards (Tableau, analytics.mdsp.org): PublicCrashData (2019-2023) and PublicCrash2 (ACRS 2.0, 2024-present)",
+   "url": "https://analytics.mdsp.org/t/Public/views/PublicCrash2/PublicCrash",
+   "access": "guest, no login; 'Download > Data' per tab (Reports, Contributing Circumstances, Occupants, NonMotorists, Vehicles), UTF-16 tab-separated; no API. Sheet CSV exports answer (CrashMap.csv: 110,474 crash points with Reportnumber, no date/severity/road)",
+   "licence_paid_use": "unclear",
+   "licence_text": "none found on the dashboards",
+   "years": "2019-present",
+   "rows_per_year": null,
+   "gps_share": "CrashMap.csv: 110,474 of 110,474 have Latitude/Longitude (generated)",
+   "street_names_share": "not measured (needs a full Reports export)",
+   "kabco": "crash 'Crash Severity Description' and person 'InjuryStatus Occ'/'InjuryStatus NM' codes (seen in a third-party script); not measured",
+   "keys_linkable": true
+  },
+  {
+   "name": "MDOT SHA Fatal Crash Locations (Public), ArcGIS",
+   "url": "https://maps.roads.maryland.gov/arcgis/rest/services/OOTS/FatalCrash_Maryland_MDOTSHA/MapServer/0",
+   "access": "open",
+   "licence_paid_use": "unclear",
+   "years": "fatal only, SHA roads",
+   "rows_per_year": null,
+   "gps_share": 1.0,
+   "street_names_share": 0.0,
+   "kabco": "K only (269 rows)",
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": null,
+  "n": 0,
+  "gps_share": null,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "not measured: no statewide record-level file with road names could be downloaded without a manual browser export"
+ },
+ "status": "gated",
+ "importer_built": false,
+ "blockers": [
+  "no machine-readable statewide record-level source: the open Socrata copy needs a login now; MSP's dashboard export is manual, per year, per tab",
+  "no licence found for MSP's dashboard data"
+ ],
+ "user_actions": [
+  "Export one county-year from https://analytics.mdsp.org/t/Public/views/PublicCrash2/PublicCrash (e.g. Baltimore City, 1/1/2024-12/31/2024): click the map once, Download > Data, then for each tab (Reports, Contributing Circumstances, Occupants, NonMotorists, Vehicles) Show Fields > (All) > Download. Put the five files in ~/.hermes/cache/scratch/states/md/export/. A reader is built against them.",
+  "Ask MSP (Central Records / the dashboard owner) or MDOT SHA Office of Traffic & Safety whether Maryland's statewide crash data is available as a bulk file or API, and whether a paid tool may use it",
+  "Decide: should Montgomery County's open, public-domain ACRS feed (road + cross street + GPS, ~10k crashes a year) be offered as a Maryland county pack until the statewide data is reachable?"
+ ],
+ "cities": [
+  {
+   "city": "Montgomery County (county police and municipal reports)",
+   "source": "Crash Reporting - Incidents / Drivers / Non-Motorists Data (Socrata bhju-22kf, mmzv-x632, n7fk-dce5)",
+   "url": "https://data.montgomerycountymd.gov/Public-Safety/Crash-Reporting-Incidents-Data/bhju-22kf",
+   "gps_share": "lat/long columns on every table (screen 2026-11-02: 10,629 of 10,629 in 2024)",
+   "years": "2015-2026 (updated 2026-11-05)",
+   "rows_per_year": {
+    "2015": 11470,
+    "2016": 12103,
+    "2017": 12104,
+    "2018": 11869,
+    "2019": 11665,
+    "2020": 8070,
+    "2021": 9353,
+    "2022": 10056,
+    "2023": 10776,
+    "2024": 10629,
+    "2025": 10312,
+    "2026_to_2026-11-05": 8533
+   },
+   "licence": "Public Domain (Socrata licence field)"
+  }
+ ]
+}

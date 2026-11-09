@@ -1,0 +1,73 @@
+{
+ "area": "Hinds County (28049), 2024",
+ "n": 2000,
+ "gps_share": 1.0,
+ "street_pair_share": 0.2565,
+ "tiers": {
+  "exact": 249,
+  "verified_typo": 12,
+  "review": 141,
+  "unique_pair": 85,
+  "relaxed": 14,
+  "near": 7,
+  "fuzzy": 5
+ },
+ "name_placed_share": 0.186,
+ "name_placed_share_of_pairs": 0.7251,
+ "auto_share": 0.167,
+ "auto_share_of_pairs": 0.6511,
+ "gate": "Gate() tiers with tiger_only_auto=True (TIGER-only network; plain Gate() auto-places 0 here)",
+ "within_250ft": 0.7365,
+ "within_250ft_low": 0.6868,
+ "within_250ft_all_placed": 0.7231,
+ "within_250ft_all_placed_low": 0.6755,
+ "not_placed": {
+  "no cross street in source": 1487,
+  "no intersection of the two named streets": 111,
+  "exact: streets meet in more than one place": 14,
+  "relaxed: streets meet in more than one place": 13,
+  "missing street name": 2,
+  "fuzzy: streets meet in more than one place": 1
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "GREENWAY DRIVE & US-18",
+   "BROADWAY STREET & Hampstead Blvd.",
+   "GALLATIN STREET & Frontage Road",
+   "Old Canton Road & Pear Orchard Dr. / North Town Dr.",
+   "VALLEY STREET & FRONTAGE ROAD",
+   "US 80 & HAMPSTEAD BLVD"
+  ],
+  "placed >250 ft off": [
+   "I-55 E FRONTAGE RD & NORTHSIDE DRIVE [unique_pair] 420 ft",
+   "I-20 W OFF-RAMP & SPRINGRIDGE RD [exact] 597 ft",
+   "CHESWOOD DRIVE & RAYMOND ROAD [exact] 559 ft",
+   "Ridgewood road & East Countyline [exact] 8484 ft",
+   "I-55 & EAST COUNTY LINE ROAD [exact] 1415 ft",
+   "RIDGEWOOD CT & COUNTYLINE RD [relaxed] 1333 ft"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "WYNNDALE ROAD & WEST FRONTAGE ROAD",
+   "WEST FRONTAGE ROAD & SOUTH SIWELL ROAD",
+   "NORTHSIDE DRIVE & WEST FRONTAGE ROAD",
+   "CLINTON RAYMOND ROAD & CLINTON ST",
+   "SIWELL ROAD & E. FRONTAGE ROAD",
+   "NORTHSIDE DRIVE & WEST FRONTAGE ROAD"
+  ],
+  "exact: streets meet in more than one place": [
+   "ABRAHAM LINCOLN DRIVE & GEORGE WASHINGTON DRIVE",
+   "COLEMAN & SUNSET",
+   "I-20 WEST & I-220 SOUTH",
+   "SR 473 & Cunningham",
+   "SIWELL ROAD & I-55",
+   "I-55 South & Siwell Road"
+  ],
+  "missing street name": [
+   "-- & E college street",
+   "-- & University/ US-80"
+  ],
+  "fuzzy: streets meet in more than one place": [
+   "US 49 & BOILING STREET"
+  ]
+ }
+}

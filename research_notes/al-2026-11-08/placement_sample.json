@@ -1,0 +1,202 @@
+{
+ "statewide_rows_per_year": {
+  "2019": {
+   "rows": 0,
+   "with_point": 0
+  },
+  "2020": {
+   "rows": 134567,
+   "with_point": 125275
+  },
+  "2021": {
+   "rows": 152621,
+   "with_point": 144438
+  },
+  "2022": {
+   "rows": 144554,
+   "with_point": 127276
+  },
+  "2023": {
+   "rows": 144418,
+   "with_point": 122044
+  },
+  "2024": {
+   "rows": 142015,
+   "with_point": 121357
+  },
+  "2025": {
+   "rows": 140514,
+   "with_point": 118689
+  },
+  "2026": {
+   "rows": 115516,
+   "with_point": 81640
+  }
+ },
+ "jefferson_2024": {
+  "n": 26509,
+  "shifted": 0,
+  "gps_share": 0.6663,
+  "street_share": 1.0,
+  "street_pair_share": 0.8803,
+  "severity": {
+   "O": 21546,
+   "null": 1353,
+   "A": 323,
+   "B": 1383,
+   "K": 97,
+   "C": 1807
+  },
+  "county_fips": {
+   "01073": 26509
+  },
+  "collision_type": {
+   "REAR END": 8540,
+   "SIDE SWIPE": 4490,
+   "BROADSIDE": 4300,
+   "SINGLE VEHICLE CRASH (ALL TYPES)": 2897,
+   "ANGLE (FRONT TO SIDE) OPPOSITE DIRECTION": 1097
+  },
+  "freeway_share": 0.1994,
+  "ped": 152,
+  "bike": 35,
+  "months": {
+   "2024-10": 2366,
+   "2024-11": 2268,
+   "2024-12": 2255
+  }
+ },
+ "jefferson_2025_shifted": {
+  "n": 21550,
+  "shifted": 21550,
+  "gps_share": 0.6374,
+  "street_share": 1.0,
+  "street_pair_share": 0.8703,
+  "severity": {
+   "C": 1414,
+   "O": 17469,
+   "null": 1170,
+   "B": 1102,
+   "A": 334,
+   "K": 61
+  },
+  "county_fips": {
+   "01073": 21550
+  },
+  "collision_type": {
+   "REAR END": 6887,
+   "SIDE SWIPE": 3718,
+   "BROADSIDE": 3372,
+   "SINGLE VEHICLE CRASH (ALL TYPES)": 2236,
+   "ANGLE (FRONT TO SIDE) OPPOSITE DIRECTION": 929
+  },
+  "freeway_share": 0.198,
+  "ped": 117,
+  "bike": 24,
+  "months": {
+   "2025-10": 2510,
+   "2025-11": 2216,
+   "2025-12": 2353
+  }
+ },
+ "placement": {
+  "area": "Jefferson County (01073), 2024, random 2,000 with GPS (seed 2026)",
+  "n": 2000,
+  "street_pair_share": 0.987,
+  "tiers": {
+   "exact": 1204,
+   "review": 668,
+   "relaxed": 16,
+   "near": 30,
+   "unique_pair": 12,
+   "verified_typo": 35,
+   "fuzzy": 9
+  },
+  "name_placed_share": 0.653,
+  "auto_share": 0.608,
+  "gate": "Gate(tiger_only_auto=True) on a TIGER-only network",
+  "within_250ft": 0.4408,
+  "within_250ft_low": 0.4131,
+  "within_250ft_all_placed": 0.4387,
+  "not_placed": {
+   "no intersection of the two named streets": 440,
+   "exact: streets meet in more than one place": 219,
+   "no cross street in source": 26,
+   "fuzzy: streets meet in more than one place": 5,
+   "relaxed: streets meet in more than one place": 3,
+   "missing street name": 1
+  },
+  "examples": {
+   "auto >250 ft off": [
+    "CENTERPOINT PARKWAY & CHEYENNE BLVD 439 ft",
+    "JAMES W WILSON JR PKWY & Galleria Circle 395 ft",
+    "4th Ave S & 15th St S 11594 ft",
+    "I065 & I459 524 ft",
+    "INTERSTATE 59 NORTH & I 459 1188 ft",
+    "I-59 & Tallapoosa St 1154 ft"
+   ],
+   "no intersection of the two named streets": [
+    "ENSLEY 5 PTS W & BESSEMER RD",
+    "INTERSTATE 20/59 NORTH 114 & JAYBIRD ROAD",
+    "TYLER RD & CLEARBROOK Road",
+    "WESTCHESTER DR / PINSON VALLEY PKWY & 9999",
+    "HWY 280 & CAHABA RIVER RD",
+    "I-20/59 Northbound & 19th Street Entrance Merge"
+   ],
+   "exact: streets meet in more than one place": [
+    "I-59 & 3RD AVE N",
+    "3rd Ave N & 11th St N",
+    "I-459 & I-20",
+    "LORNA RD & LORNARIDGE Drive",
+    "6th Ave S & 18TH STREET S",
+    "Lakeshore Drive & University Park E"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "Posey Ave & Gloria Dr",
+    "MONTGOMERY HWY & CHASE CORPORATE Parkway",
+    "1150 TOADVINE RD & S FIELDS"
+   ],
+   "fuzzy: streets meet in more than one place": [
+    "US HWY 280 & PERIMETER PK S",
+    "I-20 & US411 (EXIT 144)",
+    "MINOR PKWY & OLD MINES RD.",
+    "US280 & PERIMETER PKS",
+    "I-65 & Greenspring Entrance ramp"
+   ],
+   "missing street name": [
+    "I-20/59 & 115 EXIT RAMP"
+   ]
+  },
+  "no_gps_crashes": 8079,
+  "no_gps_with_pair": 5237,
+  "no_gps_auto_placed": 2830,
+  "no_gps_auto_share": 0.3503,
+  "accuracy_by_point_source": {
+   "Coordinates derived from Node": {
+    "n": 795,
+    "auto": 470,
+    "within_250ft": 0.7404
+   },
+   "Coordinates derived from Route-Milepost": {
+    "n": 712,
+    "auto": 435,
+    "within_250ft": 0.1126
+   },
+   "Coordinates derived from Link": {
+    "n": 150,
+    "auto": 86,
+    "within_250ft": 0.4186
+   },
+   "Coordinates entered by Officer": {
+    "n": 250,
+    "auto": 167,
+    "within_250ft": 0.3473
+   },
+   "Coordinates entered Manually": {
+    "n": 93,
+    "auto": 58,
+    "within_250ft": 0.7759
+   }
+  }
+ }
+}

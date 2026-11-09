@@ -93,6 +93,23 @@ def test_fetch_caches_and_retries(db):
     assert len(calls) == 2                                               # served from SQLite
 
 
+def test_own_overpass_server_first_then_the_public_one(db, monkeypatch):
+    """#395: CRASHIQ_OVERPASS_URL (ours) is asked first; a retry goes to the public server, then back."""
+    monkeypatch.setenv("CRASHIQ_OVERPASS_URL", "http://overpass:80/api/interpreter")
+    urls = []
+
+    def ours_down(url, data, timeout):
+        urls.append(url)
+        if url.startswith("http://overpass"):
+            raise urllib.error.HTTPError(url, 503, "busy", {}, None)
+        return json.dumps(OSM).encode()
+
+    network.fetch_overpass(db, network.overpass_query(LINE), transport=ours_down, sleep=lambda s: None)
+    assert urls == ["http://overpass:80/api/interpreter", network.OVERPASS_URL]
+    monkeypatch.delenv("CRASHIQ_OVERPASS_URL")
+    assert network.overpass_urls() == [network.OVERPASS_URL]
+
+
 def test_fetch_failure_raises_never_empty(db):
     def down(url, data, timeout):
         raise urllib.error.URLError("unreachable")
@@ -152,6 +169,13 @@ def test_api_overpass_down_returns_502_with_message(client, sid):
     client.app.state.overpass_retries = 0
     r = client.put(f"/api/studies/{sid}/corridor", json={"line": LINE})
     assert r.status_code == 502 and "OpenStreetMap" in r.json()["detail"]
+
+
+def test_a_line_outside_the_studys_state_is_refused_before_overpass(client, sid):
+    client.app.state.overpass = lambda *a, **k: (_ for _ in ()).throw(AssertionError("no Overpass call"))
+    r = client.put(f"/api/studies/{sid}/corridor", json={"line": [[33.45, -112.07], [33.46, -112.07]]})   # Phoenix
+    assert r.status_code == 400 and r.json()["detail"] == ("This line isn't in California. Start a new study and "
+                                                          "pick the state it's in.")
 
 
 def test_api_rejects_bad_edits(client, sid):

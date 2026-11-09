@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>South Carolina crash data for CrashIQ</title>
+<style>
+:root{--bg:#0d0d0f;--card:#17171b;--ink:#ececec;--dim:#a8a8b0;--red:#e5383b;--line:#2a2a30}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 -apple-system,system-ui,sans-serif}
+main{max-width:720px;margin:auto;padding:18px}h1{font-size:1.5rem;margin:.2em 0}h2{font-size:1.1rem;color:var(--red);margin:1.4em 0 .4em}
+.card{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.9rem;font-weight:700;color:var(--red)}.dim{color:var(--dim);font-size:.9rem}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left;vertical-align:top}
+.ok{color:#5fd38a}.warn{color:#f2b134}code{background:#222;padding:1px 4px;border-radius:4px;font-size:.85em}
+ol li,ul li{margin:.3em 0}
+</style></head><body><main>
+<p class="dim">CrashIQ · state check · 8 Nov 2026 · written by Hermes</p>
+<h1>South Carolina: locked today, one email from open</h1>
+
+<div class="card"><b>In one line:</b> SCDPS once shared every crash from 2017 to 2021 under a licence that lets a paid tool use it (CC BY 4.0, give credit). That public layer is now empty. Today the full crash file comes only by request.</div>
+
+<h2>1. What South Carolina has</h2>
+<table>
+<tr><th>Source</th><th>Can CrashIQ use it?</th></tr>
+<tr><td>SCDPS crash file (every TR-310 report)</td><td class="warn">By request only.</td></tr>
+<tr><td>SCDPS public crash layer (CC BY 4.0)</td><td class="warn">The fields are listed, but it holds 0 crashes. The layer behind it needs a login.</td></tr>
+<tr><td>Greenville area (GPATS), 2017–2025</td><td>Open, 188,597 crashes, with a map point and injury level. No licence.</td></tr>
+<tr><td>Spartanburg County, 2024 – Apr 2025</td><td>Open, with GPS and street names. No licence, and not updated since May 2025.</td></tr>
+</table>
+
+<h2>2. Would the street names place? At the corner, yes</h2>
+<div class="card"><div class="big">81 of 100</div>Spartanburg 2024 crashes (2,000 sampled) that CrashIQ places from the two street names alone.<br>
+At the intersection, 74 of 100 land within 250 ft of the officer's GPS. But when the report says "0.3 miles north of" the cross street, only 13 of 100 do, and applying the distance makes it worse. We don't know yet which way SC's "north of" points.</div>
+
+<h2>3. Live test</h2>
+<div class="card">Not run: there is no open statewide data to load.</div>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Ask SCDPS (Office of Highway Safety and Justice Programs, Statistics Section) to refresh its CC BY 4.0 public crash layer with 2022–2025. That alone would make South Carolina open.</li>
+<li>Or ask for the statewide crash file (crashes, vehicles, people) with written permission to use it in a paid tool.</li>
+<li>Ask SCDPS which way the "distance and direction from the base point" runs.</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>The crash report manual's definitions (it's a scanned PDF).</li>
+<li>Placement in the Greenville area (we sampled only Spartanburg).</li>
+<li>SCDOT crash costs and rate method.</li>
+</ul>
+<p class="dim">Details: <code>research_notes/sc-2026-11-08/sc-import.md</code>, <code>sc-summary.json</code>, <code>sc-column-map.json</code>.</p>
+</main></body></html>

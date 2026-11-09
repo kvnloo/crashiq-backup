@@ -1,0 +1,58 @@
+{
+ "state": "MN",
+ "manuals": {
+  "mn_bca_a1": {
+   "title": "Table A.1: Recommended standard values for use in cost-effectiveness & benefit-cost analysis in SFY 2026",
+   "publisher": "MnDOT Office of Transportation System Management",
+   "jurisdiction": "MN",
+   "edition": "August 2025 (file dated 28 July 2025)",
+   "url": "https://www.dot.state.mn.us/planning/program/pdf/Table%20A.1%20SV%20L-ML-H%2028-July-2025.pdf",
+   "sha256": "386858f078c9280ccf0bed9b880f3fb78e1bda925516ce4baf9178e7c7df8fc5",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/mn-2026-11-08/mn-methods.md §1"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 16500000,
+   "A": 1700000,
+   "B": 380000,
+   "C": 180000,
+   "O": 18000,
+   "dollar_year": "SFY 2026",
+   "manual": "mn_bca_a1",
+   "page": "p. 1, 'Per-crash comprehensive costs' (Most Likely column); note 7, p. 2",
+   "verified": true,
+   "rules": [
+    "per crash by its most severe injury, one cost per level for every location type (Most Likely column; Low/High are a sensitivity range)",
+    "the table gives these as SFY 2026 standard values and names no dollar year for crash costs (its CO2 line is 2024$)",
+    "U (injury, level not reported) is left unpriced (shared rule) and counted"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "MnDOT's crash-rate page (dot.state.mn.us/trafficeng/safety/crash_complex.html, read 2026-11-08) gives only the formulas; its BCA guidance says facility-type averages come from MnDOT District Traffic Engineering offices. No published table found, and CrashIQ has no Minnesota traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "MnDOT critical crash rate and severity rate against district facility-type averages (not read into CrashIQ)"
+  },
+  "min_years": {
+   "missing": "not found in the MnDOT documents read on 2026-11-08 (Table A.1, the BCA guidance page, the crash-rate page)"
+  },
+  "spf_calibration": {
+   "missing": "not looked up (no SPF engine)"
+  }
+ }
+}

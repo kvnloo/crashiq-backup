@@ -15,6 +15,7 @@ from typing import Callable
 from fastapi import APIRouter, HTTPException, Request
 from pydantic import BaseModel, Field
 
+from . import packs
 from .db import Database
 
 CCRS_FIRST_YEAR = 2016
@@ -42,26 +43,28 @@ def last_complete_year(on: date | None = None) -> int:
     return (on or today()).year - 1
 
 
-def last_final_year(on: date | None = None) -> int:
-    """Last year whose CHP data should be final: it ended at least FINAL_LAG_MONTHS ago (#34 item 8)."""
+def last_final_year(on: date | None = None, lag: int = FINAL_LAG_MONTHS) -> int:
+    """Last year whose data should be final: it ended at least `lag` months ago (#34 item 8; the pack's lag)."""
     d = on or today()
-    months = d.year * 12 + (d.month - 1) - FINAL_LAG_MONTHS
+    months = d.year * 12 + (d.month - 1) - lag
     return months // 12 - 1
 
 
-def default_window(on: date | None = None) -> tuple[int, int]:
-    to = last_final_year(on)
-    return to - DEFAULT_YEARS + 1, to
+def default_window(on: date | None = None, pack: packs.StatePack | None = None) -> tuple[int, int]:
+    to = last_final_year(on, pack.final_lag_months if pack else FINAL_LAG_MONTHS)
+    # never before the source's first year (CDOT's listing starts in 2021): a shorter window beats a refused study
+    return max(to - DEFAULT_YEARS + 1, pack.first_year if pack else CCRS_FIRST_YEAR), to
 
 
-def validate_window(from_year: int, to_year: int, on: date | None = None) -> None:
+def validate_window(from_year: int, to_year: int, on: date | None = None, pack: packs.StatePack | None = None) -> None:
     """Raise ValueError with a plain message if the window breaks a rule."""
     now = (on or today()).year
     n = to_year - from_year + 1
+    first, src = (pack.first_year, pack.source_short) if pack else (CCRS_FIRST_YEAR, "CCRS")
     if from_year > to_year:
         raise ValueError("The start year must not be after the end year.")
-    if from_year < CCRS_FIRST_YEAR:
-        raise ValueError(f"CCRS crash data starts in {CCRS_FIRST_YEAR}. Pick {CCRS_FIRST_YEAR} or later.")
+    if from_year < first:
+        raise ValueError(f"{src} crash data starts in {first}. Pick {first} or later.")
     if to_year > now:
         raise ValueError(f"The window can't end after {now}.")
     if not MIN_YEARS <= n <= MAX_YEARS:
@@ -72,13 +75,13 @@ def covid_in_window(from_year: int, to_year: int) -> bool:
     return any(from_year <= y <= to_year for y in COVID_YEARS)
 
 
-def window_options(on: date | None = None) -> list[dict]:
-    """The dropdown choices: last N finalized years for N = 1..10 (stopping at 2016)."""
-    to = last_final_year(on)
+def window_options(on: date | None = None, pack: packs.StatePack | None = None) -> list[dict]:
+    """The dropdown choices: last N finalized years for N = 1..10 (stopping at the pack's first year, CA 2016)."""
+    to = last_final_year(on, pack.final_lag_months if pack else FINAL_LAG_MONTHS)
     out = []
     for n in range(MIN_YEARS, MAX_YEARS + 1):
         fy = to - n + 1
-        if fy < CCRS_FIRST_YEAR:
+        if fy < (pack.first_year if pack else CCRS_FIRST_YEAR):
             break
         span = f"{fy}–{to}" if n > 1 else f"{to}"
         out.append({"years": n, "from_year": fy, "to_year": to, "covid": covid_in_window(fy, to),
@@ -101,20 +104,32 @@ def _row(r: dict | None) -> dict | None:
     return r
 
 
-def create(db: Database, name: str, mode: str, from_year: int | None = None, to_year: int | None = None) -> dict:
+def ready_pack(state: str) -> packs.StatePack:
+    """The pack of a state a new study may use; ValueError for one that isn't ready (#19)."""
+    pack = packs.PACKS.get(state)
+    if pack is None or pack.status != "active":
+        name = pack.name if pack else packs.COMING.get(state, state)
+        raise ValueError(f"{name} isn't ready yet.")
+    return pack
+
+
+def create(db: Database, name: str, mode: str, from_year: int | None = None, to_year: int | None = None,
+           state: str = "CA") -> dict:
     name = (name or "").strip()
     if not name:
         raise ValueError("Give the project a name.")
     if mode not in MODES:
         raise ValueError(f"Unknown study mode '{mode}'.")
+    pack = ready_pack(state)
     if from_year is None and to_year is None:
-        from_year, to_year = default_window()
+        from_year, to_year = default_window(pack=pack)
     elif from_year is None or to_year is None:
         raise ValueError("Give both the start and end year, or neither for the default window.")
-    validate_window(from_year, to_year)
+    validate_window(from_year, to_year, pack=pack)
     sid = uuid.uuid4().hex[:12]
-    db.execute("INSERT INTO study (id, name, mode, from_year, to_year, covid_years_in_window) VALUES (?,?,?,?,?,?)",
-               (sid, name, mode, from_year, to_year, int(covid_in_window(from_year, to_year))))
+    db.execute("INSERT INTO study (id, name, mode, from_year, to_year, covid_years_in_window, state) "
+               "VALUES (?,?,?,?,?,?,?)", (sid, name, mode, from_year, to_year, int(covid_in_window(from_year, to_year)),
+                                          state))
     return get(db, sid)
 
 
@@ -143,7 +158,7 @@ def update(db: Database, sid: str, **changes) -> dict:
         raise ValueError("Give the project a name.")
     if mode not in MODES:
         raise ValueError(f"Unknown study mode '{mode}'.")
-    validate_window(fy, ty)
+    validate_window(fy, ty, pack=packs.for_study(cur))
     if not RADIUS_RANGE[0] <= radius <= RADIUS_RANGE[1]:
         raise ValueError(f"Influence radius must be {RADIUS_RANGE[0]:.0f}–{RADIUS_RANGE[1]:.0f} ft.")
     if not BUFFER_RANGE[0] <= buffer <= BUFFER_RANGE[1]:
@@ -167,6 +182,7 @@ class StudyIn(BaseModel):
     mode: str
     from_year: int | None = None
     to_year: int | None = None
+    state: str = "CA"             # fixed once the study exists: StudyPatch has no state (#19)
 
 
 class StudyPatch(BaseModel):
@@ -185,14 +201,30 @@ router = APIRouter()
 
 
 @router.get("/studies/meta")
-def meta() -> dict:
-    fy, ty = default_window()
+def meta(state: str | None = None) -> dict:
+    """Setup's choices for one state (#19): California when none is asked for (a new study's default)."""
+    states = packs.states()
+    try:
+        pack = ready_pack(state or "CA")              # the DB default and the home state, not the first alphabetically
+    except ValueError as e:
+        raise HTTPException(400, str(e)) from e
+    fy, ty = default_window(pack=pack)
+    short = packs.value(pack, "min_years")
     return {
+        "states": states,
+        "state": pack.code,
+        "state_name": pack.name,
+        "source_short": pack.source_short,
+        # CA keeps its sentence; elsewhere only a cited minimum (methods file) says anything
+        "short_window_note": ("Under 3 years of crashes. Caltrans recommends at least 3, preferably 5." if pack.caltrans
+                              else f"Under {short['value']} years of crashes. {packs.cite(pack, 'min_years')} asks for "
+                                   f"at least {short['value']}." if short else None),
+        "severity_note": pack.severity_note,
         "modes": [{"id": k, "label": v} for k, v in MODES.items()],
         "default_mode": "profile",
         "default_window": {"from_year": fy, "to_year": ty},
-        "window_options": window_options(),
-        "first_year": CCRS_FIRST_YEAR,
+        "window_options": window_options(pack=pack),
+        "first_year": pack.first_year,
         "last_year": today().year,
         "min_years": MIN_YEARS,
         "max_years": MAX_YEARS,
@@ -201,7 +233,7 @@ def meta() -> dict:
 
 @router.post("/studies", status_code=201)
 def create_study(body: StudyIn, request: Request) -> dict:
-    return create(request.app.state.db, body.name, body.mode, body.from_year, body.to_year)
+    return create(request.app.state.db, body.name, body.mode, body.from_year, body.to_year, body.state)
 
 
 @router.get("/studies/{sid}")

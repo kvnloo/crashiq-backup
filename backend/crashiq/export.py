@@ -4,6 +4,7 @@ No number is computed here; values are copied from the cited tables (T1…T11) a
 from __future__ import annotations
 
 import io
+import re
 from xml.sax.saxutils import escape
 from datetime import datetime, timezone
 
@@ -22,6 +23,7 @@ from reportlab.graphics.shapes import Circle, Drawing, Group, PolyLine, Polygon,
 from reportlab.platypus import KeepTogether, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 
 from . import locate
+from . import packs
 from . import union as union_mod
 from . import profile as profile_mod
 from .severity import COLORS as SEV_COLORS
@@ -30,6 +32,35 @@ from .assign import for_study
 CREDITS = ("Crash data: CCRS, California Highway Patrol (data.ca.gov, public domain). "
            "Map data © OpenStreetMap contributors (ODbL). Fatal crash locations marked 'fars': FARS, NHTSA "
            "(public domain).")
+# Methodology sentences that hold only for California's CCRS pull (#19): left out, or reworded, for a reader pack
+CA_ONLY = (
+    ("A report without GPS counts only if it was filed in a city the corridor enters (OpenStreetMap city limits along "
+     "the line and buffer), or in the unincorporated county where the corridor leaves city limits. ",
+     "A report without GPS counts only if the source files it in a county the corridor crosses. "),
+    ("GPS on a default point (one exact point shared by 10 or more reports naming 5 or more different street pairs, "
+     "most of which it doesn't fit), or written with 2 decimals or fewer (both coordinates, or one where the point doesn't "
+     "fit the report's streets), is not used; those reports are placed by their street names. ", ""),
+    ("from the USDOT National Address Database (NAD, release r24; 86% of tested crashes within 400 ft), or where NAD has "
+     "none, from a county address list measured about as accurate (most accurate list first); such crashes also count "
+     "on segments only. A less accurate county list only gives the review list a suggestion, and with no address point "
+     "the crash goes to the review list with the Census TIGER address-range point as a suggestion. ",
+     "when an address list is loaded for the state (none yet: the crash goes to the review list). "),
+    ("Primary collision factor categories are the 24 SWITRS categories, from CHP's own Vehicle Code section table "
+     "rebuilt from SWITRS records (a section is used only where 99% or more of its records agree); reports with no "
+     "section, a description in words, or a section CHP did not categorize are listed as such. ", ""),
+)
+
+
+CA_REFS = re.compile(r"^(ct_|ccrs$|tims$|caltrans_pm$)")    # California-only sources in references.json
+
+
+def credits(pack) -> str:
+    if pack.caltrans:
+        return CREDITS
+    return (f"{pack.source} Map data © OpenStreetMap contributors (ODbL). Street names also from US Census "
+            "TIGER/Line (public domain).")
+
+
 NO_AI = ("This report has no AI narrative. Findings are written by code from the over-representation screen (table T12, HSM excess-proportion test) and appear only after you accept them.")
 
 
@@ -66,7 +97,10 @@ def _postmiles(pull: dict, a: dict, pm) -> list[dict]:
 
 def gather(db, sid: str, postmiles=None, aadt_cache=None) -> dict:
     study, net, pull, a = for_study(db, sid)
-    net = profile_mod.with_shs(net, pull, postmiles, aadt_cache)        # state-highway rates (#287)
+    if not packs.for_study(study).caltrans:   # Caltrans postmiles + AADT: California only (#19)
+        postmiles = aadt_cache = None
+    else:
+        net = profile_mod.with_shs(net, pull, postmiles, aadt_cache)    # state-highway rates (#287)
     from .findings import check_stored        # local import: findings imports profile, which export also uses
     accepted = [f for f in check_stored(db, sid) if f["status"] == "accepted"]
     return {"study": study, "network": net, "profile": profile_mod.build(study, net, pull, a),
@@ -195,7 +229,12 @@ def to_xlsx(d: dict) -> bytes:
             ("Influence radius (ft)", s["radius_ft"]), ("Corridor buffer (ft)", s["buffer_ft"]),
             ("Generated", d["generated"]), ("Data pulled", p["pulled_at"]), ("", ""), ("Caveats", "")]
     rows += [("", c["text"]) for c in p["caveats"]] or [("", "None")]
-    rows += [("", ""), ("Note", NO_AI), ("Sources", CREDITS),
+    pack = packs.for_study(s)
+    if not pack.caltrans:                     # the State methods and sources block (#19)
+        rows += [("", ""), ("State methods and sources", pack.name)] + [(m["what"], m["text"]) for m in p["methods"]]
+    if pack.legal:
+        rows += [("", ""), ("Legal notice", pack.legal)]
+    rows += [("", ""), ("Note", NO_AI), ("Sources", credits(pack)),
              ("Tables", "Each sheet is one cited table (T1…T12). Cell = sheet / row key / column.")]
     for r in rows:
         ws.append(list(r))
@@ -323,6 +362,19 @@ def methodology(d: dict) -> str:
     excl = "; ".join(f"{n} {RULE_TEXT.get(k, k)}" for k, n in sorted(ex.items())) or "none"
     unplaced = (asg.get("counts") or {}).get("unmatched", 0)
     ncs = (asg.get("unmatched_by_rule") or {}).get("no_cross_street", 0)
+    pack = packs.for_study(s)
+    text = _methodology_ca(d, s, excl, unplaced, ncs)
+    if pack.caltrans:
+        return text
+    for old, new in CA_ONLY:
+        assert old in text, old[:60]          # a CA sentence was edited: update CA_ONLY with it
+        text = text.replace(old, new)
+    text = text.replace("Crash data: CCRS (California Highway Patrol)", f"Crash data: {pack.source_short}")
+    text = text.replace("CHP IsFreeway", "the source's freeway flag")     # in the exclusion counts, when there are any
+    return text + (f" {pack.severity_note}" if pack.severity_note else "")
+
+
+def _methodology_ca(d, s, excl, unplaced, ncs) -> str:
     return (f"Crash data: CCRS (California Highway Patrol), {s['from_year']}–{s['to_year']}"
             + (f", pulled {d['pulled_at'][:10]}" if d.get("pulled_at") else "") + ". "
             f"A crash is assigned to the nearest study intersection within {s['radius_ft']:g} ft; otherwise to the "
@@ -386,9 +438,11 @@ def methodology(d: dict) -> str:
 
 def to_pdf(d: dict) -> bytes:
     s, net, p = d["study"], d["network"], d["profile"]
+    pack = packs.for_study(s)
     buf = io.BytesIO()
     doc = SimpleDocTemplate(buf, pagesize=letter, leftMargin=0.7 * inch, rightMargin=0.7 * inch,
-                            topMargin=0.7 * inch, bottomMargin=0.7 * inch, title=f"{s['name']} crash profile",
+                            topMargin=0.7 * inch, bottomMargin=(1.25 if pack.legal else 0.7) * inch,
+                            title=f"{s['name']} crash profile",
                             author="CrashIQ")
     ss = getSampleStyleSheet()
     h1 = ParagraphStyle("h1", parent=ss["Title"], alignment=0, fontSize=20, spaceAfter=4)
@@ -417,8 +471,8 @@ def to_pdf(d: dict) -> bytes:
 
     def src(tid):
         note = f" Note: {escape(notes[tid])}" if notes.get(tid) else ""     # a missing CCRS Parties / IWP year (#188)
-        return Paragraph(f"Source: table {tid}, computed from the CCRS records listed in the appendix workbook.{note}",
-                         small)
+        return Paragraph(f"Source: table {tid}, computed from the {escape(pack.source_short)} records listed in the "
+                         f"appendix workbook.{note}", small)
 
     v = lambda a: profile_mod.cell(p["tables"], a)
     story = [Paragraph(f"{s['name']}: crash profile", h1),
@@ -472,6 +526,8 @@ def to_pdf(d: dict) -> bytes:
                                      ("T5", "Primary collision factor (top 10)", 10, "Factor"),
                                      ("T18", "Primary collision factor category", None, "Category"),
                                      ("T6", "Lighting", None, "Lighting")):
+        if tid in ("T5", "T18") and not pack.caltrans:
+            continue                          # California Vehicle Code factors: CCRS only
         t = _t(p, tid)
         rows = t["rows"][:limit] if limit else t["rows"]
         story += [KeepTogether([Paragraph(title, h2), table(
@@ -523,13 +579,20 @@ def to_pdf(d: dict) -> bytes:
                                "can pass by chance. Treat findings as leads to verify in the field.", small))
     if d.get("stale_findings"):
         story.append(Paragraph(stale_text(d["stale_findings"]), small))
-    story += [Paragraph(NO_AI, small), Spacer(1, 14), Paragraph(CREDITS, small)]
+    story += [Paragraph(NO_AI, small), Spacer(1, 14), Paragraph(escape(credits(pack)), small)]
+    if not pack.caltrans:                     # the State methods and sources block (#19)
+        story += [Paragraph(f"State methods and sources: {escape(pack.name)}", h2)]
+        story += [Paragraph(f"<b>{escape(m['what'])}</b>: {escape(m['text'])}", small) for m in p["methods"]]
     from .references import cited_sources
     story += [Paragraph("References", h2),
               Paragraph("Each method in this report and the source it follows are listed in CrashIQ under "
                         "Methods &amp; references.", small)]
+    refs = [r if pack.caltrans else {**r, "title": r["title"].replace("California", pack.name)}   # TIGER: "<state> counties"
+            for r in cited_sources() if pack.caltrans or not CA_REFS.match(r["key"])]
     story += [Paragraph(f"[{i}] {escape(r['publisher'])}, <i>{escape(r['title'])}</i>. {escape(r['url'])}", small)
-              for i, r in enumerate(cited_sources(), start=1)]
+              for i, r in enumerate(refs, start=1)]
+    legal = Paragraph(escape(pack.legal), ParagraphStyle("legal", parent=small, fontSize=6.5, leading=8)) \
+        if pack.legal else None
 
     def footer(canvas, _doc):
         canvas.saveState()
@@ -537,6 +600,9 @@ def to_pdf(d: dict) -> bytes:
         canvas.setFillColor(colors.HexColor("#57636F"))
         canvas.drawString(0.7 * inch, 0.45 * inch, f"CrashIQ · {s['name']} · {s['from_year']}–{s['to_year']}")
         canvas.drawRightString(letter[0] - 0.7 * inch, 0.45 * inch, f"Page {canvas.getPageNumber()}")
+        if legal is not None:                 # the state's notice on every page (WSDOT: in the footer)
+            legal.wrap(W, inch)
+            legal.drawOn(canvas, 0.7 * inch, 0.62 * inch)
         canvas.restoreState()
 
     doc.build(story, onFirstPage=footer, onLaterPages=footer)

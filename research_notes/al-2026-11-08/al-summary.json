@@ -1,0 +1,98 @@
+{
+ "state": "AL",
+ "bucket": "D",
+ "bucket_note": "technically A* (open ArcGIS layer: record-level, KABCO, 85% points, street names, current to the day), but ALDOT says the data are not to be shared with the public, and CAPS gates location data behind a password portal; treated as gated until permission",
+ "status": "reader_only",
+ "sources": [
+  {
+   "name": "CARE eCrash map layer (UA CAPS for ALDOT/ALEA)",
+   "url": "https://care-esriext.aladata.com/arcgis/rest/services/eCrash/Red/MapServer/0",
+   "access": "open (ArcGIS REST, no token), undocumented",
+   "licence_paid_use": "no",
+   "licence_quote": "These data are not to be shared with the public pursuant to Alabama Law and 23 U.S.C. \u00a7\u00a7148(h)(4) and 409. (ALDOT Safety Data Access Guidebook, PDF p. 6)",
+   "years": "2020-current",
+   "rows_per_year": {
+    "2020": 134567,
+    "2021": 152621,
+    "2022": 144554,
+    "2023": 144418,
+    "2024": 142015,
+    "2025": 140514,
+    "2026": 115516
+   },
+   "gps_share": 0.8545,
+   "street_names_share": 0.8803,
+   "kabco": true,
+   "keys_linkable": "no person/vehicle tables; ID unique per crash"
+  },
+  {
+   "name": "CARE SAFETY Private portal",
+   "url": "https://www.caps.ua.edu/analytics/portals/",
+   "access": "gated (individual password)",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": null
+  },
+  {
+   "name": "CARE SAFETY Public portal",
+   "url": "https://safety.aladata.com",
+   "access": "open, aggregate only",
+   "licence_paid_use": "unclear",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": null
+  }
+ ],
+ "placement_sample": {
+  "area": "Jefferson County (01073), 2024, random 2,000 with GPS (seed 2026)",
+  "n": 2000,
+  "gps_share": 0.6663,
+  "name_placed_share": 0.653,
+  "auto_share": 0.608,
+  "within_250ft": 0.4408,
+  "within_250ft_low": 0.4131,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "low accuracy is mostly street_key dropping the N/S quadrant (Birmingham 3rd Ave N vs S) and CARE-derived points; by point source in al-import.md; no-point crashes auto-placed by name: 0.3503"
+ },
+ "end_to_end": {
+  "corridor": "3rd Ave N, Birmingham (1.21 mi)",
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 1470,
+  "counted": 256,
+  "unplaced": 295,
+  "severity": {
+   "K": 0,
+   "A": 4,
+   "B": 17,
+   "C": 28,
+   "U": 0,
+   "O": 207
+  },
+  "crash_cost_total": 14079535,
+  "pdf_bytes": 58526,
+  "xlsx_bytes": 38664,
+  "seconds": 154
+ },
+ "importer_built": true,
+ "blockers": [
+  "ALDOT: crash data 'not to be shared with the public' (Safety Data Access Guidebook); the open layer looks unintended",
+  "shared names.street_key drops the trailing N/S quadrant: Birmingham twin streets collide (shared-fixes.md)",
+  "CARE's late loads shifted text columns by two; repaired in the reader, may change again"
+ ],
+ "user_actions": [
+  "Ask ALDOT Office of Safety Operations and UA CAPS for written permission to read the CARE eCrash layer in a paid product (or for a licensed extract)",
+  "If refused: consultants with a SAFETY Private login can bring their own export (needs one sample export to build the column map)"
+ ],
+ "cities": []
+}

@@ -1,0 +1,71 @@
+{
+ "state": "IL",
+ "study": "bb65e3ba0ec7",
+ "corridor": "North Western Avenue",
+ "length_mi": 1.01,
+ "window": [
+  2021,
+  2025
+ ],
+ "pulled": 1773,
+ "counted": 796,
+ "ksi": 14,
+ "fatal": 1,
+ "injury": 130,
+ "pdo": 666,
+ "unplaced": 0,
+ "excluded": 977,
+ "severity_T3": {
+  "K": 1,
+  "A": 13,
+  "B": 67,
+  "C": 49,
+  "U": 0,
+  "O": 666
+ },
+ "crash_cost_total": null,
+ "cost_column": false,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_crash_costs",
+  "no_statewide_rates",
+  "rates_not_computed"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": false,
+   "text": "not available for Illinois: IDOT publishes costs per person killed or injured, not per crash (2024 Crash Facts p. 23: fatality $2,009,575, A-injury $171,925, B $45,300, C $27,795, property damage crash $6,485, from National Safety Council 2024 estimates); its only per-crash table is 1999-2003, marked 'reference only' (Safety 1-06, p. 225). Pricing a crash by its worst injury with per-person costs would be wrong, so no cost column until IDOT's current HSIP benefit-cost crash costs are found"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for Illinois: IDOT's only published statewide averages here are fatal and A-injury crashes per 100 centerline miles for rural collectors and local roads (Safety 1-06, p. 7, high-risk rural roads), not crash rates per vehicle-mile; and CrashIQ has no Illinois traffic counts"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Highway Safety Manual (AASHTO, 1st, 2010), Ch. 4, Sec. 4.2.3. Illinois's own method, IDOT screens by peer group with frequency, rate and EPDO critical values (Safety 1-06 HSIP candidate form, 'HALIS Peer Group ... Critical Values Exceeded: Freq Rate EPDO', p. 252) and the 5% report; not built, isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": true,
+   "text": "Safety Engineering Policy Memorandum Safety 1-06, Highway Safety Improvement Program (HSIP) (Illinois Department of Transportation, effective November 1, 2006 (as posted 2026-11-08)), p. 8: 'five years of crash data should be used for the analysis' (also p. 7 table note: 'a minimum of 5 most recent years of crash data'); written for HSIP analyses"
+  }
+ ],
+ "findings_shown": 9,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 39588,
+ "pdf_bytes": 88752,
+ "seconds": 112
+}

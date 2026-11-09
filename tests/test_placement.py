@@ -71,3 +71,15 @@ def test_nothing_to_place_downloads_nothing(monkeypatch):
 def test_no_corridor_line_places_nothing(result):
     counts = placement.place_unmatched(None, {"line": []}, result)
     assert counts["placed"] == {} and all(c["lat"] is None for c in result["crashes"][:3])
+
+
+def test_a_block_crash_is_placed_mid_block_not_on_the_corner(monkeypatch):
+    # #19 (Seattle: "CRENSHAW BL BETWEEN MARINE AV AND W 147TH ST"): halfway between the block's two corners
+    monkeypatch.setattr(network_mod, "fetch_overpass", lambda db, q: OSM)
+    res = {"cleaning": {}, "crashes": [
+        _crash("blk", "CRENSHAW BL", "MARINE AV", block_end_road="W 147TH ST"),
+        _crash("far", "CRENSHAW BL", "MARINE AV", block_end_road="ZZYZX RD")]}       # far corner unknown
+    placement.place_unmatched(None, NET, res)
+    blk, far = res["crashes"]
+    assert blk["location_source"] == "exact" and 33.8960 < blk["lat"] < 33.8972        # corners 33.8953, 33.8978
+    assert far["location_source"] == "unmatched" and far["suggestion"]["tier"] == "review"

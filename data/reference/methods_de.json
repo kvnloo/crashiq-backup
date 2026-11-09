@@ -1,0 +1,57 @@
+{
+ "state": "DE",
+ "manuals": {
+  "deldot_hsip_2024": {
+   "title": "Delaware Highway Safety Improvement Program (Delaware Highway Safety Summit presentation)",
+   "publisher": "DelDOT (Scott Neidert, HSIP Manager)",
+   "jurisdiction": "DE",
+   "edition": "April 17, 2024",
+   "url": "https://deldot.gov/Programs/DSHSP/pdfs/presentations/safetysummit/1_Neidert_Delaware%20HSIP.pdf",
+   "sha256": "d34f741e7c995212b3ae14009902d09964d5df243348d68b210bee0f2e392bcf",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/de-2026-11-08/de-methods.md"
+  },
+  "de_hsip_2025": {
+   "title": "Delaware Highway Safety Improvement Program 2025 Annual Report",
+   "publisher": "DelDOT (posted by FHWA)",
+   "jurisdiction": "DE",
+   "edition": "2025",
+   "url": "https://highways.dot.gov/sites/fhwa.dot.gov/files/2026-09/DELAWARE_HSIP%20REPORT_2025_508.pdf",
+   "note": "FHWA's server refused the download (Access Denied) on 2026-11-08; read through a text extract, no sha256"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "DelDOT publishes no crash costs: its 2025 HSIP report says it 'began development of Delaware-specific crash costs using FHWA values as a guide' and plans to complete them in 2026 (page not recorded: FHWA refused the PDF download)"
+  },
+  "statewide_rates": {
+   "missing": "DelDOT publishes no statewide average crash-rate table, and CrashIQ has no Delaware traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "DelDOT Hazard Elimination Program: 3-year crash history; segments ranked by crash rate on a 0.1-mile sliding window, signalized and unsignalized intersections by crash frequency and severity (DelDOT HSIP presentation, 2024, PDF p. 9)"
+  },
+  "min_years": {
+   "value": 3,
+   "manual": "deldot_hsip_2024",
+   "page": "PDF p. 9 (HEP: 'Identification of sites is based on 3-year crash history')",
+   "verified": false,
+   "note": "DelDOT's network-screening window, not a stated minimum for a corridor study: the user decides"
+  },
+  "spf_calibration": {
+   "missing": "DelDOT is still developing Delaware calibration factors for the HSM (2025 HSIP report); none published"
+  }
+ }
+}

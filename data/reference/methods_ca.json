@@ -1,0 +1,68 @@
+{
+ "state": "CA",
+ "manuals": {
+  "lrsm": {
+   "title": "Local Roadway Safety Manual",
+   "publisher": "Caltrans",
+   "jurisdiction": "CA",
+   "edition": "v1.8, May 2026",
+   "url": "https://dot.ca.gov/-/media/dot-media/programs/local-assistance/documents/hsip/2026/lrsm2026final.pdf",
+   "downloaded": "2026-11-01",
+   "note": "data/reference/crash_costs_ca.md"
+  },
+  "cshwy": {
+   "title": "2024 Crash Data on California State Highways",
+   "publisher": "Caltrans",
+   "jurisdiction": "CA",
+   "edition": "2024 (v3)",
+   "url": "https://dot.ca.gov/-/media/dot-media/programs/research-innovation-system-information/documents/annual-collision-data/2024-crash-data-on-cshwy-book-v3-a11y.pdf",
+   "sha256": "4ec3f34c199e7c533c287e64a77a9ff06d8cfe002e5bb14ea7d41b3654e7daf0",
+   "downloaded": "2026-11-01",
+   "note": "data/reference/caltrans_rate_groups.md"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "file": "crash_costs_ca.csv",
+   "dollar_year": 2026,
+   "manual": "lrsm",
+   "page": "App. D, p. 100 (PDF 106)",
+   "rules": [
+    "KA priced together by location type",
+    "U priced at C (user 2026-11-01, #273)",
+    "KA at unknown control at the signalized price (user 2026-11-01)"
+   ]
+  },
+  "statewide_rates": {
+   "file": "caltrans_rate_groups.csv",
+   "facility_label": "Caltrans rate group",
+   "manual": "cshwy",
+   "page": "pp. 83-90"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3"
+  },
+  "min_years": {
+   "value": 3,
+   "preferred": 5,
+   "manual": "lrsm",
+   "page": "page not recorded (#34 item 15)",
+   "verified": false
+  },
+  "spf_calibration": {
+   "missing": "not looked up for CA yet"
+  }
+ }
+}

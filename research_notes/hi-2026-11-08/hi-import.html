@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hawaii crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1313;border-left:4px solid #e33;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em;margin-left:.4em}code{background:#2a2a2a;padding:1px 4px;border-radius:3px;color:#ffb3b3}
+table{border-collapse:collapse;width:100%;font-size:.92em}td,th{border-bottom:1px solid #333;padding:5px 4px;text-align:left}th{color:#ff8080}
+<h1>Hawaii: crash data for CrashIQ</h1>
+<p class="ex">Hermes, 8 Nov 2026. Checked live today. Full notes: <code>hi-import.md</code>, column map: <code>hi-column-map.json</code>.</p>
+<p class="big"><b>Short answer:</b> Hawaii is <span class="no">not ready</span>. HDOT does put crash points online with no login (we found 37,315 crashes, 2015-2024, a point on 99.9%), but each crash has only its <b>year</b>: no date, no injury level, no street name. We built no pack: a study would need made-up dates and severities.</p>
+<h2>1. What Hawaii has</h2><ul>
+<li><b>HDOT crash layer</b>: one point per crash, the year, the county, and yes/no flags (pedestrian, bike, alcohol, speed, "major injury"). <span class="ex">Example: "2018, Honolulu, state road S3U, action code 82, no major injury".</span></li>
+<li>Until 2022 it holds <b>state highways only</b>. County roads (most Honolulu city streets) start in 2023. <span class="ex">Example: Honolulu 2024 has 4,025 crashes, 60% on county roads; Honolulu 2022 has none on county roads.</span></li>
+<li><b>HDOT fatal layer</b>: 1,416 deadly crashes 2012-2025, with the date and point, <span class="ok">public domain</span>. Before 2019 HDOT set dates to Dec 30/31.</li>
+<li><b>Honolulu</b> open data has no crash table (only a 24-hour police dispatch feed).</li></ul>
+<h2>2. Would CrashIQ place the crashes?</h2><ul>
+<li>Yes by GPS: 99.8% of Honolulu's 2024 crashes have a real point. 63 crashes statewide sit at 0,0 or at a Honolulu "default" point and would be dropped.</li>
+<li>No street names, so nothing else to place from or to check against.</li></ul>
+<h2>3. The rules HDOT uses</h2><ul>
+<li>HDOT screens sites with the Number-Rate method on 3-year windows and 0.3-mile sliding segments, and uses <b>FHWA's</b> crash costs. No HDOT crash-rate table found.</li></ul>
+<h2>4. Can we sell it?</h2><ul>
+<li>The crash layer has no licence. HDOT's pages say the data is "for highway safety and educational purposes only": <span class="warn">unclear for a paid tool</span>.</li></ul>
+<h2>What you need to do</h2><ol>
+<li>Ask HDOT Traffic Safety (their SHACA system) for one statewide export, 2019-2024, with the crash <b>date</b>, the <b>injury level</b> (K/A/B/C/O), the road and milepost or street names, the report number, and written OK to use it in a paid product.</li>
+<li>Or ask HDOT to add the date and injury level to the open layer. With those two fields it becomes a pack.</li></ol>
+<h2>What we didn't check</h2><ul>
+<li>What "major injury" means exactly (no data dictionary).</li>
+<li>Whether county-road crashes before 2023 exist inside SHACA.</li>
+<li>HDOT's HSIP report PDF itself (the federal site blocks downloads; we read its text).</li></ul>
+</body></html>

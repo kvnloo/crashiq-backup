@@ -1,0 +1,90 @@
+{
+ "area": "Pulaski County (Little Rock), 2025, every row",
+ "n": 15030,
+ "gps_share": 1.0,
+ "intersecting_street_share": 0.3895,
+ "intersecting_street_spaced_share": 0.3156,
+ "road_id_county_prefix": {
+  "60": 14995,
+  "43": 32,
+  "62": 2,
+  "23": 1
+ },
+ "crashdate_local_time_equals_crashtime": "15030/15030",
+ "severity": {
+  "Suspected Minor Injury (B)": 1562,
+  "Possible Injury (C)": 1634,
+  "No Apparent Injury (O)": 11432,
+  "Suspected Serious Injury (A)": 337,
+  "Fatal Injury (K)": 65
+ },
+ "road_system": {
+  "City Street": 9029,
+  "Interstate": 3035,
+  "US Highway": 709,
+  "State Highway": 2066,
+  "Unknown": 190,
+  "Frontage Road": 1
+ },
+ "time_formats": {
+  "24h": 15030
+ },
+ "serinj_vs_A": [
+  [
+   [
+    "O",
+    false,
+    false
+   ],
+   11432
+  ],
+  [
+   [
+    "C",
+    false,
+    false
+   ],
+   1634
+  ],
+  [
+   [
+    "B",
+    false,
+    false
+   ],
+   1562
+  ],
+  [
+   [
+    "A",
+    true,
+    false
+   ],
+   337
+  ],
+  [
+   [
+    "K",
+    false,
+    true
+   ],
+   54
+  ],
+  [
+   [
+    "K",
+    true,
+    true
+   ],
+   10
+  ],
+  [
+   [
+    "K",
+    true,
+    false
+   ],
+   1
+  ]
+ ]
+}

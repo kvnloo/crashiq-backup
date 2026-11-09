@@ -1,0 +1,115 @@
+{
+ "state": "IL",
+ "bucket": "A",
+ "bucket_note": "open, statewide, record-level, GPS on 99.8%, IDOT crash KABCO; street names only in the 2025 layer; no person/vehicle rows except 2025's separate extract (not read)",
+ "status": "active",
+ "sources": [
+  {
+   "name": "IDOT statewide crash layers 'Crashes - <year>' (IDOT open data hub, owner IDOTAdmin)",
+   "url": "https://gis-idot.opendata.arcgis.com/ (services2.arcgis.com/aIrBD8yn1TDTEXoz/.../CRASHES___2025/FeatureServer/0)",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "2014-2020 items: 'This work is licensed under a Creative Commons ... by-sa/2.0'; 2024 item: 'The Illinois Department of Transportation and the State of Illinois hereby give notice to all users that these maps and the data included hereon, lack the accuracy required for site-specific uses ...'; 2021-2023 and 2025 items: no licence text",
+   "years": "2014-2025 (one frozen layer per year; 2025 posted Aug 2026)",
+   "rows_per_year": {
+    "2014": 296194,
+    "2015": 313319,
+    "2016": 324496,
+    "2017": 311930,
+    "2018": 319213,
+    "2019": 313185,
+    "2020": 246868,
+    "2021": 295634,
+    "2022": 298431,
+    "2023": 300144,
+    "2024": 303927,
+    "2025": 303087
+   },
+   "gps_share": 0.9982,
+   "street_names_share": {
+    "2025_road": 1.0,
+    "2025_pair_chicago": 0.005,
+    "2025_pair_dupage": 0.3955,
+    "2014_2024": 0.0
+   },
+   "kabco": true,
+   "keys_linkable": "CrashID/ICN; persons and vehicles published only for 2025 (Crashes Extract - 2025, layers 1-2: 692,501 persons, 574,716 vehicles)"
+  },
+  {
+   "name": "IDOT Safety Portal / I-CARS",
+   "url": "https://webapps1.dot.illinois.gov/SafetyPortal/",
+   "access": "gated (account vetted by a County Engineer, then IDOT)",
+   "licence_paid_use": "no",
+   "years": "10-year retention",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "yes (inside the portal)"
+  }
+ ],
+ "placement_sample": {
+  "area": "DuPage County (17043) box (41.75, -88.2, 41.95, -87.92), 2025, random 2,000 with GPS (seed 2026)",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.3245,
+  "auto_share": 0.3195,
+  "within_250ft": 0.9249,
+  "within_250ft_low": 0.9018,
+  "house_address_share": 0.0738,
+  "address_points_source": null,
+  "chicago": {
+   "area": "Cook County (17031) inside the Chicago box, 2025, random 2,000 with GPS (seed 2026)",
+   "n": 2000,
+   "street_pair_share": 0.005,
+   "auto_share": 0.004,
+   "house_address_share": 0.8464
+  },
+  "note": "Gate(tiger_only_auto=True) on TIGER 2024; Chicago reports locate by house number (84.6%) not street pair (0.5%); house-address placement not measured; GPS on 100% of both samples"
+ },
+ "end_to_end": {
+  "corridor": "N Western Ave, Chicago, Fullerton Ave to Belmont Ave (1.01 mi)",
+  "window": [
+   2021,
+   2025
+  ],
+  "pulled": 1773,
+  "counted": 796,
+  "excluded": 977,
+  "unplaced": 0,
+  "severity": {
+   "K": 1,
+   "A": 13,
+   "B": 67,
+   "C": 49,
+   "U": 0,
+   "O": 666
+  },
+  "crash_cost_total": null,
+  "findings_shown": 9,
+  "pdf_bytes": 88752,
+  "xlsx_bytes": 39588,
+  "seconds": 112
+ },
+ "importer_built": true,
+ "blockers": [
+  "no licence on the 2021-2025 layers (2014-2020 CC BY-SA 2.0: share-alike); paid use unclear",
+  "street names only in the 2025 layer: 2014-2024 crashes are placed by GPS only, no not-on-the-corridor-street check",
+  "2019 layer: ~25% of rows have the columns after TrafficwayDescrip shifted by an unquoted comma (reader reads severity from the unshifted counts)",
+  "no crash costs: IDOT publishes per-person NSC costs, not per-crash"
+ ],
+ "user_actions": [
+  "Ask IDOT Bureau of Data Collection (DOT.DTS.DataRequests@illinois.gov) in writing whether the hub crash layers may be shown in a paid product, and under which licence for 2021-2025",
+  "Optional: ask IDOT for street names for 2014-2024 (they exist in the Safety Portal) and its current HSIP benefit-cost crash costs per crash"
+ ],
+ "cities": [
+  {
+   "city": "Chicago",
+   "source": "Traffic Crashes - Crashes (City of Chicago data portal, 85ca-t3if)",
+   "url": "https://data.cityofchicago.org/d/85ca-t3if",
+   "gps_share": null,
+   "years": "2015 (partial) - today, daily; 2025: 109,117 rows",
+   "licence": "City of Chicago Terms of Use ('See Terms of Use'); not read: IDOT already covers Chicago (100,055 Chicago crashes in IDOT 2025), the only gap is the current, non-final year"
+  }
+ ]
+}

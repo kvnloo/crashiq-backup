@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New York crash data for CrashIQ</title>
+<style>
+:root{--bg:#120c0c;--card:#1d1414;--red:#e5484d;--soft:#ff9592;--text:#f2e8e8;--mute:#b9a5a5;--line:#3a2626}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.5 -apple-system,system-ui,Segoe UI,Roboto,sans-serif}
+main{max-width:720px;margin:0 auto;padding:18px}
+h1{font-size:1.5rem;margin:.2em 0;color:#fff}h2{font-size:1.15rem;color:var(--soft);margin:1.4em 0 .4em;border-bottom:1px solid var(--line);padding-bottom:.2em}
+.card{background:var(--card);border:1px solid var(--line);border-left:4px solid var(--red);border-radius:10px;padding:12px 14px;margin:10px 0}
+.big{font-size:1.6rem;font-weight:700;color:#fff}.mute{color:var(--mute);font-size:.9rem}
+.ex{color:var(--mute);font-size:.92rem;border-left:2px solid var(--line);padding-left:8px;margin-top:6px}
+table{width:100%;border-collapse:collapse;font-size:.92rem}td,th{border-bottom:1px solid var(--line);padding:6px 4px;text-align:left}th{color:var(--soft)}
+a{color:var(--soft)}ol li,ul li{margin:.35em 0}.tag{display:inline-block;background:var(--red);color:#fff;border-radius:6px;padding:0 6px;font-size:.8rem;font-weight:700}
+</style></head><body><main>
+<h1>New York: what crash data CrashIQ can use</h1>
+<p class="mute">Hermes, 7 Nov 2026 · branch state/ny · every number checked live today</p>
+
+<div class="card"><span class="tag">Verdict</span>
+<p><b>New York City works like California. The rest of the state only partly.</b> NYC publishes every crash with a map point and street names, free for any use. The state publishes crashes too, but without a map point or street names; we can place the state-highway ones (about 4 in 10 outside NYC) by their mile-post sign. Full detail for every road (KABCO injury levels, exact spot) is in NYSDOT's CLEAR system, which only government staff and their consultants can log into.</p></div>
+
+<h2>1. The sources</h2>
+<div class="card"><b>NYC crash records</b> — 85,559 crashes in 2025, <b>97% with a map point</b>, 9 in 10 with two street names or a house address. Free, no limits on use ("There are no restrictions on the use of Open Data").
+<div class="ex">Example: "WEST 170 STREET at OGDEN AVENUE, Bronx, 06:13". People in the crash link to it by one ID. Injury is only "injured" or "killed", not the K-A-B-C levels.</div></div>
+<div class="card"><b>State DMV crash table</b> — about 381,000 crashes a year, 2021–2024 (2025 not out yet). Free for any use. No map point, no street names, no case number.
+<div class="ex">Example: a 2024 crash says only "ERIE County, WEST SENECA, property damage, marker 219 53121268". Without a marker it says just the town.</div></div>
+<div class="card"><b>CLEAR (NYSDOT)</b> — every crash since 2012, on every road, with a map point, street names and K-A-B-C. Login for government staff and their consultants; everyone else asks by FOIL.
+<div class="ex">We found two real CLEAR-style exports posted online (a Town of Gardiner study and a state utility filing) and built the reader from their columns: case number, coordinates, severity, serious injuries, on-street and cross-street.</div></div>
+<div class="card"><b>Other big cities</b> — Buffalo posts 911 crash <i>calls</i> (10,174 in 2025, 92% with a point), not police crash reports. Rochester has a dashboard only. Syracuse and Albany: nothing found.</div>
+
+<h2>2. How well CrashIQ places them</h2>
+<div class="card"><div class="big">98%</div>of 500 state-highway crashes matched a NYSDOT mile-post sign, and 99.6% of those land inside the crash's own county.
+<div class="ex">Example: marker "9 84041008" becomes the point of the sign "  9 84041008" on Route 9. Signs are every 0.1 mile, so the crash is within about 260 ft along the road; which side and which lane is unknown.</div></div>
+<div class="card"><div class="big">57%</div>of 2,000 NYC crashes placed automatically from the street names alone (GPS hidden), and <b>99.2%</b> of those were within 250 ft of the real point (at least 98.5% with 95% confidence). Another 20% placed from house addresses, 98.7% within 250 ft.
+<div class="ex">What didn't place: crashes that name only a highway ("BELT PARKWAY", 20%), and pairs of streets that cross twice. We also had to turn "E 26 ST" into "E 26th St" first; that fix belongs in the shared name code.</div></div>
+<div class="card"><b>What it adds:</b> NYC crashes with no GPS: in 2024 we place 2,263 of 7,619 (1,524 automatically); in 2025, 1,232 of 2,641. That is 1.4–2.5% more of all NYC crashes on the map.
+<div class="ex">Honest catch: NYC's map points for these crashes were probably made from the same street names, so "99% within 250 ft" shows we agree with the city's geocoder, not with an officer's GPS.</div></div>
+
+<h2>3. New York's own rules (manuals)</h2>
+<div class="card">NYSDOT's Red Book and Yellow Book (both April 2026) and Design Manual chapter 5 (April 2026). <a href="ny-methods.md">Full notes with page numbers</a>.
+<ul>
+<li>Hot spots are found by <b>fatal + serious-injury crashes above what the NY model predicts</b> for that kind of road (Empirical Bayes), over 5 years — not by comparing a crash rate with a base rate like TASAS.</li>
+<li>Crash costs (2024 dollars): K $18,186,968 · A $991,313 · B $309,976 · C $194,893 · O $18,794.</li>
+<li>Study period: 3 years normally, 2 if AADT over 100,000, 5 if under 2,000.</li>
+<li>Average crash rates: the latest public table is 2017–2019 (e.g. urban 4-lane divided road with full access control 1.33 crashes per million vehicle-miles; urban 4-leg signal 0.56 per million entering vehicles). Newer rates are only inside CLEAR.</li>
+</ul></div>
+
+<h2>4. What we built</h2>
+<div class="card">Three readers, not yet switched on in the app: NYC crashes + people; the state DMV table with the mile-post join; and a CLEAR export reader that takes a spreadsheet or shapefile table and turns its coordinates into map points. 18 offline tests pass.</div>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Get <b>one CLEAR export</b> (crash list and person list, one county, one year) from a NYSDOT or county contact, or by FOIL, so we can check the reader against today's CLEAR columns.</li>
+<li>Ask NYSDOT (dot.sm.clear@dot.ny.gov) whether consultants may load CLEAR exports into a paid tool.</li>
+<li>Decide what CrashIQ shows for state crashes that only name a town (about 58% outside NYC).</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>The national address database (NAD) for New York: its server timed out today.</li>
+<li>Whether NYSDOT's mile-post layer and the state address points may be used in a paid product (no licence text either way).</li>
+<li>Mile-post accuracy against officers' own GPS (no public source has both).</li>
+<li>OpenStreetMap streets for NYC (we used Census TIGER only); NYC vehicle table; current NY crash rates.</li>
+</ul>
+</main></body></html>

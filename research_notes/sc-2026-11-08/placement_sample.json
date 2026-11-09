@@ -1,0 +1,72 @@
+{
+ "area": "Spartanburg County (45083), 2024 (county layer)",
+ "n": 2000,
+ "crashes_in_year": 10674,
+ "gps_share": 0.9995,
+ "street_pair_share": 0.9935,
+ "tiers": {
+  "exact": 1583,
+  "review": 300,
+  "unique_pair": 28,
+  "verified_typo": 36,
+  "near": 17,
+  "relaxed": 20,
+  "fuzzy": 3
+ },
+ "route_retry_used": 152,
+ "name_placed_share": 0.8435,
+ "name_placed_share_of_pairs": 0.849,
+ "auto_share": 0.0,
+ "auto_share_of_pairs": 0.0,
+ "within_250ft_auto": null,
+ "within_250ft_auto_low": 0.0,
+ "within_250ft_all_placed": 0.4748,
+ "within_250ft_all_placed_low": 0.4511,
+ "tier_gate_share": 0.8055,
+ "within_250ft_tier_gate": 0.4767,
+ "within_250ft_tier_gate_low": 0.4524,
+ "within_250ft_by_tier": {
+  "exact": 0.4776,
+  "unique_pair": 0.4286,
+  "verified_typo": 0.3611,
+  "near": 0.4706,
+  "relaxed": 0.5,
+  "fuzzy": 0.6667
+ },
+ "not_placed": {
+  "no intersection of the two named streets": 199,
+  "exact: streets meet in more than one place": 97,
+  "no on/base street in source": 13,
+  "missing street name": 2,
+  "fuzzy: streets meet in more than one place": 1,
+  "relaxed: streets meet in more than one place": 1
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "60 & DUNCAN REIDVILLE RD",
+   "HIGHWAY 56 & BOBBI RD",
+   "ASHEVILLE HWY & NORTH TOWER DR",
+   "E HAYNE ST & MEDICAL CENTER DR",
+   "INTERSTATE 85 & AVIATION DR",
+   "ASHEVILLE HWY & ASHEVILLE HWY"
+  ],
+  "exact: streets meet in more than one place": [
+   "BOILING SPRINGS RD & INTERSTATE 85",
+   "POWELL MILL RD & COUNTY RD",
+   "AMMONS RD & RIDGEDALE DR",
+   "BOILING SPRINGS RD & CALIFORNIA AVE",
+   "S DANZLER RD & WINFRED CIR",
+   "WESTMORELAND RD & ABNER CREEK RD"
+  ],
+  "fuzzy: streets meet in more than one place": [
+   "BATTLEGROUND RD & B ARTHUR BRIDGE RD"
+  ],
+  "missing street name": [
+   "EXIT RAMP & CHESNEE HWY",
+   "E MAIN ST & 85 SB ON RAMP"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "CHESNEE HWY & CHEROKEE DR"
+  ]
+ }
+}
