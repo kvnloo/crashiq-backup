@@ -1,0 +1,34 @@
+{
+ "state": "SC",
+ "purpose": "Bring your export: map an SCDPS crash export (master file / TR-310 fields) to CrashIQ's crash keys. Column names are SCDPS's own, from its CC BY 4.0 'SCDPS Collisions' layer schema; the person-level names are from the Spartanburg County layer built from the same TR-310 data.",
+ "spec_sources": [
+  "https://services7.arcgis.com/TdsEnMqzMcTd7pnb/arcgis/rest/services/Extrnl_Collisions_Collision_Dashboard/FeatureServer/0 (SCDPS field list)",
+  "https://services6.arcgis.com/bom7L4u7y1k0qkF1/arcgis/rest/services/Spartanburg_County_Crash_Data_Monthly_Update/FeatureServer/0 (TR-310 person fields)",
+  "https://scdps.sc.gov/sites/scdps/files/Documents/forms/TR-310%20Report%20Manual%20Revised%20May%202019.pdf (scanned; saved in ~/.hermes/state-manuals/sc/)"
+ ],
+ "crash": {
+  "collision_id": "AccidentNumber (crash_number)",
+  "datetime": "CrashDate + hour (date + time)",
+  "lat": "Latitude (decimal_degrees_latitude; 'latitude' is DDMMSSss packed, e.g. 35014116 = 35 01' 41.16\")",
+  "lon": "Longitude (decimal_degrees_longitude; packed 'longitude' has no minus sign)",
+  "primary_road": "Street, else RouteCategory + RouteNum (on_route_*): Interstate -> I, US Primary -> US, SC Primary -> SC",
+  "secondary_road": "StreetBaseInt, else RouteCategoryBaseInt + RouteNumBaseInt (base_route_*)",
+  "sec_distance": "base_distance_offset, MILES (0.01, 0.1, 0.5, 1); not in the SCDPS dashboard layer",
+  "sec_direction": "offset_direction N/S/E/W. Meaning unverified: applying it from the base point made long offsets worse (see sc-import.md)",
+  "county_code": "County",
+  "city_name": "not given; Agency names the police department (e.g. GREER POLICE DEPARTMENT)",
+  "killed": "NumberOfFatalities (persons_killed)",
+  "injured": "NumberOfInjuries (persons_injured)",
+  "collision_type": "not in the SCDPS layer (FirstHarmfulEvent / MostHarmfulEvent are events, not manner of collision); 'collision_type' in the county layer is the severity class",
+  "lighting": "LightingCondition (lighting_conditions)",
+  "weather": "WeatherCondition (weather_conditions)",
+  "surface": "RoadSurfaceCondition (road_condition)",
+  "is_freeway": "RouteCategory = Interstate (or Ramp)"
+ },
+ "severity": {
+  "crash_level_from_counts": "K if NumberOfFatalities > 0, else A if Suspected_Serious_Injuries > 0, else B if Suspected_Minor_Injuries > 0, else C if Possible_Injuries > 0, else O",
+  "person_field": "injury_severity (county layer, TR-310 scale)",
+  "person_map": {"Fatal": "K", "Incapacitating": "A", "Non-Incapacitating": "B", "Possible Injury": "C", "Not Injured": "O", "(blank)": "U"},
+  "severity_note": "KABCO as SCDPS gives it. Older TR-310 words (Incapacitating / Non-Incapacitating) are A / B; GPATS also uses Serious / Minor Injury for the newer reports. Blank = U, injury level not reported."
+ }
+}
