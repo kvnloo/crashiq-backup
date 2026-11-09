@@ -1,0 +1,16 @@
+<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Ohio crash data</title><style>body{background:#111;color:#eee;font:16px/1.5 system-ui;margin:0;padding:18px;max-width:720px}
+h1{color:#e33;font-size:24px}h2{color:#f55;font-size:18px;margin-top:22px}.b{background:#1d1d1d;border-left:4px solid #e33;padding:10px 12px;margin:10px 0}li{margin:4px 0}</style></head><body>
+<h1>Ohio: ready</h1>
+<div class="b">ODOT puts every Ohio crash on its public TIMS map, one layer per year, free, no login, and says the data is public domain. CrashIQ now reads it, 2021 to 2025.</div>
+<h2>What we found</h2><ul>
+<li><b>It's the whole state.</b> 2025: 264,530 crashes and 1,033 fatal crashes in the layer; ODOT's own 2025 table says 264,529 and 1,033.</li>
+<li><b>Every crash has a GPS point.</b> Franklin County sample: 2,000 of 2,000.</li>
+<li><b>Real injury levels (KABCO).</b> Fatal, serious, minor, possible, none, the same scale as California.</li>
+<li><b>What's missing:</b> the day of the month (only month, weekday and hour), street names, and how many people were hurt. Example: a crash reads "August 2024, a Wednesday, 6 pm", never "Aug 14".</li>
+<li><b>Crash costs are Ohio's own:</b> ODOT 2025 costs, fatal $2,266,992 down to property damage $11,648 per crash.</li></ul>
+<h2>Test run</h2><div class="b">N High St, Columbus, 5th Ave to Lane Ave, 1.21 mi, 2021-2025: 500 crashes counted (1 fatal, 13 serious, 98 minor, 60 possible, 328 property damage). Crash cost $19,297,824. PDF and Excel both made.</div>
+<h2>What you need to do</h2><ul><li>Nothing to start. If you want full dates and street names, Ohio's Public Safety site emails a free CSV (needs your email and a captcha): send one county, one year, and we'll read it too.</li>
+<li>Say if Ohio studies should use ODOT's comprehensive costs instead of its published economic costs.</li></ul>
+<h2>What we didn't check</h2><ul><li>The emailed ODPS file's columns.</li><li>ODOT's official day-of-week codes (we worked them out from the counts).</li><li>Statewide average crash rates and traffic counts (none loaded).</li><li>How long TIMS keeps 2021 once 2026 is added.</li></ul>
+</body></html>

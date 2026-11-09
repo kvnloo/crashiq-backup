@@ -1,0 +1,103 @@
+{
+ "state": "OH",
+ "bucket": "A*",
+ "bucket_note": "open, record-level, GPS on every crash, KABCO, public domain; catch: no day of month, no street names or people counts, REST endpoints 'subject to change without notice'",
+ "bucket_2026_11_02": "D (wrong: looked only at GCAT)",
+ "status": "active",
+ "sources": [
+  {
+   "name": "ODOT TIMS public crash layers (Safety/<year>_Crash_Locations)",
+   "url": "https://tims.dot.state.oh.us/ags/rest/services/Safety",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "ok_with_attribution",
+   "licence_quote": "The data published within the Ohio Department of Transportation (ODOT) TIMS application is in the public domain and as such it is not copyrighted. Individuals can use, reproduce or copy material from TIMS ... without seeking permission from ODOT.",
+   "licence_url": "https://tims.dot.state.oh.us/tims/support",
+   "years": "2021-2025",
+   "rows_per_year": {
+    "2021": 269674,
+    "2022": 265502,
+    "2023": 252570,
+    "2024": 251091,
+    "2025": 264530
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.0,
+   "route_from_nlfid_share": 0.385,
+   "kabco": true,
+   "keys_linkable": "DOCUMENT_NBR unique per crash; no person/vehicle rows public"
+  },
+  {
+   "name": "ODPS Crash Statistics (emailed OH-1 CSV)",
+   "url": "https://ohtrafficdata.dps.ohio.gov/CrashStatistics/Home",
+   "access": "free, captcha + email link + PIN (not scriptable)",
+   "licence_paid_use": "unclear",
+   "years": "5 years + current",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "not checked"
+  },
+  {
+   "name": "ODOT GCAT / AASHTOWare Safety",
+   "url": "https://tims.dot.state.oh.us/tims/help/ODOT%20TIMS%20User%20Guide.pdf",
+   "access": "gated (agencies, pre-qualified consultants)",
+   "licence_paid_use": "no",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": true,
+   "keys_linkable": "inside GCAT"
+  }
+ ],
+ "placement_sample": {
+  "area": "Franklin County (39049), 2024, 10 pages of 200 at seeded random offsets",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": null,
+  "address_points_source": null,
+  "note": "GPS on 2,000/2,000 (all inside the county box); no street names in the source, so name placement can't be measured and isn't needed"
+ },
+ "end_to_end": {
+  "corridor": "N High St (US 23), Columbus, 5th Ave to Lane Ave",
+  "length_mi": 1.21,
+  "window": [
+   2021,
+   2025
+  ],
+  "pulled": 643,
+  "counted": 500,
+  "severity": {
+   "K": 1,
+   "A": 13,
+   "B": 98,
+   "C": 60,
+   "U": 0,
+   "O": 328
+  },
+  "ksi": 14,
+  "excluded": 143,
+  "unplaced": 0,
+  "crash_cost_total": 19297824,
+  "cost_basis": "ODOT 2025 economic unit costs",
+  "pdf_bytes": 92589,
+  "xlsx_bytes": 42605,
+  "findings_shown": 9
+ },
+ "importer_built": true,
+ "blockers": [
+  "no day of month in the public layer (dates blank)",
+  "no street names/people counts/light/weather/surface",
+  "TIMS REST endpoints may change without notice"
+ ],
+ "user_actions": [
+  "Optional: for full dates, streets and persons, request the ODPS Crash Statistics CSV (email + captcha, free) and send one county-year so a 'bring your export' reader can be built",
+  "Decide whether ODOT's economic costs (ODOT's published series) or its comprehensive costs should price Ohio studies (economic is used)"
+ ],
+ "cities": []
+}
