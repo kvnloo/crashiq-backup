@@ -1,0 +1,54 @@
+{
+ "state": "VT",
+ "manuals": {
+  "vt_hcl": {
+   "title": "High Crash Location Report: Sections and Intersections 2012-2016",
+   "publisher": "VTrans Office of Highway Safety, Data Section",
+   "jurisdiction": "VT",
+   "edition": "2012-2016 (formal report)",
+   "url": "https://vtrans.vermont.gov/sites/aot/files/highway/documents/highway/Formal%202012-2016%20High%20Crash%20Location%20Report.pdf",
+   "sha256": "2ec112d27844771557165aa24f5a727a0a200eb5db4d2805d2262af619b41f63",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/vt-2026-11-08/vt-methods.md"
+  },
+  "vt_rates": {
+   "title": "Summary Statewide Average Crash Rate 2012-2016",
+   "publisher": "VTrans",
+   "jurisdiction": "VT",
+   "edition": "2012-2016",
+   "url": "https://vtrans.vermont.gov/sites/aot/files/highway/documents/data&analysis/Statewide%20Crash%20Rates%202012%20to%202016_accessible.pdf",
+   "sha256": "234276c2a79e4322a08c9e0d339ecf3c8e13d1b9ad00124145f89e8104b44087",
+   "downloaded": "2026-11-08"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "VTrans' Severity Index prices each person killed ($1,500,000) and injured ($88,500) and each PDO crash ($11,300), NSC 2014 economic costs (HCL Report 2012-2016, PDF p. 12); VTrans' public crash data has no people counts, so per-crash costs can't be applied, and the figures are 2014 economic, not comprehensive"
+  },
+  "statewide_rates": {
+   "missing": "VTrans publishes statewide average rates by functional class (Summary Statewide Average Crash Rate 2012-2016, 1 page; e.g. urban principal arterial 5.1796 crashes/MVM), but they are 2012-2016 and CrashIQ has no Vermont AADT or functional class: not loaded"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "High Crash Location: 5 or more crashes in 5 years and Actual/Critical rate ratio of 1.000 or more, critical rate against the statewide average for the functional class with K = 2.58 (VTrans HCL Report 2012-2016, PDF pp. 10-11)"
+  },
+  "min_years": {
+   "missing": "VTrans states no minimum; its HCL analysis period is 'Typically … 5 except where Roadway Improvements have occurred' (HCL Report 2012-2016, PDF p. 12)"
+  },
+  "spf_calibration": {
+   "missing": "no Vermont SPF calibration factors found (research 2026-11-08)"
+  }
+ }
+}
