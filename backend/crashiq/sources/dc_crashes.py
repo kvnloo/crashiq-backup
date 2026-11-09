@@ -22,7 +22,7 @@ import json
 import re
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from zoneinfo import ZoneInfo
 
 BASE = "https://maps2.dcgis.dc.gov/dcgis/rest/services/DCGIS_DATA/Public_Safety_WebMercator/MapServer"
@@ -94,7 +94,7 @@ def local_time(ms) -> datetime | None:
     """REPORTDATE is epoch ms in UTC; the crash happened in DC time."""
     if ms is None:
         return None
-    t = datetime.fromtimestamp(ms / 1000, timezone.utc).astimezone(EASTERN)
+    t = (datetime(1970, 1, 1, tzinfo=timezone.utc) + timedelta(milliseconds=ms)).astimezone(EASTERN)  # pre-1970 OK on Windows
     return t if 2000 <= t.year <= 2100 else None    # the layer holds a few 1825 dates
 
 

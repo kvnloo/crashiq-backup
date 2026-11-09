@@ -19,6 +19,7 @@ import json
 import os
 import shutil
 import sqlite3
+from contextlib import closing
 import threading
 import time
 import urllib.request
@@ -84,7 +85,7 @@ class TigerCache:
     def edges_in(self, fips: str, bbox: tuple[float, float, float, float]) -> list[dict]:
         """Named road segments whose box meets bbox (s, w, n, e): {tlid, mtfcc, names, pts, tnidf, tnidt}."""
         s, w, n, e = bbox
-        with sqlite3.connect(f"file:{self.path(fips)}?mode=ro", uri=True) as con:
+        with closing(sqlite3.connect(f"file:{self.path(fips)}?mode=ro", uri=True)) as con:
             rows = con.execute("SELECT tlid, mtfcc, names, pts, tnidf, tnidt FROM edge WHERE maxlat >= ? AND minlat <= ? "
                                "AND maxlon >= ? AND minlon <= ?", (s, n, w, e)).fetchall()
         return [{"tlid": r[0], "mtfcc": r[1], "names": json.loads(r[2]), "pts": json.loads(r[3]), "tnidf": r[4],

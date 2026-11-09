@@ -19,6 +19,7 @@ import csv
 import os
 import shutil
 import sqlite3
+from contextlib import closing
 import threading
 import time
 import urllib.request
@@ -82,7 +83,7 @@ class FileCache:
         if not p.exists():
             return None
         try:
-            with sqlite3.connect(f"file:{p}?mode=ro", uri=True) as con:
+            with closing(sqlite3.connect(f"file:{p}?mode=ro", uri=True)) as con:
                 m = dict(con.execute("SELECT key, value FROM meta").fetchall())
         except sqlite3.Error:
             return None
@@ -115,7 +116,7 @@ class FileCache:
 
     def lookup(self, rid: str, ids: list[str]) -> list[dict]:
         rows: list[dict] = []
-        with sqlite3.connect(f"file:{self.path(rid)}?mode=ro", uri=True) as con:
+        with closing(sqlite3.connect(f"file:{self.path(rid)}?mode=ro", uri=True)) as con:
             con.row_factory = sqlite3.Row
             for i in range(0, len(ids), ID_CHUNK):
                 chunk = [str(x) for x in ids[i:i + ID_CHUNK]]
