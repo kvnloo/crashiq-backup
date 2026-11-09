@@ -14,7 +14,6 @@ import json
 import subprocess
 import sys
 from collections import Counter, defaultdict
-from pathlib import Path
 
 from run11_reconcile import APPROX, DATA, PRECISE, coverage, load
 
@@ -109,7 +108,7 @@ def main() -> None:
     L += [f"- Not counted (GPS off its roads; the app keeps the officer's GPS): {nia:,} house-address points found.",
           "- Found only in a suggest-only county layer (on the review list with the point as the suggestion, not on "
           "the map): " + (", ".join(f"{s} {n:,}" for s, n in sug.most_common()) or "none") + ".", "",
-          f"Outputs: `data/statewide/` in the run-12 worktree (`coverage_crashes_r12_*.csv`, `run12_reconcile.json`), "
+          "Outputs: `data/statewide/` in the run-12 worktree (`coverage_crashes_r12_*.csv`, `run12_reconcile.json`), "
           "not committed.", ""]
     (ROOT / "reports" / "testing" / f"run12-{day}.md").write_text("\n".join(L))
     (DATA / "run12_headline.md").write_text(
