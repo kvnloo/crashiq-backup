@@ -1,0 +1,71 @@
+{
+ "state": "TN",
+ "study": "5423f138d030",
+ "corridor": "Nolensville Pike",
+ "length_mi": 0.92,
+ "window": [
+  2021,
+  2024
+ ],
+ "pulled": 516,
+ "counted": 406,
+ "ksi": 12,
+ "fatal": 3,
+ "injury": 160,
+ "pdo": 246,
+ "unplaced": 0,
+ "excluded": 110,
+ "severity_T3": {
+  "K": 3,
+  "A": 9,
+  "B": 107,
+  "C": 41,
+  "U": 0,
+  "O": 246
+ },
+ "crash_cost_total": null,
+ "cost_column": false,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_crash_costs",
+  "no_statewide_rates",
+  "rates_not_computed"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": false,
+   "text": "not available for Tennessee: TDOT publishes no crash cost table of its own: HSAM Vol. 2 sends practitioners to the LCCET tool with its 'Fatality, injury, PDO' option (p. 2-74, PDF p. 82) and gives no dollar values; and the public layer has no property-damage crashes outside Nashville, so a cost total would be misleading"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for Tennessee: TDOT's statewide average crash rates for similar intersections come from TDOT's STID on request (HSAM Vol. 2 p. 2-19, PDF p. 27); no published table, and CrashIQ has no Tennessee traffic counts"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Highway Safety Manual (AASHTO, 1st, 2010), Ch. 4, Sec. 4.2.3. Tennessee's own method, TDOT's intersection evaluation compares the crash rate with the statewide average and a critical rate at a 99 percent confidence level (HSAM Vol. 2 p. 2-19, PDF p. 27), isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": false,
+   "text": "not available for Tennessee: TDOT's intersection evaluation typically uses the most recent three-year period of crashes (HSAM Vol. 2 p. 2-18, PDF p. 26) but sets no minimum for a corridor study; and the public layer starts in 2024"
+  }
+ ],
+ "findings_shown": 11,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 38971,
+ "pdf_bytes": 79172,
+ "seconds": 124
+}
