@@ -1,0 +1,70 @@
+{
+ "state": "NM",
+ "study": "e1b0c490b764",
+ "corridor": "US 66 Hist",
+ "length_mi": 1.06,
+ "window": [
+  2020,
+  2024
+ ],
+ "pulled": 955,
+ "counted": 779,
+ "ksi": 29,
+ "fatal": 11,
+ "injury": 259,
+ "pdo": 520,
+ "unplaced": 0,
+ "excluded": 176,
+ "severity_T3": {
+  "K": 11,
+  "A": 18,
+  "B": 65,
+  "C": 165,
+  "U": 0,
+  "O": 520
+ },
+ "crash_cost_total": null,
+ "cost_column": false,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_crash_costs",
+  "no_statewide_rates",
+  "rates_not_computed",
+  "gps_far_from_stated"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": false,
+   "text": "not available for New Mexico: found in research, not yet checked against nmdot_aashtoware_costs"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for New Mexico: NMDOT publishes no statewide average crash-rate table by facility type that was found (2026-11-08), and CrashIQ has no New Mexico traffic counts"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Highway Safety Manual (AASHTO, 1st, 2010), Ch. 4, Sec. 4.2.3. New Mexico's own method, NMDOT HSIP network screening (Non-Interstate 2019 and Interstate 2021 technical memos on nmdot.maps.arcgis.com); not loaded, isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": false,
+   "text": "not available for New Mexico: not found in an NMDOT document read 2026-11-08 (the network screening memos were not read)"
+  }
+ ],
+ "findings_shown": 19,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 39011,
+ "pdf_bytes": 94034,
+ "seconds": 8
+}

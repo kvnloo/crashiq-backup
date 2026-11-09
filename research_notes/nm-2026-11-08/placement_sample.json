@@ -1,0 +1,70 @@
+{
+ "Bernalillo (Albuquerque)": {
+  "area": "Bernalillo (Albuquerque) (35001), 2024",
+  "county_crashes": 15528,
+  "gps_share": 0.9993,
+  "street_pair_share": 0.9565,
+  "no_gps_with_pair": 9,
+  "no_gps": 11,
+  "n": 2000,
+  "tiers": {
+   "exact": 1421,
+   "review": 472,
+   "verified_typo": 27,
+   "relaxed": 47,
+   "unique_pair": 8,
+   "near": 19,
+   "fuzzy": 6
+  },
+  "name_placed_share": 0.764,
+  "auto_share": 0.0,
+  "within_250ft_auto": null,
+  "within_250ft_auto_low": 0.0,
+  "auto_share_tiger_only_auto": 0.7145,
+  "within_250ft_tiger_only_auto": 0.9174,
+  "within_250ft_tiger_only_auto_low": 0.902,
+  "within_250ft_all_placed": 0.9097,
+  "within_250ft_all_placed_low": 0.8943,
+  "not_placed": {
+   "no intersection of the two named streets": 435,
+   "exact: streets meet in more than one place": 34,
+   "missing street name": 2,
+   "relaxed: streets meet in more than one place": 1
+  },
+  "examples": {
+   "no intersection of the two named streets": [
+    "ELLISON DR NW & SAN ANTONIO DR",
+    "MONTANO RD NE & CULTURE DR NE",
+    "INTERSTATE 40 & I 40 EB ON RAMP",
+    "I 25 & AVENIDA CESAR CHAVEZ   SE",
+    "230 SOLANO DR NE & 230 SOLANO DR NE",
+    "I 25 & AVENIDA CESAR CHAVEZ   SE"
+   ],
+   "placed >250 ft off": [
+    "COMANCHE RD NE & INTERSTATE 25 SOUTHBOUND [exact] 270 ft",
+    "WELLESLEY DR SE & SILVER AVE SE [exact] 495 ft",
+    "YALE BLVD SE & GOLD AVE SE [exact] 1818 ft",
+    "6600 ZUNI RD SE & FLORIDA ST NE [exact] 320 ft",
+    "4TH ST NW & WEST FRONTAGE RD NW [unique_pair] 335 ft",
+    "JEFFERSON ST NE & PAN AMERICAN FY NE [verified_typo] 337 ft",
+    "FORTUNA RD NW & 64TH ST NW [exact] 1041 ft",
+    "I 40 & EUBANK BLVD NE [exact] 1313 ft"
+   ],
+   "exact: streets meet in more than one place": [
+    "SEVEN BAR LOOP RD NW & COTTONWOOD LOOP NW",
+    "BROADWAY & I 25",
+    "PASEO DEL NORTE   NW & NM 423",
+    "CIBOLA LOOP NW & ELLISON DR NW",
+    "COORS & EAGLE RANCH RD",
+    "CONTINENTAL LOOP SE & LOUISIANA BLVD SE"
+   ],
+   "relaxed: streets meet in more than one place": [
+    "RENAISSANCE BLVD NE & ALEXANDER BLVD NE"
+   ],
+   "missing street name": [
+    "RAMP & INTERSTATE 25 SB OFF RAMP",
+    "12700 CENTRAL AVE E & ENTRANCE"
+   ]
+  }
+ }
+}
