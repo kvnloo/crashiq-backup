@@ -1,0 +1,70 @@
+{
+ "state": "KS",
+ "study": "044ff84cfd8a",
+ "corridor": "North Rock Road",
+ "length_mi": 1.01,
+ "window": [
+  2020,
+  2024
+ ],
+ "pulled": 388,
+ "counted": 233,
+ "ksi": 2,
+ "fatal": 1,
+ "injury": 74,
+ "pdo": 159,
+ "unplaced": 0,
+ "excluded": 155,
+ "severity_T3": {
+  "K": 1,
+  "A": 1,
+  "B": 26,
+  "C": 46,
+  "U": 0,
+  "O": 159
+ },
+ "crash_cost_total": null,
+ "cost_column": false,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_crash_costs",
+  "no_statewide_rates",
+  "rates_not_computed"
+ ],
+ "methods": [
+  {
+   "key": "crash_costs",
+   "what": "Crash costs",
+   "used": false,
+   "text": "not available for Kansas: KDOT prices people, not crashes (Crash Facts: each K, A, B, C person adds a cost; $11,900 per PDO crash, 2019 dollars); CrashIQ prices one cost per crash level, so there is no per-crash KDOT figure to print (shared fix proposed in research_notes/ks-2026-11-08/shared-fixes.md)"
+  },
+  {
+   "key": "statewide_rates",
+   "what": "Statewide average crash rates",
+   "used": false,
+   "text": "not available for Kansas: KDOT's Crash Facts gives all-roads rates only (2023: 187.95 crashes per 100 million vehicle miles, p. 1), not by facility type, and CrashIQ has no Kansas traffic counts"
+  },
+  {
+   "key": "screening",
+   "what": "Screening",
+   "used": true,
+   "text": "Highway Safety Manual (AASHTO, 1st, 2010), Ch. 4, Sec. 4.2.3. Kansas's own method, crash frequency, crash rate, critical rate, EPDO, excess expected crashes with EB and level of service of safety (KDOT 2025 HSIP report, Intersection program, pp. 8-9), isn't built: this report uses the HSM critical rate against the corridor's own sites (national method)"
+  },
+  {
+   "key": "min_years",
+   "what": "Minimum years of crash data",
+   "used": false,
+   "text": "not available for Kansas: not stated in the KDOT documents read (2025 HSIP report, 2023 Crash Facts)"
+  }
+ ],
+ "findings_shown": 9,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 35688,
+ "pdf_bytes": 47502,
+ "seconds": 141
+}

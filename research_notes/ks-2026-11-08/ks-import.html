@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kansas crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1313;border-left:4px solid #e33;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em;margin-left:.4em}code{background:#2a2a2a;padding:1px 4px;border-radius:3px;color:#ffb3b3}
+a{color:#ff8a8a}li{margin:.35em 0}
+</style></head><body>
+<h1>Kansas: crash data for CrashIQ</h1>
+<p class="ex">Hermes, 8 Nov 2026. Measured live today. Full notes: <code>ks-import.md</code>, methods: <code>ks-methods.md</code>.</p>
+
+<p class="big"><b>Short answer:</b> Kansas works in CrashIQ now. KDOT puts its crashes online, free, no login, each with
+a map point and the K/A/B/C counts. Two catches: no street names, and no clear licence for a paid tool.</p>
+
+<h2>1. What Kansas has</h2>
+<ul>
+<li><b>KDOT "Crashes in Kansas"</b>: 607,257 crashes, 2016 to 29 Oct 2026. <span class="ex">Example: 2024 has 55,685.</span></li>
+<li><b>A map point on every one</b>, but KDOT only publishes crashes it could locate. <span class="ex">Example: Kansas reported 61,495 crashes in 2024; 91% are on the map.</span></li>
+<li><b>Severity is real KABCO</b>: killed, disabling, non-incapacitating, possible injury counts per crash.</li>
+<li><b>No street names at all.</b> <span class="ex">Example: a crash says "Wichita, Sedgwick County, local route", plus its point.</span></li>
+<li>No driver or vehicle tables, so no movement diagrams.</li>
+</ul>
+
+<h2>2. Test on a real street</h2>
+<ul>
+<li>N Rock Rd, Wichita, Central to 13th (1 mile), 2020–2024: <b>233 crashes counted</b>: 1 fatal, 1 serious, 26 minor, 46 possible injury, 159 property damage.</li>
+<li>PDF and Excel came out fine (48 KB and 36 KB).</li>
+<li>No dollar costs: KDOT prices each hurt person, CrashIQ prices each crash. <span class="ex">Example: KDOT counts $14.0M per person killed, $774k per disabling injury (2019 dollars).</span></li>
+</ul>
+
+<h2>3. What you need to do</h2>
+<ul>
+<li>Ask KDOT (Safety Data Section) for a written OK to use the crash layer in a paid product. Its website terms say no reuse "without explicit permission from KDOT".</li>
+<li>Decide whether Kansas costs should be priced per person, as KDOT does.</li>
+</ul>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>Freeways built on US routes (Kellogg in Wichita) aren't flagged as freeway; check those corridors by hand.</li>
+<li>KDOT's 2024 Crash Facts pages (the site blocks scripts); the 2023 book was used.</li>
+<li>Placement accuracy: there are no street names to test against.</li>
+</ul>
+</body></html>
