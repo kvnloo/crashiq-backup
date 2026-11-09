@@ -1,0 +1,49 @@
+{
+ "area": "City of Tempe (Maricopa 04013), 2025",
+ "n": 2000,
+ "gps_share": 0.9995,
+ "street_pair_share": 0.9305,
+ "tiers": {
+  "unique_pair": 1702,
+  "review": 142,
+  "exact": 12,
+  "near": 3,
+  "relaxed": 2
+ },
+ "name_placed_share": 0.8595,
+ "name_placed_share_of_pairs": 0.9237,
+ "auto_share": 0.0,
+ "auto_share_if_tiger_only_auto": 0.857,
+ "route_form_retry_used": 0,
+ "scored_against_gps": 1719,
+ "within_250ft_all_placed": 0.7266,
+ "within_250ft_all_placed_low": 0.705,
+ "within_250ft_auto_if_tiger_only_auto": 0.7281,
+ "within_250ft_auto_if_tiger_only_auto_low": 0.7066,
+ "within_250ft_offset_le_250ft": 0.9108,
+ "within_250ft_offset_le_250ft_low": 0.8945,
+ "offset_le_250ft_n": 1368,
+ "not_placed": {
+  "no cross street": 139,
+  "no intersection of the two named streets": 79,
+  "relaxed: streets meet in more than one place": 63
+ },
+ "examples": {
+  "relaxed: streets meet in more than one place": [
+   "Rio Salado Pkwy & Ash Ave",
+   "Baseline Rd & Lakeshore Dr",
+   "Grove Pkwy & Kyrene Rd",
+   "Kyrene Rd & Baseline Rd",
+   "Washington St & Center Pkwy",
+   "Rio Salado Pkwy & Ash Ave"
+  ],
+  "no intersection of the two named streets": [
+   "McClintock Dr & E Tempe Marketplace",
+   "Forest Service 01 Tempe Ave & University Dr",
+   "Rio Salado Pkwy & Scottsdale Rd",
+   "Apache Blvd & Forest Service 01 Tempe Ave",
+   "University Dr & S Athletes Pl",
+   "7th St & Forest Service 01 Tempe Ave"
+  ]
+ }
+}
