@@ -1,0 +1,99 @@
+{
+ "state": "MO",
+ "bucket": "A*",
+ "bucket_note": "open, record-level, GPS 95% + officer street pair 85%; catches: minor injury = B+C (U), PDO missing from 2024, no licence",
+ "status": "active",
+ "sources": [
+  {
+   "name": "MSHP STARS crash layer (Traffic Crashes Online Mapping)",
+   "url": "https://www.mshp.dps.missouri.gov/arcgis/rest/services/STARS_CRASHES/MapServer/0",
+   "access": "open (ArcGIS query, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": null,
+   "years": "2002, 2003 (part), 2013-current",
+   "rows_per_year": {
+    "2019": 157077,
+    "2020": 131425,
+    "2021": 146757,
+    "2022": 138479,
+    "2023": 137125,
+    "2024": 59769,
+    "2025": 34338
+   },
+   "gps_share": 0.9498,
+   "street_names_share": 0.8522,
+   "kabco": "K/A/U/O (minor = B+C)",
+   "keys_linkable": "no person/vehicle rows; ACCIDENT+AGENCY unique"
+  },
+  {
+   "name": "MoDOT Crash Statistics Map",
+   "url": "https://www.modot.org/modatazone/safety",
+   "access": "gated (internal or authorized users)",
+   "licence_paid_use": "no",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null
+  }
+ ],
+ "placement_sample": {
+  "area": "Jackson County (29095), 2023, random 2,000 with GPS (seed 2026)",
+  "n": 2000,
+  "gps_share": 0.9498,
+  "name_placed_share": 0.6305,
+  "auto_share": 0.619,
+  "within_250ft": 0.9556,
+  "within_250ft_low": 0.9426,
+  "house_address_share": null,
+  "address_points_source": null,
+  "no_gps_with_street_pair": 607,
+  "no_gps_crashes": 995
+ },
+ "end_to_end": {
+  "corridor": "Troost Avenue",
+  "length_mi": 0.99,
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 523,
+  "counted": 307,
+  "severity_T3": {
+   "K": 1,
+   "A": 5,
+   "B": 0,
+   "C": 0,
+   "U": 116,
+   "O": 185
+  },
+  "unplaced": 5,
+  "excluded": 211,
+  "crash_cost_total": null,
+  "findings_shown": 8,
+  "pdf_bytes": 53885,
+  "xlsx_bytes": 36513
+ },
+ "importer_built": true,
+ "blockers": [
+  "no reuse licence published by MSHP",
+  "no B/C split (minor = B+C)",
+  "property-damage crashes missing from 2024 on (2024 partial, 2025 none)",
+  "2004-2012 absent"
+ ],
+ "user_actions": [
+  "Ask MSHP SAC in writing whether CrashIQ may show the STARS crash layer in a paid tool, and whether 2024+ PDO crashes will be loaded",
+  "Optional: ask MoDOT for its CPI-adjusted crash costs"
+ ],
+ "cities": [
+  {
+   "city": "Kansas City",
+   "source": "Kansas City Road Casualties (Open Data KC)",
+   "url": "https://data.kcmo.org/d/62pj-bjfw",
+   "gps_share": 0.0,
+   "years": "2019-2024",
+   "licence": "unclear (no licence field); injury/fatal only, subset of STARS: not read"
+  }
+ ]
+}
