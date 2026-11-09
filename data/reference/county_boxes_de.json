@@ -1,0 +1,33 @@
+{
+ "source": "Census cb_2024_us_county_500k (public domain), county bounding box + 5 km",
+ "box": "[min lat, min lon, max lat, max lon]",
+ "counties": {
+  "10001": {
+   "name": "Kent County",
+   "box": [
+    38.7849,
+    -75.818,
+    39.4106,
+    -75.2537
+   ]
+  },
+  "10003": {
+   "name": "New Castle County",
+   "box": [
+    39.2455,
+    -75.8469,
+    39.8839,
+    -75.3652
+   ]
+  },
+  "10005": {
+   "name": "Sussex County",
+   "box": [
+    38.4063,
+    -75.7802,
+    39.0068,
+    -74.9914
+   ]
+  }
+ }
+}
