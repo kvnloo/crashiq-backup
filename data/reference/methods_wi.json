@@ -1,0 +1,61 @@
+{
+ "state": "WI",
+ "manuals": {
+  "wi_fdm_11_38": {
+   "title": "Facilities Development Manual, Chapter 11 Design, Section 38 Safety Certification Process",
+   "publisher": "Wisconsin Department of Transportation",
+   "jurisdiction": "WI",
+   "edition": "FDM 11-38, August 15, 2025",
+   "url": "https://wisconsindot.gov/rdwy/fdm/fd-11-38.pdf",
+   "sha256": "fb4d8d9928a17fb617f1e188ea9cc6f73f38ec224321de3e77dfdd6b613da709",
+   "downloaded": "2026-11-08",
+   "note": "research_notes/wi-2026-11-08/wi-methods.md"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 16085401,
+   "A": 818160,
+   "B": 258751,
+   "C": 146882,
+   "O": 19499,
+   "dollar_year": 2025,
+   "manual": "wi_fdm_11_38",
+   "page": "p. 15, §10.5.3.2, Table 10.2 'Crash Costs for Benefit-Cost Analysis in 2025 Dollars'",
+   "verified": true,
+   "rules": [
+    "per crash by its most severe injury (Table 10.2 'Most severe injury in crash'), one cost per level for every location type",
+    "U (injury, level not reported) is left unpriced (shared rule) and counted"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "FDM 11-38 sends crash rates and network screening to TEOpS 12-3 (not read); CrashIQ has no Wisconsin traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "WisDOT statewide network screening and Level of Service of Safety (FDM 11-38 p. 5, TEOpS 12-3-3; not read into CrashIQ)"
+  },
+  "min_years": {
+   "value": 5,
+   "minimum": 2,
+   "manual": "wi_fdm_11_38",
+   "page": "p. 13, Step 4.1a: 'Statewide network screening use five years of historical crash data by default… a minimum of two years of data'",
+   "verified": true
+  },
+  "spf_calibration": {
+   "missing": "FDM 11-38 points to TEOpS 12-3-5 for calibration factors (not read; no SPF engine)"
+  }
+ }
+}
