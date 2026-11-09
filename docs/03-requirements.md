@@ -676,6 +676,8 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
     at a stop where only a driveway meets the corridor, the driveway's entering volume is left blank for the engineer
     to enter, like a side street with no count. No crash rate is shown there until it is entered. Found in the
     Tester's #423 review: the 74 new driveway stops have no side-street leg.
+    Half the entered volume counts as entering, like a T's side street (user, 2026-11-07, PM session, "Half, like a
+    T").
 - **County address points fill NAD's gaps DECIDED (user, 2026-11-04, CrashIQ chat; #393):** "I think 2 is easy. And
   it can be carried over to other states as well, so let's get that going." House-address crashes (D5) in counties
   USDOT NAD doesn't cover are placed at the county's own address points (`data/reference/address_points.json`), with
