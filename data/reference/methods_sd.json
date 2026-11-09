@@ -1,0 +1,55 @@
+{
+ "state": "SD",
+ "manuals": {
+  "sd_wvc_2019": {
+   "title": "Guidelines for Wildlife Vehicle Collision Mitigation (SD2019-02 final report)",
+   "publisher": "SDDOT Office of Research",
+   "jurisdiction": "SD",
+   "edition": "SD2019-02",
+   "url": "https://dot.sd.gov/media/iepdy5gi/sd2019-02_wvc_research_final_report.pdf",
+   "sha256": "1d86b4d69cfbfc1dd814f2b5b5ee1b78405920bc6cec9e194a3604f5c46e384b",
+   "downloaded": "2026-11-08"
+  },
+  "sd_hsip_report": {
+   "title": "Highway Safety Improvement Program Annual Report: South Dakota",
+   "publisher": "SDDOT, to FHWA",
+   "jurisdiction": "SD",
+   "edition": "2025 report (and 2020-2024)",
+   "url": "https://highways.dot.gov/sites/fhwa.dot.gov/files/2026-09/SOUTH%20DAKOTA_HSIP%20REPORT_2025_508.pdf",
+   "note": "FHWA's server refuses scripted downloads (HTTP 403); read through a search extract, not stored, no sha256"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "missing": "SDDOT publishes no crash cost per KABCO level. Its 2019 research report (SD2019-02, Table 'SDDOT average $ value per crash') uses one US DOT 2020 value for every fatal or injury crash ($395,313) and $18,491 per property-damage crash: not a per-level table"
+  },
+  "statewide_rates": {
+   "missing": "no statewide average crash-rate table by facility type found (2026-11-08); SDDOT ranks counties by injury-crash rate per VMT (HSIP report), and CrashIQ has no South Dakota traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "Roadway Safety Improvement (RSI) inspections of locations with 5 or more crashes (animal hits excluded) in the latest 3 years, Road Safety Audits, and a Safety Module using the HSM rural two-lane predictive method (SDDOT HSIP reports)"
+  },
+  "min_years": {
+   "years": 3,
+   "manual": "sd_hsip_report",
+   "page": "Program Methodology (RSI: 'five or more crashes ... in the most current three year period')",
+   "verified": false
+  },
+  "spf_calibration": {
+   "missing": "SDDOT's Safety Module calibration not published; no SPF engine"
+  }
+ }
+}
