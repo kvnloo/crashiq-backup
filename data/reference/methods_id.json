@@ -1,0 +1,68 @@
+{
+ "state": "ID",
+ "manuals": {
+  "itd_crashes_2025": {
+   "title": "Idaho Traffic Crashes 2025",
+   "publisher": "Idaho Transportation Department, Office of Highway Safety",
+   "jurisdiction": "ID",
+   "edition": "2025 annual report",
+   "url": "https://apps.itd.idaho.gov/Apps/OHS/Crash/25/Analysis.pdf",
+   "sha256": "d937c6757d1a508c7f61273e5e41e3f0ea345128d3a9f7117a26b5b1308b5316",
+   "downloaded": "2026-11-08",
+   "note": "ITD's annual crash report; research_notes/id-2026-11-08/id-methods.md"
+  },
+  "itd_rp287": {
+   "title": "Development of a Methodology to Evaluate the Highway Safety Improvement Program (RP 287)",
+   "publisher": "Idaho Transportation Department (University of Idaho, Lowry and Ward)",
+   "jurisdiction": "ID",
+   "edition": "FHWA-ID-23-287, March 2023",
+   "url": "https://apps.itd.idaho.gov/apps/research/Completed/RP287.pdf",
+   "sha256": "f0bba2b3b83a0080f229b0eb98f105a255345f597d72b6f114410a8c4bd89932",
+   "downloaded": "2026-11-08",
+   "note": "ITD research report (not a standard): it applies ITD's cost per severity to crashes, Eq. 4 and Table 2.1, p. 18"
+  },
+  "hsm": {
+   "title": "Highway Safety Manual",
+   "publisher": "AASHTO",
+   "jurisdiction": "US",
+   "edition": "1st, 2010",
+   "url": "https://www.highwaysafetymanual.org",
+   "decided": "critical rate against the corridor's own sites (user, #34 item 7, docs/03); used in every state until that state's own screening is built"
+  }
+ },
+ "values": {
+  "crash_costs": {
+   "K": 14200000,
+   "A": 679115,
+   "B": 184970,
+   "C": 94451,
+   "O": 4785,
+   "dollar_year": 2025,
+   "manual": "itd_crashes_2025",
+   "page": "Table 4 'Economic Cost of Idaho Crashes: 2025 Estimates', p. 12 (PDF p. 17)",
+   "verified": true,
+   "rules": [
+    "ITD gives a cost per occurrence: per person killed or injured at each level, and per person uninjured for O (AIS to KABCO scales of USDOT's BCA guide, 2025 VSL)",
+    "CrashIQ prices each crash at its own level, as ITD's RP 287 does with the 2022 equivalents (Eq. 4, Table 2.1, p. 18)",
+    "U (injury, level not reported) unpriced"
+   ]
+  },
+  "statewide_rates": {
+   "missing": "ITD's annual report gives statewide crashes per 100 million VMT for all roads, not average rates by facility type, and CrashIQ has no Idaho traffic counts"
+  },
+  "screening": {
+   "engine": "critical_rate_own_sites",
+   "k": 1.645,
+   "min_sites": 3,
+   "manual": "hsm",
+   "page": "Ch. 4, Sec. 4.2.3",
+   "state_method": "ITD's Highway Safety Corridor Analysis (HSCA) ranks corridors by crash rate and its High Accident Location (HAL) list by a weighted score of frequency, rate and severity (Idaho HSIP 2024 annual report to FHWA, p. 10 of 41)"
+  },
+  "min_years": {
+   "missing": "ITD's documents read here set no minimum study period for a corridor study"
+  },
+  "spf_calibration": {
+   "missing": "no Idaho calibration factors found in the documents read here"
+  }
+ }
+}

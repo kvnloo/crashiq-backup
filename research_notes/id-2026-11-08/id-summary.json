@@ -1,0 +1,107 @@
+{
+ "state": "ID",
+ "bucket": "A*",
+ "bucket_note": "open, record-level, GPS ~100% since 2008, KABCO, units linkable by Serial_Number; catches: service ~3 years behind (2023 part-loaded, no 2024-2025), no street names, no reuse licence",
+ "status": "active",
+ "sources": [
+  {
+   "name": "ITD CrashLayers MapServer (Office of Highway Safety crash database)",
+   "url": "https://gis.itd.idaho.gov/arcgisprod/rest/services/ArcGISOnline/CrashLayers/MapServer",
+   "access": "open (ArcGIS REST, no login)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "ITD provides this geographic data and any associated metadata \"as is\" without warranty of any kind \u2026 It is the sole responsibility of the user to determine the usability of the data for their purposes.",
+   "years": "2005-2022 full, 2023 to 2023-10-01 only; GPS from 2008",
+   "rows_per_year": {
+    "2018": 24306,
+    "2019": 27136,
+    "2020": 22637,
+    "2021": 27620,
+    "2022": 27678,
+    "2023": 18488
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.0,
+   "kabco": true,
+   "keys_linkable": "Serial_Number links crash, unit and person layers; person severity is the crash's"
+  },
+  {
+   "name": "ITD Crash Data Dashboards (AASHTOWare Safety)",
+   "url": "https://itd.aashtowaresafety.net/itd-safety-dashboards",
+   "access": "public web app, no documented API",
+   "licence_paid_use": "unclear",
+   "years": "last five full years",
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null,
+   "note": "newer than the open layer; vendor app, not used"
+  },
+  {
+   "name": "ITD single crash reports",
+   "url": "https://apps.itd.idaho.gov/apps/HWY_CrashReports",
+   "access": "paid per report ($7)",
+   "licence_paid_use": "no",
+   "years": null,
+   "rows_per_year": null,
+   "gps_share": null,
+   "street_names_share": null,
+   "kabco": null,
+   "keys_linkable": null
+  }
+ ],
+ "placement_sample": {
+  "area": "Ada County (Boise), 2022, every row",
+  "n": 6682,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": 1.0,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "hidden-GPS locator test not run: the layer has no street text"
+ },
+ "end_to_end": {
+  "corridor": "W Fairview Ave, Orchard St to Cole Rd, Boise (1.55 mi)",
+  "window": [
+   2018,
+   2022
+  ],
+  "pulled": 592,
+  "counted": 230,
+  "severity": {
+   "K": 0,
+   "A": 8,
+   "B": 24,
+   "C": 40,
+   "U": 0,
+   "O": 158
+  },
+  "crash_cost_total": 14406270,
+  "findings_shown": 0,
+  "pdf_bytes": 33291,
+  "xlsx_bytes": 33843,
+  "seconds": 127
+ },
+ "importer_built": true,
+ "blockers": [
+  "no published licence for a paid product",
+  "open service ~3 years behind: newest full year 2022",
+  "no street names: GPS-only placement, no not-on-corridor-street check"
+ ],
+ "user_actions": [
+  "Ask ITD Office of Highway Safety (ohsweb@itd.idaho.gov, 208-334-8000) for written permission to use the crash layers in a paid product",
+  "Ask ITD OHS to load 2023-2025 into the open CrashLayers service, or for a bulk export of the dashboard's five years"
+ ],
+ "cities": [
+  {
+   "city": "Boise / Ada-Canyon (COMPASS)",
+   "source": "COMPASS open data (republishes ITD)",
+   "url": "https://share-open-data-compassidaho.hub.arcgis.com/maps/32030dbf2f0f493786fb31988643c13c",
+   "gps_share": null,
+   "years": null,
+   "licence": "not checked"
+  }
+ ]
+}

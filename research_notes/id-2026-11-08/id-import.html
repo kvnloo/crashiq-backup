@@ -1,0 +1,18 @@
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Idaho crash data for CrashIQ</title><style>body{background:#111;color:#eee;font:16px/1.5 system-ui,sans-serif;margin:0;padding:18px;max-width:720px}
+h1{color:#e53935;font-size:1.5em}h2{color:#ef5350;font-size:1.15em;margin-top:1.4em}b{color:#fff}.box{background:#1c1c1c;border-left:4px solid #e53935;padding:10px 14px;margin:10px 0}li{margin:4px 0}</style></head><body>
+<h1>Idaho: crash data for CrashIQ</h1><p>Hermes, 8 Nov 2026. Status: <b>ready to use</b> (active), with two catches.</p>
+<h2>What Idaho has</h2><ul>
+<li>ITD (the state DOT) publishes every police-reported crash on a public map service, no login. About 22,000 to 28,000 crashes a year.</li>
+<li>Every crash since 2008 has a GPS point. Example: crash 22C608312 in Boise sits at 43.5698, -116.2167.</li>
+<li>Severity is the standard K/A/B/C/O scale. Each vehicle and person is linked to its crash, so we can flag pedestrian, bicycle, motorcycle and truck crashes.</li></ul>
+<h2>Catch 1: it's about three years behind</h2><div class="box">The newest full year is <b>2022</b>. 2023 stops on 1 Oct 2023 (18,488 of the 27,679 crashes ITD's own report counts), and 2024 and 2025 aren't there. CrashIQ treats a part-loaded year as missing and never counts it. The default study window is 2018-2022.</div>
+<h2>Catch 2: no street names</h2><div class="box">Crashes are placed by GPS only. A crash in a parking lot next to the corridor can't be told apart from one on the corridor, so check those by hand.</div>
+<h2>Test run: Fairview Ave, Boise (Orchard to Cole, 1.55 mi, 2018-2022)</h2><ul>
+<li>230 crashes counted: K 0, A 8, B 24, C 40, no-injury 158.</li>
+<li>Crash cost $14,406,270 at ITD's 2025 costs (fatal $14.2M, serious injury $679,115).</li>
+<li>PDF and Excel exports both work (33 KB and 33 KB). No over-representation findings came up on this corridor.</li></ul>
+<h2>Licence</h2><p>ITD gives the data "as is" and says it's "the sole responsibility of the user to determine the usability". It neither grants nor forbids paid use, so the licence is <b>unclear</b>.</p>
+<h2>What you need to do</h2><ol><li>Email ITD's Office of Highway Safety (ohsweb@itd.idaho.gov) for written permission to use the crash layers in CrashIQ.</li>
+<li>In the same email, ask them to load 2023-2025 into the public service (their dashboard already shows those years).</li></ol>
+<h2>What we didn't check</h2><ul><li>How accurate ITD's GPS points are on local streets.</li><li>Statewide average crash rates (ITD doesn't publish them by road type) and Idaho traffic counts.</li><li>The COMPASS (Boise-area) copy of the data.</li></ul></body></html>
