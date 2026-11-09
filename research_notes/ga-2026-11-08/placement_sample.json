@@ -1,0 +1,69 @@
+{
+ "area": "Fulton County (13121), 2024 (ARC layer)",
+ "n": 2000,
+ "gps_share": 1.0,
+ "street_pair_share": 0.9045,
+ "tiers": {
+  "exact": 1206,
+  "review": 520,
+  "near": 25,
+  "unique_pair": 29,
+  "relaxed": 17,
+  "verified_typo": 9,
+  "fuzzy": 3
+ },
+ "name_placed_share": 0.6445,
+ "name_placed_share_of_pairs": 0.7125,
+ "auto_share": 0.0,
+ "auto_share_of_pairs": 0.0,
+ "within_250ft_auto": null,
+ "within_250ft_auto_low": 0.0,
+ "within_250ft_all_placed": 0.7386,
+ "within_250ft_all_placed_low": 0.7139,
+ "tier_gate_share": 0.6175,
+ "within_250ft_tier_gate": 0.7449,
+ "within_250ft_tier_gate_low": 0.7199,
+ "within_250ft_by_tier": {
+  "exact": 0.7438,
+  "near": 0.48,
+  "unique_pair": 0.7931,
+  "relaxed": 0.7059,
+  "verified_typo": 0.5556,
+  "fuzzy": 1.0
+ },
+ "not_placed": {
+  "no intersection of the two named streets": 456,
+  "no cross street in source": 191,
+  "exact: streets meet in more than one place": 58,
+  "relaxed: streets meet in more than one place": 4,
+  "fuzzy: streets meet in more than one place": 2
+ },
+ "examples": {
+  "no intersection of the two named streets": [
+   "400 On Rp & Northridge Rd",
+   "Global Gateway Connector & Riverdale Rd",
+   "400 & 285",
+   "285 & Mount Vernon Hwy",
+   "Baker St Nw & Park Avenue West Nw",
+   "Northside Dr Nw & 10Th St Nw"
+  ],
+  "exact: streets meet in more than one place": [
+   "GA 120 & GA 9",
+   "Lenox Rd Ne & Wildwood Rd Ne",
+   "GA 9 & GA 120",
+   "Piedmont Rd Ne & Piedmont Cir Ne",
+   "Roswell Rd & Carpenter Dr",
+   "I 85 & SR 400"
+  ],
+  "relaxed: streets meet in more than one place": [
+   "Beecher St Sw & Cascade Ave Sw",
+   "Cascade Ave Sw & Beecher St Sw",
+   "Mt Vernon Hwy & Powers Ferry Rd",
+   "Holcomb Bridge Rd & Market Way"
+  ],
+  "fuzzy: streets meet in more than one place": [
+   "GA 120 & States Bridge Way",
+   "GA 120 & Brookeside Pkwy"
+  ]
+ }
+}

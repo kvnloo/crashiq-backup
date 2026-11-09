@@ -1,0 +1,36 @@
+{
+ "state": "GA",
+ "purpose": "Bring your export: map a GDOT AASHTOWare Safety (GEARS) crash export to CrashIQ's crash keys. Column names are AASHTOWare's, as published in ARC's open layers built from GDOT's export (Crashes 2020-2024; MARTACountyCrashes_2023) and on the GDOT-523 form.",
+ "spec_sources": [
+  "https://www.dot.ga.gov/DriveSmart/CrashReporting/DOT-523.pdf (GDOT-523, 07/2023), saved in ~/.hermes/state-manuals/ga/",
+  "https://services1.arcgis.com/Ug5xGQbHsD8zuZzM/arcgis/rest/services/MARTACountyCrashes_2023/FeatureServer/0 (field names)",
+  "https://services1.arcgis.com/Ug5xGQbHsD8zuZzM/arcgis/rest/services/Crashes2020_2024/FeatureServer/0 (field names)"
+ ],
+ "crash": {
+  "collision_id": "Collision ID",
+  "datetime": "Date + Time",
+  "lat": "Latitude",
+  "lon": "Longitude",
+  "primary_road": "Roadway (From Crash Report)",
+  "secondary_road": "Intersecting Roadway  ('(none)' = blank)",
+  "sec_distance": "GDOT-523 'Not At Its Intersection But ___ Miles/Feet' (not in the ARC layers; ask GDOT to include it)",
+  "sec_direction": "GDOT-523 'North/South/East/West Of' (same)",
+  "county_code": "County / Area (County)",
+  "city_name": "Area (City)  ('Unincorporated' = none)",
+  "killed": "# of Fatalities per Crash",
+  "injured": "# of Injuries per crash",
+  "collision_type": "Manner of Collision (Crash Level)",
+  "lighting": "Light Conditions (Crash Level)",
+  "surface": "Surface Condition (Crash Level)",
+  "weather": "not in the ARC layers; GDOT-523 has Weather",
+  "is_freeway": "Functional Class (Crash Level) = Interstate / Other Freeway & Expressway; or 'Interstate' flag",
+  "route_id": "Inventory Route ID (Crash Level)"
+ },
+ "severity": {
+  "field": "KABCO Severity (crash level, worst injury)",
+  "map": {"(K) Fatal Injury": "K", "(A) Suspected Serious Injury": "A", "(B) Suspected Minor/Visible Injury": "B",
+          "(C) Possible Injury / Complaint": "C", "(O) No Injury": "O", "Unknown": "U"},
+  "severity_note": "KABCO as GDOT gives it; 'Unknown' (1.0% in 2020-2024) is U, injury level not reported."
+ },
+ "person": "Person-level KABCO needs GDOT's person table (Injury Status in MARTACountyCrashes_2023 is per person); ask GDOT to include it."
+}
