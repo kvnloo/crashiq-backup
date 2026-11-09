@@ -1,0 +1,31 @@
+{
+ "state": "RI",
+ "export": "RIDOT Office of Safety statewide crash repository extract, as delivered on an APRA request",
+ "spec": "State of Rhode Island Uniform Crash Report (rev 12/06, NHTSA copy https://www.nhtsa.gov/sites/nhtsa.gov/files/documents/ri_par_rev_12_06_sub_02_08_07.pdf, pages 1-8 incl. Coding Guide) and RIDOT Traffic Design Manual 2025, 7.1.1.1 Crash Summary, pp. 7-1 to 7-2 (~/.hermes/state-manuals/ri/RIDOT_Traffic_Design_Manual_2025.pdf). No database field dictionary is published.",
+ "unit": "form: crash page + vehicle pages + occupants/witnesses/pedestrians page (Unit ID, Injury), keyed by Report Number. The repository's table split is unknown.",
+ "map": {
+  "collision_id": "Report Number (TDM example format '18-142-AC')",
+  "datetime": "Crash Date + Crash Time",
+  "city_name": "City or Town Name",
+  "county_code": "derived from city/town (RI has 39 towns, 5 counties)",
+  "primary_road": "Street or Highway",
+  "secondary_road": "intersecting street (the form's location block; name not readable in the published copy)",
+  "sec_distance": "not confirmed in the published form",
+  "sec_direction": "not confirmed in the published form",
+  "lat_lon": "NOT documented. Ask RIDOT for latitude/longitude. Without it every crash is placed from street + cross street (TIGER Providence County 44007 etc.)",
+  "property": "State Property / City/Town Property / Private Property (drop private property, as CCRS does)",
+  "speed_limit": "Posted Speed Limit",
+  "severity": "crash-level KABCO (TDM 2025 p. 7-2: 'severity ... based on the KABCO severity index ... most severe injury sustained'); person Injury column on page 6. Crash Facts also has 'Unknown' (5.5% in 2025) -> U",
+  "killed": "count persons with Injury K",
+  "injured": "count persons with Injury A/B/C",
+  "collision_type": "Manner of Collision (angle, rear end ...)",
+  "lighting": "Light Condition (Coding Guide)",
+  "weather": "Weather Condition",
+  "surface": "Road Surface Condition",
+  "contributing": "Driver Contributing Code",
+  "is_freeway": "derived: Street or Highway is I-95, I-195, I-295, RI 4, RI 146 (controlled access) or a ramp",
+  "pedestrian": "Occupants - Witnesses - Pedestrians - Bicyclists page, person type",
+  "bicycle": "same page"
+ },
+ "verified_against_real_export": false
+}
