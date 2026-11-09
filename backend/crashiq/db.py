@@ -208,6 +208,14 @@ MIGRATIONS: list[str] = [
     """
     ALTER TABLE study ADD COLUMN state TEXT NOT NULL DEFAULT 'CA';
     """,
+    # 17 — #413 whether the signalized-driveway query was answered when the corridor was detected (NULL: drawn before)
+    """
+    ALTER TABLE corridor ADD COLUMN driveways_checked INTEGER;
+    """,
+    # 18 — #421 the intersection is a signalized driveway, named by the driveway alone (NULL: not, or drawn before)
+    """
+    ALTER TABLE intersection ADD COLUMN driveway INTEGER;
+    """,
 ]
 
 

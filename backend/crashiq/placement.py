@@ -287,6 +287,24 @@ def _block(onet, c: dict, gate, pl):
     return locate.Placement("review", pl.lat, pl.lon, note="block crash: the block's far corner wasn't placed")
 
 
+def with_driveways(raw: dict, net: dict) -> dict:
+    """The locator's street network plus the named signalized driveways that are study intersections (#421). The street
+    query has no `service` ways, so "PACIFIC COAST HWY / DOHENY PARK PLZ" found no Doheny Park Plaza and stayed
+    unmatched. Each one is a short way by its name from its corridor nodes; no other driveway reaches the locator.
+    The caller's network isn't changed."""
+    have = {el["id"] for el in raw.get("elements", []) if el.get("type") == "node"}
+    extra, nid = [], -1
+    for i in net.get("intersections", []):
+        if not i.get("driveway") or i.get("name") in ("Driveway (signal)", "Unnamed road", None):
+            continue
+        for n in i.get("osm_node_ids", []):
+            if n in have:
+                extra += [{"type": "node", "id": nid, "lat": i["lat"], "lon": i["lon"]},
+                          {"type": "way", "id": nid, "nodes": [n, nid], "tags": {"highway": "service", "name": i["name"]}}]
+                nid -= 1
+    return {**raw, "elements": raw.get("elements", []) + extra} if extra else raw
+
+
 def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | None = None, overpass=None,
                     raw: dict | None = None, tiger=None, postmiles=None, addresses=None, fars: bool = True) -> dict:
     gate = gate or locate.Gate()
@@ -313,7 +331,7 @@ def place_unmatched(db: Database, net: dict, result: dict, gate: locate.Gate | N
     if (todo or offset_cands) and net.get("line"):
         if raw is None:                   # OSM only (the caller passes the OSM + TIGER network when it has one, #229)
             raw = network_mod.fetch_overpass(db, network_mod.overpass_query([tuple(p) for p in net["line"]]))
-        onet = osm.Network(raw)
+        onet = osm.Network(with_driveways(raw, net))
     result["cleaning"]["gps_offset_applied"] = gps_rules.apply_offsets(onet, net, offset_cands) if onet else 0
     if todo and onet is not None:
         for c in todo:
