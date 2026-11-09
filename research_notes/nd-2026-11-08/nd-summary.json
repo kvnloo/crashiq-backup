@@ -1,0 +1,145 @@
+{
+ "state": "ND",
+ "bucket": "A*",
+ "status": "active",
+ "bucket_note": "Corrected from the 2026-11-02 screen (D, 'records request'). Open ArcGIS layer, record-level, statewide 2017-2025, a point on every crash, crash KABCO; its 2024 count equals NDDOT's Crash Summary exactly. Catches: hosted by NDSU's DOT Support Center for NDDOT (not on an nd.gov server), no description or reuse licence, no street names, no person/vehicle records.",
+ "sources": [
+  {
+   "name": "NDDOT crash records, 'All Crash Data - 2017 to 2025' (ArcGIS layer hosted by NDSU UGPTI DOT Support Center for NDDOT's crash dashboards)",
+   "url": "https://dotsc.ugpti.ndsu.edu:6443/arcgis/rest/services/NDDOT_crash/ALL_CRASHES_2017_to_2025/FeatureServer/0",
+   "access": "open (ArcGIS REST query, no login, maxRecordCount 20000)",
+   "licence_paid_use": "unclear",
+   "licence_text": "Layer and service: no description, no copyright text, no licence. Dashboard item 'ND County Crash Dashboard' (bradley.wentz@ndsu.edu_NDSU): 'historical crash information provided by the NDDOT'; licenseInfo blank. NDDOT Traffic Operations Manual (Jan 2026) p. 19: crash data for studies is provided on email request with the pledge 'I recognize this crash data is considered to be exempted from disclosure pursuant to 23 USC \u00a7 407, and can be used only with the understanding that the City of X or its agents will not release or transfer it'.",
+   "licence_urls": [
+    "https://www.arcgis.com/home/item.html?id=93a0ca93e706476f89e927a84e247155",
+    "https://www.ugpti.org/dotsc/resources/",
+    "https://www.dot.nd.gov/sites/www/files/documents/construction-and-planning/Traffic-Operations-Manual.pdf"
+   ],
+   "years": "2017-2025 (crash_yr; 2025 max date 12/31/2025)",
+   "rows_per_year": {
+    "2017": 15114,
+    "2018": 14986,
+    "2019": 14324,
+    "2020": 8949,
+    "2021": 9683,
+    "2022": 10798,
+    "2023": 10549,
+    "2024": 9803,
+    "2025": 9802
+   },
+   "gps_share": 1.0,
+   "street_names_share": 0.0,
+   "kabco": "yes, crash level: Crash_Severity_KABCO (K 825, A 3,040, B 13,424, C 9,419, O 77,300 in 2017-2025); no person table",
+   "keys_linkable": false
+  }
+ ],
+ "other_layers_checked": [
+  {
+   "url": "https://dotsc.ugpti.ndsu.edu:6443/arcgis/rest/services/NDDOT_crash/ND_Crash_All/FeatureServer/0",
+   "what": "dbo.Crashdata_StoredView: live, 2019-11-05 to 2026-11-05, 85,354 rows; 2024 = 12,032 (not NDDOT's 9,803, so it holds more than reportable crashes); KABCO text, crash time, junction type, no street names. Not used."
+  },
+  {
+   "url": "https://dotsc.ugpti.ndsu.edu:6443/arcgis/rest/services/NDDOT_crash/ND_Recent_Crashes/FeatureServer",
+   "what": "last 365 days / current / previous year, Injury / Non-Injury only. Not used."
+  },
+  {
+   "url": "https://dotsc.ugpti.ndsu.edu:6443/arcgis/rest/services/NDDOT_crash/Rural_Crashes_2017_to_2025/FeatureServer",
+   "what": "rural subset of the same data. Not used."
+  }
+ ],
+ "check_against_official": {
+  "source": "NDDOT Crash Summary 2024, p. 6 'A Decade in Review'",
+  "layer_vs_summary": {
+   "2017": [
+    15114,
+    15280
+   ],
+   "2018": [
+    14986,
+    15242
+   ],
+   "2019": [
+    14324,
+    14221
+   ],
+   "2020": [
+    8949,
+    8820
+   ],
+   "2021": [
+    9683,
+    9585
+   ],
+   "2022": [
+    10798,
+    10734
+   ],
+   "2023": [
+    10549,
+    10475
+   ],
+   "2024": [
+    9803,
+    9803
+   ]
+  }
+ },
+ "placement_sample": {
+  "area": "statewide, 2017-2025 (all 104,008 crashes)",
+  "n": 104008,
+  "gps_share": 1.0,
+  "name_placed_share": null,
+  "auto_share": null,
+  "within_250ft": null,
+  "within_250ft_low": null,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "Every crash has a point inside North Dakota (query for null/0/out-of-state points returned none). The layer has no street names or house addresses, so the street-name placement test can't run: not measured."
+ },
+ "end_to_end": {
+  "corridor": "13th Avenue South, Fargo, 45th St S to 25th St S",
+  "length_mi": 1.95,
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 677,
+  "counted": 500,
+  "severity": {
+   "K": 2,
+   "A": 13,
+   "B": 105,
+   "C": 108,
+   "U": 0,
+   "O": 272
+  },
+  "excluded": {
+   "outside_buffer": 89,
+   "freeway": 59,
+   "outside_study_limits": 29
+  },
+  "crash_cost_total": null,
+  "pdf_bytes": 72833,
+  "xlsx_bytes": 40353,
+  "findings_shown": 10
+ },
+ "importer_built": true,
+ "blockers": [
+  "No reuse licence: the layer is NDDOT data on NDSU's server with no terms; NDDOT's own manual has requesters promise not to release or transfer crash data it sends them",
+  "NDDOT publishes no crash costs per KABCO level and no statewide average rates by facility type: costs and rates are blank"
+ ],
+ "user_actions": [
+  "Ask NDDOT Highway Safety Division (and NDSU UGPTI's DOT Support Center, which hosts the layer) in writing whether a paid tool may read the public crash layer, and what notice to show. Until then the pack is active on the same footing as WA/OR/AR (open, no licence); flip status to reader_only in statepacks/nd.py if you'd rather wait.",
+  "Decide on crash costs: NDDOT has none per injury level (FHWA's national costs would need your OK)."
+ ],
+ "cities": [
+  {
+   "city": "Fargo / Bismarck",
+   "source": "none found: only consultant and MPO project layers (SRF, Bismarck-Mandan MPO) on ArcGIS Online",
+   "url": null,
+   "gps_share": null,
+   "years": null,
+   "licence": null
+  }
+ ]
+}
