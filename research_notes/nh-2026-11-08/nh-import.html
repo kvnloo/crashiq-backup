@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>New Hampshire crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:760px}
+h1{color:#ff4d4d;font-size:1.5em;margin:.2em 0}h2{color:#ff6b6b;font-size:1.15em;margin-top:1.6em;border-bottom:1px solid #522;padding-bottom:4px}
+.big{font-size:1.1em;background:#2a1313;border-left:4px solid #e33;padding:10px 12px;border-radius:4px}
+.ex{color:#bbb;font-size:.92em;margin-left:.4em}code{background:#2a2a2a;padding:1px 4px;border-radius:3px;color:#ffb3b3}
+table{border-collapse:collapse;width:100%;font-size:.92em}td,th{border-bottom:1px solid #333;padding:5px 4px;text-align:left}th{color:#ff8080}
+<h1>New Hampshire: crash data for CrashIQ</h1>
+<p class="ex">Hermes, 8 Nov 2026. Checked live today. Full notes: <code>nh-import.md</code>, column map: <code>nh-column-map.json</code>.</p>
+<p class="big"><b>Short answer:</b> New Hampshire is <span class="no">locked</span>. Crash reports sit in the DMV's records system, and state law (RSA 260:14) only releases them on request for listed uses. NHDOT shares its mapped copy with regional planning agencies, not the public. We built no pack.</p>
+<h2>1. What New Hampshire has</h2><ul>
+<li><b>Nothing open from the state.</b> We searched the state's map service, NHDOT's quarterly GIS downloads (55 layers: roads, signals, guardrail; no crashes) and the GIS catalog.</li>
+<li><b>Copies by others</b>: a planning commission posted 30,793 crashes for its region (2002 to mid-2017); a consultant posted 1,169 crashes on NH 114 (2017-2023). <span class="ex">Example: "PDAR214837, Bedford PD, 0 114 RTE, Apr 2019, No Apparent Injury".</span> They show NHDOT's format: date, time, town, road, KABCO injury level, map point.</li></ul>
+<h2>2. Would CrashIQ place the crashes?</h2><ul>
+<li>On 1,773 Grafton County crashes (2015-16) we hid the map point and placed from the street names: <b>43%</b> placed (51% of those with two streets).</li>
+<li>Only <b>35%</b> landed within 250 ft of NHDOT's point, but NHDOT's points aren't GPS: 39% of crashes share a point with 5 or more others (it snaps them to road nodes). Where the point is unique, 57% of at-intersection crashes agree.</li>
+<li>What fails: state routes written many ways (<code>RT 4</code>, <code>USHY 4</code>, <code>ROUTE 4-A</code>, <code>89 N</code>), house numbers in front of the street, ramps. A reader can fix these.</li></ul>
+<h2>3. The rules NHDOT uses</h2><ul>
+<li>NH's own crash costs (2021 $): fatal <b>$13.6M</b>, serious injury <b>$737,900</b>, property damage only <b>$8,623</b>. Benefit/cost from the Highway Safety Manual, aiming for 2.0 or more. No crash-rate table found.</li></ul>
+<h2>What you need to do</h2><ol>
+<li>Email NHDOT (GISMaps@dot.nh.gov or their crash data analyst): ask for one county, one year of their GIS crash layer, and written OK to use it in a paid product.</li>
+<li>If they send you to the DMV, that's a bulk records request (form DSMV 494, heavy paperwork).</li>
+<li>NH's safety office plans a public crash portal by 2027: we'll re-check then.</li></ol>
+<h2>What we didn't check</h2><ul>
+<li>The full export (people and vehicles tables).</li>
+<li>Accuracy against the officer's GPS (the copies have NHDOT's snapped points).</li>
+<li>NHDOT's PDFs themselves (their site blocks downloads; we read the text).</li></ul>
+</body></html>

@@ -1,0 +1,28 @@
+{
+ "state": "NH",
+ "export": "NHDOT GIS crash layer export (crashes from NH DMV VISION, located on NHDOT's LRS), by request to NHDOT Bureau of Planning (GISMaps@dot.nh.gov) or NHDOT's crash data analyst",
+ "spec": "No public column list. Layout seen live (2026-11-08) in two re-hosts of NHDOT's layer: NHDOT_Crash_Data_RT114 (newer, 2017-2023) https://services8.arcgis.com/M2LuFXYoyXAAOrnN/arcgis/rest/services/NHDOT_Crash_Data_RT114/FeatureServer/0 and UVLSRPC Crash History (older, 2002-2017) https://services1.arcgis.com/Lxx6ZzbB9K8v0kCg/arcgis/rest/services/Crash_History/FeatureServer/0. Names below are the newer layout's, with the older in brackets. Confirm on one sample.",
+ "unit": "one row per crash; person/vehicle tables not seen",
+ "map": {
+  "collision_id": "ACCIDENTNUMBER (e.g. PDAR214837)",
+  "datetime": "CRASHDATE (epoch ms, local midnight) + CRASHTIME (hhmm, e.g. 727 = 07:27) [CRASH_DATE + ACDTIME]",
+  "lat": "DECIMALLATITUDE (officer GPS, text) else DOT_LATITUDE (NHDOT's located point) [layer geometry]",
+  "lon": "DECIMALLONGITUDE else DOT_LONGITUDE",
+  "primary_road": "ROUTENO_STREETNAME: a class digit, spaces, then the road ('0  114 RTE', '1  NEW BOSTON RD'); strip the leading digit [ACDSTREET, often with a house number: '2345 RT 25A'; route code in ACDROUTE '00118']",
+  "secondary_road": "FIRSTNODE*/SECONDNODE* node ids (no cross-street text in the newer layout) [INTERSTREE + INTERROUTE]",
+  "sec_distance": "FEET from FROMMILEMARKER / DISTANCEFIRSTNODETOSECOND [MILESFTFRO, read as feet]",
+  "sec_direction": "DIRECTION [NSEW_TO_IN: N/S/E/W or AT]",
+  "route_milepoint": "SRI (e.g. S0000114__ = state route 114) + MP_ACCIDENT (miles): joins to HIGHWAYS_LRS_ROUTES in NHDOT's GIS snapshot",
+  "city_name": "TOWN [TOWN_NAME]",
+  "county_code": "COUNTY ('HILLSBORO COUNTY' -> 33011) [COUNTY_NAM]",
+  "severity": "SEVERITY: Fatal Injury=K, Suspected Serious Injury=A, Suspected Minor Injury=B, Possible Injury=C, No Apparent Injury=O, Unknown=U [Killed=K, Incapacitating=A, Non_Incapacitating=B, Possible=C, No Apparent Injury=O, Unknown=U]",
+  "killed": "FATALINDICATOR Yes/No only [TOTALFATAL]",
+  "injured": "TOTALINJURED [TOTALINJUR]",
+  "collision_type": "CRASHTYPE / FIRSTHARMFULEVENT [TYPE_OF_AC]",
+  "lighting": "LIGHTCONDITION [LIGHTING_D]",
+  "weather": "WEATHERCONDITION [WEATHER_DE]",
+  "surface": "ROADSURFACECONDITION [SURFACE_CO]",
+  "reportable": "REPORTABLE Yes/No: keep Yes only (22 of 1,000 RT114 rows are No)"
+ },
+ "checked": "2026-11-08"
+}
