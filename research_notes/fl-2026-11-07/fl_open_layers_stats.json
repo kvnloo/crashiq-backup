@@ -1,0 +1,503 @@
+{
+ "palm_beach_mpo": {
+  "url": "https://services5.arcgis.com/79IoFXBn9ZeqmVlC/arcgis/rest/services/pal_crash_event/FeatureServer/0",
+  "n": 268619,
+  "gps": 268619,
+  "on_street": 268619,
+  "on_and_from": 222048,
+  "on_and_house": 45721,
+  "severity": [
+   [
+    "Fatal (within 30 days)",
+    1126
+   ],
+   [
+    "Incapacitating Injury",
+    4104
+   ],
+   [
+    "No Injury",
+    208020
+   ],
+   [
+    "Non-Incapacitating Injury",
+    20266
+   ],
+   [
+    "Non-Traffic Fatality",
+    77
+   ],
+   [
+    "Possible Injury",
+    35026
+   ]
+  ],
+  "years": [
+   [
+    2019,
+    44416
+   ],
+   [
+    2020,
+    34564
+   ],
+   [
+    2021,
+    44608
+   ],
+   [
+    2022,
+    46788
+   ],
+   [
+    2023,
+    48890
+   ],
+   [
+    2024,
+    49353
+   ]
+  ]
+ },
+ "orlando_city_2014_2024": {
+  "url": "https://services5.arcgis.com/mMuoPCaIYD4wEgDl/arcgis/rest/services/Cleaned_Crash_Data_2014_2024/FeatureServer/0",
+  "n": 113318,
+  "gps": 19429,
+  "on_street": 113318,
+  "on_and_from": 100383,
+  "on_and_house": 12599,
+  "severity": [
+   [
+    "Fatal (within 30 days)",
+    307
+   ],
+   [
+    "Incapacitating Injury",
+    1639
+   ],
+   [
+    "No Injury",
+    79439
+   ],
+   [
+    "Non-Incapacitating Injury",
+    9479
+   ],
+   [
+    "Possible Injury",
+    22454
+   ]
+  ],
+  "years": [
+   [
+    2014,
+    10530
+   ],
+   [
+    2015,
+    10106
+   ],
+   [
+    2016,
+    9527
+   ],
+   [
+    2017,
+    11053
+   ],
+   [
+    2018,
+    12088
+   ],
+   [
+    2019,
+    12149
+   ],
+   [
+    2020,
+    8629
+   ],
+   [
+    2021,
+    10197
+   ],
+   [
+    2022,
+    9846
+   ],
+   [
+    2023,
+    9860
+   ],
+   [
+    2024,
+    9333
+   ]
+  ]
+ },
+ "orlando_city_final": {
+  "url": "https://services5.arcgis.com/mMuoPCaIYD4wEgDl/arcgis/rest/services/Final_Crashes_10172025/FeatureServer/0",
+  "n": 52607,
+  "gps": 20498,
+  "on_street": 52607,
+  "on_and_from": 47788,
+  "on_and_house": 4504,
+  "severity": [
+   [
+    "Fatal (within 30 days)",
+    173
+   ],
+   [
+    "Incapacitating Injury",
+    808
+   ],
+   [
+    "No Injury",
+    35975
+   ],
+   [
+    "Non-Incapacitating Injury",
+    4396
+   ],
+   [
+    "Possible Injury",
+    11255
+   ]
+  ],
+  "years": [
+   [
+    2020,
+    9799
+   ],
+   [
+    2021,
+    11304
+   ],
+   [
+    2022,
+    10765
+   ],
+   [
+    2023,
+    10624
+   ],
+   [
+    2024,
+    10115
+   ]
+  ]
+ },
+ "metroplan_orlando": {
+  "url": "https://services3.arcgis.com/0gEhw9JctymdZD3f/arcgis/rest/services/MetroPlan_Orlando_Crash_Data_2018_2022/FeatureServer/0",
+  "n": 526438,
+  "gps": 526438,
+  "on_street": 526438,
+  "on_and_from": 478446,
+  "on_and_house": 45716,
+  "severity": [
+   [
+    "Fatal (within 30 days)",
+    2127
+   ],
+   [
+    "Incapacitating Injury",
+    10660
+   ],
+   [
+    "No Injury",
+    372349
+   ],
+   [
+    "Non-Incapacitating Injury",
+    48504
+   ],
+   [
+    "Non-Traffic Fatality",
+    120
+   ],
+   [
+    "Possible Injury",
+    92678
+   ]
+  ],
+  "years": [
+   [
+    2018,
+    74426
+   ],
+   [
+    2019,
+    74599
+   ],
+   [
+    2020,
+    52709
+   ],
+   [
+    2021,
+    62521
+   ],
+   [
+    2022,
+    61805
+   ],
+   [
+    2023,
+    65815
+   ],
+   [
+    2024,
+    67056
+   ],
+   [
+    2025,
+    67507
+   ]
+  ]
+ },
+ "jacksonville_leronev": {
+  "url": "https://services1.arcgis.com/NXfNVaFp7QMxnE3j/arcgis/rest/services/Traffic_Crash_RoadData/FeatureServer/0",
+  "n": 268198,
+  "gps": 267468,
+  "on_street": 268198,
+  "severity": [
+   [
+    "Fatality",
+    1112
+   ],
+   [
+    "Injury",
+    65768
+   ],
+   [
+    "No Injury",
+    198088
+   ],
+   [
+    "Serious Injury",
+    3230
+   ]
+  ],
+  "years": [
+   [
+    2019,
+    38356
+   ],
+   [
+    2020,
+    33846
+   ],
+   [
+    2021,
+    39634
+   ],
+   [
+    2022,
+    39765
+   ],
+   [
+    2023,
+    39918
+   ],
+   [
+    2024,
+    38720
+   ],
+   [
+    2025,
+    37441
+   ],
+   [
+    2026,
+    518
+   ]
+  ]
+ },
+ "hillsborough_county": {
+  "url": "https://services.arcgis.com/apTfC6SUmnNfnxuF/arcgis/rest/services/Crash_Data_Hillsborough/FeatureServer/7",
+  "n": 244317,
+  "gps": 244317,
+  "on_street": 242187,
+  "on_and_from": 232732,
+  "severity": [
+   [
+    "",
+    34475
+   ],
+   [
+    "0 - No Injury",
+    111
+   ],
+   [
+    "1 - No Injury",
+    12916
+   ],
+   [
+    "1 - Property Damage Only",
+    124131
+   ],
+   [
+    "2 - Injury",
+    62273
+   ],
+   [
+    "2 - Possible Injury",
+    4576
+   ],
+   [
+    "3 - Fatality",
+    1396
+   ],
+   [
+    "3 - Non-Incapacitating Injury",
+    3168
+   ],
+   [
+    "4 - Incapacitating Injury",
+    1129
+   ],
+   [
+    "5 - Fatal (within 30 days)",
+    139
+   ],
+   [
+    "6 - Non-Traffic Fatality",
+    3
+   ]
+  ]
+ },
+ "hillsborough_hdr": {
+  "url": "https://services.arcgis.com/04HiymDgLlsbhaV4/arcgis/rest/services/Signal4_Crashes_Hillsborough_2020_2024/FeatureServer/1",
+  "n": 197798,
+  "gps": 139877,
+  "on_street": 197798,
+  "on_and_from": 185196,
+  "severity": [
+   [
+    "Fatality",
+    1028
+   ],
+   [
+    "Injury",
+    50565
+   ],
+   [
+    "No Injury",
+    141920
+   ],
+   [
+    "Serious Injury",
+    4285
+   ]
+  ],
+  "years": [
+   [
+    2020,
+    34205
+   ],
+   [
+    2021,
+    40429
+   ],
+   [
+    2022,
+    42179
+   ],
+   [
+    2023,
+    41221
+   ],
+   [
+    2024,
+    39764
+   ]
+  ]
+ },
+ "miami_dade_ksi": {
+  "url": "https://services.arcgis.com/8Pc9XBTAsYuxx9Ny/arcgis/rest/services/KSI_Crash_Events_Public/FeatureServer/0",
+  "n": 9468,
+  "gps": 9433,
+  "severity": [
+   [
+    "Fatality",
+    2005
+   ],
+   [
+    "Serious Injury",
+    7463
+   ]
+  ],
+  "years": [
+   [
+    2019,
+    1526
+   ],
+   [
+    2020,
+    1216
+   ],
+   [
+    2021,
+    1406
+   ],
+   [
+    2022,
+    1358
+   ],
+   [
+    2023,
+    1414
+   ],
+   [
+    2024,
+    1337
+   ],
+   [
+    2025,
+    1211
+   ]
+  ]
+ },
+ "tampa_ksi": {
+  "url": "https://services1.arcgis.com/IbNXlmt2RVVRCZ6M/arcgis/rest/services/Serious_Injury_and_Fatal_Crashes/FeatureServer/0",
+  "n": 1497,
+  "gps": 1497,
+  "on_street": 1497,
+  "severity": [
+   [
+    "Fatality",
+    298
+   ],
+   [
+    "Serious Injury",
+    1199
+   ]
+  ],
+  "years": [
+   [
+    2021,
+    307
+   ],
+   [
+    2022,
+    314
+   ],
+   [
+    2023,
+    281
+   ],
+   [
+    2024,
+    252
+   ],
+   [
+    2025,
+    238
+   ],
+   [
+    2026,
+    105
+   ]
+  ]
+ }
+}
