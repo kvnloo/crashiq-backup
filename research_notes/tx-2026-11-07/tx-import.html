@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Texas crash data for CrashIQ</title>
+<style>
+body{background:#111;color:#eee;font:16px/1.5 -apple-system,system-ui,sans-serif;margin:0;padding:18px;max-width:720px}
+h1{color:#ff4d4d;font-size:24px;margin:0 0 4px}h2{color:#ff4d4d;font-size:18px;margin:22px 0 6px;border-bottom:1px solid #522}
+.k{color:#ff8080;font-weight:600}.box{background:#1c1c1c;border-left:4px solid #c22;padding:10px 12px;margin:10px 0}
+table{border-collapse:collapse;width:100%;font-size:14px}td,th{border-bottom:1px solid #333;padding:5px;text-align:left}
+th{color:#ff8080}small,.m{color:#aaa}a{color:#ff9999}li{margin:4px 0}
+</style></head><body>
+<h1>Texas: crash data for CrashIQ</h1>
+<div class="m">Hermes, 7 Nov 2026. Bucket B: free sign-up, then download.</div>
+
+<h2>The short answer</h2>
+<div class="box">Texas has one statewide crash file, TxDOT's <b>CRIS public extract</b>. It's free, but you sign up first.
+Every crash comes with its people and vehicles, the injury level on the usual K-A-B-C-O scale, and two locations: what
+the officer wrote and where TxDOT's own map put it. The reader for it is built and tested on a practice file made from
+TxDOT's published layout. It still needs your download to run on real crashes.</div>
+
+<h2>How much is on the map</h2>
+<ul>
+<li><span class="k">92.5%</span> of Dallas County's 47,628 crashes in 2025 already have a map point. On public roads
+it's <span class="k">98.8%</span>. Almost every crash without a point happened in a parking lot (3,007 of 3,562).</li>
+<li>Austin's open copy shows 100%, but Austin publishes only the crashes it could map, so that isn't the real rate.</li>
+<li>Houston and Fort Worth publish no crash list. San Antonio has injury crashes 2021–2025 with one street name each.
+Dallas city has 2019 only, marked "not for commercial uses".</li>
+</ul>
+
+<h2>Can CrashIQ find crashes from the street names?</h2>
+<p>We tested 2,000 Dallas County crashes. We hid each crash's map point and gave CrashIQ only the two street names, for
+example <i>E BELT LINE RD &amp; S HIGHLAND DR</i>.</p>
+<table><tr><th></th><th>placed by itself</th><th>within 250 ft</th></tr>
+<tr><td>All 2,000</td><td>78%</td><td>88% (at least 86%)</td></tr>
+<tr><td>City streets (1,375)</td><td>84%</td><td><b>95%</b> (at least 94%)</td></tr>
+<tr><td>Highways and freeways</td><td>62–74%</td><td>58–75%</td></tr></table>
+<p class="m">City streets work almost as well as in California. Highways don't yet: this copy has no "500 ft north of"
+distance, and CrashIQ can't read Texas highway names like <i>IH0035E</i> or <i>SL0012</i> until the shared code learns
+them. It also treats I-35E and I-35W, two different freeways in Dallas, as the same road. Texas mile markers would fix
+highways, but that isn't built yet. Few crashes without a point have both street names, so names add only 40 more
+crashes (0.08%).</p>
+
+<h2>Texas rules CrashIQ must follow</h2>
+<ul>
+<li><b>Crash rate:</b> crashes per 100 million vehicle miles for road sections, per million entering vehicles for
+intersections. Compare with TxDOT's statewide average, e.g. an urban state highway averages 215.41 and a rural one
+94.00 (2024).</li>
+<li><b>Crash cost (2026 safety funding):</b> $4,290,000 per fatal or serious-injury crash and $360,000 per minor-injury
+crash. Possible-injury and damage-only crashes get no cost. California prices all five levels.</li>
+<li><b>Years:</b> 5 years of crashes (at least 3; 8 for walking, biking or truck studies). Safety funding uses exactly
+the last 3.</li>
+<li><b>Benefit vs cost:</b> TxDOT's "Safety Improvement Index" (≥ 1.0 qualifies), with its own percent reduction for
+each fix, e.g. a new signal 20%, a median barrier 50%.</li>
+<li>No statewide intersection average rate and no "critical rate" formula found. Details with page numbers:
+<a href="tx-methods.md">tx-methods.md</a>.</li>
+</ul>
+
+<h2>What you need to do</h2>
+<ol>
+<li>Sign up at <a href="https://cris.txdot.gov">cris.txdot.gov</a> and pick "Download interface data from Crash
+Reports for statistical purposes". Log in at least once a month, or TxDOT deletes the account after 30 days.</li>
+<li>Request the <b>Public Extract</b> as <b>CSV</b> for <b>county DALLAS</b>, 1 Jan–31 Dec 2025. Then do the same for
+2024, 2023, 2022 and 2021. Each request can cover only one year.</li>
+<li>If you have time, also request Travis 2025 and Harris 2025.</li>
+<li>Choose a file password. When the email comes, download the zip, open it with 7-Zip or Keka, and put every file in
+<small>~/.hermes/cache/scratch/states/tx/cris/dallas_2025/</small> (one folder per county and year).</li>
+<li>Email TRF_CRASH@txdot.gov to ask whether CrashIQ may show these crashes inside a paid product.</li>
+</ol>
+
+<h2>What we didn't check</h2>
+<ul>
+<li>The statewide share of crashes with a map point (needs your download).</li>
+<li>House addresses: the national address list wasn't responding today.</li>
+<li>Whether paid use is allowed: TxDOT gives no licence.</li>
+<li>Which yearly traffic volumes city streets use, and Texas's other tables (critical rates, intersection averages).</li>
+</ul>
+</body></html>

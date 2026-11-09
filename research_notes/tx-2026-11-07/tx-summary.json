@@ -1,0 +1,227 @@
+{
+ "state": "TX",
+ "bucket": "B",
+ "sources": [
+  {
+   "name": "TxDOT CRIS Public Extract",
+   "url": "https://www.txdot.gov/data-maps/crash-reports-records/crash-data-analysis-statistics.html",
+   "access": "free self-registration (https://cris.txdot.gov), CSV zip per request, max 1 year per request",
+   "licence_paid_use": "unclear",
+   "years": "2014-current (spec file is '2018 and Greater')",
+   "rows_per_year": "not measured (needs registration)",
+   "gps_share": "not measured statewide; Dallas County 2025 CRIS copy 0.9252",
+   "street_names_share": "not measured statewide; Dallas County 2025 copy: primary+intersecting 0.3820",
+   "kabco": true,
+   "keys_linkable": true
+  },
+  {
+   "name": "Dallas County GIS: 2025 traffic accidents_no duplicates (CRIS Query copy)",
+   "url": "https://services3.arcgis.com/zqe2kwz79KUqUvxC/arcgis/rest/services/2025_traffic_accidents_no_duplicates/FeatureServer/0",
+   "access": "open ArcGIS REST, no login",
+   "licence_paid_use": "unclear",
+   "years": "2025",
+   "rows_per_year": {
+    "2025": 47628
+   },
+   "gps_share": 0.9252,
+   "street_names_share": 0.382,
+   "kabco": true,
+   "keys_linkable": false
+  },
+  {
+   "name": "Austin Crash Report Data - Crash Level Records",
+   "url": "https://data.austintexas.gov/d/y2wy-tgr5",
+   "access": "open Socrata",
+   "licence_paid_use": "ok_with_attribution",
+   "years": "2010-2026",
+   "rows_per_year": {
+    "2021": 13201,
+    "2022": 13659,
+    "2023": 13035,
+    "2024": 12080,
+    "2025": 12012
+   },
+   "gps_share": "1.0 for 2021-2026 (filtered to located crashes, not a statewide rate)",
+   "street_names_share": "primary street 1.0, block number 0.86 (2025); no cross-street column",
+   "kabco": true,
+   "keys_linkable": true
+  },
+  {
+   "name": "San Antonio SS4A HIN Dashboard Data: Crash Data",
+   "url": "https://services.arcgis.com/g1fRTDLeMgspWrYp/arcgis/rest/services/SS4A_HIN_Dashboard_Data/FeatureServer/2",
+   "access": "open ArcGIS REST",
+   "licence_paid_use": "unclear",
+   "years": "2021-2025 (K/A/B/C only)",
+   "rows_per_year": {
+    "2021": 11231,
+    "2022": 11678,
+    "2023": 11579,
+    "2024": 11986,
+    "2025": 11192
+   },
+   "gps_share": "2000/2000 first page with geometry; full share not measured",
+   "street_names_share": "one street field only",
+   "kabco": true,
+   "keys_linkable": false
+  },
+  {
+   "name": "City of Dallas: DallasCrash2019_events",
+   "url": "https://services2.arcgis.com/rwnOSbfKSwyTBcwN/arcgis/rest/services/DallasCrashData/FeatureServer/0",
+   "access": "open ArcGIS REST",
+   "licence_paid_use": "no",
+   "years": "2019",
+   "rows_per_year": {
+    "2019": 40765
+   },
+   "gps_share": "first 1,000 rows: 943 with geometry; full share not measured",
+   "street_names_share": "Rpt_Street_Name 40,666/40,765; no cross street",
+   "kabco": true,
+   "keys_linkable": false
+  }
+ ],
+ "placement_sample": {
+  "area": "Dallas County (FIPS 48113), crash year 2025, crashes with primary + intersecting street and GPS; TIGER/Line 2024",
+  "n": 2000,
+  "gps_share": 0.9252,
+  "name_placed_share": 0.794,
+  "auto_share": 0.7835,
+  "within_250ft": 0.8787,
+  "within_250ft_low": 0.8617,
+  "city_streets": {
+   "n": 1375,
+   "auto_share": 0.8364,
+   "within_250ft": 0.9522,
+   "within_250ft_low": 0.9383
+  },
+  "tiers": {
+   "exact": 1508,
+   "review": 412,
+   "unique_pair": 59,
+   "relaxed": 11,
+   "verified_typo": 4,
+   "near": 3,
+   "fuzzy": 3
+  },
+  "no_gps_crashes": 3562,
+  "no_gps_with_street_pair": 122,
+  "no_gps_auto_placed": 40,
+  "added_share_of_all": 0.0008,
+  "house_address_share": "not measured (the copy's Street_Number is TxDOT-locator output: 0 of 3,562 no-GPS crashes have it)",
+  "address_points_source": "NAD (TX is a statewide partner) - not measured: NAD feature service returned HTTP 400 to every query on 2026-11-07"
+ },
+ "importer_built": true,
+ "blockers": [
+  "CRIS extract needs the user's registration (planned 2026-11-08)",
+  "No licence for showing CRIS extract rows in a paid product; ask TxDOT TRF",
+  "names.py has no Texas route types (IH/SH/SL/SS/FM/RM/BI/BU/CR/TOLL) and drops the letter of I-35E/I-35W (two different freeways in DFW)",
+  "Freeway/highway placement needs TxDOT reference markers or DFO (not built); street-pair placement on highways is 57.6% (IH) / 74.7% (US/SH) within 250 ft",
+  "NAD service down on 2026-11-07; house-address placement unmeasured"
+ ],
+ "user_actions": [
+  "Register for the CRIS public interface at https://cris.txdot.gov ('Download interface data from Crash Reports for statistical purposes'; guide v29 p. 7-9). Log in at least every 30 days or the account is deleted.",
+  "Request Public Extract, format CSV, location filter County = DALLAS, crash date 01/01/2025-12/31/2025. Then the same for 2024, 2023, 2022, 2021 (one request per year; 5 years per TxDOT TSAP Table 6-1).",
+  "Optional second county: TRAVIS 2025 (to measure what Austin's open copy leaves out) and HARRIS 2025 (Houston has no open crash table).",
+  "Set an extract password; download each zip from the email link; unzip with 7-Zip or Keka into ~/.hermes/cache/scratch/states/tx/cris/<county>_<year>/ keeping every CSV including the lookup file.",
+  "Email TRF_CRASH@txdot.gov asking whether public-extract rows and maps made from them may be shown inside a paid product."
+ ],
+ "cities": [
+  {
+   "city": "Austin",
+   "source": "y2wy-tgr5 Crash Level Records",
+   "url": "https://data.austintexas.gov/d/y2wy-tgr5",
+   "gps_share": "1.0 (filtered)",
+   "years": "2010-2026",
+   "licence": "Public Domain label + attribution request (City of Austin Open Data Terms of Use)"
+  },
+  {
+   "city": "Dallas",
+   "source": "City GIS DallasCrash2019_events; Dallas County 2025 CRIS copy",
+   "url": "https://services2.arcgis.com/rwnOSbfKSwyTBcwN/arcgis/rest/services/DallasCrashData/FeatureServer/0",
+   "gps_share": "city 2019 not measured in full; county 2025 0.9252",
+   "years": "2019 (city); 2025 (county)",
+   "licence": "city: 'only for research purposes and not for commercial uses'; county: none stated"
+  },
+  {
+   "city": "San Antonio",
+   "source": "SS4A HIN Dashboard Data: Crash Data",
+   "url": "https://services.arcgis.com/g1fRTDLeMgspWrYp/arcgis/rest/services/SS4A_HIN_Dashboard_Data/FeatureServer/2",
+   "gps_share": "not measured in full",
+   "years": "2021-2025 (injury crashes only)",
+   "licence": "'open to the public according to the City of San Antonio Open Data Policy', as-is"
+  },
+  {
+   "city": "Houston",
+   "source": "none record-level (only Vision Zero HIN 2018/2022 segments)",
+   "url": "https://mycity2.houstontx.gov/gisweb02/rest/services/HoustonMap/Transportation/MapServer",
+   "gps_share": null,
+   "years": null,
+   "licence": null
+  },
+  {
+   "city": "Fort Worth",
+   "source": "none historical (CFW Current Traffic Accidents is a live 5-minute feed; HIN layer)",
+   "url": "https://data.fortworthtexas.gov/datasets/cfw-current-traffic-accidents/about",
+   "gps_share": null,
+   "years": "live only",
+   "licence": "CC BY 4.0 (hub page)"
+  }
+ ],
+ "methods": {
+  "manuals": [
+   {
+    "title": "2026 HSIP Guidelines",
+    "url": "https://www.txdot.gov/content/dam/docs/division/trf/highway-safety-engineering/hsip-guidance-program.pdf",
+    "date": "2026"
+   },
+   {
+    "title": "2026 HSIP Webinar Slides",
+    "url": "https://www.txdot.gov/content/dam/docs/division/trf/highway-safety-engineering/2026-hsip-webinar-slides.pdf",
+    "date": "2026"
+   },
+   {
+    "title": "Traffic and Safety Analysis Procedures Manual",
+    "url": "https://www.txdot.gov/content/dam/txdotoms/des/tsp/tsp.pdf",
+    "date": "2024-06"
+   },
+   {
+    "title": "Statewide Traffic Crash Rates 2024",
+    "url": "https://www.txdot.gov/content/dam/docs/division/trf/crash-records/2024/02.pdf",
+    "date": "2025-04-09"
+   },
+   {
+    "title": "TTI 0-7083-R1 Calibrating the HSM Predictive Methods for Texas Highways",
+    "url": "https://library.ctr.utexas.edu/hostedpdfs/tti/0-7083-r1.pdf",
+    "date": "2023"
+   },
+   {
+    "title": "TTI 5-7083-01-R1 Implementation of Safety Prediction Methods for Texas Highways",
+    "url": "https://library.ctr.utexas.edu/hostedpdfs/tti/5-7083-01-R1.pdf",
+    "date": "2024"
+   },
+   {
+    "title": "CRIS Automated Interface User Guide v29",
+    "url": "https://www.txdot.gov/content/dam/docs/division/trf/crash-records/automated-interface-guide-for-public-and-standard-extracts-v29.pdf",
+    "date": "v29"
+   }
+  ],
+  "rates_available": true,
+  "rates_unit": "crashes per 100 MVMT (segments, statewide averages by highway system and road type, rural/urban); intersections per MEV (formula only, no statewide table found)",
+  "crash_costs": {
+   "K": 4290000,
+   "A": 4290000,
+   "B": 360000,
+   "C": "not found",
+   "O": "not found",
+   "year": "2026 HSIP program call (NSC comprehensive costs)"
+  },
+  "screening_method": "HSIP: district KA crash lists + Safety Improvement Index (B/C of preventable KAB crash costs, 3 years, SII >= 1.0); project studies: rate vs statewide average (TSAP 6.1.3.1), HSM Part B/C with Texas calibration factors",
+  "differences_from_ca": [
+   "one statewide average rate per highway system/road type (all severities, per 100 MVMT) vs Caltrans TASAS base rates by facility type with total and F+I",
+   "no statewide intersection base rates or critical-rate formula found",
+   "K and A priced together at $4.29M with no location type; B $360k; C and O unpriced (Caltrans LRSM v1.8 prices KA by location type, B, C, O)",
+   "B/C by SII with TxDOT work-code reduction factors and 3 years of preventable KAB crashes (vs LRSM BCR and CRFs)",
+   "5-year study period recommended (min 3, 8 for sparse/VRU/CMV)",
+   "Texas local HSM calibration factors published (TTI 0-7083, 5-7083-01)"
+  ]
+ }
+}
