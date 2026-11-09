@@ -1,0 +1,44 @@
+{
+ "state": "MN",
+ "study": "c02775af7fe4",
+ "corridor": "CR 3",
+ "length_mi": 0.9,
+ "window": [
+  2020,
+  2024
+ ],
+ "pulled": 1060,
+ "counted": 519,
+ "ksi": 20,
+ "fatal": 3,
+ "injury": 228,
+ "pdo": 291,
+ "unplaced": 0,
+ "excluded": 541,
+ "severity_T3": {
+  "K": 3,
+  "A": 17,
+  "B": 65,
+  "C": 143,
+  "U": 0,
+  "O": 291
+ },
+ "crash_cost_total": 134078000,
+ "cost_column": true,
+ "caveats": [
+  "covid",
+  "state_data",
+  "state_data",
+  "state_data",
+  "state_data",
+  "no_statewide_rates",
+  "rates_not_computed",
+  "gps_far_from_stated"
+ ],
+ "findings_shown": 4,
+ "findings_rejected": 0,
+ "rejected_reasons": [],
+ "xlsx_bytes": 35547,
+ "pdf_bytes": 74572,
+ "seconds": 252
+}

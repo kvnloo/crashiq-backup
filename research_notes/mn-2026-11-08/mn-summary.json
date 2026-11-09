@@ -1,0 +1,72 @@
+{
+ "state": "MN",
+ "bucket": "A*",
+ "status": "active",
+ "bucket_note": "open, record-level, GPS 99.99%, KABCO; catch: no API (ASP.NET portal postbacks) and no licence text",
+ "sources": [
+  {
+   "name": "MN DPS MNCrash Public Crash Data Portal, Analyze Data (AdHocSearch) export",
+   "url": "https://mncrash.state.mn.us/Pages/AdHocSearch.aspx",
+   "access": "open (web form, no login; CSV export by postback)",
+   "licence_paid_use": "unclear",
+   "licence_quote": "No licence or terms on the portal (read 2026-11-08). The page says only: 'For technical assistance or access to complete public crash data sets, email: MNCrash.Team@state.mn.us'.",
+   "years": "2016-present (current year preliminary)",
+   "rows_per_year": {
+    "2024": 63643
+   },
+   "gps_share": 0.99995,
+   "street_names_share": 0.447,
+   "street_names_note": "one Roadway text field; 'X at Y' / 'X near Y' / 'X @ Y' street pair in 44.7% of 2024; a street alone in 55.3%; no house numbers",
+   "kabco": true,
+   "keys_linkable": "no person/vehicle tables in the public export (ACN crash key only)"
+  }
+ ],
+ "placement_sample": {
+  "area": "Hennepin County (27053), 2024",
+  "n": 2000,
+  "gps_share": 1.0,
+  "name_placed_share": 0.3075,
+  "auto_share": 0.3005,
+  "within_250ft": 0.7055,
+  "within_250ft_low": 0.6678,
+  "house_address_share": 0.0,
+  "address_points_source": null,
+  "note": "TIGER-only network; auto = Gate() tiers with tiger_only_auto=True. 49.4% of Hennepin crashes name one street only; 17.9% of pairs say 'near' (not at the intersection, no distance), and freeway crashes place at the interchange, which pulls accuracy down. Every crash but 4 statewide has a point, so name placement only backs the corridor-street check."
+ },
+ "end_to_end": {
+  "corridor": "Lake St (Hennepin CR 3), Lyndale Ave S to Portland Ave, Minneapolis (0.9 mi)",
+  "window": [
+   2020,
+   2024
+  ],
+  "pulled": 1060,
+  "counted": 519,
+  "excluded": 541,
+  "severity": {
+   "K": 3,
+   "A": 17,
+   "B": 65,
+   "C": 143,
+   "U": 0,
+   "O": 291
+  },
+  "crash_cost_total": 134078000,
+  "findings_shown": 4,
+  "pdf_bytes": 74572,
+  "xlsx_bytes": 35547,
+  "seconds": 252
+ },
+ "importer_built": true,
+ "blockers": [
+  "no licence text for paid use (public data under Minn. Stat. ch. 13, but no grant)",
+  "no person/vehicle data: pedestrian, bicycle, motorcycle and truck crashes can't be flagged",
+  "no collision type, light, weather or surface in the public export",
+  "portal is a web form, not an API: a portal redesign breaks the reader",
+  "no statewide average rates published; no Minnesota AADT in CrashIQ"
+ ],
+ "user_actions": [
+  "Optional: email MNCrash.Team@state.mn.us to ask (a) permission to use the public portal data in a paid product, (b) the 'complete public crash data sets' (with person/vehicle tables) the portal offers by email",
+  "Optional: MnDOT MnCMAT2 (agency login) has the full crash file; not used"
+ ],
+ "cities": []
+}
