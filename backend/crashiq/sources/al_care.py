@@ -29,6 +29,8 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import from_epoch
+
 LAYER = "https://care-esriext.aladata.com/arcgis/rest/services/eCrash/Red/MapServer/0"
 PAGE = 5000                                      # the layer's maxRecordCount
 AL_LAT, AL_LON = (30.1, 35.1), (-88.6, -84.8)    # Alabama's extent with a small margin
@@ -92,7 +94,7 @@ def contract_record(raw: dict) -> dict:
     lat, lon = a.get("Latitude"), a.get("Longitude")
     has = plausible(lat, lon)
     # DateTime is the local clock time stored as if UTC (2:13 AM crash = 02:13Z, Time "2:00 AM to 2:59 AM")
-    when = datetime.fromtimestamp(a["DateTime"] / 1000, timezone.utc) if a.get("DateTime") is not None else None
+    when = from_epoch(a["DateTime"] / 1000, timezone.utc) if a.get("DateTime") is not None else None
     sev = SEVERITY.get(word(a.get("CrashSev")) or "")
     killed, hurt = count(a.get("NumKilled")), count(a.get("NumNonFat"))
     prim, sec = word(a.get("StreetName")), word(a.get("CrossStreet1"))

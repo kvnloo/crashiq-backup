@@ -23,6 +23,8 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from . import from_epoch
+
 LAYER = "https://gis.ardot.gov/referenced/rest/services/TPP_TrafficSafety/NotForOfficialUse/FeatureServer/20"
 PAGE = 2000                                      # the layer's maxRecordCount
 AR_LAT, AR_LON = (32.9, 36.6), (-94.7, -89.6)    # Arkansas's extent with a small margin
@@ -77,7 +79,7 @@ def contract_record(a: dict) -> dict:
     s = lambda v: (str(v).strip() or None) if v is not None else None                  # noqa: E731
     lat, lon = a.get("Latitude"), a.get("Longitude")
     has = plausible(lat, lon)
-    when = datetime.fromtimestamp(a["CrashDate"] / 1000, _TZ) if a.get("CrashDate") is not None else None
+    when = from_epoch(a["CrashDate"] / 1000, _TZ) if a.get("CrashDate") is not None else None
     sev = severity(a)
     nmt = s(a.get("NonMotoristType")) or ""
     # ARDOT counts only people killed and seriously injured; a K, B or C crash has at least one such person

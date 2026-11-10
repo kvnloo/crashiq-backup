@@ -17,8 +17,10 @@ from __future__ import annotations
 
 import hashlib
 import json
-from datetime import date, datetime, timezone
+from datetime import date, timezone
 from pathlib import Path
+
+from . import from_epoch
 
 LAYER = "https://www.mshp.dps.missouri.gov/arcgis/rest/services/STARS_CRASHES/MapServer/0"
 FIRST_YEAR = 2013               # the layer has 2002, part of 2003, then nothing until 2013 (counted 2026-11-08)
@@ -85,7 +87,7 @@ def contract_record(a: dict) -> dict:
     """One layer row -> the shared crash dict (packs.check_crash)."""
     lat, lon = a.get("GPS_LAT"), a.get("GPS_LONG")
     has = plausible(lat, lon)
-    day = datetime.fromtimestamp(a["ACC_DATE"] / 1000, tz=timezone.utc).date() if a.get("ACC_DATE") else None
+    day = from_epoch(a["ACC_DATE"] / 1000, timezone.utc).date() if a.get("ACC_DATE") else None
     t = _s(a.get("ACC_TIME")) or ""
     hour = int(t[:2]) if len(t) >= 5 and t[:2].isdigit() and int(t[:2]) < 24 else None
     at = _s(a.get("AT_STREET"))

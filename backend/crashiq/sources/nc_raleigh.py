@@ -11,10 +11,11 @@ Standalone reader: not wired into the app (state-pack seam, issue #19).
 from __future__ import annotations
 
 import re
-from datetime import datetime, timezone
+from datetime import timezone
 from typing import Iterable
 
 from .nc_arcgis import EASTERN, coord, query, text
+from . import from_epoch
 
 SERVICE = "https://utility.arcgis.com/usrsvcs/servers/3f503c43a0bd4490be7dec17650bcda9/rest/services/Crash_Reports/FeatureServer"
 CRASHES, PERSONS = SERVICE + "/0", SERVICE + "/1"
@@ -38,7 +39,7 @@ def when(r: dict) -> str | None:
     ms = r.get("DateOfCrash")
     if ms in (None, ""):
         return None
-    utc = datetime.fromtimestamp(ms / 1000, timezone.utc)
+    utc = from_epoch(ms / 1000, timezone.utc)
     east = utc.astimezone(EASTERN)
     return (east if east.hour == r.get("Crash_Date_Hour") else utc).replace(tzinfo=None).isoformat()
 

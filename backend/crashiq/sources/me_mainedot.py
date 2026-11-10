@@ -25,6 +25,8 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from . import from_epoch
+
 LAYER = ("https://services1.arcgis.com/RbMX0mRVOFNTdLzd/arcgis/rest/services/"
          "Crashes_Attributes_10_Year_and_Current_Year_Test_View/FeatureServer/44")
 PAGE = 2000                                    # the layer's maxRecordCount
@@ -60,7 +62,7 @@ def contract_record(a: dict) -> dict:
     """One layer row -> the shared crash dict (packs.check_crash), plus Maine's route, milepoint and node."""
     lat, lon = a.get("LATITUDE"), a.get("LONGITUDE")
     has = plausible(lat, lon)
-    d = datetime.fromtimestamp(a["ACCIDENT_DATE"] / 1000, _TZ).date() if a.get("ACCIDENT_DATE") is not None else None
+    d = from_epoch(a["ACCIDENT_DATE"] / 1000, _TZ).date() if a.get("ACCIDENT_DATE") is not None else None
     hour = _int(a.get("ACCIDENT_HOUR")) if a.get("ACCIDENT_HOUR") is not None else None
     county = _s(a.get("COUNTY_CODE"))
     route = _s(a.get("PRIMARY_ROUTE_NAME"))

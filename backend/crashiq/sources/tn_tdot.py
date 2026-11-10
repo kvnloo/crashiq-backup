@@ -25,6 +25,8 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from . import from_epoch
+
 LAYER_TDOT = ("https://services2.arcgis.com/nf3p7v7Zy4fTOh6M/arcgis/rest/services/"
               "Tennessee_Crashes_JAN_2021_JAN_2025/FeatureServer/0")
 LAYER = "https://tnmap.tn.gov/arcgis/rest/services/SAFETY/MapForDashboards/MapServer/0"
@@ -91,7 +93,7 @@ def _base(crash_id: str, day: date | None, hour, county: str, source: str) -> di
 
 def tdot_record(a: dict) -> dict:
     """One TDOT row (attributes plus `_lat`/`_lon` from its point) -> the shared crash dict, KABCO."""
-    day = datetime.fromtimestamp(a["DATEOFCRAS"] / 1000, tz=timezone.utc).date() if a.get("DATEOFCRAS") else None
+    day = from_epoch(a["DATEOFCRAS"] / 1000, timezone.utc).date() if a.get("DATEOFCRAS") else None
     t = a.get("TIMEOFCRAS")
     route = _ROUTE.match(_s(a.get("NBR_RT2")) or "")
     harm = (_s(a.get("FIRSTHARMF")) or "").upper()
@@ -130,7 +132,7 @@ def contract_record(a: dict) -> dict:
 def nashville_record(a: dict) -> dict:
     """One Metro Nashville row with no one hurt -> the shared crash dict, severity O."""
     # Metro's times are true UTC (the layer says so; read in Central time the night low falls at 2-4 am, 2026-11-08)
-    t = datetime.fromtimestamp(a["Date_and_Time"] / 1000, tz=CENTRAL) if a.get("Date_and_Time") else None
+    t = from_epoch(a["Date_and_Time"] / 1000, CENTRAL) if a.get("Date_and_Time") else None
     addr = _s(a.get("Street_Address"))
     road, _, cross = _PKE.sub("PIKE", _HOUSE.sub("", addr) if addr else "").partition(" & ")   # "X PKE & Y LN"
     return {**_base(f"NASH{a['Accident_Number']}", t.date() if t else None, t.hour if t else None, "DAVIDSON",

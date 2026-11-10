@@ -1,11 +1,18 @@
 # CrashIQ commands. First time: `make setup`.
-PY := .venv/bin/python
+ifeq ($(OS),Windows_NT)
+VENV_BIN := .venv/Scripts
+PYTHON ?= py -3.12
+else
+VENV_BIN := .venv/bin
+PYTHON ?= python3
+endif
+PY := $(VENV_BIN)/python
 export PYTHONPATH := backend
 
 .PHONY: setup backend frontend test test-backend test-frontend lint build serve
 
 setup:            ## install backend venv + frontend packages
-	python3 -m venv .venv && .venv/bin/pip install -q -r backend/requirements.txt
+	$(PYTHON) -m venv .venv && $(PY) -m pip install -q -r backend/requirements.txt
 	cd frontend && npm ci
 
 backend:          ## API on :8000 (auto-reload)
