@@ -215,6 +215,9 @@ Status: PROPOSED, needs user confirmation (see Q9–Q11 below).
   then star rating; (4) user picks; combination rules enforced (Caltrans max 3; warn when multiplying >2 CMFs).
   Proposal to confirm: HSIP mode uses Caltrans' own LRSM countermeasure table (closed list, required by HSIP);
   Clearinghouse used in ISOAP/general modes as a curated shortlist (star rating, crash types), not a full ingest.
+  **#481 (user, 2026-11-10): quality floor = 3 stars and up** (Clearinghouse star rating; unrated and 1-2 star CMFs
+  are not offered). Still open on #481: source (full FHWA download vs hand-picked), how crashes reduced is computed
+  outside HSIP mode, and CMFs whose study conditions don't match the site.
 - **D10 YES:** ISOAP mode as a Stage 1 package (SPICE + conflict-point / Safe System score + observed history).
 - **Phasing DECIDED (2026-10-18):** one complete process at a time, not many in parallel. Order confirmed:
   P1 core crash profile (foundation) → P2 HSIP application → P3 ISOAP → P4 traffic-study safety section, ATP, LRSP/HIN.
