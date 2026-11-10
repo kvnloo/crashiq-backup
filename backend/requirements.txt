@@ -8,3 +8,4 @@ pytest==8.3.4
 ruff==0.8.4
 pypdf==5.1.0        # tests: read exported PDFs back
 pyshp==3.1.6        # TIGER/Line shapefiles (OSM + TIGER street network, #229)
+tzdata==2026.6; sys_platform == "win32"   # Windows has no system time-zone database (zoneinfo)
