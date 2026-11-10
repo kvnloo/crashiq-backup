@@ -641,7 +641,9 @@ if __name__ == "__main__":
         import address_points_check as apc
         AUTO_SOURCES = nad.auto_sources()
         from crashiq.placement import FWY_AUTO_KINDS
-        NAD = nad.NadIndex(ROOT / "data" / "cache" / "nad" / "nad_ca.sqlite", ROOT / "data" / "cache" / "nad" / "nad_ca_r24.csv")
+        from crashiq.settings import Settings
+        nad_dir = Settings().nad_dir                   # CRASHIQ_NAD_DIR, the same folder the app reads
+        NAD = nad.NadIndex(nad_dir / "nad_ca.sqlite", nad_dir / "nad_ca_r24.csv")
         assert NAD._built(), "NAD index missing: it would be built inside data/cache"
         print("address sources:", [p.name for p in NAD.sources()], "auto:", sorted(AUTO_SOURCES), flush=True)
     NETWORK = a.network
