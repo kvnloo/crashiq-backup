@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Iterable, Iterator
 
 from .ca_ccrs import parse_dt
+from . import from_epoch
 
 FL_LAT, FL_LON = (24.4, 31.1), (-87.7, -79.8)   # S4 dictionary E24/E25: 24.544110-31.000750, -87.634930 to -80.0x
 
@@ -111,7 +112,7 @@ def _date(v, crash_time=None) -> tuple[str | None, int | None, int | None]:
     if isinstance(v, (int, float)) and not isinstance(v, bool) and v > 1e11:     # ArcGIS date: epoch milliseconds
         # read as UTC = local wall time: Palm Beach MPO's earliest value is 2019-01-01 00:15 "UTC" in a layer of
         # 2019-2024 crashes, so publishers store Florida wall-clock time without a zone
-        t = _dt.datetime.fromtimestamp(v / 1000, _dt.timezone.utc)
+        t = from_epoch(v / 1000, _dt.timezone.utc)
         return t.strftime("%Y-%m-%d"), t.year, t.hour
     date, year, hour = parse_dt(v)
     if hour is None and crash_time not in (None, ""):

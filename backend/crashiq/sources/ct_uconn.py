@@ -22,6 +22,8 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from . import from_epoch
+
 SERVICE = "https://gis.cti.uconn.edu/arcgis/rest/services/Crash_Dashboards/ConnecticutCrash/MapServer"
 LAYERS = {"crash": 0, "person": 1, "vehicle": 2}
 PAGE = 2000                                      # the service's maxRecordCount
@@ -119,7 +121,7 @@ def severity(a: dict, people: list[dict]) -> str:
 
 def contract_record(a: dict, geom: dict | None, people: list[dict], vehicles: list[dict]) -> dict:
     """One Crash attributes dict (+ its point, persons and vehicles) -> the shared crash dict (packs.check_crash)."""
-    t = datetime.fromtimestamp(a["CrashDate"] / 1000, _TZ) if a.get("CrashDate") is not None else None
+    t = from_epoch(a["CrashDate"] / 1000, _TZ) if a.get("CrashDate") is not None else None
     lat = lon = None
     if geom and isinstance(geom.get("x"), (int, float)) and isinstance(geom.get("y"), (int, float)):
         s, w, n, e = CT_BOUNDS

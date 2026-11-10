@@ -17,9 +17,10 @@ import hashlib
 import json
 import urllib.parse
 import urllib.request
-from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
+
+from . import from_epoch
 
 LAYER = ("https://services.arcgis.com/CWv1abTnC3urn4bV/arcgis/rest/services/Crashes_Five_Year_2020_2024/"
          "FeatureServer/0")
@@ -99,7 +100,7 @@ def contract_record(a: dict) -> dict:
     lat, lon = a.get("LAT"), a.get("LON")
     has = lat is not None and lon is not None and NM_LAT[0] <= lat <= NM_LAT[1] and NM_LON[0] <= lon <= NM_LON[1]
     ms = a.get("DATETIME") if a.get("DATETIME") is not None else a.get("DATE")   # 1.7% have a date but no time
-    t = datetime.fromtimestamp(ms / 1000, _TZ) if ms is not None else None
+    t = from_epoch(ms / 1000, _TZ) if ms is not None else None
     hour = t.hour if t and a.get("DATETIME") is not None else None
     cross, ft = _cross_and_offset(a)
     route = _s(a.get("ROUTE_NAME"))

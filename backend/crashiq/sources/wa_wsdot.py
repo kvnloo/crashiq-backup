@@ -28,6 +28,7 @@ from pathlib import Path
 from zoneinfo import ZoneInfo
 
 from .ca_ccrs import parse_dt
+from . import from_epoch
 
 PORTAL = ("https://remoteapps.wsdot.wa.gov/highwaysafety/collision/data/portal/public/Api/CrashDataPortalService/"
           "GetPublicPortalData")
@@ -112,12 +113,12 @@ def _when(date_v, time_v) -> tuple[str | None, int | None, int | None]:
     """(ISO date, year, hour). ArcGIS layers hold epoch ms (the date as the UTC instant of local midnight);
     the export and the portal hold text ('2025-01-04T00:00:00', '4:30 PM', '1630')."""
     if isinstance(date_v, (int, float)):
-        d = dt.datetime.fromtimestamp(date_v / 1000, PACIFIC)
+        d = from_epoch(date_v / 1000, PACIFIC)
         date, year, hour = d.date().isoformat(), d.year, None
     else:
         date, year, hour = parse_dt(date_v)
     if isinstance(time_v, (int, float)):        # the clock time is stored as if UTC (07:44Z = 7:44 AM, "Dawn")
-        hour = dt.datetime.fromtimestamp(time_v / 1000, dt.timezone.utc).hour
+        hour = from_epoch(time_v / 1000, dt.timezone.utc).hour
     elif time_v:
         t = str(time_v).strip().upper()
         try:

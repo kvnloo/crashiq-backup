@@ -24,10 +24,12 @@ import json
 import math
 import urllib.parse
 import urllib.request
-from datetime import datetime, timezone
+from datetime import timezone
 from pathlib import Path
 
 from crashiq.packs import REF
+
+from . import from_epoch
 
 SERVICE = "https://gis.itd.idaho.gov/arcgisprod/rest/services/ArcGISOnline/CrashLayers/MapServer"
 CRASH, UNIT = 11, 35
@@ -65,7 +67,7 @@ def contract_record(a: dict, units=()) -> dict:
     lat, lon = _num(a.get("Latitude")), _num(a.get("Longitude"))
     has = plausible(lat, lon)
     # Accident_Date_Time is Idaho's wall-clock time sent as if it were UTC (Accident_Time matches it in UTC)
-    when = (datetime.fromtimestamp(a["Accident_Date_Time"] / 1000, timezone.utc)
+    when = (from_epoch(a["Accident_Date_Time"] / 1000, timezone.utc)
             if a.get("Accident_Date_Time") is not None else None)
     sev = SEVERITY.get(s(a.get("Severity")))
     vt = {s(u.get("Vehicle_Type")) for u in units}
@@ -118,7 +120,7 @@ def last_full_year(opener) -> int:
     before (2023 stopped at 2023-10-01 when checked)."""
     b = _get(CRASH, {"where": "1=1", "outStatistics": json.dumps([{"statisticType": "max",
              "onStatisticField": "Accident_Date_Time", "outStatisticFieldName": "hi"}])}, opener)
-    hi = datetime.fromtimestamp(b["features"][0]["attributes"]["hi"] / 1000, timezone.utc)
+    hi = from_epoch(b["features"][0]["attributes"]["hi"] / 1000, timezone.utc)
     return hi.year if (hi.month, hi.day) >= (12, 25) else hi.year - 1
 
 

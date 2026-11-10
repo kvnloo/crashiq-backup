@@ -25,6 +25,8 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import from_epoch
+
 BASE = "https://gis.iowadot.gov/agshost/rest/services/Traffic_Safety"
 CRASH_URL = f"{BASE}/Crash_Data/FeatureServer/0/query"
 PERSON_URL = f"{BASE}/Crash_Person_Data/FeatureServer/0/query"
@@ -124,7 +126,7 @@ def crash_record(f: dict, nm_types: frozenset | set = frozenset(), vconfigs: fro
     lat, lon = g.get("y"), g.get("x")
     has = plausible(lat, lon)
     # CRASH_DATE is the local calendar date sent as UTC midnight
-    d = datetime.fromtimestamp(a["CRASH_DATE"] / 1000, timezone.utc).date() if a.get("CRASH_DATE") is not None else None
+    d = from_epoch(a["CRASH_DATE"] / 1000, timezone.utc).date() if a.get("CRASH_DATE") is not None else None
     tm = re.fullmatch(r"(\d{1,2}):(\d{2})", (a.get("TIMESTR") or "").strip())
     hour = int(tm[1]) if tm and int(tm[1]) < 24 else None
     loc = split_literal(a.get("LITERAL"))

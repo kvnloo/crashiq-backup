@@ -21,6 +21,8 @@ from datetime import datetime
 from pathlib import Path
 from zoneinfo import ZoneInfo
 
+from . import from_epoch
+
 LAYER = "https://services.arcgis.com/p5v98VHDX9Atv3l7/arcgis/rest/services/Full_Crash/FeatureServer/0"
 PAGE = 2000                                    # the layer's maxRecordCount
 SEVERITY_ORDER = "KABCUO"                      # same order as CCRS: U = injured, level not reported
@@ -191,7 +193,7 @@ def crash_record(a: dict) -> dict:
     s = lambda v: (str(v).strip() or None) if v is not None else None
     lat, lon = a.get("LAT"), a.get("LON")
     has = plausible(lat, lon)
-    date = datetime.fromtimestamp(a["CRASH_DT"] / 1000, _TZ).date() if a.get("CRASH_DT") is not None else None
+    date = from_epoch(a["CRASH_DT"] / 1000, _TZ).date() if a.get("CRASH_DT") is not None else None
     tm = a.get("CRASH_MILITARY_TM")
     hour = tm // 100 if isinstance(tm, int) and 0 <= tm <= 2359 and tm % 100 < 60 else None
     juris = s(a.get("PHYSICAL_JURIS")) or s(a.get("JURIS_CODE"))

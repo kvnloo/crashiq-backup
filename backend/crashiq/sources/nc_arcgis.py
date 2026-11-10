@@ -15,6 +15,8 @@ from datetime import datetime, timezone
 from typing import Iterator
 from zoneinfo import ZoneInfo
 
+from . import from_epoch
+
 UA = {"User-Agent": "CrashIQ/0.1"}
 EASTERN = ZoneInfo("America/New_York")
 KABCO = "KABCO"
@@ -65,7 +67,7 @@ def day_time(day, hhmm=None) -> str | None:
     if day in (None, ""):
         return None
     if isinstance(day, (int, float)):
-        d = datetime.fromtimestamp(day / 1000, timezone.utc).date()
+        d = from_epoch(day / 1000, timezone.utc).date()
     else:
         d = datetime.strptime(str(day).strip().rstrip("."), "%m/%d/%Y").date()
     m = re.match(r"^\s*(\d{1,2})(?::(\d{2}))?\s*$", str(hhmm if hhmm is not None else ""))

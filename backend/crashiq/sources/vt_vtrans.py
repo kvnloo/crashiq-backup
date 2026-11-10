@@ -26,6 +26,8 @@ import urllib.request
 from datetime import datetime, timezone
 from pathlib import Path
 
+from . import from_epoch
+
 LAYER = "https://services1.arcgis.com/NXmBVyW5TaiCXqFs/arcgis/rest/services/CrashPQT/FeatureServer/0"
 PAGE = 2000                                    # the layer's maxRecordCount
 BOUNDS = (42.6, -73.5, 45.1, -71.4)            # Vermont's extent with a small margin (s, w, n, e)
@@ -67,7 +69,7 @@ def contract_record(a: dict) -> dict:
     """One layer row -> the shared crash dict (packs.check_crash). Call only on rows with a known InjuryType."""
     lat, lon = a.get("LATITUDE"), a.get("LONGITUDE")
     has = plausible(lat, lon)
-    t = datetime.fromtimestamp(a["ACCIDENTDATE"] / 1000, timezone.utc) if a.get("ACCIDENTDATE") is not None else None
+    t = from_epoch(a["ACCIDENTDATE"] / 1000, timezone.utc) if a.get("ACCIDENTDATE") is not None else None
     involving = INVOLVING.get(_s(a.get("Involving")) or "")
     mp = a.get("AOTACTUALMILEPOINT")
     route = _s(a.get("AOTROUTE"))
