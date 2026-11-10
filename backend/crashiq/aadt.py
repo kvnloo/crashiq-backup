@@ -31,6 +31,7 @@ import json
 import os
 import re
 import sqlite3
+from contextlib import closing
 import threading
 import time
 import urllib.request
@@ -184,7 +185,7 @@ class AadtCache:
     def _schema(self, p: Path) -> int:
         """The copy's schema; an older copy keeps serving until the new one is in."""
         if getattr(self, "_schema_of", (None,))[0] != p:
-            with sqlite3.connect(f"file:{p}?mode=ro", uri=True) as con:
+            with closing(sqlite3.connect(f"file:{p}?mode=ro", uri=True)) as con:
                 row = con.execute("SELECT value FROM meta WHERE key = 'schema'").fetchone()
             self._schema_of = (p, int(row[0]) if row else 1)
         return self._schema_of[1]

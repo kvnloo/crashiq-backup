@@ -18,6 +18,7 @@ import functools
 import json
 import math
 import sqlite3
+from contextlib import closing
 import threading
 from dataclasses import dataclass
 from pathlib import Path
@@ -75,6 +76,8 @@ def ft(a: tuple[float, float], b: tuple[float, float]) -> float:
     return math.hypot(dx, dy)
 
 
+_OPEN: dict[str, list[sqlite3.Connection]] = {}   # db path -> open read-only connections
+
 class NadIndex:
     def __init__(self, db_path: Path, csv_path: Path, measuring: bool = False):
         self.db_path, self.csv_path = Path(db_path), Path(csv_path)
@@ -107,14 +110,17 @@ class NadIndex:
     def _conn(self) -> sqlite3.Connection:
         """A read-only connection for this thread: one shared between server threads gives errors and wrong rows."""
         con = getattr(self._local, "con", None)
+        if con is not None and con not in _OPEN.get(str(self.db_path), []):
+            con = None                                   # closed by a rebuild
         if con is None:
-            con = self._local.con = sqlite3.connect(f"file:{self.db_path}?mode=ro", uri=True)
+            con = self._local.con = sqlite3.connect(f"file:{self.db_path}?mode=ro", uri=True, check_same_thread=False)
+            _OPEN.setdefault(str(self.db_path), []).append(con)   # closed before a rebuild swaps the file
         return con
 
     def _built(self) -> bool:
         if not self.db_path.exists():
             return False
-        with sqlite3.connect(self.db_path) as con:
+        with closing(sqlite3.connect(self.db_path)) as con:
             try:
                 meta = dict(con.execute("SELECT key, value FROM meta"))
                 # an added or re-downloaded address file rebuilds the index
@@ -162,7 +168,15 @@ class NadIndex:
                                                           ("sources", sig)])
         con.commit()
         con.close()
+        self.close()                    # Windows can't replace a file a connection still holds open
         tmp.replace(self.db_path)
+
+    def close(self) -> None:
+        """Close every reader of this index file, in any thread or instance: Windows can't replace an open file.
+        A thread whose reader was closed opens a new one on its next lookup."""
+        for con in _OPEN.pop(str(self.db_path), []):
+            con.close()
+        self._local = threading.local()
 
     def lookup(self, county: int | None, city: str | None, number: int, k: StreetKey | None) -> dict | None:
         """{"lat", "lon", "points"} for the house number on the street in the crash's city, or None."""
