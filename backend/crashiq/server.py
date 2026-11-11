@@ -156,5 +156,6 @@ def _default_app():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("crashiq.server:_default_app", factory=True, host="0.0.0.0",
+    # HOST=127.0.0.1 on the home PC: only the Cloudflare Tunnel reaches it, not the LAN (#395).
+    uvicorn.run("crashiq.server:_default_app", factory=True, host=os.getenv("HOST", "0.0.0.0"),
                 port=int(os.getenv("PORT", "8000")))
