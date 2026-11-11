@@ -674,7 +674,9 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
 - **Results visuals: mockup first DECIDED (user, 2026-11-10, PM chat, "2 yea"):** a headline sentence computed by code,
   crash columns coloured by severity (fatal/serious on top), a corridor strip of intersections (count, rate vs critical
   rate), and a collision diagram on clicking an intersection. Mocked up on real study data first; built only after the
-  user approves the mockup. Ideas taken from TrafficOpsIQ's results screen.
+  user approves the mockup. Ideas taken from TrafficOpsIQ's results screen. **Mockup approved and locked (user,
+  2026-11-10, PM chat: "The visual mockup is amazing. Let's lock it"):** PR #485,
+  `docs/research/2026-11-10-results-visual/index.html`, is the spec for the real screen.
 - **Surrogate safety (FHWA SSAM) DECIDED (user, 2026-11-10, PM chat, "3a"):** start now, on its own branch, separate
   from the launch. CrashIQ reads trajectory files (SSAM `.trj` from Vissim/Aimsun/Paramics, and a plain trajectory CSV
   for video/drone tracks) and finds conflicts with its own code following FHWA's published SSAM method (TTC, PET, DR,
