@@ -88,7 +88,7 @@ export default function LocationPanel({
   if (pending) { rows.push({ kind: 'seg', seg: pending }); rows.push({ kind: 'end', label: 'B', name: 'Study end (B)' }) }
 
   let primary
-  if (canDetect) primary = <button type="button" className="sf-btn sf-btn--go" onClick={onDetect} disabled={Boolean(busy)}>{busy || 'Find intersections →'}</button>
+  if (canDetect) primary = <button type="button" className="sf-btn sf-btn--go" onClick={onDetect} disabled={Boolean(busy)}>{busy || (err ? 'Try again' : 'Find intersections →')}</button>
   else if (saved) primary = <button type="button" className="sf-btn sf-btn--go" onClick={onNext} disabled={Boolean(busy)}>Build the profile →</button>
   else primary = <button type="button" className="sf-btn sf-btn--go" disabled>Find intersections →</button>
 
