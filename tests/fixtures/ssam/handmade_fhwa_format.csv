@@ -1,0 +1,4 @@
+trjFile,tMinTTC,xMinPET,yMinPET,zMinPET,TTC,PET,MaxS,DeltaS,DR,MaxD,MaxDeltaV,ConflictAngle,ClockAngle,ConflictType,PostCrashV,PostCrashHeading,FirstVID,SecondVID
+C:\x\rear_end.trj,3.7,65.5,0,0,1.1,0.6,15,6.5,-5,-5,3.25,0,6,rear end,8.25,0,1,2
+C:\x\crossing.trj,3.2,2.75,0,0,0.8,1.1,10,13.6,-8,-8,6.8,90,3,rear end,6.8,42.6,2,1
+C:\x\near_pass.trj,4.0,0,0,0,1.4,2.5,14,4,0,0,2,0,6,rear end,12,0,1,3
