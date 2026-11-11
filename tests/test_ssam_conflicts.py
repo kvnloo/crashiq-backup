@@ -42,16 +42,29 @@ def test_right_angle_crossing(tmp_path):
     # B brakes from t=3: at t=3.1 v=9.2, 8.14 m to go -> enters at +0.885 s, A still inside until +1.44 -> 0.9;
     #   t=3.4: v=6.8, 5.74 m -> 0.844 (continuous minimum); every step 3.1..3.6 rounds up to 0.9; from 3.7
     #   B's projected entry comes after A has left -> no TTC.
-    # PET: A's rear clears x=0.9 at 4.54 (last step inside 4.5); B (2 m/s from t=4, front y = -4 + 2(t-4)) enters
-    #   at 5.55 (first step inside 5.6): continuous 1.01 s, between steps 1.1 s.
+    # PET: positions are recorded only at the TTC steps (report Step 4.2), t <= 3.6, when A's front is still west
+    #   of x=-4. B never enters any of them, so no PET is observed. (FHWA's SSAM_MT lists no conflict here.)
     (c,) = run(tmp_path, "crossing")
     assert (c["FirstVID"], c["SecondVID"], c["ConflictType"]) == (1, 2, "crossing")
     assert c["TTC"] == pytest.approx(0.9)
     assert c["tMinTTC"] == pytest.approx(3.1)
-    assert c["PET"] == pytest.approx(1.1)
+    assert c["PET"] is None
     assert c["ConflictAngle"] == pytest.approx(90.0, abs=0.5)  # B comes from A's right
     assert c["MaxD"] == pytest.approx(-8.0) and c["DR"] == pytest.approx(-8.0)
     assert c["DeltaS"] > 0 and c["MaxDeltaV"] > 0
+
+
+def test_pet_uses_positions_at_ttc_steps(tmp_path):
+    # Leader rear 12.5 - 3t ahead up to t=3 (12 vs 15 m/s): TTC = g/3, under 1.5 from t=2.7, 1.2 at t=3.
+    # The follower brakes at -4 from t=3 and its TTC ends after t=3.2. PET from a position the leader held at a
+    #   TTC step: its rear at t=2.7 (x=44.9) is reached by the follower's front at 2.99 -> 0.29, between steps 0.3,
+    #   at the leader's centre then (47.15). Positions after the last TTC step would give 0.2 (the old rule).
+    # FHWA's SSAM_MT gives exactly this: PET 0.3, xMinPET 47.15 (tests/fixtures/ssam/fhwa/follow_brake.csv).
+    (c,) = run(tmp_path, "follow_brake")
+    assert (c["FirstVID"], c["SecondVID"], c["ConflictType"]) == (1, 2, "rear-end")
+    assert c["TTC"] == pytest.approx(1.2) and c["tMinTTC"] == pytest.approx(3.0)
+    assert c["PET"] == pytest.approx(0.3)
+    assert c["xMinPET"] == pytest.approx(47.15, abs=0.01)
 
 
 def test_lane_change_cut_in(tmp_path):
@@ -91,3 +104,20 @@ def test_thresholds(tmp_path):
 ])
 def test_classify(angle, start, end, want):
     assert classify(angle, start, end) == want
+
+
+def test_overlap_is_sides_crossing(tmp_path):
+    # The report (Step 3, figure 13) tests every side of one rectangle for intersection with every side of the
+    # other, so a car wholly inside a bus outline (a tracking error) is no overlap. Car (4 x 1.6) sits inside a
+    # stopped bus (12 x 2.6, x 0..12) and drives off at 5 m/s from t=3: its front crosses the bus front (x=12)
+    # at t=3.8, the first step with a crossing side. FHWA's SSAM_MT gives tMinTTC 3.8, TTC 0, PET 0 for this.
+    from ssam_scenarios import build
+
+    from crashiq.ssam import Veh
+    bus = lambda t: Veh(1, None, None, 12.0, 0.0, 0.0, 0.0, 12.0, 2.6, 0.0, 0.0)
+    car = lambda t: Veh(2, None, None, 8.0 + 5 * max(t - 3, 0), 0.0, 4.0 + 5 * max(t - 3, 0), 0.0, 4.0, 1.6,
+                        5.0 if t >= 3 else 0.0, 0.0)
+    p = tmp_path / "contain.trj"
+    write_trj(p, build([bus, car], 20.0))
+    (c,) = find_conflicts(read_trj(p))
+    assert (c["tMinTTC"], c["TTC"], c["PET"]) == pytest.approx((3.8, 0.0, 0.0))

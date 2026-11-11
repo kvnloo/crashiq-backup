@@ -6,15 +6,17 @@ Per timestep:
    facing along the path.
 2. A 50 ft / 15.25 m zone grid keeps comparisons to vehicles whose swept area shares a zone.
 3. TTC for a pair is the first tau whose two projected rectangles overlap (0 = touching now: a crash).
-4. Pairs with a TTC open (or continue) a conflict event. Each step of an event records both vehicles' actual
-   rectangles; PET is the time since the other vehicle last occupied any part of a vehicle's current rectangle.
-5. An event ends when the pair is off a collision course and no later encroachment could lower its PET (or MaxPET
-   has passed), or a vehicle leaves; its final measures and type are computed then.
+4. Pairs with a TTC open (or continue) a conflict event. Each step with a TTC records both vehicles' actual
+   rectangles (report Step 4.2); PET is the time since the other vehicle last occupied any part of a vehicle's
+   current rectangle, against those recorded positions only.
+5. An event ends when the pair is off a collision course and no later encroachment could lower its PET (the time
+   since its last TTC step reaches the minimum PET, or MaxPET), or a vehicle leaves; its measures and type are
+   computed then. A pair that comes back on a collision course after that is a new event.
 
 Choices the report leaves open, made here:
 - Projected positions past the end of a vehicle's recorded path continue straight along its last heading.
-- PET only counts encroachment on positions held up to MaxTTC after the last TTC step (the projected collision
-  must have happened by then); an event with no PET observed is still a conflict, with PET None.
+- An event with no PET observed is still a conflict, with PET None. (FHWA's SSAM_MT drops it.)
+- Events still open when the file ends are listed. (FHWA's SSAM_MT drops them.)
 - PostCrashV/DeltaV treat the two vehicles as equal mass (the report gives no masses).
 - Positions (CSP/CEP, heading, xMinPET) use the vehicle centre, midway between the bumpers.
 - Z (format 3.0) is read but not used to separate levels yet.
@@ -80,17 +82,27 @@ def _rect(fx, fy, hx, hy, length, width):
     return ((fx + nx, fy + ny), (fx - nx, fy - ny), (bx - nx, by - ny), (bx + nx, by + ny))
 
 
+def _side_cross(a, b, c, d) -> bool:
+    """Segments ab and cd intersect (touching counts)."""
+    def orient(p, q, r):
+        v = (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+        return 0 if abs(v) <= EPS else (1 if v > 0 else -1)
+
+    def on(p, q, r):  # r, collinear with pq, lies within pq's box
+        return min(p[0], q[0]) - EPS <= r[0] <= max(p[0], q[0]) + EPS and             min(p[1], q[1]) - EPS <= r[1] <= max(p[1], q[1]) + EPS
+
+    o1, o2, o3, o4 = orient(a, b, c), orient(a, b, d), orient(c, d, a), orient(c, d, b)
+    if o1 * o2 < 0 and o3 * o4 < 0:
+        return True
+    return (o1 == 0 and on(a, b, c)) or (o2 == 0 and on(a, b, d)) or (o3 == 0 and on(c, d, a)) or         (o4 == 0 and on(c, d, b))
+
+
 def _overlap(p, q) -> bool:
-    """Separating-axis test for two rectangles (touching counts as overlap)."""
-    for poly in (p, q):
-        for k in (0, 1):
-            (x0, y0), (x1, y1) = poly[k], poly[k + 1]
-            ax, ay = y0 - y1, x1 - x0
-            pa = [ax * x + ay * y for x, y in p]
-            qa = [ax * x + ay * y for x, y in q]
-            if max(pa) < min(qa) - EPS or max(qa) < min(pa) - EPS:
-                return False
-    return True
+    """Report Step 3 / figure 13: some side of one rectangle intersects some side of the other (touching counts).
+    A rectangle wholly inside the other is no overlap, as in FHWA's SSAM_MT."""
+    if max(x for x, _ in p) < min(x for x, _ in q) - EPS or max(x for x, _ in q) < min(x for x, _ in p) - EPS or             max(y for _, y in p) < min(y for _, y in q) - EPS or max(y for _, y in q) < min(y for _, y in p) - EPS:
+        return False
+    return any(_side_cross(p[i], p[(i + 1) % 4], q[j], q[(j + 1) % 4]) for i in range(4) for j in range(4))
 
 
 def _centre(r: Veh) -> tuple[float, float]:
@@ -134,7 +146,7 @@ class _Event:
         self.start = None  # (rec a, rec b) at the first step
 
 
-def _pet(ev: _Event, t: float, ra, rb, max_pet: float) -> None:
+def _pet(ev: _Event, t: float, ra, rb, recs, max_pet: float) -> None:
     for cur, theirs, other in ((rb, 1, ev.a), (ra, 2, ev.b)):
         for h in reversed(ev.hist):
             if t - h[0] > max_pet + EPS:
@@ -143,7 +155,7 @@ def _pet(ev: _Event, t: float, ra, rb, max_pet: float) -> None:
                 pet = round(t - h[0], 3)
                 if ev.pet is None or pet < ev.pet[0]:
                     ev.pet = (pet, other, _centre(h[theirs + 2]))
-                ev.last_pet = (t, ev.hist[-1][3], ev.hist[-1][4]) if ev.hist[-1][0] == t else ev.last_pet
+                ev.last_pet = (t, *recs)
                 break
 
 
@@ -274,10 +286,11 @@ def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0) -> list
             ra_rec, rb_rec = tracks[a].recs[here[a]], tracks[b].recs[here[b]]
             if ev.start is None:
                 ev.start = (ra_rec, rb_rec)
-            window_end = ev.ttc_steps[-1][0] + max_ttc
-            if t <= window_end + EPS:
+            window_end = ev.ttc_steps[-1][0]
+            if key in active:  # Step 4.2: positions are recorded at the steps with a TTC
                 ev.hist.append((t, rect(a, 0), rect(b, 0), ra_rec, rb_rec))
-            _pet(ev, t, rect(a, 0), rect(b, 0), max_pet)
+            _pet(ev, t, rect(a, 0), rect(b, 0), (ra_rec, rb_rec), max_pet)
+            # Off a collision course and no later encroachment could lower the PET (or MaxPET has passed): done.
             best = ev.pet[0] if ev.pet else max_pet
             if key not in active and t - window_end >= min(best, max_pet) - EPS:
                 out.append(_finish(events.pop(key), trj.units))

@@ -57,7 +57,17 @@ def rear_end() -> Trj:
     # (front to rear), reacts at t=3 and brakes at -5 until t=5. Same lane, link 1 lane 1.
     lead = lambda t: straight(1, t, (22.25 + L, 0.0), (1, 0), 15.0, [(1.0, 3.0, -5.0)], lane=1, link=1)
     foll = lambda t: straight(2, t, (0.0, 0.0), (1, 0), 15.0, [(3.0, 5.0, -5.0)], lane=1, link=1)
-    return build([lead, foll], 10.0)
+    # 20 s, not 10: FHWA's SSAM_MT drops an event still open when the file ends (it keeps this one open to ~14.5 s).
+    return build([lead, foll], 20.0)
+
+
+def follow_brake() -> Trj:
+    # Leader (1) at a steady 12 m/s, its rear 12.5 m ahead of the follower (2) at 15 m/s. The follower brakes at
+    # -4 m/s2 from t=3 to t=4 (down to 11 m/s) and drops back. No lanes. Its PET comes from a position the leader
+    # held at a TTC step (Step 4.2 of the report), not from a later one.
+    lead = lambda t: straight(1, t, (12.5 + L, 0.0), (1, 0), 12.0, [])
+    foll = lambda t: straight(2, t, (0.0, 0.0), (1, 0), 15.0, [(3.0, 4.0, -4.0)])
+    return build([lead, foll], 15.0)
 
 
 def crossing() -> Trj:
@@ -94,4 +104,4 @@ def near_pass() -> Trj:
     return build([a, b, c], 10.0)
 
 
-SCENARIOS = {"rear_end": rear_end, "crossing": crossing, "cut_in": cut_in, "near_pass": near_pass}
+SCENARIOS = {"rear_end": rear_end, "follow_brake": follow_brake, "crossing": crossing, "cut_in": cut_in, "near_pass": near_pass}
