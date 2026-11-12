@@ -1,8 +1,8 @@
 # Runbook: the CrashIQ container (#383)
 
-One Docker service (docs/03 R8): the API and the built app on `$PORT`, the same as `make serve`. Render runs it from
-`render.yaml` with a persistent disk at `/var/data`. Deploying to Render (part B) waits for the user, who signs in and
-approves the cost.
+One Docker service (docs/03 R8): the API and the built app on `$PORT`, the same as `make serve`. **Render is dropped
+(user, 2026-11-10, #395):** the free beta runs on the home PC (section "Free beta" below); the Render parts are kept
+only as the container reference.
 
 ## Build and run locally
 Needs a container tool: Colima on this Mac (decision #384, 2026-11-03): `brew install colima docker docker-buildx`,
@@ -50,8 +50,36 @@ Everything the app writes is under `/var/data`:
 The image holds no data except the committed tables in `data/reference/` and `data/aliases/`. `.dockerignore` keeps out
 `data/`, SQLite files, `.env`, `node_modules` and caches.
 
+## Free beta: the home PC + Cloudflare Tunnel (decided 2026-11-10, #395)
+The beta runs on the user's always-on Windows PC. No Docker: the server runs straight from a checkout of `main`, with
+its own data folder (never a dev session's `data/`, CLAUDE.md Isolation). Cloudflare Tunnel gives it
+`https://crash.aitransportationtools.com` with no open ports.
+1. A checkout only the beta uses: `git worktree add C:/Users/aksha/Workspace/repos/Crash-beta origin/main`, then in it
+   `make setup && make build`. To update: `git -C .../Crash-beta pull --ff-only origin main && make build`, then restart.
+2. Start it (Git Bash; the user types the password, it isn't written in any file):
+   ```bash
+   cd C:/Users/aksha/Workspace/repos/Crash-beta
+   D=C:/Users/aksha/Workspace/data/crashiq-beta
+   read -s -p 'Password: ' APP_PASSWORD; export APP_PASSWORD
+   CRASHIQ_HOSTED=1 HOST=127.0.0.1 PORT=8090 CRASHIQ_DB=$D/crashiq.sqlite \
+     CRASHIQ_FILES_DIR=$D/cache/ccrs_files CRASHIQ_TIGER_DIR=$D/cache/tiger CRASHIQ_NAD_DIR=$D/cache/nad \
+     CRASHIQ_ADDRFEAT_DIR=$D/cache/tiger_addrfeat CRASHIQ_POSTMILE_DIR=$D/cache/postmiles CRASHIQ_AADT_DIR=$D/cache/aadt \
+     PYTHONPATH=backend .venv/Scripts/python -m crashiq.server
+   ```
+   `HOST=127.0.0.1` keeps it off the home network: only the tunnel reaches it. Copy the NAD extract to
+   `$D/cache/nad/nad_ca_r24.csv` once (the PC already has it locally, so no upload).
+3. Tunnel (once): `winget install --id Cloudflare.cloudflared -e`, then `cloudflared tunnel login` (the user clicks
+   Allow in the browser and picks `aitransportationtools.com`), `cloudflared tunnel create crashiq-beta`,
+   `cloudflared tunnel route dns crashiq-beta crash.aitransportationtools.com`, and run it with
+   `cloudflared tunnel run --url http://127.0.0.1:8090 crashiq-beta`. `cloudflared service install` makes it start
+   with Windows.
+4. Check from a phone off Wi-Fi: `https://crash.aitransportationtools.com/api/health` answers, every other page asks
+   for the password. Then the userflow check below with `CRASHIQ_URL=https://crash.aitransportationtools.com`.
+5. Limits: the beta is down when the PC sleeps, restarts or loses power; set Windows power to never sleep. Back up
+   `$D/crashiq.sqlite` with the `sqlite3 backup` line under "Back up the disk".
+
 ## One server (option 2: CrashIQ + our own Overpass + HTTPS)
-**Not decided: waits on #395.** Render (above) is the decided path (docs/03 R8).
+**Decided as the move once people pay (#395).** Until then the beta runs on the home PC (above).
 
 `deploy/docker-compose.yml` runs three containers on one Linux server with Docker (e.g. Hetzner CX33: 4 CPU, 8 GB,
 80 GB disk). Sizes measured 2026-11-03 on Southern California: Overpass load 27 min, 5.1 GB disk, 2.6 GB peak RAM;

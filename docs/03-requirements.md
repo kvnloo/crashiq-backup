@@ -85,7 +85,10 @@ run and what the export contains:
 5. Export (Excel + PDF, mode-specific format)
 
 ## R8 — Deployment & platform (Q8)
-- Same as DemandIQ: local dev first → Render, single Docker service, `APP_PASSWORD` basic auth, `ANTHROPIC_API_KEY`.
+- ~~Same as DemandIQ: local dev first → Render, single Docker service, `APP_PASSWORD` basic auth, `ANTHROPIC_API_KEY`.~~
+  **Superseded 2026-11-10 (#395):** the free beta runs on the user's always-on home PC behind a Cloudflare Tunnel at
+  `crash.aitransportationtools.com`, `APP_PASSWORD` basic auth. Render is dropped (cost). When people pay, it moves to
+  one rented server with `deploy/docker-compose.yml`. Runbook: `docs/runbook-deploy.md`.
 - LLM: Claude API, current Sonnet for the agent.
 - Crash data: live CCRS pull from data.ca.gov per study, cached per project. Fallback if too slow: per-county snapshot.
 - Persistence (new vs DemandIQ): projects, accepted findings/worked examples, pattern library →
@@ -664,6 +667,21 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   (1) Colima via Homebrew on this Mac for the image build and the Tester's click-through against the container.
   (2) Address data on a fresh hosted disk: an on-demand per-county TIGER ADDRFEAT fetcher, plus a one-time upload of
   the NAD California extract (426 MB) to the Render disk. Not baked into the image.
+- **Where the beta runs DECIDED (user, 2026-11-10, PM chat, "1a"; #395):** the user's always-on home Windows PC behind
+  a Cloudflare Tunnel (free, no open ports, HTTPS), at `crash.aitransportationtools.com`, password-protected. Render
+  is dropped (too expensive per app). The one-server option (#395 c, `deploy/docker-compose.yml`) is the move once
+  people pay. No Docker on the home PC: `crashiq.server` runs directly from a checkout of `main` with its own data folder.
+- **Results visuals: mockup first DECIDED (user, 2026-11-10, PM chat, "2 yea"):** a headline sentence computed by code,
+  crash columns coloured by severity (fatal/serious on top), a corridor strip of intersections (count, rate vs critical
+  rate), and a collision diagram on clicking an intersection. Mocked up on real study data first; built only after the
+  user approves the mockup. Ideas taken from TrafficOpsIQ's results screen. **Mockup approved and locked (user,
+  2026-11-10, PM chat: "The visual mockup is amazing. Let's lock it"):** PR #485,
+  `docs/research/2026-11-10-results-visual/index.html`, is the spec for the real screen.
+- **Surrogate safety (FHWA SSAM) DECIDED (user, 2026-11-10, PM chat, "3a"):** start now, on its own branch, separate
+  from the launch. CrashIQ reads trajectory files (SSAM `.trj` from Vissim/Aimsun/Paramics, and a plain trajectory CSV
+  for video/drone tracks) and finds conflicts with its own code following FHWA's published SSAM method (TTC, PET, DR,
+  MaxD, MaxS, DeltaS, DeltaV; rear-end / lane-change / crossing). Its conflict list must match FHWA SSAM 3.0 run on the
+  same file before it is shown. Credited to FHWA, never presented as FHWA's SSAM.
 - **Signalized driveways are study intersections DECIDED (user, 2026-11-07, PM session, "Signalized ones only"; #413):**
   a driveway or access road (OSM `service`) meeting the corridor at a traffic signal is a study intersection, named
   after the driveway when it has a name, otherwise "Driveway (signal)". A driveway without a signal stays part of the
