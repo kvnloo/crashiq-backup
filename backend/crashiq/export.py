@@ -312,6 +312,11 @@ def to_xlsx(d: dict) -> bytes:
                        r["distance_ft"], r["assigned_to"] or ""])
         sh.column_dimensions["B"].width = 44
         sh.column_dimensions["D"].width = 22
+    for sh in wb:                   # text starting with '=' (project name, police wording) stays text, never a formula
+        for row in sh.iter_rows():
+            for c in row:
+                if c.data_type == "f":
+                    c.data_type = "s"
     buf = io.BytesIO()
     wb.save(buf)
     return buf.getvalue()

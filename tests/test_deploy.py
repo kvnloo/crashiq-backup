@@ -45,6 +45,8 @@ def test_on_an_empty_disk_health_is_open_and_every_other_route_needs_the_passwor
             for m in r.methods - {"HEAD"}:
                 assert c.request(m, path).status_code == 401, (m, path)
         assert c.get("/").status_code == 401 and c.get("/s/abc/corridor").status_code == 401   # the app itself
+        for p in ("/openapi.json", "/docs", "/redoc"):          # the route list isn't public either
+            assert c.get(p).status_code in (401, 404), p
         assert c.get("/api/config", auth=("u", "pw")).status_code == 200
         assert "root" in c.get("/", auth=("u", "pw")).text
 
