@@ -19,15 +19,17 @@ import hashlib
 import json
 import math
 import os
+import threading
 import time
 import urllib.error
 import urllib.parse
 import urllib.request
 import uuid
 from collections import Counter, defaultdict
+from datetime import datetime, timezone
 from typing import Callable, Literal
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Response
 from pydantic import BaseModel, Field
 
 from . import study as study_mod
@@ -188,11 +190,12 @@ def driveway_query(line: list[tuple[float, float]]) -> str:
 
 
 def fetch_driveways(db: Database, line: list[tuple[float, float]], transport: Transport | None = None,
-                    retries: int = 1) -> dict | None:
+                    retries: int = 1, backoff_s: float = 2.0) -> dict | None:
     """The driveway answer, or None when Overpass can't give it: the corridor then records that signalized driveways
     weren't checked, and the profile says so (#413), instead of quietly detecting fewer intersections."""
     try:
-        return fetch_overpass(db, driveway_query(line), transport=transport, retries=retries, allow_empty=True)
+        return fetch_overpass(db, driveway_query(line), transport=transport, retries=retries, allow_empty=True,
+                              backoff_s=backoff_s)
     except NetworkError:
         return None
 
@@ -206,8 +209,10 @@ OSM_TTL_DAYS = 180     # streets change slowly; a cached Overpass answer is refr
 
 
 def fetch_overpass(db: Database, query: str, transport: Transport | None = None, retries: int = 3,
-                   backoff_s: float = 2.0, sleep: Callable[[float], None] = time.sleep, allow_empty: bool = False) -> dict:
-    """Overpass JSON for `query`, from the SQLite cache when present. Raises NetworkError on failure."""
+                   backoff_s: float = 2.0, sleep: Callable[[float], None] = time.sleep, allow_empty: bool = False,
+                   on_attempt: Callable[[int, int, str], None] | None = None) -> dict:
+    """Overpass JSON for `query`, from the SQLite cache when present. Raises NetworkError on failure. `on_attempt(n, of,
+    last error)` is told before each network attempt (the corridor job's status)."""
     key = "overpass:" + hashlib.sha1(query.encode()).hexdigest()
     hit = db.one("SELECT body, (julianday('now') - julianday(created_at)) AS age_days FROM http_cache WHERE key = ?",
                  (key,))
@@ -222,6 +227,8 @@ def fetch_overpass(db: Database, query: str, transport: Transport | None = None,
     last = "no response"
     for attempt in range(retries + 1):
         wait = backoff_s * 2 ** attempt
+        if on_attempt:
+            on_attempt(attempt + 1, retries + 1, "" if attempt == 0 else last)
         try:
             data = json.loads(transport(urls[attempt % len(urls)], payload, 120))
             if not isinstance(data.get("elements"), list):
@@ -806,8 +813,30 @@ def get_network(sid: str, request: Request) -> dict:
     return network(_db(request), sid)
 
 
+_JOBS: dict[str, dict] = {}       # study id -> background corridor detection status (one per study)
+
+
+def _detect_job(db: Database, sid: str, line: list, st, job: dict) -> None:
+    def tell(n, of, last):
+        job.update(attempt=n, attempts=of, last_error=last)
+    try:
+        osm = fetch_overpass(db, overpass_query(line), transport=getattr(st, "overpass", None),
+                             retries=getattr(st, "overpass_retries", 3), backoff_s=getattr(st, "overpass_backoff", 2.0),
+                             on_attempt=tell)
+        job.update(step="driveways")
+        drive = fetch_driveways(db, line, transport=getattr(st, "overpass", None),
+                                retries=min(1, getattr(st, "overpass_retries", 1)),
+                                backoff_s=getattr(st, "overpass_backoff", 2.0))
+        if _JOBS.get(sid) is job:          # a newer line replaced this job meanwhile: its answer isn't saved
+            job.update(state="done", network=save_corridor(db, sid, line, osm, drive))
+    except NetworkError as e:
+        job.update(state="error", status=502, error=str(e))
+    except Exception as e:  # noqa: BLE001 - reported to the screen through the status endpoint
+        job.update(state="error", status=500, error=f"Finding intersections failed: {e}")
+
+
 @router.put("/studies/{sid}/corridor")
-def put_corridor(sid: str, body: CorridorIn, request: Request) -> dict:
+def put_corridor(sid: str, body: CorridorIn, request: Request, response: Response, background: bool = False) -> dict:
     from . import packs
     db = _db(request)
     pack = packs.for_study(study_mod.require(db, sid))
@@ -817,8 +846,27 @@ def put_corridor(sid: str, body: CorridorIn, request: Request) -> dict:
     # #19 check 1, offline: a line with no point in the state's box is clearly elsewhere (no Overpass call, no pull)
     if not any(packs.in_bounds(pack, lat, lon) for lat, lon in body.line):
         raise HTTPException(400, f"This line isn't in {pack.name}. Start a new study and pick the state it's in.")
+    st = request.app.state
+    if background:
+        # Behind the Cloudflare Tunnel a request is cut at 100 s; Overpass can take minutes with its retries. The
+        # detection runs in a thread and the screen polls .../corridor/status (the crash pull's pattern, #54).
+        from .crashes import _LOCKS_GUARD
+        line, t = [list(p) for p in body.line], None
+        with _LOCKS_GUARD:
+            job = _JOBS.get(sid)
+            if not job or job["state"] != "running" or job["line"] != line:
+                job = {"state": "running", "step": "streets", "attempt": 0, "attempts": 0, "line": line,
+                       "started_at": datetime.now(timezone.utc).isoformat(timespec="seconds")}
+                _JOBS[sid] = job
+                t = threading.Thread(target=_detect_job, args=(_db(request), sid, body.line, st, job), daemon=True)
+                t.start()
+        if t:
+            t.join(1.0)                    # a corridor seen before is cached: answered in this request
+        if job["state"] == "done":
+            return job["network"]
+        response.status_code = 202
+        return {"job": dict(job)}
     try:
-        st = request.app.state
         osm = fetch_overpass(db, overpass_query(body.line), transport=getattr(st, "overpass", None),
                              retries=getattr(st, "overpass_retries", 3))
     except NetworkError as e:
@@ -828,9 +876,18 @@ def put_corridor(sid: str, body: CorridorIn, request: Request) -> dict:
     return save_corridor(db, sid, body.line, osm, drive)
 
 
+@router.get("/studies/{sid}/corridor/status")
+def corridor_status(sid: str, request: Request) -> dict:
+    study_mod.require(_db(request), sid)
+    return dict(_JOBS.get(sid) or {"state": "idle"})
+
+
 @router.delete("/studies/{sid}/corridor")
 def delete_corridor(sid: str, request: Request) -> dict:
+    from .crashes import _LOCKS_GUARD
     study_mod.require(_db(request), sid)
+    with _LOCKS_GUARD:
+        _JOBS.pop(sid, None)               # a running detection is cancelled: its answer isn't saved (review on #489)
     return clear_corridor(_db(request), sid)
 
 

@@ -1,11 +1,18 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import CorridorMap from '../components/CorridorMap'
 import LocationPanel from '../components/LocationPanel'
 import PlaceSearch from '../components/PlaceSearch'
-import { api, errorText } from '../lib/api'
+import { ApiError, api, errorText } from '../lib/api'
 import { useStudy } from '../study'
 import '../styles/corridor.css'
+
+// Behind the Cloudflare Tunnel a request is cut at 100 s and Overpass can take minutes with its retries, so detection
+// runs as a server job and the screen polls it.
+const POLL_MS = 2000
+const detectLabel = (j) => (j.step === 'driveways' ? 'Finding intersections… checking driveways at signals'
+  : j.attempt > 1 ? `Finding intersections… OpenStreetMap is busy, trying again (${j.attempt} of ${j.attempts})`
+    : 'Finding intersections…')
 
 // Step 2: draw the corridor (on by default), then review the detected locations on the same screen.
 export default function Corridor() {
@@ -53,16 +60,55 @@ export default function Corridor() {
     try { return await fn() } catch (e) { setErr(errorText(e)); return null } finally { setBusy('') }
   }, [])
 
+  // Polls a running corridor job until it ends; resolves to the network. A non-job answer is the network itself.
+  const stop = useRef(0)                             // bumped by Clear line and on leaving: the poll stops
+  useEffect(() => () => { stop.current += 1 }, [])
+  const follow = useCallback(async (r) => {
+    const me = stop.current
+    while (r && r.job) {
+      setBusy(detectLabel(r.job))
+      await new Promise((res) => setTimeout(res, POLL_MS))
+      if (me !== stop.current) return null
+      const st = await api(`/studies/${studyId}/corridor/status`)
+      if (st.state === 'done') return st.network
+      if (st.state === 'error') throw new ApiError(st.status || 500, st.error)
+      if (st.state !== 'running') throw new ApiError(500, 'The server restarted while finding intersections.')
+      r = { job: st }
+    }
+    return r
+  }, [studyId])
+
   const detect = () => run('Finding intersections…', async () => {
-    const n = await api(`/studies/${studyId}/corridor`, { method: 'PUT', body: { line } })
+    const n = await follow(await api(`/studies/${studyId}/corridor?background=true`, { method: 'PUT', body: { line } }))
+    if (!n) return
     setNet(n)
     setDraft([])
     setFinished(false)
     setFit({ key: `detect-${Date.now()}`, points: n.line })
   })
 
+  // Coming back to the screen while a detection is still running: show its line and keep following it.
+  useEffect(() => {
+    let alive = true
+    api(`/studies/${studyId}/corridor/status`).then((st) => {
+      if (!alive || st?.state !== 'running') return
+      setDraft(st.line)
+      setFinished(true)
+      run('Finding intersections…', async () => {
+        const n = await follow({ job: st })
+        if (!alive || !n) return
+        setNet(n)
+        setDraft([])
+        setFinished(false)
+        setFit({ key: `detect-${Date.now()}`, points: n.line })
+      })
+    }).catch(() => {})
+    return () => { alive = false }
+  }, [studyId, run, follow])
+
   const clear = () => run('', async () => {
-    if (saved) setNet(await api(`/studies/${studyId}/corridor`, { method: 'DELETE' }))
+    stop.current += 1                                // a running detection is cancelled too (server drops the job)
+    if (saved || busy) setNet(await api(`/studies/${studyId}/corridor`, { method: 'DELETE' }))
     setDraft([])
     setFinished(false)
     setAdding(false)

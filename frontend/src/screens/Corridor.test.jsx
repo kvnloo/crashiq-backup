@@ -28,6 +28,60 @@ const NET = { line: [[33.8953, -118.32662], [33.8999, -118.32662]], length_ft: 1
 const EMPTY = { line: null, intersections: [], segments: [], radius_ft: 250, buffer_ft: 100, buffer_ring: null }
 
 describe('Corridor screen', () => {
+  // Detection is a server job behind the 100 s Cloudflare limit: the screen polls it every 2 s.
+  const BUSY = { job: { state: 'running', step: 'streets', attempt: 2, attempts: 4, line: [[33.8953, -118.32662], [33.9123, -118.32662]] } }
+
+  it('polls a slow detection, says OpenStreetMap is busy, then lists the intersections', async () => {
+    let polls = 0
+    const calls = mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': EMPTY,
+      'PUT /studies/:id/corridor': BUSY,
+      'GET /studies/:id/corridor/status': () => (++polls < 2 ? { state: 'idle' } : { state: 'done', network: NET }) })
+    renderAt('/s/s1/corridor')
+    fireEvent.click(await screen.findByText('map: click A'))
+    fireEvent.click(screen.getByText('map: click B'))
+    fireEvent.click(screen.getByRole('button', { name: 'Find intersections →' }))
+    expect(await screen.findByRole('button', { name: 'Finding intersections… OpenStreetMap is busy, trying again (2 of 4)' })).toBeDisabled()
+    expect(await screen.findByText('West 147th Street', {}, { timeout: 4000 })).toBeInTheDocument()
+    expect(calls.filter((c) => c.path.endsWith('/corridor/status'))).toHaveLength(2)   // the mount check + one poll
+  })
+
+  it('shows the final error in plain words with a Try again button', async () => {
+    mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': EMPTY,
+      'PUT /studies/:id/corridor': BUSY,
+      'GET /studies/:id/corridor/status': { state: 'error', status: 502, error: "Couldn't get streets from OpenStreetMap (Overpass): timed out. Try again in a minute." } })
+    renderAt('/s/s1/corridor')
+    fireEvent.click(await screen.findByText('map: click A'))
+    fireEvent.click(screen.getByText('map: click B'))
+    fireEvent.click(screen.getByRole('button', { name: 'Find intersections →' }))
+    expect(await screen.findByRole('alert', {}, { timeout: 4000 })).toHaveTextContent("Couldn't get streets from OpenStreetMap")
+    expect(screen.getByRole('button', { name: 'Try again' })).toBeEnabled()
+  })
+
+  it('Clear line during a detection cancels it: no error, no corridor comes back', async () => {
+    const calls = mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': EMPTY,
+      'PUT /studies/:id/corridor': BUSY, 'DELETE /studies/:id/corridor': EMPTY,
+      'GET /studies/:id/corridor/status': () => ({ state: 'done', network: NET }) })
+    renderAt('/s/s1/corridor')
+    fireEvent.click(await screen.findByText('map: click A'))
+    fireEvent.click(screen.getByText('map: click B'))
+    fireEvent.click(screen.getByRole('button', { name: 'Find intersections →' }))
+    await screen.findByRole('button', { name: /OpenStreetMap is busy/ })
+    fireEvent.click(screen.getByRole('button', { name: 'Clear line' }))
+    await new Promise((r) => setTimeout(r, 2500))                     // past one poll interval
+    expect(screen.queryByText('West 147th Street')).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(true)
+  })
+
+  it('coming back to the screen resumes a running detection', async () => {
+    let polls = 0
+    mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': EMPTY,
+      'GET /studies/:id/corridor/status': () => (++polls < 2 ? BUSY.job : { state: 'done', network: NET }) })
+    renderAt('/s/s1/corridor')
+    expect(await screen.findByRole('button', { name: /OpenStreetMap is busy, trying again \(2 of 4\)/ })).toBeInTheDocument()
+    expect(await screen.findByText('West 147th Street', {}, { timeout: 4000 })).toBeInTheDocument()
+  })
+
   it('starts in drawing mode with no tool to turn drawing on, and finds intersections after two clicks', async () => {
     const calls = mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': EMPTY,
       'PUT /studies/:id/corridor': NET })
