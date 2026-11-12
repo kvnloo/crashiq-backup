@@ -3,7 +3,7 @@
 Per timestep:
 1. Each vehicle is projected along its own next 10 s of trajectory (front-bumper path), a distance
    speed * tau for projection times tau = 0, 0.1, ... MaxTTC. The vehicle is the rectangle behind that point,
-   facing along the path.
+   with its current facing (fhwa_compatible=False: facing along the path there).
 2. A 50 ft / 15.25 m zone grid keeps comparisons to vehicles whose swept area shares a zone.
 3. TTC for a pair is the first tau whose two projected rectangles overlap (0 = touching now: a crash).
 4. Pairs with a TTC open (or continue) a conflict event. Each step with a TTC records both vehicles' actual
@@ -13,10 +13,16 @@ Per timestep:
    since its last TTC step reaches the minimum PET, or MaxPET), or a vehicle leaves; its measures and type are
    computed then. A pair that comes back on a collision course after that is a new event.
 
-Choices the report leaves open, made here:
+Choices the report leaves open. The default, fhwa_compatible=True, matches FHWA's SSAM_MT.exe (user decision
+2026-11-11, docs/03-requirements.md); fhwa_compatible=False keeps the report-literal variant:
+1. An event with no PET observed: dropped (False: listed with PET None).
+2. Events still open when the file ends: dropped, using SSAM_MT's close time fitted from black-box runs
+   (_fhwa_listed; False: listed). PET ties then break on the file's float32 times, as in SSAM_MT.
+3. The projected rectangle keeps the vehicle's current facing (False: turned along the path at that point).
+4. CSP and DeltaS at the event start, DeltaS from the velocities along the conflict headings, as SSAM_MT
+   reports them (False: at tMinTTC along the facing, as the report defines them).
+Also:
 - Projected positions past the end of a vehicle's recorded path continue straight along its last heading.
-- An event with no PET observed is still a conflict, with PET None. (FHWA's SSAM_MT drops it.)
-- Events still open when the file ends are listed. (FHWA's SSAM_MT drops them.)
 - PostCrashV/DeltaV treat the two vehicles as equal mass (the report gives no masses).
 - Positions (CSP/CEP, heading, xMinPET) use the vehicle centre, midway between the bumpers.
 - Z (format 3.0) is read but not used to separate levels yet.
@@ -57,12 +63,15 @@ def _facing(r: Veh) -> tuple[float, float]:
     return (dx / d, dy / d) if d > EPS else (1.0, 0.0)
 
 
-def _project(tr: _Track, i: int, tau: float) -> tuple[float, float, float, float]:
-    """Front point and unit heading after travelling speed * tau along the vehicle's future path."""
+def _project(tr: _Track, i: int, tau: float, keep_facing: bool = False) -> tuple[float, float, float, float]:
+    """Front point and unit heading after travelling speed * tau along the vehicle's future path.
+    keep_facing: the heading stays the vehicle's current facing (FHWA's SSAM_MT), not the path direction there."""
     r = tr.recs[i]
     dist = r.speed * tau
     if dist <= EPS:
         return (r.fx, r.fy, *_facing(r))
+    if keep_facing:
+        return (*_project(tr, i, tau)[:2], *_facing(r))
     target, end = tr.cum[i] + dist, tr.end[i]
     j = bisect_left(tr.cum, target, i + 1, end + 1)
     if j <= end:  # cum[j-1] < target <= cum[j], so the segment has length
@@ -157,25 +166,37 @@ class _Event:
         self.order = None  # (first, second) from the TTC geometry, used when no PET is seen
         self.ttc_steps: list[tuple[float, Veh, Veh]] = []  # (t, rec a, rec b) while TTC is under the threshold
         self.hist: list[tuple] = []  # (t, rect a, rect b, rec a, rec b): actual positions, for PET
-        self.pet = None  # (pet, first vid, centre of first vehicle at the encroached position)
+        self.pet = None  # (pet, first vid, centre of first vehicle at the encroached position, t held, t seen)
         self.last_pet = None  # (t, rec a, rec b) of the last step a PET was seen
         self.start = None  # (rec a, rec b) at the first step
 
 
-def _pet(ev: _Event, t: float, ra, rb, recs, max_pet: float) -> None:
+def _pet(ev: _Event, t: float, ra, rb, recs, max_pet: float, raw: bool) -> None:
+    """raw: compare unrounded time differences, so ties break on the file's float32 times as in FHWA's SSAM_MT."""
     for cur, theirs, other in ((rb, 1, ev.a), (ra, 2, ev.b)):
         for h in reversed(ev.hist):
             if t - h[0] > max_pet + EPS:
                 break
             if _overlap(cur, h[theirs]):
-                pet = round(t - h[0], 3)
+                pet = t - h[0] if raw else round(t - h[0], 3)
                 if ev.pet is None or pet < ev.pet[0]:
-                    ev.pet = (pet, other, _centre(h[theirs + 2]))
+                    ev.pet = (pet, other, _centre(h[theirs + 2]), h[0], t)
                 ev.last_pet = (t, *recs)
                 break
 
 
-def _finish(ev: _Event, units: int) -> dict:
+def _fhwa_listed(ev: _Event, t_end: float, dt: float, max_pet: float) -> bool:
+    """FHWA's SSAM_MT lists an event only if it has a PET and the file runs MaxPET - dt past the event's close C.
+    C, fitted from black-box runs of SSAM_MT.exe (PR body): the step after the last TTC step for PET 0; the step
+    the best PET was seen, if it was against the positions at the last TTC step; else the last TTC step + MaxPET."""
+    if ev.pet is None:
+        return False
+    e = ev.ttc_steps[-1][0]
+    close = e + dt if ev.pet[0] <= EPS else ev.pet[4] if abs(ev.pet[3] - e) <= EPS else e + max_pet
+    return t_end >= close + max_pet - dt - EPS
+
+
+def _finish(ev: _Event, units: int, fhwa: bool) -> dict:
     first = ev.pet[1] if ev.pet else ev.order[0]
     swap = first != ev.a
     pick = (lambda ra, rb: (rb, ra)) if swap else (lambda ra, rb: (ra, rb))
@@ -193,17 +214,21 @@ def _finish(ev: _Event, units: int) -> dict:
     h1, h2 = heading(f0, f1), heading(s0, s1)
     angle = (h2 - h1 + 180.0) % 360.0 - 180.0
     vel = lambda r, h: (r.speed * math.cos(math.radians(h)), r.speed * math.sin(math.radians(h)))
-    (u1x, u1y), (u2x, u2y) = _facing(f_min), _facing(s_min)
-    delta_s = math.hypot(f_min.speed * u1x - s_min.speed * u2x, f_min.speed * u1y - s_min.speed * u2y)
+    if fhwa:  # FHWA's SSAM_MT: at the event start, velocities along the conflict headings
+        (a1x, a1y), (a2x, a2y) = vel(f0, h1), vel(s0, h2)
+        delta_s = math.hypot(a1x - a2x, a1y - a2y)
+    else:  # the report: at tMinTTC, velocities along the vehicles' facing
+        (u1x, u1y), (u2x, u2y) = _facing(f_min), _facing(s_min)
+        delta_s = math.hypot(f_min.speed * u1x - s_min.speed * u2x, f_min.speed * u1y - s_min.speed * u2y)
     (v1x, v1y), (v2x, v2y) = vel(f_min, h1), vel(s_min, h2)
     px, py = (v1x + v2x) / 2, (v1y + v2y) / 2  # equal masses, perfectly inelastic
     dv1, dv2 = math.hypot(v1x - px, v1y - py), math.hypot(v2x - px, v2y - py)
     second_acc = [pick(ra, rb)[1].accel for _, ra, rb in ev.ttc_steps]
     dr = next((a for a in second_acc if a < 0), min(second_acc))
-    (xf0, yf0), (xs0, ys0) = _centre(f_min), _centre(s_min)
+    (xf0, yf0), (xs0, ys0) = (_centre(f0), _centre(s0)) if fhwa else (_centre(f_min), _centre(s_min))
     (xf1, yf1), (xs1, ys1) = _centre(f1), _centre(s1)
     return {
-        "tMinTTC": tmin, "TTC": ev.ttc, "PET": ev.pet[0] if ev.pet else None,
+        "tMinTTC": tmin, "TTC": ev.ttc, "PET": round(ev.pet[0], 3) if ev.pet else None,
         "xMinPET": ev.pet[2][0] if ev.pet else None, "yMinPET": ev.pet[2][1] if ev.pet else None,
         "MaxS": max(max(ra.speed, rb.speed) for _, ra, rb in ev.ttc_steps), "DeltaS": delta_s,
         "DR": dr, "MaxD": min(second_acc), "MaxDeltaV": max(dv1, dv2),
@@ -221,8 +246,9 @@ def _finish(ev: _Event, units: int) -> dict:
     }
 
 
-def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0) -> list[dict]:
-    """All conflicts in one trajectory file, in the order they end. Keys follow SSAM's conflict-table names."""
+def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0, fhwa_compatible: bool = True) -> list[dict]:
+    """All conflicts in one trajectory file, in the order they end. Keys follow SSAM's conflict-table names.
+    fhwa_compatible=False gives the report-literal variant (see the module docstring)."""
     tracks: dict[int, _Track] = defaultdict(_Track)
     for t, vehs in trj.steps:
         for v in vehs:
@@ -235,6 +261,12 @@ def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0) -> list
     ptr: dict[int, int] = defaultdict(int)
     events: dict[tuple[int, int], _Event] = {}
     out: list[dict] = []
+    t_end = trj.steps[-1][0] if trj.steps else 0.0
+    dt = trj.steps[1][0] - trj.steps[0][0] if len(trj.steps) > 1 else 0.0
+
+    def done(ev):
+        if not fhwa_compatible or _fhwa_listed(ev, t_end, dt, max_pet):
+            out.append(_finish(ev, trj.units, fhwa_compatible))
 
     for t, vehs in trj.steps:
         here: dict[int, int] = {}
@@ -256,7 +288,7 @@ def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0) -> list
         def proj(vid, k):
             key = (vid, k)
             if key not in projs:
-                projs[key] = _project(tracks[vid], here[vid], taus[k])
+                projs[key] = _project(tracks[vid], here[vid], taus[k], fhwa_compatible)
             return projs[key]
 
         def circle(vid, k):
@@ -315,7 +347,7 @@ def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0) -> list
         for key, ev in list(events.items()):
             a, b = key
             if a not in here or b not in here:
-                out.append(_finish(events.pop(key), trj.units))
+                done(events.pop(key))
                 continue
             ra_rec, rb_rec = tracks[a].recs[here[a]], tracks[b].recs[here[b]]
             if ev.start is None:
@@ -323,10 +355,11 @@ def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0) -> list
             window_end = ev.ttc_steps[-1][0]
             if key in active:  # Step 4.2: positions are recorded at the steps with a TTC
                 ev.hist.append((t, rect(a, 0), rect(b, 0), ra_rec, rb_rec))
-            _pet(ev, t, rect(a, 0), rect(b, 0), (ra_rec, rb_rec), max_pet)
+            _pet(ev, t, rect(a, 0), rect(b, 0), (ra_rec, rb_rec), max_pet, fhwa_compatible)
             # Off a collision course and no later encroachment could lower the PET (or MaxPET has passed): done.
             best = ev.pet[0] if ev.pet else max_pet
             if key not in active and t - window_end >= min(best, max_pet) - EPS:
-                out.append(_finish(events.pop(key), trj.units))
-    out.extend(_finish(ev, trj.units) for ev in events.values())
+                done(events.pop(key))
+    if not fhwa_compatible:  # FHWA's SSAM_MT drops events still open when the file ends
+        out.extend(_finish(ev, trj.units, False) for ev in events.values())
     return out
