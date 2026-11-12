@@ -2,12 +2,13 @@
 
 tests/fixtures/ssam/fhwa/<stem>.csv are SSAM_MT's own CSVs for the fixture .trj files (TTC 1.5, PET 5.0), saved
 unchanged: `SSAM_MT.exe trjfiles=<fixture>.trj csvfile=<stem>.csv`. SSAM_MT wrote no CSV for crossing and near_pass
-(no conflicts). FHWA and we agree on every conflict FHWA lists. The one difference is crossing: we list a TTC 0.9
-event with no PET observed, SSAM_MT lists none (it drops events with no PET; an OPEN rule choice on PR #487).
+(no conflicts). Our default (fhwa_compatible=True) gives exactly SSAM_MT's conflicts on all five files, including
+none for crossing (a TTC 0.9 event with no PET, which SSAM_MT drops), with SSAM_MT's DeltaS and CSPs.
 """
 
 from __future__ import annotations
 
+import csv
 import shutil
 
 import pytest
@@ -33,6 +34,17 @@ def test_ours_matches_fhwa(stem):
     (o,) = find_conflicts(read_trj(SSAM / f"{stem}.trj"))
     assert (o["FirstVID"], o["SecondVID"], o["ConflictType"]) == (f["FirstVID"], f["SecondVID"], f["ConflictType"])
     assert (o["tMinTTC"], o["TTC"], o["PET"]) == pytest.approx((f["tMinTTC"], f["TTC"], f["PET"]))
+    # Rule 4: DeltaS and the conflict start points as SSAM_MT reports them (its CSV is float32, 6 decimals).
+    rows = list(csv.reader((FHWA / f"{stem}.csv").open()))
+    h = next(i for i, r in enumerate(rows) if r and r[0] == "Conflict Listing") + 1
+    raw = {k.strip(): v for k, v in zip(rows[h], rows[h + 1])}
+    names = ["DeltaS", "xFirstCSP", "yFirstCSP", "xSecondCSP", "ySecondCSP"]
+    assert [o[n] for n in names] == pytest.approx([float(raw[n]) for n in names], abs=1e-4)
+
+
+def test_no_conflict_where_fhwa_has_none():
+    for stem in ("crossing", "near_pass"):  # SSAM_MT wrote no CSV for these
+        assert not (FHWA / f"{stem}.csv").exists() and find_conflicts(read_trj(SSAM / f"{stem}.trj")) == []
 
 
 def test_compare_command(tmp_path, capsys):
@@ -41,8 +53,8 @@ def test_compare_command(tmp_path, capsys):
     assert main([str(tmp_path), "--fhwa-dir", str(FHWA)]) == 0
     report = (tmp_path / "ssam_compare.txt").read_text()
     assert report == capsys.readouterr().out
-    assert "Found by both: 3" in report and "Only FHWA: 0" in report and "Only CrashIQ: 1 (1 with no PET)" in report
-    assert "Same type: 3 of 3" in report and "crossing: vehicles 1-2 at t=3.1 (no PET)" in report
+    assert "Found by both: 3" in report and "Only FHWA: 0" in report and "Only CrashIQ: 0 (0 with no PET)" in report
+    assert "Same type: 3 of 3" in report
     assert "TTC difference (s): median 0.000, worst 0.000" in report
     assert "PET difference (s): median 0.000, worst 0.000" in report
     assert "Wall-clock: FHWA SSAM_MT not run (saved CSVs), CrashIQ " in report

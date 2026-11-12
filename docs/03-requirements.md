@@ -682,6 +682,13 @@ Resume: confirm R2.5 (intersection-only mode), settle runtime/build agent, then 
   for video/drone tracks) and finds conflicts with its own code following FHWA's published SSAM method (TTC, PET, DR,
   MaxD, MaxS, DeltaS, DeltaV; rear-end / lane-change / crossing). Its conflict list must match FHWA SSAM 3.0 run on the
   same file before it is shown. Credited to FHWA, never presented as FHWA's SSAM.
+- **SSAM matches FHWA's program DECIDED (user, 2026-11-11, PM chat: "I agree to the FWA. Let's do that. This is based on the guidelines.")**
+  The conflict finder's default does what FHWA's SSAM_MT.exe does on the four choices the report leaves open (found by
+  black-box runs, PR #487); `find_conflicts(..., fhwa_compatible=False)` keeps the report-literal variant for tests.
+  1. An event with a TTC but no PET is dropped.
+  2. An event still open when the file ends is dropped (SSAM_MT's close time, fitted from black-box runs).
+  3. The projected rectangle keeps the vehicle's current facing, not turned along its future path.
+  4. CSP and DeltaS are measured at the start of the event, not at tMinTTC.
 - **Signalized driveways are study intersections DECIDED (user, 2026-11-07, PM session, "Signalized ones only"; #413):**
   a driveway or access road (OSM `service`) meeting the corridor at a traffic signal is a study intersection, named
   after the driveway when it has a name, otherwise "Driveway (signal)". A driveway without a signal stays part of the

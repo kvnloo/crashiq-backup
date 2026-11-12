@@ -3,6 +3,8 @@
 TTC is found on SSAM's 0.1 s projection grid, so the expected value is the first 0.1 s step at or above the
 continuous answer worked out below. PET is measured between 0.1 s timesteps, the same way.
 All scenarios go through our own .trj writer and reader first.
+The default (fhwa_compatible=True) matches FHWA's SSAM_MT.exe on four rules (user, 2026-11-11, docs/03); each rule
+has one test below, run in both variants.
 """
 
 from __future__ import annotations
@@ -14,10 +16,10 @@ from crashiq.ssam import find_conflicts, read_trj, write_trj
 from crashiq.ssam.conflicts import classify
 
 
-def run(tmp_path, name):
+def run(tmp_path, name, trj=None, **kw):
     p = tmp_path / f"{name}.trj"
-    write_trj(p, SCENARIOS[name]())
-    return find_conflicts(read_trj(p))
+    write_trj(p, trj or SCENARIOS[name]())
+    return find_conflicts(read_trj(p), **kw)
 
 
 def test_rear_end_braking_leader(tmp_path):
@@ -43,8 +45,8 @@ def test_right_angle_crossing(tmp_path):
     #   t=3.4: v=6.8, 5.74 m -> 0.844 (continuous minimum); every step 3.1..3.6 rounds up to 0.9; from 3.7
     #   B's projected entry comes after A has left -> no TTC.
     # PET: positions are recorded only at the TTC steps (report Step 4.2), t <= 3.6, when A's front is still west
-    #   of x=-4. B never enters any of them, so no PET is observed. (FHWA's SSAM_MT lists no conflict here.)
-    (c,) = run(tmp_path, "crossing")
+    #   of x=-4. B never enters any of them, so no PET is observed. Report-literal variant: listed, PET empty.
+    (c,) = run(tmp_path, "crossing", fhwa_compatible=False)
     assert (c["FirstVID"], c["SecondVID"], c["ConflictType"]) == (1, 2, "crossing")
     assert c["TTC"] == pytest.approx(0.9)
     assert c["tMinTTC"] == pytest.approx(3.1)
@@ -52,6 +54,56 @@ def test_right_angle_crossing(tmp_path):
     assert c["ConflictAngle"] == pytest.approx(90.0, abs=0.5)  # B comes from A's right
     assert c["MaxD"] == pytest.approx(-8.0) and c["DR"] == pytest.approx(-8.0)
     assert c["DeltaS"] > 0 and c["MaxDeltaV"] > 0
+
+
+def test_rule1_no_pet_event_dropped(tmp_path):
+    # Rule 1: an event with a TTC but no PET is not listed (FHWA's SSAM_MT writes no conflict for crossing).
+    assert run(tmp_path, "crossing") == []
+
+
+def test_rule2_open_at_file_end_dropped(tmp_path):
+    # Rule 2: SSAM_MT lists rear_end (last TTC step 4.6, PET 0.5 against a position held before it) only once the
+    #   file runs to 14.5 s = last TTC step + 2 x MaxPET - 0.1 (black-box runs, PR body), with MaxPET 3: 10.5.
+    # follow_brake's best PET is against the last TTC step's position (seen at 3.6): 3.6 + MaxPET - 0.1 = 8.5.
+    from ssam_scenarios import leader_follower
+    rear = lambda t_end: leader_follower(22.25, [(1, 3, -5)], [(3, 5, -5)], 15, 15, t_end)  # rear_end, no lanes
+    assert run(tmp_path, "r", rear(14.4)) == [] and len(run(tmp_path, "r", rear(14.5))) == 1
+    assert run(tmp_path, "r", rear(10.4), max_pet=3.0) == [] and len(run(tmp_path, "r", rear(10.5), max_pet=3.0)) == 1
+    fb3 = lambda t_end: leader_follower(12.5, [], [(3, 4, -3)], 12, 15, t_end)  # follow_brake braking at -3
+    assert run(tmp_path, "f", fb3(8.4)) == [] and len(run(tmp_path, "f", fb3(8.5))) == 1
+    assert len(run(tmp_path, "r", rear(10.0), fhwa_compatible=False)) == 1  # report-literal: listed
+
+
+def test_rule3_projection_keeps_current_facing(tmp_path):
+    # Rule 3: A stopped (front x=10). B stopped 1 m behind, reported speed 0.5 m/s, its front creeping back 1 cm per
+    #   step (tracking jitter) until t=6, then on at 1 m/s; A drives off at t=5. Turned along its path, B's projected
+    #   outline flips onto A (report-literal: TTC 0.1, PET 2.4 when B later reaches A's held place). Keeping B's
+    #   facing, it never reaches A: no conflict, as in SSAM_MT.
+    from ssam_scenarios import build
+
+    from crashiq.ssam import Veh
+
+    def a(t):
+        x = 10.0 + max(t - 5, 0) ** 2
+        return Veh(1, None, None, x, 0.0, x - 4.5, 0.0, 4.5, 1.8, 2 * max(t - 5, 0), 2.0 if t >= 5 else 0.0)
+
+    def b(t):
+        x = 4.5 - 0.1 * min(t, 6) + max(t - 6, 0)
+        return Veh(2, None, None, x, 0.0, x - 4.5, 0.0, 4.5, 1.8, 0.5 if t < 6 else 1.0, 0.0)
+    trj = build([a, b], 30.0)
+    assert run(tmp_path, "j", trj) == []
+    (c,) = run(tmp_path, "j", trj, fhwa_compatible=False)
+    assert (c["TTC"], c["PET"]) == pytest.approx((0.1, 2.4))
+
+
+def test_rule4_csp_and_delta_s_at_event_start(tmp_path):
+    # Rule 4: the rear_end event starts at t=2.9: leader centre 58.975 (braking, 5.5 m/s), follower 41.25 (15 m/s),
+    #   DeltaS 15 - 5.5 = 9.5, exactly SSAM_MT's (tests/fixtures/ssam/fhwa/rear_end.csv). The report defines both at
+    #   tMinTTC (t=3.7: leader 5, follower 11.5 m/s, DeltaS 6.5).
+    (c,) = run(tmp_path, "rear_end")
+    assert (c["DeltaS"], c["xFirstCSP"], c["xSecondCSP"]) == pytest.approx((9.5, 58.975, 41.25))
+    (c,) = run(tmp_path, "rear_end", fhwa_compatible=False)
+    assert c["DeltaS"] == pytest.approx(6.5) and c["xFirstCSP"] == pytest.approx(63.0)
 
 
 def test_pet_uses_positions_at_ttc_steps(tmp_path):
@@ -90,7 +142,8 @@ def test_near_pass_is_not_a_conflict(tmp_path):
 def test_thresholds(tmp_path):
     p = tmp_path / "x.trj"
     write_trj(p, SCENARIOS["crossing"]())
-    assert find_conflicts(read_trj(p), max_ttc=0.8) == []  # crossing TTC is 0.9
+    assert len(find_conflicts(read_trj(p), fhwa_compatible=False)) == 1
+    assert find_conflicts(read_trj(p), max_ttc=0.8, fhwa_compatible=False) == []  # crossing TTC is 0.9
 
 
 @pytest.mark.parametrize("angle,start,end,want", [
@@ -123,9 +176,12 @@ def test_overlap_is_sides_crossing(tmp_path):
     assert (c["tMinTTC"], c["TTC"], c["PET"]) == pytest.approx((3.8, 0.0, 0.0))
 
 
-def test_busy_scene_unchanged():
+@pytest.mark.parametrize("fhwa,name", [(True, "busy_conflicts.json"), (False, "busy_conflicts_report.json")])
+def test_busy_scene_unchanged(fhwa, name):
     # Speed-ups must not change any result: the full conflict list of a dense synthetic scene (ssam_scenarios.busy)
-    # is frozen in tests/fixtures/ssam/busy_conflicts.json, written by the engine before the speed work.
+    # is frozen in tests/fixtures/ssam/. busy_conflicts_report.json was written by the engine before the speed work
+    # (report-literal); busy_conflicts.json is the FHWA-compatible list (every change from the report-literal list
+    # is one of the four rules, listed on the PR that made the switch).
     # Floats compared to 9 digits: Linux CI and Windows differ in the last bit of atan2 (FirstHeading).
     import json
 
@@ -134,4 +190,4 @@ def test_busy_scene_unchanged():
 
     def r(rows):
         return [{k: round(v, 9) if isinstance(v, float) else v for k, v in c.items()} for c in rows]
-    assert r(find_conflicts(busy())) == r(json.loads((FIXTURES / "ssam" / "busy_conflicts.json").read_text()))
+    assert r(find_conflicts(busy(), fhwa_compatible=fhwa)) == r(json.loads((FIXTURES / "ssam" / name).read_text()))

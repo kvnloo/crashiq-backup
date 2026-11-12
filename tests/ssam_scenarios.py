@@ -72,6 +72,13 @@ def follow_brake() -> Trj:
     return build([lead, foll], 15.0)
 
 
+def leader_follower(gap, lead_phases, follow_phases, v_lead, v_follow, t_end) -> Trj:
+    # Leader (1) with its rear `gap` m ahead of the follower (2), both eastbound from x=0, no lanes.
+    lead = lambda t: straight(1, t, (gap + L, 0.0), (1, 0), v_lead, lead_phases)
+    foll = lambda t: straight(2, t, (0.0, 0.0), (1, 0), v_follow, follow_phases)
+    return build([lead, foll], t_end)
+
+
 def crossing() -> Trj:
     # A (1) eastbound on y=0 at 10 m/s, front at x=-40 at t=0. B (2) northbound on x=0 at 10 m/s, front at y=-40:
     # both would reach the crossing together; B brakes at -8 m/s2 from t=3 to t=4 (down to 2 m/s). No lanes.
