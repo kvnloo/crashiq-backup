@@ -126,8 +126,12 @@ def test_overlap_is_sides_crossing(tmp_path):
 def test_busy_scene_unchanged():
     # Speed-ups must not change any result: the full conflict list of a dense synthetic scene (ssam_scenarios.busy)
     # is frozen in tests/fixtures/ssam/busy_conflicts.json, written by the engine before the speed work.
+    # Floats compared to 9 digits: Linux CI and Windows differ in the last bit of atan2 (FirstHeading).
     import json
 
     from conftest import FIXTURES
     from ssam_scenarios import busy
-    assert find_conflicts(busy()) == json.loads((FIXTURES / "ssam" / "busy_conflicts.json").read_text())
+
+    def r(rows):
+        return [{k: round(v, 9) if isinstance(v, float) else v for k, v in c.items()} for c in rows]
+    assert r(find_conflicts(busy())) == r(json.loads((FIXTURES / "ssam" / "busy_conflicts.json").read_text()))
