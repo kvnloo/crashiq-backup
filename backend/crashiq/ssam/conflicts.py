@@ -76,31 +76,47 @@ def _project(tr: _Track, i: int, tau: float) -> tuple[float, float, float, float
     return (last.fx + hx * over, last.fy + hy * over, hx, hy)
 
 
+class _Rect(tuple):
+    """Four corners, plus their bounding box (min x, min y, max x, max y) for a quick reject."""
+
+    def __new__(cls, corners):
+        r = super().__new__(cls, corners)
+        xs, ys = [c[0] for c in corners], [c[1] for c in corners]
+        r.box = (min(xs), min(ys), max(xs), max(ys))
+        return r
+
+
 def _rect(fx, fy, hx, hy, length, width):
     nx, ny = -hy * width / 2, hx * width / 2
     bx, by = fx - hx * length, fy - hy * length
-    return ((fx + nx, fy + ny), (fx - nx, fy - ny), (bx - nx, by - ny), (bx + nx, by + ny))
+    return _Rect(((fx + nx, fy + ny), (fx - nx, fy - ny), (bx - nx, by - ny), (bx + nx, by + ny)))
+
+
+def _orient(p, q, r) -> int:
+    v = (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
+    return 0 if abs(v) <= EPS else (1 if v > 0 else -1)
+
+
+def _on(p, q, r) -> bool:
+    """r, collinear with pq, lies within pq's box."""
+    return (min(p[0], q[0]) - EPS <= r[0] <= max(p[0], q[0]) + EPS
+            and min(p[1], q[1]) - EPS <= r[1] <= max(p[1], q[1]) + EPS)
 
 
 def _side_cross(a, b, c, d) -> bool:
     """Segments ab and cd intersect (touching counts)."""
-    def orient(p, q, r):
-        v = (q[0] - p[0]) * (r[1] - p[1]) - (q[1] - p[1]) * (r[0] - p[0])
-        return 0 if abs(v) <= EPS else (1 if v > 0 else -1)
-
-    def on(p, q, r):  # r, collinear with pq, lies within pq's box
-        return min(p[0], q[0]) - EPS <= r[0] <= max(p[0], q[0]) + EPS and             min(p[1], q[1]) - EPS <= r[1] <= max(p[1], q[1]) + EPS
-
-    o1, o2, o3, o4 = orient(a, b, c), orient(a, b, d), orient(c, d, a), orient(c, d, b)
+    o1, o2, o3, o4 = _orient(a, b, c), _orient(a, b, d), _orient(c, d, a), _orient(c, d, b)
     if o1 * o2 < 0 and o3 * o4 < 0:
         return True
-    return (o1 == 0 and on(a, b, c)) or (o2 == 0 and on(a, b, d)) or (o3 == 0 and on(c, d, a)) or         (o4 == 0 and on(c, d, b))
+    return ((o1 == 0 and _on(a, b, c)) or (o2 == 0 and _on(a, b, d)) or (o3 == 0 and _on(c, d, a))
+            or (o4 == 0 and _on(c, d, b)))
 
 
-def _overlap(p, q) -> bool:
+def _overlap(p: _Rect, q: _Rect) -> bool:
     """Report Step 3 / figure 13: some side of one rectangle intersects some side of the other (touching counts).
     A rectangle wholly inside the other is no overlap, as in FHWA's SSAM_MT."""
-    if max(x for x, _ in p) < min(x for x, _ in q) - EPS or max(x for x, _ in q) < min(x for x, _ in p) - EPS or             max(y for _, y in p) < min(y for _, y in q) - EPS or max(y for _, y in q) < min(y for _, y in p) - EPS:
+    (px0, py0, px1, py1), (qx0, qy0, qx1, qy1) = p.box, q.box
+    if px1 < qx0 - EPS or qx1 < px0 - EPS or py1 < qy0 - EPS or qy1 < py0 - EPS:
         return False
     return any(_side_cross(p[i], p[(i + 1) % 4], q[j], q[(j + 1) % 4]) for i in range(4) for j in range(4))
 
@@ -226,14 +242,31 @@ def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0) -> list
             here[v.vid] = ptr[v.vid]
             ptr[v.vid] += 1
         cache: dict[tuple[int, int], tuple] = {}
+        circles: dict[tuple[int, int], tuple] = {}
 
         def rect(vid, k):
             key = (vid, k)
             if key not in cache:
-                tr, i = tracks[vid], here[vid]
-                r = tr.recs[i]
-                cache[key] = _rect(*_project(tr, i, taus[k]), r.length, r.width)
+                r = tracks[vid].recs[here[vid]]
+                cache[key] = _rect(*proj(vid, k), r.length, r.width)
             return cache[key]
+
+        projs: dict[tuple[int, int], tuple] = {}
+
+        def proj(vid, k):
+            key = (vid, k)
+            if key not in projs:
+                projs[key] = _project(tracks[vid], here[vid], taus[k])
+            return projs[key]
+
+        def circle(vid, k):
+            """Centre and half diagonal of the projected rectangle: far-apart pairs skip the side test."""
+            key = (vid, k)
+            if key not in circles:
+                r = tracks[vid].recs[here[vid]]
+                fx, fy, hx, hy = proj(vid, k)
+                circles[key] = (fx - hx * r.length / 2, fy - hy * r.length / 2, math.hypot(r.length, r.width) / 2)
+            return circles[key]
 
         # Zone grid over each vehicle's swept area: its front path out to the MaxTTC point, padded by its size.
         grid: dict[tuple[int, int], list[int]] = defaultdict(list)
@@ -260,7 +293,8 @@ def find_conflicts(trj: Trj, max_ttc: float = 1.5, max_pet: float = 5.0) -> list
         active = set()
         for a, b in pairs:
             for k, tau in enumerate(taus):
-                if not _overlap(rect(a, k), rect(b, k)):
+                (xa, ya, ra_), (xb, yb, rb_) = circle(a, k), circle(b, k)
+                if math.hypot(xa - xb, ya - yb) > ra_ + rb_ + 1e-3 or not _overlap(rect(a, k), rect(b, k)):
                     continue
                 active.add((a, b))
                 ev = events.get((a, b))

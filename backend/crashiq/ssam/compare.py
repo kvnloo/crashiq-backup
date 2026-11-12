@@ -16,6 +16,9 @@ import argparse
 import csv
 import statistics
 import subprocess
+import time
+from concurrent.futures import ProcessPoolExecutor
+from itertools import repeat
 from pathlib import Path
 
 from .conflicts import find_conflicts
@@ -130,12 +133,17 @@ def compare(ours: dict[str, list[dict]], fhwa: dict[str, list[dict]]) -> tuple[d
                "type_agree": len(both) - len(type_diff), "type_differ": len(type_diff),
                "ttc_worst": max(d_ttc)[0] if d_ttc else None, "pet_worst": max(d_pet)[0] if d_pet else None}
     lines = ["CrashIQ conflicts vs FHWA SSAM", f"Files: {', '.join(sorted(ours.keys() | fhwa.keys()))}", "",
-             f"Found by both: {len(both)}", f"Only FHWA: {len(only_f)}", f"Only CrashIQ: {len(only_o)} ({summary['only_ours_no_pet']} with no PET)",
+             f"Found by both: {len(both)}", f"Only FHWA: {len(only_f)}",
+             f"Only CrashIQ: {len(only_o)} ({summary['only_ours_no_pet']} with no PET)",
              f"Same type: {summary['type_agree']} of {len(both)}", spread("TTC", d_ttc), spread("PET", d_pet)]
     for title, items in (("Only FHWA", only_f), ("Only CrashIQ", only_o), ("Type differs", type_diff)):
         if items:
             lines += ["", f"{title}:"] + [f"  {s}" for s in items]
     return summary, "\n".join(lines) + "\n"
+
+
+def _ours(path: Path, ttc: float, pet: float) -> list[dict]:
+    return find_conflicts(read_trj(path), ttc, pet)
 
 
 def main(argv=None) -> int:
@@ -153,17 +161,24 @@ def main(argv=None) -> int:
     files = sorted(p for p in a.folder.iterdir() if p.suffix.lower() == ".trj")
     if not files:
         ap.error(f"no .trj files in {a.folder}")
+    t0 = time.perf_counter()
     if a.exe:
         (a.folder / "fhwa").mkdir(exist_ok=True)
         fhwa = {p.stem.lower(): run_fhwa(a.exe, p, a.folder / "fhwa" / f"{p.stem}.csv", a.ttc, a.pet) for p in files}
         src_note = f"SSAM_MT.exe run now, CSVs in {a.folder / 'fhwa'}"
+        fhwa_s = f"{time.perf_counter() - t0:.1f} s"
     else:
         saved = {p.stem.lower(): p for p in a.fhwa_dir.glob("*.csv")}
         fhwa = {p.stem.lower(): read_fhwa_csv(saved[p.stem.lower()]) if p.stem.lower() in saved else [] for p in files}
         src_note = f"saved SSAM_MT CSVs in {a.fhwa_dir} (no CSV = no conflicts)"
-    ours = {p.stem.lower(): find_conflicts(read_trj(p), a.ttc, a.pet) for p in files}
+        fhwa_s = "not run (saved CSVs)"
+    t0 = time.perf_counter()
+    with ProcessPoolExecutor() as pool:  # one process per .trj file
+        ours = dict(zip((p.stem.lower() for p in files), pool.map(_ours, files, repeat(a.ttc), repeat(a.pet))))
+    ours_s = f"{time.perf_counter() - t0:.1f} s"
     _, report = compare(ours, fhwa)
-    report += f"\nSettings: TTC {a.ttc} s, PET {a.pet} s. FHWA conflicts from {src_note}.\n"
+    report += (f"\nSettings: TTC {a.ttc} s, PET {a.pet} s. FHWA conflicts from {src_note}.\n"
+               f"Wall-clock: FHWA SSAM_MT {fhwa_s}, CrashIQ {ours_s} ({len(files)} files, one process each).\n")
     out = a.out or a.folder / "ssam_compare.txt"
     out.write_text(report, encoding="utf-8")
     print(report, end="")

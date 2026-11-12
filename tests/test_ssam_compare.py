@@ -45,6 +45,7 @@ def test_compare_command(tmp_path, capsys):
     assert "Same type: 3 of 3" in report and "crossing: vehicles 1-2 at t=3.1 (no PET)" in report
     assert "TTC difference (s): median 0.000, worst 0.000" in report
     assert "PET difference (s): median 0.000, worst 0.000" in report
+    assert "Wall-clock: FHWA SSAM_MT not run (saved CSVs), CrashIQ " in report
 
 
 def test_compare_counts():

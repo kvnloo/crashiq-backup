@@ -6,6 +6,8 @@ The expected TTC/PET for each scenario is worked out by hand in tests/test_ssam_
 
 from __future__ import annotations
 
+import math
+
 from crashiq.ssam import Trj, Veh
 
 L, W, DT = 4.5, 1.8, 0.1
@@ -105,3 +107,26 @@ def near_pass() -> Trj:
 
 
 SCENARIOS = {"rear_end": rear_end, "follow_brake": follow_brake, "crossing": crossing, "cut_in": cut_in, "near_pass": near_pass}
+
+
+def busy(seed: int = 484) -> Trj:
+    # 60 s of 80 vehicles on straight paths through a 200 m square in four directions, random speeds, some
+    # braking, small lateral jitter: a dense scene for checking that speed-ups leave the conflict list unchanged.
+    import random
+
+    rnd = random.Random(seed)
+    dirs = [((1, 0), (-100.0, 0.0)), ((-1, 0), (100.0, 3.6)), ((0, 1), (1.8, -100.0)), ((0, -1), (-1.8, 100.0))]
+    vehicles = []
+    for vid in range(1, 81):
+        (hx, hy), (sx, sy) = rnd.choice(dirs)
+        t0, v0 = rnd.uniform(-20, 50), rnd.uniform(6, 16)
+        start = (sx - hx * v0 * t0 + rnd.uniform(-0.3, 0.3) * hy, sy - hy * v0 * t0 + rnd.uniform(-0.3, 0.3) * hx)
+        tb = rnd.uniform(0, 60)
+        phases = [(tb, tb + rnd.uniform(0.5, 2.0), rnd.uniform(-6, -1))] if rnd.random() < 0.5 else []
+        amp = rnd.uniform(0, 0.15)
+        lat = (lambda a: lambda t: (a * math.sin(3 * t), 3 * a * math.cos(3 * t)))(amp)
+        vehicles.append((lambda vid, s, d, v, ph, lt: lambda t: straight(vid, t, s, d, v, ph, lateral=lt))(
+            vid, start, (hx, hy), v0, phases, lat))
+    steps = build(vehicles, 60.0).steps
+    keep = [(t, [v for v in vs if abs(v.fx) < 100 and abs(v.fy) < 100]) for t, vs in steps]
+    return Trj(version=1.04, endian="L", units=1, scale=1.0, bounds=(-106, -106, 106, 106), z=False, steps=keep)

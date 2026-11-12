@@ -121,3 +121,13 @@ def test_overlap_is_sides_crossing(tmp_path):
     write_trj(p, build([bus, car], 20.0))
     (c,) = find_conflicts(read_trj(p))
     assert (c["tMinTTC"], c["TTC"], c["PET"]) == pytest.approx((3.8, 0.0, 0.0))
+
+
+def test_busy_scene_unchanged():
+    # Speed-ups must not change any result: the full conflict list of a dense synthetic scene (ssam_scenarios.busy)
+    # is frozen in tests/fixtures/ssam/busy_conflicts.json, written by the engine before the speed work.
+    import json
+
+    from conftest import FIXTURES
+    from ssam_scenarios import busy
+    assert find_conflicts(busy()) == json.loads((FIXTURES / "ssam" / "busy_conflicts.json").read_text())
