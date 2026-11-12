@@ -884,7 +884,10 @@ def corridor_status(sid: str, request: Request) -> dict:
 
 @router.delete("/studies/{sid}/corridor")
 def delete_corridor(sid: str, request: Request) -> dict:
+    from .crashes import _LOCKS_GUARD
     study_mod.require(_db(request), sid)
+    with _LOCKS_GUARD:
+        _JOBS.pop(sid, None)               # a running detection is cancelled: its answer isn't saved (review on #489)
     return clear_corridor(_db(request), sid)
 
 

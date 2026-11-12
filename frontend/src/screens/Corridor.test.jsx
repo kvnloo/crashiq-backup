@@ -57,6 +57,22 @@ describe('Corridor screen', () => {
     expect(screen.getByRole('button', { name: 'Try again' })).toBeEnabled()
   })
 
+  it('Clear line during a detection cancels it: no error, no corridor comes back', async () => {
+    const calls = mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': EMPTY,
+      'PUT /studies/:id/corridor': BUSY, 'DELETE /studies/:id/corridor': EMPTY,
+      'GET /studies/:id/corridor/status': () => ({ state: 'done', network: NET }) })
+    renderAt('/s/s1/corridor')
+    fireEvent.click(await screen.findByText('map: click A'))
+    fireEvent.click(screen.getByText('map: click B'))
+    fireEvent.click(screen.getByRole('button', { name: 'Find intersections →' }))
+    await screen.findByRole('button', { name: /OpenStreetMap is busy/ })
+    fireEvent.click(screen.getByRole('button', { name: 'Clear line' }))
+    await new Promise((r) => setTimeout(r, 2500))                     // past one poll interval
+    expect(screen.queryByText('West 147th Street')).toBeNull()
+    expect(screen.queryByRole('alert')).toBeNull()
+    expect(calls.some((c) => c.method === 'DELETE')).toBe(true)
+  })
+
   it('coming back to the screen resumes a running detection', async () => {
     let polls = 0
     mockApi({ 'GET /studies/meta': META, 'GET /studies/:id': STUDY, 'GET /studies/:id/network': EMPTY,

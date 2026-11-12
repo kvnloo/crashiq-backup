@@ -94,3 +94,14 @@ def test_an_error_names_the_last_failure_and_try_again_starts_a_new_job(client, 
 def test_bad_lines_are_still_refused_in_the_request(client, sid):
     r = client.put(f"/api/studies/{sid}/corridor?background=true", json={"line": [[33.45, -112.07], [33.46, -112.07]]})
     assert r.status_code == 400 and status(client, sid) == {"state": "idle"}
+
+
+def test_clearing_the_line_mid_detection_cancels_it(client, sid):
+    """Review on #489: Clear line while a detection ran brought the cleared corridor back when the job finished."""
+    fake = client.app.state.overpass = FlakyOverpass(fails=0)
+    assert client.put(f"/api/studies/{sid}/corridor?background=true", json={"line": LINE}).status_code == 202
+    assert client.delete(f"/api/studies/{sid}/corridor").status_code == 200
+    fake.release.set()
+    time.sleep(0.5)
+    assert status(client, sid) == {"state": "idle"}
+    assert not client.get(f"/api/studies/{sid}/network").json().get("line")

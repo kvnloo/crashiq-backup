@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import CorridorMap from '../components/CorridorMap'
 import LocationPanel from '../components/LocationPanel'
@@ -61,10 +61,14 @@ export default function Corridor() {
   }, [])
 
   // Polls a running corridor job until it ends; resolves to the network. A non-job answer is the network itself.
+  const stop = useRef(0)                             // bumped by Clear line and on leaving: the poll stops
+  useEffect(() => () => { stop.current += 1 }, [])
   const follow = useCallback(async (r) => {
+    const me = stop.current
     while (r && r.job) {
       setBusy(detectLabel(r.job))
       await new Promise((res) => setTimeout(res, POLL_MS))
+      if (me !== stop.current) return null
       const st = await api(`/studies/${studyId}/corridor/status`)
       if (st.state === 'done') return st.network
       if (st.state === 'error') throw new ApiError(st.status || 500, st.error)
@@ -76,6 +80,7 @@ export default function Corridor() {
 
   const detect = () => run('Finding intersections…', async () => {
     const n = await follow(await api(`/studies/${studyId}/corridor?background=true`, { method: 'PUT', body: { line } }))
+    if (!n) return
     setNet(n)
     setDraft([])
     setFinished(false)
@@ -91,7 +96,7 @@ export default function Corridor() {
       setFinished(true)
       run('Finding intersections…', async () => {
         const n = await follow({ job: st })
-        if (!alive) return
+        if (!alive || !n) return
         setNet(n)
         setDraft([])
         setFinished(false)
@@ -102,7 +107,8 @@ export default function Corridor() {
   }, [studyId, run, follow])
 
   const clear = () => run('', async () => {
-    if (saved) setNet(await api(`/studies/${studyId}/corridor`, { method: 'DELETE' }))
+    stop.current += 1                                // a running detection is cancelled too (server drops the job)
+    if (saved || busy) setNet(await api(`/studies/${studyId}/corridor`, { method: 'DELETE' }))
     setDraft([])
     setFinished(false)
     setAdding(false)
