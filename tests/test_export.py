@@ -34,6 +34,16 @@ def test_xlsx_has_a_sheet_per_table_and_every_number_matches(data):
                 assert row[header.index(c["label"])] == r["values"].get(c["key"]), (t["id"], r["key"], c["key"])
 
 
+def test_xlsx_text_that_looks_like_a_formula_stays_text(data):
+    """A project name or police text starting with '=' was written as a live formula (found 2026-11-11)."""
+    data["study"]["name"] = '=HYPERLINK("http://evil.example","x")'
+    data["profile"]["tables"][0]["rows"][0]["label"] = "=1+1"
+    wb = load_workbook(io.BytesIO(export.to_xlsx(data)))
+    cells = [c for ws in wb for row in ws.iter_rows() for c in row]
+    assert not [c.coordinate for c in cells if c.data_type == "f"]
+    assert wb["Study"]["B2"].value == data["study"]["name"]                # kept exactly, as text
+
+
 def test_xlsx_study_sheet_has_caveats_and_credits(data):
     ws = load_workbook(io.BytesIO(export.to_xlsx(data)))["Study"]
     text = " ".join(str(c.value) for row in ws.iter_rows() for c in row if c.value is not None)
