@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { Circle, MapContainer, Marker, Polygon, Polyline, TileLayer, Tooltip, useMap, useMapEvents } from 'react-leaflet'
+import { Circle, MapContainer, Marker, Polygon, Polyline, Tooltip, useMap, useMapEvents } from 'react-leaflet'
 import L from 'leaflet'
-import { FT_TO_M, TILE_ATTR, TILE_MAX_NATIVE_ZOOM, TILE_URL } from '../lib/tiles'
+import '@maplibre/maplibre-gl-leaflet'
+import { FT_TO_M, basemapStyle } from '../lib/tiles'
 
 const DEFAULT_CENTER = [33.9038, -118.3266]
 // Leaflet writes stroke/fill as SVG attributes, so colors come from the theme tokens at render time.
@@ -31,8 +32,20 @@ function Fit({ points, fitKey, padRight }) {
     if (!fitKey || fitKey === last.current || !points?.length) return
     last.current = fitKey
     if (points.length === 1) map.setView(points[0], 17)
-    else map.fitBounds(points, { paddingTopLeft: [60, 60], paddingBottomRight: [padRight, 60] })
+    // padding wider than a phone map gives a NaN zoom, which the MapLibre basemap throws on: cap it at half the map
+    else map.fitBounds(points, { paddingTopLeft: [60, 60], paddingBottomRight: [Math.min(padRight, map.getSize().x / 2), 60] })
   }, [fitKey, points, map, padRight])
+  return null
+}
+
+// The aitt-map vector basemap drawn inside Leaflet, so every Leaflet overlay and interaction stays as it was.
+// Attribution comes from the style's source (OSM + Protomaps).
+function Basemap() {
+  const map = useMap()
+  useEffect(() => {
+    const layer = L.maplibreGL({ style: basemapStyle() }).addTo(map)
+    return () => { layer.remove() }
+  }, [map])
   return null
 }
 
@@ -55,7 +68,7 @@ export default function CorridorMap({
   mode, line, intersections = [], radiusFt = 250, bufferRing, selectedId,
   onAddPoint, onFinish, onAddIntersection, onMoveEnd, onSelect, fitKey, fitPoints, padRight = 420,
 }) {
-  const colors = useMemo(() => ({ go: token('--go', '#1EE39A'), fg: token('--fg', '#E6EAEE') }), [])
+  const colors = useMemo(() => ({ go: token('--go', '#1EE39A'), fg: '#13181D' }), [])
   const studyInts = useMemo(() => intersections.filter((i) => i.is_study), [intersections])
   const numbered = useMemo(() => {
     let n = 0
@@ -65,7 +78,7 @@ export default function CorridorMap({
   return (
     <MapContainer center={DEFAULT_CENTER} zoom={DEFAULT_ZOOM} zoomControl={false} className="ciq-map"
       doubleClickZoom={mode !== 'draw'}>
-      <TileLayer url={TILE_URL} attribution={TILE_ATTR} maxNativeZoom={TILE_MAX_NATIVE_ZOOM} maxZoom={20} />
+      <Basemap />
       <DoubleClickZoom enabled={mode !== 'draw'} />
       <Fit points={fitPoints} fitKey={fitKey} padRight={padRight} />
       <ClickLayer
