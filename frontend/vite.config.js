@@ -5,6 +5,8 @@ import react from '@vitejs/plugin-react'
 // Prod: FastAPI serves this build and strips /api itself, so the same URLs work.
 export default defineConfig({
   plugins: [react()],
+  // @aitt/map ships source with a `?url` worker import the dev pre-bundler can't load: serve it as-is
+  optimizeDeps: { exclude: ['@aitt/map'] },
   server: {
     port: 3000,
     strictPort: true,

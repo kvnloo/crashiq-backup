@@ -22,6 +22,8 @@ vi.mock('maplibre-gl', () => {
   return { Map, Popup, Marker, setWorkerUrl: () => {} }   // maplibre-gl 6: named exports only (no default)
 })
 vi.mock('maplibre-gl/dist/maplibre-gl.css', () => ({}))
+// the aitt-map style reads CSS tokens, which the tests don't load (css: false)
+vi.mock('../lib/tiles', () => ({ basemapStyle: () => ({ version: 8, sources: {}, layers: [] }) }))
 
 const { default: ProfileMap } = await import('./ProfileMap')
 const C = crashes.crashes.filter((c) => c.lat != null).map((c, i) => ({ ...c, location_id: network.intersections[i % 3].id }))

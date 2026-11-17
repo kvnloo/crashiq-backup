@@ -1,38 +1,32 @@
 import * as maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
-import workerUrl from 'maplibre-gl/dist/maplibre-gl-worker.mjs?url'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { DIMENSIONS, categories, catOf, columns, corridorAzimuth, topLocations, visible } from '../lib/mapcats'
 import { HOLLOW } from '../lib/severity'
 import { RING_LEGEND, isVru, vruWho } from '../lib/vru'
-import { TILE_MAX_NATIVE_ZOOM, TILE_URL } from '../lib/tiles'
+import { basemapStyle } from '../lib/tiles'
 
-// maplibre-gl 6 loads its worker from a file beside its own module, which the Vite build doesn't copy: point it at
-// the bundled asset (#363)
-maplibregl.setWorkerUrl(workerUrl)
-
-const TILE_ATTR_HTML = 'Tiles © Esri — Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
 const PITCH_3D = 55
 const FIT_3D_BACKOFF = 0.15     // zoom levels: the tilted near end still fits
-const VRU_RING = '#E6EAEE'     // --fg on the (always dark) map: no hue, so the severity ramp and its CVD check stand
+const VRU_RING = '#13181D'     // near-black on the (always light, aitt-map 'day') map: no hue, so the severity ramp and its CVD check stand
+const APPROX = '#57636F'       // the day style's label grey: reads on the light basemap
 const EMPTY = { type: 'FeatureCollection', features: [] }
 const esc = (v) => String(v ?? '').replace(/[&<>"']/g, (ch) => `&#${ch.charCodeAt(0)};`)
 const round = (b) => Math.round(((b % 360) + 540) % 360 - 180)
 
 function style() {
+  const base = basemapStyle()
   return {
-    version: 8,
+    ...base,
     sources: {
-      base: { type: 'raster', tiles: [TILE_URL], tileSize: 256, maxzoom: TILE_MAX_NATIVE_ZOOM, attribution: TILE_ATTR_HTML },
+      ...base.sources,
       corridor: { type: 'geojson', data: EMPTY },
       crashes: { type: 'geojson', data: EMPTY },
       columns: { type: 'geojson', data: EMPTY },
       locs: { type: 'geojson', data: EMPTY },
     },
     layers: [
-      { id: 'bg', type: 'background', paint: { 'background-color': '#14181C' } },
-      // dimmed so the data reads first (#100); street names come from our own labels and hovers
-      { id: 'base', type: 'raster', source: 'base', paint: { 'raster-opacity': 0.55, 'raster-saturation': -0.6 } },
+      ...base.layers,
       { id: 'corridor', type: 'line', source: 'corridor', paint: { 'line-color': '#1EE39A', 'line-width': 5, 'line-opacity': 0.35 },
         layout: { 'line-cap': 'round' } },
       // invisible hover targets: every location's name and crash count on hover (#100)
@@ -46,7 +40,7 @@ function style() {
         'circle-stroke-width': 1.5, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.2, 1], 'circle-pitch-alignment': 'map' } },
       // placed approximately (#255 freeway report, +-0.5 mi; #283 NAD address point): a wide faint ring says "about here"
       { id: 'approx', type: 'circle', source: 'crashes', filter: ['==', ['get', 'approx'], true], paint: {
-        'circle-radius': 13, 'circle-opacity': 0.06, 'circle-color': '#C9D1D9', 'circle-stroke-color': '#C9D1D9',
+        'circle-radius': 13, 'circle-opacity': 0.06, 'circle-color': APPROX, 'circle-stroke-color': APPROX,
         'circle-stroke-width': 1, 'circle-stroke-opacity': ['case', ['get', 'dim'], 0.15, 0.55], 'circle-pitch-alignment': 'map' } },
       // pedestrian or bicyclist involved (#136): a light ring around the severity dot, always on, any colour mode
       { id: 'vru', type: 'circle', source: 'crashes', filter: ['==', ['get', 'vru'], true], paint: {
